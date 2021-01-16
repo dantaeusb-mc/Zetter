@@ -27,19 +27,24 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
     private TextFieldWidget nameField;
     private boolean keyMode = true;
 
+    protected final ITextComponent title = new TranslationTextComponent("container.immersivemp.lock_table");
+
     // This is the resource location for the background image
     private static final ResourceLocation LOCK_TABLE_RESOURCE = new ResourceLocation("immersivemp", "textures/locks/gui/lock_table.png");
 
+    final static  int FONT_Y_SPACING = 10;
     final static int PLAYER_INV_LABEL_XPOS = LockTableContainer.PLAYER_INVENTORY_XPOS;
-    final static int PLAYER_INV_LABEL_YPOS = LockTableContainer.PLAYER_INVENTORY_YPOS;
+    final static int PLAYER_INV_LABEL_YPOS = LockTableContainer.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
     public LockTableContainerScreen(LockTableContainer lockTableContainer, PlayerInventory playerInventory, ITextComponent title) {
         super(lockTableContainer, playerInventory, title);
         this.lockTableContainer = lockTableContainer;
 
         // Set the width and height of the gui.  Should match the size of the texture!
-        xSize = 176;
-        ySize = 166;
+        this.xSize = 176;
+        this.ySize = 166;
+
+        this.playerInventoryTitleY = this.ySize - 110;
     }
 
     protected void init() {
@@ -53,7 +58,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         int edgeSpacingX = (this.width - this.xSize) / 2;
         int edgeSpacingY = (this.height - this.ySize) / 2;
 
-        this.nameField = new TextFieldWidget(this.font, edgeSpacingX + 53, edgeSpacingY + 24, 94, 12, new TranslationTextComponent("container.repair"));
+        this.nameField = new TextFieldWidget(this.font, edgeSpacingX + 53, edgeSpacingY + 24, 94, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
         this.nameField.setCanLoseFocus(false);
         this.nameField.setTextColor(-1);
         this.nameField.setDisabledTextColour(-1);
@@ -119,6 +124,12 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         this.blit(matrixStack, edgeSpacingX + 26, edgeSpacingY + 18, buttonUOffset, buttonVOffset, 20, 20);
     }
 
+    /**
+     * @todo: use default playerInventoryTitleY and titleY fields
+     * @param matrixStack
+     * @param mouseX
+     * @param mouseY
+     */
     @Override
     protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
         // draw the label for the top of the screen

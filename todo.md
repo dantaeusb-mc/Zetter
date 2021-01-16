@@ -5,8 +5,9 @@
 ### Locks
 
 * Force close door on quick action
-* Fix quark double doors feature
-* Fix delay in blockstate
+* \[HIGH\] Fix name field state for Client Locksmith Table GUI
+* \[MED\] Copy quark double doors feature (and fix second door quick event when Quark Double Doors enabled)
+* \[LOW\] Fix delay in blockstate (probably change open state manually)
 
 ### Economy
 

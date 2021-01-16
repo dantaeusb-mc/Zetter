@@ -8,6 +8,7 @@
   "block.immersivemp.oak_lockable_door": "Запирающаяся дубовая дверь",
   "block.immersivemp.spruce_lockable_door": "Запирающаяся еловая дверь",
   "block.immersivemp.warped_lockable_door": "Запирающаяся искажённая дверь",
+  "container.immersivemp.lock_table": "Создание замков и ключей",
   "item.immersivemp.key": "Ключ",
   "item.immersivemp.lock": "Замок",
   "immersivemp.subtitles.door.lock": "Дверь заперта",

@@ -47,8 +47,7 @@ public class LockTableContainer extends Container {
     private boolean keyMode = true;
 
     private final World world;
-    private static final Logger LOGGER = LogManager.getLogger();
-    private int materialCost = 1;
+    private final int materialCost = 1;
 
     private static final int HOTBAR_SLOT_COUNT = 9;
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
@@ -202,8 +201,6 @@ public class LockTableContainer extends Container {
 
     public void updateKeyMode(boolean keyMode) {
         this.keyMode = keyMode;
-
-        LOGGER.debug("Updated key mode!");
 
         this.updateOutput();
     }

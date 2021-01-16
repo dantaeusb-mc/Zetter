@@ -8,6 +8,7 @@
   "block.immersivemp.oak_lockable_door": "Oak Lockable Door",
   "block.immersivemp.spruce_lockable_door": "Spruce Lockable Door",
   "block.immersivemp.warped_lockable_door": "Warped Lockable Door",
+  "container.immersivemp.lock_table": "Create Keys & Locks",
   "item.immersivemp.key": "Key",
   "item.immersivemp.lock": "Lock",
   "immersivemp.subtitles.door.lock": "Door Locked",
