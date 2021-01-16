@@ -16,7 +16,9 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.IWorldPosCallable;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -25,7 +27,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.UUID;
 
 public class LockTableContainer extends Container {
-    public static final int MAX_NAME_LENGTH = 35 - 4;
+    public static final int MAX_NAME_LENGTH = 25; // Reserve some symbols for " Lock" part of the name
 
     protected final IInventory inventoryIn = new Inventory(2) {
         /**
@@ -163,12 +165,16 @@ public class LockTableContainer extends Container {
 
             if (templateStack.isEmpty()) {
                 ILockingItem.setLockId(outStack, UUID.randomUUID());
+
+                if (this.keyMode && !StringUtils.isBlank(this.lockName)) {
+                    outStack.setDisplayName(new StringTextComponent(this.lockName));
+                }
             } else {
                 ILockingItem.setLockId(outStack, ILockingItem.getLockId(templateStack));
-            }
 
-            if (!StringUtils.isBlank(this.lockName)) {
-                outStack.setDisplayName(new StringTextComponent(this.lockName));
+                if (templateStack.hasDisplayName()) {
+                    outStack.setDisplayName(templateStack.getDisplayName());
+                }
             }
 
             this.inventoryOut.setInventorySlotContents(0, outStack);
@@ -200,6 +206,18 @@ public class LockTableContainer extends Container {
         LOGGER.debug("Updated key mode!");
 
         this.updateOutput();
+    }
+
+    /**
+     * Allow to name only keys, and only when we don't have template to copy
+     * (if template persists, key should copy template's name)
+     * @return
+     */
+    public boolean allowedToNameItem() {
+        boolean haveMaterial = this.getSlot(0).getHasStack();
+        boolean haveTemplate = this.getSlot(1).getHasStack();
+
+        return this.keyMode && haveMaterial && !haveTemplate;
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class ImmersiveMp
 {
     public static final String MOD_ID = "immersivemp";
+    public static boolean DEBUG_MODE = false;
 
     // get a reference to the event bus for this mod;  Registration events are fired on this bus.
     public static IEventBus MOD_EVENT_BUS;
@@ -36,8 +37,8 @@ public class ImmersiveMp
     public static CommonProxy proxy;
 
     public ImmersiveMp() {
-        final boolean HIDE_CONSOLE_NOISE = false;
-        if (HIDE_CONSOLE_NOISE) {
+        // Get rid of maybe, doesn't seem to work
+        if (DEBUG_MODE) {
             ForgeLoggerTweaker.setMinimumLevel(Level.WARN);
             ForgeLoggerTweaker.applyLoggerFilter();
         }

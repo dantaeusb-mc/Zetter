@@ -65,8 +65,6 @@ public class LockingRecipe implements ICraftingRecipe {
             }
         }
 
-        ImmersiveMp.LOG.info("Lockable stack: " + !lockableStack.isEmpty() + " lock stack: " + !lockStack.isEmpty());
-
         return !(lockableStack.isEmpty() || lockStack.isEmpty());
     }
 

@@ -22,7 +22,7 @@ import java.util.UUID;
 public class KeyLockableTileEntity extends TileEntity implements ITickableTileEntity {
     private UUID keyId;
     private boolean locked = true;
-    private int quickOpenTimeout = 0;
+    private int quickOpenTimeout = -1;
 
     public KeyLockableTileEntity() {
         super(ModLockTileEntities.LOCKING_TILE_ENTITY);

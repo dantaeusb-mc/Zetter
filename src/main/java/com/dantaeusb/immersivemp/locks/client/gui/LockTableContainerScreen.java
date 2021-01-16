@@ -100,7 +100,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         // Draw input
 
         this.blit(matrixStack, edgeSpacingX, edgeSpacingY, 0, 0, this.xSize, this.ySize);
-        this.blit(matrixStack, edgeSpacingX + 50, edgeSpacingY + 20, 0, this.ySize + (this.allowedToNameItem() ? 0 : 16), 101, 16);
+        this.blit(matrixStack, edgeSpacingX + 50, edgeSpacingY + 20, 0, this.ySize + (this.getContainer().allowedToNameItem() ? 0 : 16), 101, 16);
 
         // Draw button
 
@@ -117,18 +117,6 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         }
 
         this.blit(matrixStack, edgeSpacingX + 26, edgeSpacingY + 18, buttonUOffset, buttonVOffset, 20, 20);
-    }
-
-    /**
-     * Allow to name only keys, and only when we don't have template to copy
-     * (if template persists, key should copy template's name)
-     * @return
-     */
-    protected boolean allowedToNameItem() {
-        boolean haveMaterial = this.container.getSlot(0).getHasStack();
-        boolean haveTemplate = this.container.getSlot(1).getHasStack();
-
-        return this.keyMode && haveMaterial && !haveTemplate;
     }
 
     @Override
@@ -166,7 +154,8 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
     private void toggleMode() {
         this.keyMode = !this.keyMode;
 
-        this.container.updateKeyMode(this.keyMode);
+        this.updateNameField();
+        this.nameField.setEnabled(this.getContainer().allowedToNameItem());
 
         CLockTableModePacket modePacket = new CLockTableModePacket((this.container).windowId, this.keyMode);
         ModLockNetwork.simpleChannel.sendToServer(modePacket);
@@ -193,15 +182,21 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         this.nameField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
+    private void updateNameField() {
+        this.nameField.setEnabled(this.getContainer().allowedToNameItem());
+
+        if (!this.nameField.canWrite()) {
+            this.nameField.setText("");
+        }
+    }
+
     // Listener interface - to track name field availability
 
     private void renameItem(String name) {
-        if (!name.isEmpty()) {
-            this.container.updateItemName(name);
+        this.container.updateItemName(name);
 
-            CLockTableRenameItemPacket renameItemPacket = new CLockTableRenameItemPacket(name);
-            ModLockNetwork.simpleChannel.sendToServer(renameItemPacket);
-        }
+        CLockTableRenameItemPacket renameItemPacket = new CLockTableRenameItemPacket(name);
+        ModLockNetwork.simpleChannel.sendToServer(renameItemPacket);
     }
 
     public void sendAllContents(Container containerToSend, NonNullList<ItemStack> itemsList) {
@@ -211,7 +206,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
     public void sendSlotContents(Container containerToSend, int slotInd, ItemStack stack) {
         if (slotInd == 0) {
             this.nameField.setText(stack.isEmpty() ? "" : stack.getDisplayName().getString());
-            this.nameField.setEnabled(this.allowedToNameItem());
+            this.updateNameField();
             this.setListener(this.nameField);
         }
     }

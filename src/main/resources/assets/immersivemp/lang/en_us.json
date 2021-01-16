@@ -10,7 +10,6 @@
   "block.immersivemp.warped_lockable_door": "Warped Lockable Door",
   "item.immersivemp.key": "Key",
   "item.immersivemp.lock": "Lock",
-  "item.immersivemp.key.template": "%s Key",
   "immersivemp.subtitles.door.lock": "Door Locked",
   "immersivemp.subtitles.door.unlock": "Door Unlocked"
 }

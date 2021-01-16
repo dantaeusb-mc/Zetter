@@ -44,7 +44,7 @@ public class LockTableBlock extends Block {
     }
 
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing().rotateY());
+        return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing());
     }
 
     public BlockState rotate(BlockState state, Rotation rot) {

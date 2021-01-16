@@ -35,11 +35,30 @@ public abstract class AbstractLockItem extends Item implements ILockingItem {
         tooltip.add(new StringTextComponent(keyUUID.toString()));
     }
 
+    @OnlyIn(Dist.CLIENT)
+    public static void appendItemName(ItemStack stack, java.util.List<ITextComponent> tooltip) {
+        tooltip.add(stack.getItem().getName());
+    }
+
     /**
-     * allows items to add custom lines of information to the mouseover description
+     * Allows items to add custom lines of information to the mouseover description
+     * Show UUID in debug mode
+     * Show type of item if ItemStack is named
+     * I.E.
+     * Town Hall
+     * Key
+     * Don't show anything if unnamed
+     * I.E.
+     * Lock
      */
     @OnlyIn(Dist.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
-        appendKeyDescription(stack, tooltip);
+        if (ImmersiveMp.DEBUG_MODE) {
+            appendKeyDescription(stack, tooltip);
+        } else {
+            if (stack.hasDisplayName()) {
+                appendItemName(stack, tooltip);
+            }
+        }
     }
 }

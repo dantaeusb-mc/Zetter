@@ -4,11 +4,8 @@
 
 ### Locks
 
-* Locksmith table crafting
-* Allow naming only keys
-* Copy key's name to locks and doors
-* Close door on second click
-* Fix sound on block placement
+* Force close door on quick action
+* Fix quark double doors feature
 * Fix delay in blockstate
 
 ### Economy

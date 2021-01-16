@@ -10,7 +10,6 @@
   "block.immersivemp.warped_lockable_door": "Запирающаяся искажённая дверь",
   "item.immersivemp.key": "Ключ",
   "item.immersivemp.lock": "Замок",
-  "item.immersivemp.key.template": "%s ключ",
   "immersivemp.subtitles.door.lock": "Дверь заперта",
   "immersivemp.subtitles.door.unlock": "Дверь отперта"
 }
