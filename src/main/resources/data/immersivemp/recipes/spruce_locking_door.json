@@ -1,0 +1,9 @@
+{
+  "type": "immersivemp:locking_recipe",
+  "input": {
+    "item": "minecraft:spruce_door"
+  },
+  "output": {
+    "item": "immersivemp:spruce_lockable_door"
+  }
+}

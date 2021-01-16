@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=east": {
+            "model": "immersivemp:block/lock_table",
+            "y": 270
+        },
+        "facing=north": {
+            "model": "immersivemp:block/lock_table",
+            "y": 180
+        },
+        "facing=south": {
+            "model": "immersivemp:block/lock_table"
+        },
+        "facing=west": {
+            "model": "immersivemp:block/lock_table",
+            "y": 90
+        }
+    }
+}

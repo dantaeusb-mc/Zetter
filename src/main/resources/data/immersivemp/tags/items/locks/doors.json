@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "immersivemp:acacia_lockable_door",
+    "immersivemp:birch_lockable_door",
+    "immersivemp:dark_oak_lockable_door",
+    "immersivemp:jungle_lockable_door",
+    "immersivemp:oak_lockable_door",
+    "immersivemp:spruce_lockable_door"
+  ]
+}

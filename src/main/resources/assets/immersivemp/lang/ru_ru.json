@@ -1,0 +1,16 @@
+{
+  "block.immersivemp.lock_table": "Стол ключника",
+  "block.immersivemp.acacia_lockable_door": "Запирающаяся акациевая дверь",
+  "block.immersivemp.birch_lockable_door": "Запирающаяся берёзовая дверь",
+  "block.immersivemp.crimson_lockable_door": "Запирающаяся багровая дверь",
+  "block.immersivemp.dark_oak_lockable_door": "Запирающаяся дверь из тёмного дуба",
+  "block.immersivemp.jungle_lockable_door": "Запирающаяся дверь из тропического дерева",
+  "block.immersivemp.oak_lockable_door": "Запирающаяся дубовая дверь",
+  "block.immersivemp.spruce_lockable_door": "Запирающаяся еловая дверь",
+  "block.immersivemp.warped_lockable_door": "Запирающаяся искажённая дверь",
+  "item.immersivemp.key": "Ключ",
+  "item.immersivemp.lock": "Замок",
+  "item.immersivemp.key.template": "%s ключ",
+  "immersivemp.subtitles.door.lock": "Дверь заперта",
+  "immersivemp.subtitles.door.unlock": "Дверь отперта"
+}

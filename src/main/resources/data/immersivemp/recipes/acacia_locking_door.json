@@ -1,0 +1,9 @@
+{
+  "type": "immersivemp:locking_recipe",
+  "input": {
+    "item": "minecraft:acacia_door"
+  },
+  "output": {
+    "item": "immersivemp:acacia_lockable_door"
+  }
+}

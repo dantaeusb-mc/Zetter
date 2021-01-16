@@ -1,0 +1,9 @@
+{
+  "type": "immersivemp:locking_recipe",
+  "input": {
+    "item": "minecraft:birch_door"
+  },
+  "output": {
+    "item": "immersivemp:birch_lockable_door"
+  }
+}

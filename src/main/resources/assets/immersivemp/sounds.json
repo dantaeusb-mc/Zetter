@@ -1,0 +1,16 @@
+{
+  "block.door.lock": {
+    "category": "blocks",
+    "subtitle": "immersivemp.subtitles.door.lock",
+    "sounds": [
+      "immersivemp:block/door/locking"
+    ]
+  },
+  "block.door.unlock": {
+    "category": "blocks",
+    "subtitle": "immersivemp.subtitles.door.unlock",
+    "sounds": [
+      "immersivemp:block/door/unlocking"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "input": {
+    "item": "minecraft:spruce_door"
+  },
+  "pattern": [
+    "LLL",
+    "III",
+    "SSS"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:smooth_stone_slab"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "minecraft:smooth_stone"
+    }
+  },
+  "result": {
+    "item": "immersivemp:lock_table"
+  }
+}
