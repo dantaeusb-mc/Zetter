@@ -11,7 +11,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
@@ -20,25 +20,31 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
  * Quark handles event anyway, and opening next door.
  */
 public class ModLockGameEvents {
-    @SubscribeEvent(priority = EventPriority.NORMAL)
+    @SubscribeEvent(priority = EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent.RightClickBlock event) {
-        if(event.getHand() == Hand.OFF_HAND || event.getPlayer().isDiscrete() || event.isCanceled() || event.getResult() == Event.Result.DENY || event.getUseBlock() == Event.Result.DENY) {
+        if(!event.getWorld().isRemote || event.getPlayer().isDiscrete() || event.isCanceled() || event.getResult() == Result.DENY || event.getUseBlock() == Result.DENY) {
             return;
         }
 
         World world = event.getWorld();
         BlockPos pos = event.getPos();
 
+        // Only when we're interacting with our doors
         if(world.getBlockState(pos).getBlock() instanceof LockableDoorBlock) {
-            // Send message on client, do nothing on server
-            if (event.getWorld().isRemote) {
-                CLockDoorOpen doorPacket = new CLockDoorOpen(pos);
-                ModLockNetwork.simpleChannel.sendToServer(doorPacket);
+            // Cancel both hands interactions, cause Quark utilizes main hand
+            event.setCanceled(true);
+            event.setResult(Result.DENY);
+
+            ImmersiveMp.LOG.info("Sending from hand " + event.getHand().name());
+
+            // We, however, will consume & ignore event on main hand and proceed with OFF_HAND
+            if (event.getHand() == Hand.MAIN_HAND) {
+                return;
             }
 
-            // Consume event on both to prevent Quark open
-            event.setCanceled(true);
-            event.setResult(Event.Result.DEFAULT);
+            CLockDoorOpen doorPacket = new CLockDoorOpen(pos);
+            ModLockNetwork.simpleChannel.sendToServer(doorPacket);
+
         }
     }
 }
