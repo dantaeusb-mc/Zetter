@@ -15,10 +15,6 @@ import net.minecraftforge.eventbus.api.Event.Result;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
-/**
- * @todo: This doesn't work either. Any priority doesn't do shit.
- * Quark handles event anyway, and opening next door.
- */
 public class ModLockGameEvents {
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onPlayerInteract(PlayerInteractEvent.RightClickBlock event) {
