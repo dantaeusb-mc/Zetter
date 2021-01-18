@@ -54,7 +54,7 @@ public class Helper {
     }
 
     public static boolean playerHasKey(PlayerEntity playerEntity, UUID requiredKeyId) {
-        ImmersiveMp.LOG.info("Looking for required key " + requiredKeyId + " in " + playerEntity + " inventory");
+        ImmersiveMp.LOG.debug("Looking for required key " + requiredKeyId + " in " + playerEntity + " inventory");
 
         for (ItemStack stackInSlot: playerEntity.inventory.mainInventory) {
             if (!Helper.isKey(stackInSlot)) {
@@ -64,14 +64,14 @@ public class Helper {
             UUID keyId = ILockingItem.getLockId(stackInSlot);
 
             if (requiredKeyId.equals(keyId)) {
-                ImmersiveMp.LOG.info("Found required key " + keyId + " in " + playerEntity + " inventory");
+                ImmersiveMp.LOG.debug("Found required key " + keyId + " in " + playerEntity + " inventory");
                 return true;
             } else {
-                ImmersiveMp.LOG.info("Found key " + keyId + " in " + playerEntity + " inventory");
+                ImmersiveMp.LOG.debug("Found key " + keyId + " in " + playerEntity + " inventory");
             }
         }
 
-        ImmersiveMp.LOG.info("Unable to find required key " + requiredKeyId + " in " + playerEntity + " inventory");
+        ImmersiveMp.LOG.debug("Unable to find required key " + requiredKeyId + " in " + playerEntity + " inventory");
 
         return false;
     }

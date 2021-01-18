@@ -4,7 +4,6 @@ import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.core.Helper;
 import com.dantaeusb.immersivemp.locks.item.ILockingItem;
 import com.dantaeusb.immersivemp.locks.tileentity.KeyLockableTileEntity;
-import com.dantaeusb.immersivemp.state.properties.LockBlockStateProperties;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -17,7 +16,6 @@ import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.properties.DoubleBlockHalf;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -26,36 +24,76 @@ import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.Tags;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 public class LockableDoorBlock extends DoorBlock {
-    public static final BooleanProperty LOCKED = LockBlockStateProperties.LOCKED;
-
     public LockableDoorBlock(AbstractBlock.Properties builder)
     {
         super(builder);
     }
 
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos blockPos, PlayerEntity playerEntity, Hand handIn, BlockRayTraceResult hit) {
-        if (worldIn.isRemote()) {
-            return ActionResultType.SUCCESS;
-        }
+    /**
+     * Basic block activated event handled in
+     * @see com.dantaeusb.immersivemp.locks.core.ModLockGameEvents#onPlayerInteract(PlayerInteractEvent.RightClickBlock)
+     * If TileEntity forbids opening, event is market as denied. It seems to be cleaner way,
+     * Also patrially we use that way because of Quark design which lead to vunerability with double-doors
+     *
+     * This one only handles shift+right-click to change lock mode
+     */
 
-        BlockPos tileEntityPos = blockPos;
-        if (state.get(HALF) == DoubleBlockHalf.UPPER) {
-            tileEntityPos = blockPos.offset(Direction.DOWN);
-        }
-
-        KeyLockableTileEntity lockableDoorTileEntity = (KeyLockableTileEntity) worldIn.getTileEntity(tileEntityPos);
-        if (lockableDoorTileEntity == null) {
-            ImmersiveMp.LOG.warn("Unable to find Locking Door TileEntity at pos " + tileEntityPos);
+    @Override
+    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (worldIn.isRemote) {
             return ActionResultType.CONSUME;
         }
 
-        if (lockableDoorTileEntity.onActivated(playerEntity, worldIn, playerEntity.isCrouching())) {
-            return ActionResultType.SUCCESS;
+        if (!player.isCrouching()) {
+            ImmersiveMp.LOG.warn("Action should be dispatched by onPlayerInteract handler");
+            return ActionResultType.CONSUME;
         }
 
+        KeyLockableTileEntity doorTileEntity = getDoorTileEntity(worldIn, pos);
+
+        if (doorTileEntity == null) {
+            return ActionResultType.FAIL;
+        }
+
+        boolean isOpen = state.get(DoorBlock.OPEN);
+
+        // Close before locking
+        if (isOpen) {
+            doorTileEntity.openDoor(false);
+        }
+
+        if (doorTileEntity.canUnlock(player)) {
+            doorTileEntity.toggleLock();
+            ImmersiveMp.LOG.info("Toggling lock");
+        }
+
+
         return ActionResultType.CONSUME;
+    }
+
+    /**
+     * @param world
+     * @param pos
+     * @return
+     */
+    public static KeyLockableTileEntity getDoorTileEntity(World world, BlockPos pos) {
+        BlockPos tileEntityPos = pos;
+        BlockState state = world.getBlockState(pos);
+
+        if (state.get(DoorBlock.HALF) == DoubleBlockHalf.UPPER) {
+            tileEntityPos = tileEntityPos.down();
+        }
+
+        TileEntity doorTileEntity = world.getTileEntity(tileEntityPos);
+
+        if (!(doorTileEntity instanceof KeyLockableTileEntity)) {
+            return null;
+        }
+
+        return (KeyLockableTileEntity) doorTileEntity;
     }
 
     @Override
@@ -66,12 +104,6 @@ public class LockableDoorBlock extends DoorBlock {
         }
 
         return false;
-    }
-
-    @Override
-    public void openDoor(World worldIn, BlockState state, BlockPos pos, boolean open) {
-        ImmersiveMp.LOG.warn("Lockable door can be opened only through KeyLockableTileEntity");
-        return;
     }
 
     @Override

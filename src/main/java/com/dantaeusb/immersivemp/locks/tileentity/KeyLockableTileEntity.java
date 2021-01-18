@@ -8,14 +8,19 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.DoorBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.state.properties.DoorHingeSide;
+import net.minecraft.state.properties.DoubleBlockHalf;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 import java.util.UUID;
 
@@ -42,7 +47,7 @@ public class KeyLockableTileEntity extends TileEntity implements ITickableTileEn
         this.markDirty();
     }
 
-    public boolean getLocked() {
+    public boolean isLocked() {
         return this.locked;
     }
 
@@ -57,7 +62,6 @@ public class KeyLockableTileEntity extends TileEntity implements ITickableTileEn
         if (quickOpenTimeout >= 0) {
             if (quickOpenTimeout == 0) {
                 this.openDoor(false);
-                this.playOpenSound(false);
             }
 
             quickOpenTimeout--;
@@ -98,54 +102,67 @@ public class KeyLockableTileEntity extends TileEntity implements ITickableTileEn
         return parentNBTTagCompound;
     }
 
-    public boolean onActivated(PlayerEntity playerEntity, World worldIn, boolean isCrouching) {
-        if (worldIn.isRemote()) {
-            return false;
-        } else {
-            if (!canOpen(playerEntity, worldIn)) {
-                return false;
-            }
+    public void activateLockTimeout() {
+        this.quickOpenTimeout = Helper.DOOR_QUICK_ACTION_TIMEOUT;
+    }
 
-            if (!isCrouching) {
-                // Process open/close action
-                if (this.locked) {
-                    ImmersiveMp.LOG.debug("Quick open locked");
+    /**
+     * Toggle state by default
+     */
+    public void openDoor() {
+        BlockState doorBlockState = this.getBlockState();
 
-                    this.quickOpenTimeout = Helper.DOOR_QUICK_ACTION_TIMEOUT;
-                    this.openDoor(true);
-                    this.playOpenSound(true);
-                } else {
-                    ImmersiveMp.LOG.debug("Quick open unlocked");
-                    this.toggleDoorBlock();
-                }
-            } else {
-                // Process lock/unlock action
+        this.openDoor(!doorBlockState.get(DoorBlock.OPEN));
+    }
 
-                if (this.getBlockState().get(DoorBlock.OPEN)) {
-                    this.openDoor(false);
-                    this.playOpenSound(false);
-                }
+    /**
+     * Change block state
+     * @param open
+     */
+    public void openDoor(boolean open) {
 
-                ImmersiveMp.LOG.info("Toggling lock state");
-                this.toggleLock();
-            }
+        BlockState doorBlockState = this.getBlockState();
+
+        this.playOpenSound(open);
+        this.setOpenProperty(doorBlockState, open);
+
+        if (ImmersiveMp.quarkEnabled) {
+            this.openDoubleDoor(open);
         }
 
-        return true;
+        if (open) {
+            if (this.isLocked()) {
+                this.activateLockTimeout();
+            }
+        } else {
+            if (this.isLocked()) {
+                this.quickOpenTimeout = -1;
+            }
+        }
     }
 
-    private void toggleDoorBlock() {
-        BlockState doorBlockState = this.getBlockState();
-        boolean newOpenState = !doorBlockState.get(DoorBlock.OPEN).booleanValue();
+    /**
+     * Imitate Quark double door behavior
+     * If Quark is enabled, only close door for quick actions
+     */
+    private void openDoubleDoor(boolean open) {
+        ImmersiveMp.LOG.debug("Quark enabled, trying to toggle next door");
 
-        this.setOpenProperty(doorBlockState, newOpenState);
-        this.playOpenSound(newOpenState);
-    }
+        BlockState currentDoorState = this.getBlockState();
+        Direction direction = currentDoorState.get(DoorBlock.FACING);
+        boolean isOpen = currentDoorState.get(DoorBlock.OPEN);
+        DoorHingeSide isMirrored = currentDoorState.get(DoorBlock.HINGE);
 
-    private void openDoor(boolean open) {
-        BlockState doorBlockState = this.getBlockState();
+        BlockPos mirrorPos = pos.offset(isMirrored == DoorHingeSide.RIGHT ? direction.rotateYCCW() : direction.rotateY());
+        BlockPos doorPos = currentDoorState.get(DoorBlock.HALF) == DoubleBlockHalf.LOWER ? mirrorPos : mirrorPos.down();
+        BlockState secondDoorState = this.getWorld().getBlockState(doorPos);
 
-        this.setOpenProperty(doorBlockState, open);
+        // @todo: add second door check
+
+        if(secondDoorState.getBlock() == currentDoorState.getBlock() && secondDoorState.get(DoorBlock.FACING) == direction && secondDoorState.get(DoorBlock.OPEN) != isOpen && secondDoorState.get(DoorBlock.HINGE) != isMirrored) {
+            BlockState newState = secondDoorState.with(DoorBlock.OPEN, open);
+            this.getWorld().setBlockState(doorPos, newState);
+        }
     }
 
     private void setOpenProperty(BlockState state, boolean open) {
@@ -154,7 +171,7 @@ public class KeyLockableTileEntity extends TileEntity implements ITickableTileEn
     }
 
     public boolean canOpen(PlayerEntity playerEntity, World worldIn) {
-        ImmersiveMp.LOG.info("Check can open door");
+        ImmersiveMp.LOG.debug("Check can open door");
 
         if (worldIn.isRemote()) {
             return false;
@@ -164,7 +181,7 @@ public class KeyLockableTileEntity extends TileEntity implements ITickableTileEn
             return false;
         }
 
-        if (!this.getLocked()) {
+        if (!this.isLocked()) {
             return true;
         }
 
@@ -172,7 +189,7 @@ public class KeyLockableTileEntity extends TileEntity implements ITickableTileEn
     }
 
     public boolean canUnlock(PlayerEntity playerEntity) {
-        ImmersiveMp.LOG.info("Check can unlock door");
+        ImmersiveMp.LOG.debug("Check can unlock door");
 
         if (playerEntity.isSpectator()) {
             return false;

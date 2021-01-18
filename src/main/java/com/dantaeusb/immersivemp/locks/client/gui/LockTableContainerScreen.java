@@ -105,7 +105,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         // Draw input
 
         this.blit(matrixStack, edgeSpacingX, edgeSpacingY, 0, 0, this.xSize, this.ySize);
-        this.blit(matrixStack, edgeSpacingX + 50, edgeSpacingY + 20, 0, this.ySize + (this.getContainer().allowedToNameItem() ? 0 : 16), 101, 16);
+        this.blit(matrixStack, edgeSpacingX + 50, edgeSpacingY + 20, 0, this.ySize + (this.allowedToNameItem() ? 0 : 16), 101, 16);
 
         // Draw button
 
@@ -166,7 +166,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         this.keyMode = !this.keyMode;
 
         this.updateNameField();
-        this.nameField.setEnabled(this.getContainer().allowedToNameItem());
+        this.nameField.setEnabled(this.allowedToNameItem());
 
         CLockTableModePacket modePacket = new CLockTableModePacket((this.container).windowId, this.keyMode);
         ModLockNetwork.simpleChannel.sendToServer(modePacket);
@@ -194,11 +194,23 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
     }
 
     private void updateNameField() {
-        this.nameField.setEnabled(this.getContainer().allowedToNameItem());
+        this.nameField.setEnabled(this.allowedToNameItem());
 
         if (!this.nameField.canWrite()) {
             this.nameField.setText("");
         }
+    }
+
+    /**
+     * Copy of container method, needed cause conainer for client is just a dummy instance
+     * @see LockTableContainer#allowedToNameItem()
+     * @return
+     */
+    public boolean allowedToNameItem() {
+        boolean haveMaterial = this.getContainer().getSlot(0).getHasStack();
+        boolean haveTemplate = this.getContainer().getSlot(1).getHasStack();
+
+        return this.keyMode && haveMaterial && !haveTemplate;
     }
 
     // Listener interface - to track name field availability

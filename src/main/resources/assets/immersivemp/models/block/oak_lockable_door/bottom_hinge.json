@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:block/door_bottom_rh",
   "textures": {
-    "top": "minecraft:block/oak_door_top",
-    "bottom": "minecraft:block/oak_door_bottom"
+    "top": "immersivemp:locks/block/oak_door_top",
+    "bottom": "immersivemp:locks/block/oak_door_bottom"
   }
 }

@@ -3,6 +3,7 @@ package com.dantaeusb.immersivemp.locks.core;
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.network.ClientHandler;
 import com.dantaeusb.immersivemp.locks.network.ServerHandler;
+import com.dantaeusb.immersivemp.locks.network.packet.CLockDoorOpen;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockTableModePacket;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockTableRenameItemPacket;
 import net.minecraft.util.ResourceLocation;
@@ -47,6 +48,11 @@ public class ModLockNetwork {
         simpleChannel.registerMessage(LOCK_TABLE_MODE_MESSAGE_ID, CLockTableModePacket.class,
                 CLockTableModePacket::writePacketData, CLockTableModePacket::readPacketData,
                 ServerHandler::handleLockTableMode,
+                Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(LOCKING_DOOR, CLockDoorOpen.class,
+                CLockDoorOpen::writePacketData, CLockDoorOpen::readPacketData,
+                ServerHandler::handleDoorOpen,
                 Optional.of(PLAY_TO_SERVER));
     }
 }
