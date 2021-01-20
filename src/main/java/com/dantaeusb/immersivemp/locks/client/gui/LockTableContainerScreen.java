@@ -55,10 +55,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
     protected void initFields() {
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
-        int edgeSpacingX = (this.width - this.xSize) / 2;
-        int edgeSpacingY = (this.height - this.ySize) / 2;
-
-        this.nameField = new TextFieldWidget(this.font, edgeSpacingX + 53, edgeSpacingY + 24, 94, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
+        this.nameField = new TextFieldWidget(this.font, this.guiLeft + 53, this.guiTop + 24, 94, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
         this.nameField.setCanLoseFocus(false);
         this.nameField.setTextColor(-1);
         this.nameField.setDisabledTextColour(-1);
@@ -94,18 +91,10 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.minecraft.getTextureManager().bindTexture(LOCK_TABLE_RESOURCE);
 
-        // width and height are the size provided to the window when initialised after creation.
-        // xSize, ySize are the expected size of the texture-? usually seems to be left as a default.
-        // The code below is typical for vanilla containers, so I've just copied that- it appears to centre the texture within
-        //  the available window
-        // draw the background for this window
-        int edgeSpacingX = (this.width - this.xSize) / 2;
-        int edgeSpacingY = (this.height - this.ySize) / 2;
-
         // Draw input
 
-        this.blit(matrixStack, edgeSpacingX, edgeSpacingY, 0, 0, this.xSize, this.ySize);
-        this.blit(matrixStack, edgeSpacingX + 50, edgeSpacingY + 20, 0, this.ySize + (this.allowedToNameItem() ? 0 : 16), 101, 16);
+        this.blit(matrixStack, this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
+        this.blit(matrixStack, this.guiLeft + 50, this.guiTop + 20, 0, this.ySize + (this.allowedToNameItem() ? 0 : 16), 101, 16);
 
         // Draw button
 
@@ -117,11 +106,11 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
             buttonUOffset += 21;
         }
 
-        if (isInRect(edgeSpacingX + 26, edgeSpacingY + 18, 20, 20, x, y)) {
+        if (isInRect(this.guiLeft + 26, this.guiTop + 18, 20, 20, x, y)) {
             buttonVOffset += 21;
         }
 
-        this.blit(matrixStack, edgeSpacingX + 26, edgeSpacingY + 18, buttonUOffset, buttonVOffset, 20, 20);
+        this.blit(matrixStack, this.guiLeft + 26, this.guiTop + 18, buttonUOffset, buttonVOffset, 20, 20);
     }
 
     /**
@@ -151,10 +140,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int edgeSpacingX = (this.width - this.xSize) / 2;
-        int edgeSpacingY = (this.height - this.ySize) / 2;
-
-        if (isInRect(edgeSpacingX + 26, edgeSpacingY + 18, 20, 20, (int)mouseX, (int)mouseY)) {
+        if (isInRect(this.guiLeft + 26, this.guiTop + 18, 20, 20, (int)mouseX, (int)mouseY)) {
             this.toggleMode();
             return true;
         }

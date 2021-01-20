@@ -4,8 +4,8 @@
 
 ### Locks
 
-* \[HIGH\] Fix name field state for Client Locksmith Table GUI;
-* \[HIGH\] Fix vunerability when door with another lock can open next door with Quark Double Doors feature enabled;
+* \[HIGH\] Remove craft of the lock without key;
+* \[HIGH\] Fix client/server state issues with multiple ingots;
 * \[MED\] Force close door on quick action;
 * \[LOW\] Fix delay in blockstate (probably change open state manually);
 
