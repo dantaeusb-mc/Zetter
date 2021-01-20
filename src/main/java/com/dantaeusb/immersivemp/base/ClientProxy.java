@@ -1,6 +1,7 @@
 package com.dantaeusb.immersivemp.base;
 
 import com.dantaeusb.immersivemp.locks.client.gui.LockTableContainerScreen;
+import com.dantaeusb.immersivemp.locks.client.gui.PaintingScreen;
 import com.dantaeusb.immersivemp.locks.core.ModLockContainers;
 import net.minecraft.client.gui.ScreenManager;
 import net.minecraftforge.api.distmarker.Dist;
@@ -24,6 +25,6 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void clientSetup(FMLClientSetupEvent event) {
-        ScreenManager.registerFactory(ModLockContainers.LOCK_TABLE, LockTableContainerScreen::new);
+        ScreenManager.registerFactory(ModLockContainers.LOCK_TABLE, PaintingScreen::new);
     }
 }

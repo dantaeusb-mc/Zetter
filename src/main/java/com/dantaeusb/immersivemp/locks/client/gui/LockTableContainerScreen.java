@@ -47,6 +47,7 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         this.playerInventoryTitleY = this.ySize - 110;
     }
 
+    @Override
     protected void init() {
         super.init();
         this.initFields();
@@ -91,9 +92,10 @@ public class LockTableContainerScreen extends ContainerScreen<LockTableContainer
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         this.minecraft.getTextureManager().bindTexture(LOCK_TABLE_RESOURCE);
 
+        this.blit(matrixStack, this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
+
         // Draw input
 
-        this.blit(matrixStack, this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
         this.blit(matrixStack, this.guiLeft + 50, this.guiTop + 20, 0, this.ySize + (this.allowedToNameItem() ? 0 : 16), 101, 16);
 
         // Draw button
