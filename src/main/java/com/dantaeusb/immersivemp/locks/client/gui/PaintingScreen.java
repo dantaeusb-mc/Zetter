@@ -31,6 +31,7 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
 
     private Integer sliderDraggingIndex;
     private boolean canvasDragging = false;
+    private float sinceLastTick = .0f;
 
     public PaintingScreen(PaintingContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
         super(paintingContainer, playerInventory, title);
@@ -49,9 +50,15 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
 
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        ImmersiveMp.LOG.info(partialTicks);
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
+
+        this.sinceLastTick += partialTicks;
+
+        if (this.sinceLastTick > 1) {
+            this.getContainer().tick();
+            this.sinceLastTick = 0;
+        }
     }
 
     public void tick() {

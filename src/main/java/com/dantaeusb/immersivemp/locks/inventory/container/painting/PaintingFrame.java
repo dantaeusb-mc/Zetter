@@ -30,4 +30,9 @@ public class PaintingFrame {
     public int getColor() {
         return color;
     }
+
+    @Override
+    public String toString(){
+        return String.format("Pixel: %d with color %X changed by %s", this.pixelIndex, this.color, this.ownerId.toString());
+    }
 }

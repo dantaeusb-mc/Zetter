@@ -1,6 +1,7 @@
 ### Common
 
 * A special interface for economy and personal items (locks and money GUI overlay)
+* Avoid proxies and OnlyIn
 
 ### Locks
 

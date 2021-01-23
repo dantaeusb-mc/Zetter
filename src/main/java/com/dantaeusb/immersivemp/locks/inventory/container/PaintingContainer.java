@@ -127,7 +127,6 @@ public class PaintingContainer extends Container {
      * @param pixelY
      * @param color
      */
-    @OnlyIn(Dist.CLIENT)
     public void writePixelOnCanvasClient(int pixelX, int pixelY, int color, UUID playerId) {
         int index = this.getPixelIndex(pixelX, pixelY);
         if (this.writePixelOnCanvas(index, color)) {
@@ -191,8 +190,10 @@ public class PaintingContainer extends Container {
 
             if (frameBuffer.shouldBeSent(this.world.getGameTime())) {
                 if (this.world.isRemote()) {
+                    frameBuffer.getFrames(playerId);
                     PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(frameBuffer);
                     ImmersiveMp.LOG.info("Sending Painting Frame Buffer: " + modePacket);
+                    ImmersiveMp.LOG.info(frameBuffer.getFrameStartTime());
                     ModLockNetwork.simpleChannel.sendToServer(modePacket);
                 } else {
                     //PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(frameBuffer);

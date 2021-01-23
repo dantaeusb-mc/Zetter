@@ -27,19 +27,19 @@ public class PaintingFrameBufferPacket {
 
     /**
      * Reads the raw packet data from the data stream.
+     * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
     public static PaintingFrameBufferPacket readPacketData(PacketBuffer buf) {
         PaintingFrameBufferPacket packet = new PaintingFrameBufferPacket();
 
-        try {
-            long frameStartTime = buf.readLong();
-            ByteBuf bufferData = buf.readBytes(PaintingFrameBuffer.BUFFER_SIZE);
+        long frameStartTime = buf.readLong();
 
-            packet.paintingFrameBuffer = new PaintingFrameBuffer(frameStartTime, bufferData.nioBuffer());
-        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-            ImmersiveMp.LOG.warn("Exception while reading CPaintingUpdatePacket: " + e);
-            return packet;
-        }
+        ImmersiveMp.LOG.warn(frameStartTime);
+        ImmersiveMp.LOG.warn(String.format("%d %d %d", buf.capacity(), buf.writerIndex(), buf.readerIndex()));
+        ByteBuf bufferData = buf.readBytes(buf.writerIndex() - buf.readerIndex());
+
+        ImmersiveMp.LOG.warn(bufferData);
+        packet.paintingFrameBuffer = new PaintingFrameBuffer(frameStartTime, bufferData.nioBuffer());
 
         return packet;
     }
@@ -49,6 +49,7 @@ public class PaintingFrameBufferPacket {
      */
     public void writePacketData(PacketBuffer buf) {
         buf.writeLong(this.paintingFrameBuffer.getFrameStartTime());
+        // For some reason, without it writeBytes just copies the rest of empty buffer
         buf.writeBytes(this.paintingFrameBuffer.getBufferData());
     }
 

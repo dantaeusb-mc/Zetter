@@ -7,6 +7,9 @@ import net.minecraft.world.World;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+/**
+ * @todo: merge with PaintingFrameBufferPacket as we can create packet and send it later
+ */
 public class PaintingFrameBuffer {
     // this will allow to use byte time offset in data frame
 
@@ -43,7 +46,7 @@ public class PaintingFrameBuffer {
     }
 
     public boolean shouldBeSent(long currentTime) {
-        return currentTime >= this.frameStartTime + FRAME_TIME_LIMIT || this.buffer.position() == MAX_FRAMES;
+        return currentTime >= this.frameStartTime + FRAME_TIME_LIMIT || this.buffer.position() == FRAME_SIZE * MAX_FRAMES;
     }
 
     public void writeChange(long frameTime, int position, int color) {
@@ -62,7 +65,8 @@ public class PaintingFrameBuffer {
     }
 
     public ByteBuffer getBufferData() {
-        return this.buffer;
+        this.buffer.flip();
+        return this.buffer.asReadOnlyBuffer();
     }
 
     public Vector<PaintingFrame> getFrames(UUID ownerId) {
@@ -70,25 +74,24 @@ public class PaintingFrameBuffer {
         int lastPosition = this.buffer.position();
         this.buffer.rewind();
 
-        ImmersiveMp.LOG.warn(this.buffer);
-
         while (this.buffer.hasRemaining()) {
             byte flag = buffer.get();
-
-            if (flag == 0) {
-                break;
-            }
-
             short timeOffset = buffer.getShort();
             short position = buffer.getShort();
             int color = buffer.getInt();
 
-            long frameTime = this.frameStartTime + timeOffset;
+            if (flag != 0x1) {
+                break;
+            }
 
-            list.add(new PaintingFrame(frameTime, position, color, ownerId));
+            long frameTime = this.frameStartTime + timeOffset;
+            PaintingFrame frame = new PaintingFrame(frameTime, position, color, ownerId);
+            list.add(frame);
         }
 
         this.buffer.position(lastPosition);
+
+        ImmersiveMp.LOG.warn(list);
 
         return list;
     }
