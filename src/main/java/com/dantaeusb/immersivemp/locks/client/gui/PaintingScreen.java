@@ -1,30 +1,27 @@
 package com.dantaeusb.immersivemp.locks.client.gui;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.inventory.container.LockTableContainer;
+import com.dantaeusb.immersivemp.locks.inventory.container.PaintingContainer;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import javax.annotation.Nullable;
 import java.awt.*;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.function.BiFunction;
 
-public class PaintingScreen extends ContainerScreen<LockTableContainer> {
-    private final ByteBuffer canvas = ByteBuffer.allocateDirect(16 * 16 * 4);
-    private final ByteBuffer palette = ByteBuffer.allocateDirect(14 * 4);
+public class PaintingScreen extends ContainerScreen<PaintingContainer> {
 
     protected final ITextComponent title = new TranslationTextComponent("container.immersivemp.lock_table");
 
     // This is the resource location for the background image
     private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("immersivemp", "textures/paintings/gui/painting.png");
-
-    private static final int PALETTE_SLOTS = 14;
 
     private int currentPaletteSlot = 0;
 
@@ -32,44 +29,27 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
     private float sliderSaturationPercent = 0.0f;
     private float sliderValuePercent = 0.0f;
 
-    public PaintingScreen(LockTableContainer lockTableContainer, PlayerInventory playerInventory, ITextComponent title) {
-        super(lockTableContainer, playerInventory, title);
+    private Integer sliderDraggingIndex;
+    private boolean canvasDragging = false;
+
+    public PaintingScreen(PaintingContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
+        super(paintingContainer, playerInventory, title);
 
         this.xSize = 176;
         this.ySize = 166;
 
-        canvas.order(ByteOrder.BIG_ENDIAN);
+        this.container.getCanvas().order(ByteOrder.BIG_ENDIAN);
     }
 
     @Override
     protected void init() {
         super.init();
-        this.tempPropagateData();
-    }
-
-    protected void tempPropagateData() {
-        this.setColor(this.palette, 0, 0xFFAA0000); //dark-red
-        this.setColor(this.palette, 1, 0xFFFF5555); //red
-        this.setColor(this.palette, 2, 0xFFFFAA00); //gold
-        this.setColor(this.palette, 3, 0xFFFFFF55); //yellow
-        this.setColor(this.palette, 4, 0xFF00AA00); //dark-green
-        this.setColor(this.palette, 5, 0xFF55FF55); //green
-        this.setColor(this.palette, 6, 0xFF55FFFF); //aqua
-        this.setColor(this.palette, 7, 0xFF00AAAA); //dark-aqua
-        this.setColor(this.palette, 8, 0xFF0000AA); //dark-blue
-        this.setColor(this.palette, 9, 0xFF5555FF); //blue
-        this.setColor(this.palette, 10, 0xFFFF55FF); //light-purple
-        this.setColor(this.palette, 11, 0xFFAA00AA); //purple
-        this.setColor(this.palette, 12, 0xFFAAAAAA); //gray
-        this.setColor(this.palette, 13, 0xFF555555); //dark-gray
-
-        for (int i = 0; i < 16 * 16; i++) {
-            canvas.putInt(i * 4, 0xFF000000);
-        }
+        this.updateSlidersWithCurrentColor();
     }
 
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        ImmersiveMp.LOG.info(partialTicks);
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
     }
@@ -83,11 +63,36 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
         int iMouseX = (int) mouseX;
         int iMouseY = (int) mouseY;
 
-        this.handleCanvasClick(iMouseX, iMouseY);
+        this.handleCanvasInteraction(iMouseX, iMouseY);
         this.handlePaletteClick(iMouseX, iMouseY);
-        this.handleSliderClick(iMouseX, iMouseY);
+        this.handleSliderInteraction(iMouseX, iMouseY);
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (this.sliderDraggingIndex != null) {
+            int iMouseX = (int) mouseX;
+            int iMouseY = (int) mouseY;
+
+            this.handleSliderInteraction(iMouseX, iMouseY, this.sliderDraggingIndex);
+        }
+
+        if (this.canvasDragging) {
+            int iMouseX = (int) mouseX;
+            int iMouseY = (int) mouseY;
+
+            this.handleCanvasInteraction(iMouseX, iMouseY);
+        }
+
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        this.sliderDraggingIndex = null;
+        this.canvasDragging = false;
+
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override
@@ -113,11 +118,7 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
      */
     @Override
     protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
-        // draw selected palette color
 
-        // drawPaletteSelector(matrixStack);
-
-        // draw HSV sliders
     }
 
     /**
@@ -135,7 +136,7 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
             int localX = i % 16;
             int localY = i / 16;
 
-            int color = this.getColor(this.canvas, i);
+            int color = this.container.getColor(this.container.getCanvas(), i);
             int globalX = canvasGlobalLeft + localX * CANVAS_SCALE_FACTOR;
             int globalY = canvasGlobalTop + localY * CANVAS_SCALE_FACTOR;
 
@@ -148,7 +149,7 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
      * @param mouseX
      * @param mouseY
      */
-    protected void handleCanvasClick(final int mouseX, final int mouseY) {
+    protected void handleCanvasInteraction(final int mouseX, final int mouseY) {
         int canvasGlobalLeft = this.guiLeft + CANVAS_POSITION_X;
         int canvasGlobalTop = this.guiTop + CANVAS_POSITION_Y;
 
@@ -156,18 +157,12 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
             return;
         }
 
-        ImmersiveMp.LOG.info("Canvas click!");
+        this.canvasDragging = true;
 
         int localX = mouseX - canvasGlobalLeft;
         int localY = mouseY - canvasGlobalTop;
 
-        this.adjustCanvasPixel(localX / CANVAS_SCALE_FACTOR, localY / CANVAS_SCALE_FACTOR, this.getCurrentColor());
-    }
-
-    protected void adjustCanvasPixel(int pixelX, int pixelY, int color) {
-        int index = pixelY * 16 + pixelX;
-
-        this.canvas.putInt(index * 4, color);
+        this.getContainer().writePixelOnCanvasClient(localX / CANVAS_SCALE_FACTOR, localY / CANVAS_SCALE_FACTOR, this.getCurrentColor(), this.playerInventory.player.getUniqueID());
     }
 
     /**
@@ -183,11 +178,11 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
         int paletteGlobalLeft = this.guiLeft + PALETTE_POSITION_X;
         int paletteGlobalTop = this.guiTop + PALETTE_POSITION_Y;
 
-        for (int i = 0; i < PALETTE_SLOTS; i++) {
+        for (int i = 0; i < PaintingContainer.PALETTE_SLOTS; i++) {
             int fromX = paletteGlobalLeft + (i % 2) * PALETTE_OFFSET;
             int fromY = paletteGlobalTop + (i / 2) * PALETTE_OFFSET;
 
-            int color = this.getColor(this.palette, i);
+            int color = this.container.getColor(this.container.getPalette(), i);
 
             this.fillGradient(matrixStack, fromX, fromY, fromX + PALETTE_SCALE_FACTOR, fromY + PALETTE_SCALE_FACTOR, color, color);
         }
@@ -221,7 +216,7 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
 
         ImmersiveMp.LOG.info("Palette click!");
 
-        for (int i = 0; i < PALETTE_SLOTS; i++) {
+        for (int i = 0; i < PaintingContainer.PALETTE_SLOTS; i++) {
             int slotX = paletteGlobalLeft + (i % 2) * PALETTE_OFFSET;
             int slotY = paletteGlobalTop + (i / 2) * PALETTE_OFFSET;
 
@@ -247,7 +242,7 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
     }
 
     protected int getCurrentColor() {
-        return this.palette.getInt(currentPaletteSlot * 4);
+        return this.container.getPalette().getInt(currentPaletteSlot * 4);
     }
 
     /**
@@ -263,13 +258,13 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
     final int SLIDER_DISTANCE = 5; // distance between sliders
 
     protected void drawSliders(MatrixStack matrixStack) {
-        drawSliderBackground(matrixStack, 0, false);
-        drawSliderBackground(matrixStack, 1, true);
-        drawSliderBackground(matrixStack, 2, false);
+        drawSliderBackground(matrixStack, 0, this.isDraggingSlider(0));
+        drawSliderBackground(matrixStack, 1, this.isDraggingSlider(1));
+        drawSliderBackground(matrixStack, 2, this.isDraggingSlider(2));
 
-        drawSliderForeground(matrixStack, 0, PaintingScreen::getHue, false);
-        drawSliderForeground(matrixStack, 1, PaintingScreen::getSaturation, true);
-        drawSliderForeground(matrixStack, 2, PaintingScreen::getValue, false);
+        drawSliderForeground(matrixStack, 0, PaintingScreen::getHue, this.isDraggingSlider(0));
+        drawSliderForeground(matrixStack, 1, PaintingScreen::getSaturation, this.isDraggingSlider(1));
+        drawSliderForeground(matrixStack, 2, PaintingScreen::getValue, this.isDraggingSlider(2));
     }
 
     protected void drawSliderBackground(MatrixStack matrixStack, int verticalOffset, boolean active) {
@@ -326,57 +321,76 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
         Color currentColor = new Color(this.getCurrentColor());
         float[] currentColorHSB = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
 
-        this.sliderHuePercent = 1.0f - currentColorHSB[0];
+        this.sliderHuePercent = currentColorHSB[0];
         this.sliderSaturationPercent = 1.0f - currentColorHSB[1];
         this.sliderValuePercent = 1.0f - currentColorHSB[2];
     }
 
-    protected void handleSliderClick(final int mouseX, final int mouseY) {
-        // Quick check
-        if (!isInRect(this.guiLeft + SLIDER_POSITION_X, this.guiTop + SLIDER_OFFSET_Y, SLIDER_WIDTH, SLIDER_HEIGHT + (SLIDER_DISTANCE + SLIDER_WIDTH) * 2, mouseX, mouseY)) {
-            return;
-        }
+    protected void handleSliderInteraction(final int mouseX, final int mouseY) {
+        this.handleSliderInteraction(mouseX, mouseY, null);
+    }
 
-        ImmersiveMp.LOG.info("Slider click!");
+    protected boolean isDraggingSlider(int index) {
+        return this.sliderDraggingIndex != null && this.sliderDraggingIndex == index;
+    }
 
-        int sliderIndex = -1;
+    /**
+     *
+     * @param mouseX
+     * @param mouseY
+     * @param sliderIndex do not lookup if not null, just update slider based on mouse position - should be provided when dragging
+     */
+    protected void handleSliderInteraction(final int mouseX, final int mouseY, @Nullable Integer sliderIndex) {
+        if (sliderIndex == null) {
+            // Quick check
+            if (!isInRect(this.guiLeft + SLIDER_POSITION_X, this.guiTop + SLIDER_OFFSET_Y, SLIDER_WIDTH, SLIDER_HEIGHT + (SLIDER_DISTANCE + SLIDER_WIDTH) * 2, mouseX, mouseY)) {
+                return;
+            }
 
-        for (int i = 0; i < 3; i++) {
-            int sliderGlobalLeft = this.guiLeft + SLIDER_POSITION_X;
-            int sliderGlobalTop = this.guiTop + SLIDER_OFFSET_Y + (i * (SLIDER_HEIGHT + SLIDER_DISTANCE));
+            ImmersiveMp.LOG.info("Slider click!");
 
-            if (isInRect(sliderGlobalLeft, sliderGlobalTop, SLIDER_WIDTH, SLIDER_HEIGHT, mouseX, mouseY)) {
-                sliderIndex = i;
-                break;
+            for (int i = 0; i < 3; i++) {
+                int sliderGlobalLeft = this.guiLeft + SLIDER_POSITION_X;
+                int sliderGlobalTop = this.guiTop + SLIDER_OFFSET_Y + (i * (SLIDER_HEIGHT + SLIDER_DISTANCE));
+
+                if (isInRect(sliderGlobalLeft, sliderGlobalTop, SLIDER_WIDTH, SLIDER_HEIGHT, mouseX, mouseY)) {
+                    sliderIndex = i;
+                    break;
+                }
+            }
+
+            // Should only happen if clicked on border
+            if (sliderIndex == null) {
+                ImmersiveMp.LOG.warn("Cannot find slider!");
+                return;
             }
         }
 
-        // Should only happen if clicked on border
-        if (sliderIndex == -1) {
-            ImmersiveMp.LOG.warn("Cannot find slider!");
-            return;
-        }
+        this.sliderDraggingIndex = sliderIndex;
 
-        float percent = (float) (mouseX - SLIDER_POSITION_X - 3) / (SLIDER_WIDTH - 6);
+        float percent = (float) (mouseX - this.guiLeft - SLIDER_POSITION_X - 3) / (SLIDER_WIDTH - 6);
+        float percentC = MathHelper.clamp(percent, 0.0f, 1.0f);
 
-        this.updateSliderPosition(sliderIndex, percent);
+        this.updateSliderPosition(sliderIndex, percentC);
     }
 
     protected void updateSliderPosition(int sliderIndex, float percent) {
         Color currentColor = new Color(this.getCurrentColor());
         float[] currentColorHSB = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
 
+        // @todo: ugly, refactor
         if (sliderIndex == 0) {
             int newColor = Color.HSBtoRGB(percent, currentColorHSB[1], currentColorHSB[2]);
-            this.setColor(this.palette, this.currentPaletteSlot, newColor);
+            this.container.setColor(this.container.getPalette(), this.currentPaletteSlot, newColor);
             this.sliderHuePercent = percent;
         } else if (sliderIndex == 1) {
-            int newColor = Color.HSBtoRGB(currentColorHSB[0], percent, currentColorHSB[2]);
-            this.setColor(this.palette, this.currentPaletteSlot, newColor);
+            // We use this.sliderHuePercent cause we can lose hue data on greyscale colors
+            int newColor = Color.HSBtoRGB(this.sliderHuePercent, 1.0f - percent, currentColorHSB[2]);
+            this.container.setColor(this.container.getPalette(), this.currentPaletteSlot, newColor);
             this.sliderSaturationPercent = percent;
-        } else if (sliderIndex == 2) {
-            int newColor = Color.HSBtoRGB(currentColorHSB[0], currentColorHSB[1], percent);
-            this.setColor(this.palette, this.currentPaletteSlot, newColor);
+        } else {
+            int newColor = Color.HSBtoRGB(this.sliderHuePercent, currentColorHSB[1], 1.0f - percent);
+            this.container.setColor(this.container.getPalette(), this.currentPaletteSlot, newColor);
             this.sliderValuePercent = percent;
         }
     }
@@ -386,9 +400,9 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
      */
 
     protected void drawHandlers(MatrixStack matrixStack) {
-        drawHandler(matrixStack, 0, this.sliderHuePercent, false);
-        drawHandler(matrixStack, 1, this.sliderSaturationPercent, true);
-        drawHandler(matrixStack, 2, this.sliderValuePercent, false);
+        drawHandler(matrixStack, 0, this.sliderHuePercent, this.isDraggingSlider(0));
+        drawHandler(matrixStack, 1, this.sliderSaturationPercent, this.isDraggingSlider(1));
+        drawHandler(matrixStack, 2, this.sliderValuePercent, this.isDraggingSlider(2));
     }
 
     protected void drawHandler(MatrixStack matrixStack, int verticalOffset, float percent, boolean active) {
@@ -414,20 +428,6 @@ public class PaintingScreen extends ContainerScreen<LockTableContainer> {
     /**
      * Helpers
      */
-
-    /**
-     * @todo remove transparency, add to bytebuffer.
-     * @param byteBuffer
-     * @param offset
-     * @return
-     */
-    protected int getColor(ByteBuffer byteBuffer, int offset) {
-        return byteBuffer.getInt(offset * 4);
-    }
-
-    protected void setColor(ByteBuffer byteBuffer, int offset, int color) {
-        byteBuffer.putInt(offset * 4, color);
-    }
 
     // Returns true if the given x,y coordinates are within the given rectangle
     public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY){

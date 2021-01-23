@@ -25,6 +25,7 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void clientSetup(FMLClientSetupEvent event) {
-        ScreenManager.registerFactory(ModLockContainers.LOCK_TABLE, PaintingScreen::new);
+        ScreenManager.registerFactory(ModLockContainers.LOCK_TABLE, LockTableContainerScreen::new);
+        ScreenManager.registerFactory(ModLockContainers.PAINTING, PaintingScreen::new);
     }
 }

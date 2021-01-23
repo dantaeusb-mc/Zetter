@@ -1,6 +1,7 @@
 package com.dantaeusb.immersivemp.locks.block;
 
 import com.dantaeusb.immersivemp.locks.inventory.container.LockTableContainer;
+import com.dantaeusb.immersivemp.locks.inventory.container.PaintingContainer;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
@@ -38,9 +39,10 @@ public class LockTableBlock extends Block {
         }
     }
 
+    // @todo: cahnge that, it's temp!
     @Nullable
     public INamedContainerProvider getContainer(BlockState state, World worldIn, BlockPos pos) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> new LockTableContainer(id, inventory, IWorldPosCallable.of(worldIn, pos)), containerName);
+        return new SimpleNamedContainerProvider((id, inventory, player) -> new PaintingContainer(id, inventory, IWorldPosCallable.of(worldIn, pos)), containerName);
     }
 
     public BlockState getStateForPlacement(BlockItemUseContext context) {
