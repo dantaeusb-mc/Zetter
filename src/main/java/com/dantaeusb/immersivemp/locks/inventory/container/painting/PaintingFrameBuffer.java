@@ -2,13 +2,14 @@ package com.dantaeusb.immersivemp.locks.inventory.container.painting;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.world.World;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * @todo: merge with PaintingFrameBufferPacket as we can create packet and send it later
+ * @todo: extend PacketBuffer
  */
 public class PaintingFrameBuffer {
     // this will allow to use byte time offset in data frame
@@ -50,7 +51,6 @@ public class PaintingFrameBuffer {
     }
 
     public void writeChange(long frameTime, int position, int color) {
-        ImmersiveMp.LOG.info("writing to painting frame buffer");
         short timeOffset = (short) (frameTime - this.frameStartTime);
         short sPosition = (short) position;
 
@@ -64,6 +64,10 @@ public class PaintingFrameBuffer {
         return this.frameStartTime;
     }
 
+    /**
+     * Prepare the data for sending - flip & lock
+     * @return
+     */
     public ByteBuffer getBufferData() {
         this.buffer.flip();
         return this.buffer.asReadOnlyBuffer();

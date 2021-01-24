@@ -1,6 +1,7 @@
 package com.dantaeusb.immersivemp.locks.core;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
+import com.dantaeusb.immersivemp.locks.block.EaselBlock;
 import com.dantaeusb.immersivemp.locks.block.LockTableBlock;
 import com.dantaeusb.immersivemp.locks.block.LockableDoorBlock;
 import net.minecraft.block.*;
@@ -33,6 +34,8 @@ public class ModLockBlocks
     private static final List<Block> BLOCKS = new ArrayList<>();
 
     public static final Block LOCK_TABLE = registerBlockItem("lock_table", new LockTableBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE)));
+
+    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE)));
 
     public static final Block ACACIA_LOCKABLE_DOOR = registerLockableDoor("acacia_lockable_door", new LockableDoorBlock(AbstractBlock.Properties.create(Material.WOOD, Blocks.ACACIA_PLANKS.getMaterialColor()).hardnessAndResistance(3.0F).sound(SoundType.WOOD).notSolid()));
     public static final Block BIRCH_LOCKABLE_DOOR = registerLockableDoor("birch_lockable_door", new LockableDoorBlock(AbstractBlock.Properties.create(Material.WOOD, Blocks.BIRCH_PLANKS.getMaterialColor()).hardnessAndResistance(3.0F).sound(SoundType.WOOD).notSolid()));

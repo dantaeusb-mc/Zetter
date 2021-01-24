@@ -2,37 +2,32 @@ package com.dantaeusb.immersivemp.locks.inventory.container;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.core.ModLockContainers;
+import com.dantaeusb.immersivemp.locks.core.ModLockItems;
 import com.dantaeusb.immersivemp.locks.core.ModLockNetwork;
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrame;
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrameBuffer;
+import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingFrameBufferPacket;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingSyncPacket;
+import com.dantaeusb.immersivemp.locks.tileentity.storage.EaselStorage;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
 
+import javax.annotation.Nullable;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-public class PaintingContainer extends Container {
-    protected final IInventory inventoryIn = new Inventory(1) {
-        /**
-         * @see net.minecraft.inventory.container.RepairContainer#field_234643_d_
-         */
-        public void markDirty() {
-            super.markDirty();
-        }
-    };
-
+public class EaselContainer extends Container {
     public static int FRAME_TIMEOUT = 20 * 5;  // 5 second limit to keep changes buffer, if packet processed later disregard it
 
     private final World world;
@@ -40,10 +35,11 @@ public class PaintingContainer extends Container {
     public static final int PALETTE_SLOTS = 14;
     private static final int HOTBAR_SLOT_COUNT = 9;
 
-    protected final IWorldPosCallable worldPosCallable;
+    private boolean canvasAvailable = false;
+    private ByteBuffer canvas;
+    private ByteBuffer palette = ByteBuffer.allocateDirect(PALETTE_SLOTS * 4);
 
-    private final ByteBuffer canvas = ByteBuffer.allocateDirect(16 * 16 * 4);
-    private final ByteBuffer palette = ByteBuffer.allocateDirect(PALETTE_SLOTS * 4);
+    private final EaselStorage easelStorage;
 
     // Only player's buffer on client, all users on server
     private HashMap<UUID, PaintingFrameBuffer> frameBuffers = new HashMap<>();
@@ -52,23 +48,58 @@ public class PaintingContainer extends Container {
     private boolean invalidCache = false;
     private long lastFrameTime;
 
-    public PaintingContainer(int id, PlayerInventory playerInventory) {
-        this(id, playerInventory, IWorldPosCallable.DUMMY);
+    public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
+        return new EaselContainer(windowID, playerInventory, easelStorage, null);
     }
 
-    public PaintingContainer(int windowID, PlayerInventory invPlayer, IWorldPosCallable worldPosCallable) {
+    public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
+        // it seems like we have to utilize extraData to pass the canvas data
+        // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
+        ByteBuffer canvas = PaintingSyncPacket.readPacketData(networkBuffer);
+        EaselStorage easelStorage = EaselStorage.createForClientSideContainer();
+
+        return new EaselContainer(windowID, playerInventory, easelStorage, canvas);
+    }
+
+    public EaselContainer(int windowID, PlayerInventory invPlayer, EaselStorage easelStorage, @Nullable ByteBuffer canvas) {
         super(ModLockContainers.PAINTING, windowID);
 
         if (ModLockContainers.PAINTING == null)
             throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
 
-        this.worldPosCallable = worldPosCallable;
         this.world = invPlayer.player.world;
+        this.easelStorage = easelStorage;
 
         final int SLOT_X_SPACING = 18;
         final int SLOT_Y_SPACING = 18;
         final int HOTBAR_XPOS = 8;
         final int HOTBAR_YPOS = 142;
+
+        for (int x = 0; x < 2; x++) {
+            int slotNumber = x;
+            addSlot(new Slot(this.easelStorage, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
+        }
+
+        if (this.world.isRemote()) {
+            ImmersiveMp.LOG.warn(canvas);
+
+            if (canvas != null && canvas.limit() == CanvasItem.CANVAS_BYTE_SIZE) {
+                this.canvas = canvas;
+                this.canvasAvailable = true;
+            }
+        } else {
+            ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
+
+            if (canvasStack.getItem() == ModLockItems.CANVAS_ITEM) {
+                byte[] canvasData = CanvasItem.getCanvasData(canvasStack, true);
+                this.canvas = ByteBuffer.wrap(canvasData);
+                this.canvasAvailable = true;
+            }
+        }
+
+        if (!canvasAvailable) {
+            this.canvas = ByteBuffer.allocateDirect(CanvasItem.CANVAS_BYTE_SIZE);
+        }
 
         // Add the players hotbar to the gui - the [xpos, ypos] location of each item
         /*for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
@@ -94,18 +125,6 @@ public class PaintingContainer extends Container {
         this.setColor(this.palette, 11, 0xFFAA00AA); //purple
         this.setColor(this.palette, 12, 0xFFAAAAAA); //gray
         this.setColor(this.palette, 13, 0xFF555555); //dark-gray
-
-        for (int i = 0; i < 16 * 16; i++) {
-            this.canvas.putInt(i * 4, 0xFF000000);
-        }
-    }
-
-    public static PaintingContainer createContainerServerSide(int windowID, PlayerInventory playerInventory) {
-        return new PaintingContainer(windowID, playerInventory);
-    }
-
-    public static PaintingContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer extraData) {
-        return new PaintingContainer(windowID, playerInventory);
     }
 
     public ByteBuffer getPalette() {
@@ -127,7 +146,7 @@ public class PaintingContainer extends Container {
      * @param pixelY
      * @param color
      */
-    public void writePixelOnCanvasClient(int pixelX, int pixelY, int color, UUID playerId) {
+    public void writePixelOnCanvasClientSide(int pixelX, int pixelY, int color, UUID playerId) {
         int index = this.getPixelIndex(pixelX, pixelY);
         if (this.writePixelOnCanvas(index, color)) {
             this.checkFrameBuffer();
@@ -135,13 +154,39 @@ public class PaintingContainer extends Container {
         }
     }
 
+    /**
+     * Todo: notify all clients about that
+     * @param index
+     * @param color
+     * @return
+     */
+    private void writePixelOnCanvasServerSide(int index, int color) {
+        if (this.writePixelOnCanvas(index, color)) {
+            //this.checkFrameBuffer();
+
+            ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
+
+            if (canvasStack.getItem() != ModLockItems.CANVAS_ITEM) {
+                ImmersiveMp.LOG.warn("Cannot find canvas to write on!");
+                return;
+            }
+
+            CanvasItem.setCanvasData(canvasStack, this.canvas.array());
+        }
+    }
+
     private boolean writePixelOnCanvas(int index, int color) {
-        if (this.getCanvas().getInt(index) == color) {
+        if (!this.canvasAvailable) {
+            return false;
+        }
+
+        if (this.canvas.getInt(index) == color) {
             // Pixel is not changed
             return false;
         }
 
         this.getCanvas().putInt(index, color);
+
         return true;
     }
 
@@ -193,7 +238,6 @@ public class PaintingContainer extends Container {
                     frameBuffer.getFrames(playerId);
                     PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(frameBuffer);
                     ImmersiveMp.LOG.info("Sending Painting Frame Buffer: " + modePacket);
-                    ImmersiveMp.LOG.info(frameBuffer.getFrameStartTime());
                     ModLockNetwork.simpleChannel.sendToServer(modePacket);
                 } else {
                     //PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(frameBuffer);
@@ -221,10 +265,13 @@ public class PaintingContainer extends Container {
                 continue;
             }
 
+            // Check if the new packed claims to be older than the last processed frame
             if (frame.getFrameTime() <= this.lastFrameTime) {
+                // If two players changed same pixel but new packet claims to be older than processed, let's sync player's canvases
                 for (PaintingFrame oldFrame: this.lastFrames) {
-                    if (oldFrame.getPixelIndex() == frame.getPixelIndex()) {
+                    if (oldFrame.getPixelIndex() == frame.getPixelIndex() && oldFrame.getColor() != frame.getColor() && oldFrame.getFrameTime() >= frame.getFrameTime()) {
                         this.invalidCache = true;
+                        break;
                     }
                 }
 
@@ -235,7 +282,7 @@ public class PaintingContainer extends Container {
             }
 
             this.placeFrame(frame);
-            this.writePixelOnCanvas(frame.getPixelIndex(), frame.getColor());
+            this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
             this.lastFrameTime = frame.getFrameTime();
         }
     }
@@ -273,22 +320,13 @@ public class PaintingContainer extends Container {
     }
 
     /**
-     * Called when the container is closed.
-     */
-    public void onContainerClosed(PlayerEntity playerIn) {
-        super.onContainerClosed(playerIn);
-        this.worldPosCallable.consume((worldIn, blockPos) -> {
-            this.clearContainer(playerIn, worldIn, this.inventoryIn);
-        });
-    }
-
-    /**
      * Determines whether supplied player can use this container
      */
     public boolean canInteractWith(PlayerEntity playerIn) {
-        return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
-            return !this.isAnLockTable(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
-        }, true);
+        return true;
+        /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
+            return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
+        }, true);*/
     }
 
     /**
@@ -296,7 +334,7 @@ public class PaintingContainer extends Container {
      * @param blockState
      * @return
      */
-    protected boolean isAnLockTable(BlockState blockState) {
+    protected boolean isAnEasel(BlockState blockState) {
         return true;
     }
 }

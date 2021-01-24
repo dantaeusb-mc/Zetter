@@ -1,16 +1,13 @@
 package com.dantaeusb.immersivemp.locks.block;
 
 import com.dantaeusb.immersivemp.locks.inventory.container.LockTableContainer;
-import com.dantaeusb.immersivemp.locks.inventory.container.PaintingContainer;
 import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer;
-import net.minecraft.stats.Stats;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
@@ -39,10 +36,16 @@ public class LockTableBlock extends Block {
         }
     }
 
-    // @todo: cahnge that, it's temp!
+    /**
+     * @todo remove, can be handled by INamedContainerProvider TE in parent method
+     * @param state
+     * @param worldIn
+     * @param pos
+     * @return
+     */
     @Nullable
     public INamedContainerProvider getContainer(BlockState state, World worldIn, BlockPos pos) {
-        return new SimpleNamedContainerProvider((id, inventory, player) -> new PaintingContainer(id, inventory, IWorldPosCallable.of(worldIn, pos)), containerName);
+        return new SimpleNamedContainerProvider((id, inventory, player) -> new LockTableContainer(id, inventory, IWorldPosCallable.of(worldIn, pos)), containerName);
     }
 
     public BlockState getStateForPlacement(BlockItemUseContext context) {

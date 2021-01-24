@@ -1,7 +1,7 @@
 package com.dantaeusb.immersivemp.locks.network.handler.server;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.inventory.container.PaintingContainer;
+import com.dantaeusb.immersivemp.locks.inventory.container.EaselContainer;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingFrameBufferPacket;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.LogicalSide;
@@ -34,8 +34,8 @@ public class PaintingHandler {
     }
 
     public static void processFrameBuffer(final PaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
-        if (sendingPlayer.openContainer instanceof PaintingContainer) {
-            PaintingContainer paintingContainer = (PaintingContainer)sendingPlayer.openContainer;
+        if (sendingPlayer.openContainer instanceof EaselContainer) {
+            EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
 
             paintingContainer.processFrameBuffer(packetIn.getFrameBuffer(), sendingPlayer.getUniqueID());
         }

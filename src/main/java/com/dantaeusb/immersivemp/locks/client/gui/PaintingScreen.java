@@ -1,7 +1,8 @@
 package com.dantaeusb.immersivemp.locks.client.gui;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.inventory.container.PaintingContainer;
+import com.dantaeusb.immersivemp.locks.inventory.container.EaselContainer;
+import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
@@ -16,7 +17,7 @@ import java.awt.*;
 import java.nio.ByteOrder;
 import java.util.function.BiFunction;
 
-public class PaintingScreen extends ContainerScreen<PaintingContainer> {
+public class PaintingScreen extends ContainerScreen<EaselContainer> {
 
     protected final ITextComponent title = new TranslationTextComponent("container.immersivemp.lock_table");
 
@@ -33,7 +34,7 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
     private boolean canvasDragging = false;
     private float sinceLastTick = .0f;
 
-    public PaintingScreen(PaintingContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
+    public PaintingScreen(EaselContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
         super(paintingContainer, playerInventory, title);
 
         this.xSize = 176;
@@ -139,7 +140,7 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
         int canvasGlobalLeft = this.guiLeft + CANVAS_POSITION_X;
         int canvasGlobalTop = this.guiTop + CANVAS_POSITION_Y;
 
-        for (int i = 0; i < 16 * 16; i++) {
+        for (int i = 0; i < CanvasItem.CANVAS_SIZE; i++) {
             int localX = i % 16;
             int localY = i / 16;
 
@@ -169,7 +170,7 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
         int localX = mouseX - canvasGlobalLeft;
         int localY = mouseY - canvasGlobalTop;
 
-        this.getContainer().writePixelOnCanvasClient(localX / CANVAS_SCALE_FACTOR, localY / CANVAS_SCALE_FACTOR, this.getCurrentColor(), this.playerInventory.player.getUniqueID());
+        this.getContainer().writePixelOnCanvasClientSide(localX / CANVAS_SCALE_FACTOR, localY / CANVAS_SCALE_FACTOR, this.getCurrentColor(), this.playerInventory.player.getUniqueID());
     }
 
     /**
@@ -185,7 +186,7 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
         int paletteGlobalLeft = this.guiLeft + PALETTE_POSITION_X;
         int paletteGlobalTop = this.guiTop + PALETTE_POSITION_Y;
 
-        for (int i = 0; i < PaintingContainer.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < EaselContainer.PALETTE_SLOTS; i++) {
             int fromX = paletteGlobalLeft + (i % 2) * PALETTE_OFFSET;
             int fromY = paletteGlobalTop + (i / 2) * PALETTE_OFFSET;
 
@@ -223,7 +224,7 @@ public class PaintingScreen extends ContainerScreen<PaintingContainer> {
 
         ImmersiveMp.LOG.info("Palette click!");
 
-        for (int i = 0; i < PaintingContainer.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < EaselContainer.PALETTE_SLOTS; i++) {
             int slotX = paletteGlobalLeft + (i % 2) * PALETTE_OFFSET;
             int slotY = paletteGlobalTop + (i / 2) * PALETTE_OFFSET;
 

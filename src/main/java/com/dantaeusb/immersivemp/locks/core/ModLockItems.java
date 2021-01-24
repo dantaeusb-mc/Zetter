@@ -1,10 +1,7 @@
 package com.dantaeusb.immersivemp.locks.core;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.item.AbstractLockItem;
-import com.dantaeusb.immersivemp.locks.item.KeyItem;
-import com.dantaeusb.immersivemp.locks.item.LockItem;
-import com.dantaeusb.immersivemp.locks.item.LockableDoorItem;
+import com.dantaeusb.immersivemp.locks.item.*;
 import net.minecraft.block.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -27,6 +24,8 @@ public class ModLockItems
     public static final KeyItem KEY_ITEM = (KeyItem) register("key", new KeyItem());
     public static final LockItem LOCK_ITEM = (LockItem) register("lock", new LockItem());
     public static final BlockItem LOCK_TABLE = registerBlockItem("lock_table", ModLockBlocks.LOCK_TABLE);
+    public static final BlockItem EASEL = registerBlockItem("easel", ModLockBlocks.EASEL);
+    public static final CanvasItem CANVAS_ITEM = (CanvasItem) register("canvas", new CanvasItem());
 
     public static final Item ACACIA_LOCKABLE_DOOR = registerLockableDoor("acacia_lockable_door", ModLockBlocks.ACACIA_LOCKABLE_DOOR);
     public static final Item BIRCH_LOCKABLE_DOOR = registerLockableDoor("birch_lockable_door", ModLockBlocks.BIRCH_LOCKABLE_DOOR);

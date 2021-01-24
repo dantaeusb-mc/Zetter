@@ -20,7 +20,6 @@ public class PaintingFrameBufferPacket {
     public PaintingFrameBufferPacket() {
     }
 
-    @OnlyIn(Dist.CLIENT)
     public PaintingFrameBufferPacket(PaintingFrameBuffer paintingFrameBuffer) {
         this.paintingFrameBuffer = paintingFrameBuffer;
     }
@@ -33,9 +32,6 @@ public class PaintingFrameBufferPacket {
         PaintingFrameBufferPacket packet = new PaintingFrameBufferPacket();
 
         long frameStartTime = buf.readLong();
-
-        ImmersiveMp.LOG.warn(frameStartTime);
-        ImmersiveMp.LOG.warn(String.format("%d %d %d", buf.capacity(), buf.writerIndex(), buf.readerIndex()));
         ByteBuf bufferData = buf.readBytes(buf.writerIndex() - buf.readerIndex());
 
         ImmersiveMp.LOG.warn(bufferData);
@@ -49,7 +45,6 @@ public class PaintingFrameBufferPacket {
      */
     public void writePacketData(PacketBuffer buf) {
         buf.writeLong(this.paintingFrameBuffer.getFrameStartTime());
-        // For some reason, without it writeBytes just copies the rest of empty buffer
         buf.writeBytes(this.paintingFrameBuffer.getBufferData());
     }
 
