@@ -10,6 +10,7 @@ import net.minecraft.block.material.MaterialColor;
 import net.minecraft.block.material.PushReaction;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -35,7 +36,7 @@ public class ModLockBlocks
 
     public static final Block LOCK_TABLE = registerBlockItem("lock_table", new LockTableBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE)));
 
-    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE)));
+    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE).notSolid().setOpaque(ModLockBlocks::isntSolid)));
 
     public static final Block ACACIA_LOCKABLE_DOOR = registerLockableDoor("acacia_lockable_door", new LockableDoorBlock(AbstractBlock.Properties.create(Material.WOOD, Blocks.ACACIA_PLANKS.getMaterialColor()).hardnessAndResistance(3.0F).sound(SoundType.WOOD).notSolid()));
     public static final Block BIRCH_LOCKABLE_DOOR = registerLockableDoor("birch_lockable_door", new LockableDoorBlock(AbstractBlock.Properties.create(Material.WOOD, Blocks.BIRCH_PLANKS.getMaterialColor()).hardnessAndResistance(3.0F).sound(SoundType.WOOD).notSolid()));
@@ -74,5 +75,9 @@ public class ModLockBlocks
     {
         BLOCKS.forEach(block -> event.getRegistry().register(block));
         BLOCKS.clear();
+    }
+
+    private static boolean isntSolid(BlockState state, IBlockReader reader, BlockPos pos) {
+        return false;
     }
 }

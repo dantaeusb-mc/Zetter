@@ -2,6 +2,7 @@ package com.dantaeusb.immersivemp.locks.client.renderer.tileentity;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.block.EaselBlock;
+import com.dantaeusb.immersivemp.locks.client.gui.CanvasRenderer;
 import com.dantaeusb.immersivemp.locks.core.ModLockBlocks;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.dantaeusb.immersivemp.locks.tileentity.EaselTileEntity;
@@ -48,42 +49,53 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         super(rendererDispatcherIn);
 
         this.rack = new ModelRenderer(64, 64, 0, 0);
-        this.rack.setRotationPoint(0.0F, 24.0F, 0.0F);
-        this.rack.setTextureOffset(0, 0).addBox(-7.0F, -12.5F, -5.5F, 14.0F, 1.0F, 4.0F, 0.0F, false);
+        this.rack.setRotationPoint(0.0F, 0, 0.0F);
+        this.rack.setTextureOffset(0, 0).addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F, 0.0F, false);
 
         this.canvas = new ModelRenderer(64, 64, 0, 0);
         this.canvas.setRotationPoint(0.0F, 0.0F, 0.0F);
-        this.canvas.setTextureOffset(0, 0).addBox(-8.0F, -28.0F, -5.0F, 16.0F, 16.0F, 1.0F, 0.0F, false);
+        setRotationAngle(this.canvas, 0.1745F, 0.0F, 0.0F);
+        this.canvas.setTextureOffset(0, 0).addBox(0.0F, 12.0F, 3.0F, 16.0F, 16.0F, 1.0F, 0.0F, false);
 
         this.topPlank = new ModelRenderer(64, 64, 0, 0);
         this.topPlank.setRotationPoint(0.0F, 0.0F, 0.0F);
-        setRotationAngle(topPlank, -0.1745F, 0.0F, 0.0F);
-        this.topPlank.setTextureOffset(0, 0).addBox(-7.0F, -28.0F, -3.0F, 14.0F, 2.0F, 1.0F, 0.0F, false);
+        setRotationAngle(topPlank, 0.1745F, 0.0F, 0.0F);
+        this.topPlank.setTextureOffset(0, 0).addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F, 0.0F, false);
 
         this.backLeg = new ModelRenderer(64, 64, 0, 0);
-        this.backLeg.setRotationPoint(0.0F, 0.0F, 7.0F);
-        setRotationAngle(backLeg, 0.2182F, 0.0F, 0.0F);
-        this.backLeg.setTextureOffset(0, 0).addBox(-1.0F, -30.0F, 0.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
+        this.backLeg.setRotationPoint(0.0F, 0.0F, 15.0F);
+        setRotationAngle(backLeg, -0.2182F, 0.0F, 0.0F);
+        this.backLeg.setTextureOffset(0, 0).addBox(7.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
 
         this.frontLegs = new ModelRenderer(64, 64, 0, 0);
-        this.frontLegs.setRotationPoint(5.0F, 0.0F, -3.0F);
-        setRotationAngle(frontLegs, -0.1745F, 0.0F, 0.0F);
-        this.frontLegs.setTextureOffset(0, 0).addBox(-1.0F, -30.0F, -1.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
-        this.frontLegs.setTextureOffset(0, 0).addBox(-11.0F, -30.0F, -1.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
+        this.frontLegs.setRotationPoint(0.0F, 0.0F, -3.0F);
+        setRotationAngle(frontLegs, 0.1745F, 0.0F, 0.0F);
+        this.frontLegs.setTextureOffset(0, 0).addBox(12.0F, 0.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
+        this.frontLegs.setTextureOffset(0, 0).addBox(2.0F, 0.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
 
         //this.canvasTexture = new DynamicTexture(CanvasItem.CANVAS_SIZE, CanvasItem.CANVAS_SIZE, true);
         //this.textureManager = Minecraft.getInstance().getTextureManager();
         //this.canvasRenderType = this.textureManager.getDynamicTextureLocation("canvas/" + mapdataIn.getName(), this.canvasTexture);
     }
 
+    /**
+     * @todo: replace with TE packet
+     */
+    private boolean stoopidUpdate = false;
+
     public void render(EaselTileEntity tileEntity, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight, int combinedOverlay) {
         World world = tileEntity.getWorld();
         boolean flag = world != null;
         BlockState blockState = flag ? tileEntity.getBlockState() : ModLockBlocks.EASEL.getDefaultState().with(EaselBlock.FACING, Direction.SOUTH);
 
-        IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.getSolid());
+        if (!stoopidUpdate) {
+            CanvasRenderer.getInstance().updateCanvas(tileEntity.getCanvasData());
+            stoopidUpdate = true;
+        }
 
-        ImmersiveMp.LOG.info("RENDER!!");
+        ImmersiveMp.LOG.info(combinedLight + " " + combinedOverlay);
+
+        IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.getSolid());
 
         matrixStack.push();
 
@@ -97,6 +109,23 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         backLeg.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
         frontLegs.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
         canvas.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
+
+        /**
+         * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
+         */
+
+        final float scaleFactor = 1.0F / 16.0F;
+
+        // Scale and prepare
+        matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
+        matrixStack.translate(0.0D, 12.0D, 5.0D);
+        matrixStack.rotate(Vector3f.XP.rotation(0.1745F));
+
+        matrixStack.rotate(Vector3f.ZP.rotationDegrees(180.0F));
+        matrixStack.translate(-16.0D, -16.0D, 0.0D);
+        matrixStack.translate(0.0D, 0.0D, 0.1D);
+
+        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, tileEntity.getCanvasData(), combinedLight);
 
         matrixStack.pop();
     }

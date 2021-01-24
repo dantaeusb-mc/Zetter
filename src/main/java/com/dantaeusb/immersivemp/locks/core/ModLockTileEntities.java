@@ -26,7 +26,7 @@ public class ModLockTileEntities
         event.getRegistry().register(LOCKING_TILE_ENTITY);
 
         EASEL_TILE_ENTITY =
-                TileEntityType.Builder.create(EaselTileEntity::new, lockableDoorBlockArray).build(null);
+                TileEntityType.Builder.create(EaselTileEntity::new, ModLockBlocks.EASEL).build(null);
         EASEL_TILE_ENTITY.setRegistryName(ImmersiveMp.MOD_ID, "easel_tile_entity");
         event.getRegistry().register(EASEL_TILE_ENTITY);
     }

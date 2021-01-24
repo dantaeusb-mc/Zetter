@@ -1,83 +1,86 @@
 package com.dantaeusb.immersivemp.locks.client.gui;
 
+import com.dantaeusb.immersivemp.ImmersiveMp;
+import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
-import net.minecraft.block.material.MaterialColor;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.MapItemRenderer;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Matrix4f;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.storage.MapData;
-import net.minecraft.world.storage.MapDecoration;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 @OnlyIn(Dist.CLIENT)
-public class CanvasRenderer/* implements AutoCloseable*/ {
-    /*private static final ResourceLocation TEXTURE_MAP_ICONS = new ResourceLocation("textures/map/map_icons.png");
-    private static final RenderType field_228085_d_ = RenderType.getText(TEXTURE_MAP_ICONS);
+public class CanvasRenderer implements AutoCloseable {
+    private static CanvasRenderer instance;
+
     private final TextureManager textureManager;
-    private final Map<String, MapItemRenderer.Instance> loadedMaps = Maps.newHashMap();
+    private final Map<String, CanvasRenderer.Instance> loadedCanvases = Maps.newHashMap();
 
     public CanvasRenderer(TextureManager textureManagerIn) {
         this.textureManager = textureManagerIn;
+        instance = this;
     }
 
-    *//**
+    public static CanvasRenderer getInstance() {
+        return instance;
+    }
+
+    /*
      * Updates a map texture
-     *//*
-    public void updateMapTexture(MapData mapdataIn) {
-        this.getMapRendererInstance(mapdataIn).updateMapTexture();
+     */
+
+    public void updateCanvas(ByteBuffer canvas) {
+        this.getCanvasRendererInstance(canvas).updateMapTexture();
     }
 
-    public void renderMap(MatrixStack p_228086_1_, IRenderTypeBuffer p_228086_2_, MapData p_228086_3_, boolean p_228086_4_, int p_228086_5_) {
-        this.getMapRendererInstance(p_228086_3_).func_228089_a_(p_228086_1_, p_228086_2_, p_228086_4_, p_228086_5_);
+    public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, ByteBuffer canvas, int combinedLight) {
+        this.getCanvasRendererInstance(canvas).render(matrixStack, renderTypeBuffer, combinedLight);
     }
 
-    *//**
+    /*
      * Returns {@link net.minecraft.client.gui.MapItemRenderer.Instance MapItemRenderer.Instance} with given map data
-     *//*
-    private MapItemRenderer.Instance getMapRendererInstance(MapData mapdataIn) {
-        MapItemRenderer.Instance mapitemrenderer$instance = this.loadedMaps.get(mapdataIn.getName());
-        if (mapitemrenderer$instance == null) {
-            mapitemrenderer$instance = new MapItemRenderer.Instance(mapdataIn);
-            this.loadedMaps.put(mapdataIn.getName(), mapitemrenderer$instance);
+     */
+
+    private CanvasRenderer.Instance getCanvasRendererInstance(ByteBuffer canvas) {
+        CanvasRenderer.Instance canvasRendererInstance = this.loadedCanvases.get("test");
+
+        if (canvasRendererInstance == null) {
+            canvasRendererInstance = new CanvasRenderer.Instance(canvas);
+            this.loadedCanvases.put("test", canvasRendererInstance);
         }
 
-        return mapitemrenderer$instance;
+        return canvasRendererInstance;
     }
 
     @Nullable
-    public MapItemRenderer.Instance getMapInstanceIfExists(String p_191205_1_) {
-        return this.loadedMaps.get(p_191205_1_);
+    public CanvasRenderer.Instance getCanvasInstanceIfExists(String canvasName) {
+        return this.loadedCanvases.get(canvasName);
     }
 
-    *//**
+    /*
      * Clears the currently loaded maps and removes their corresponding textures
-     *//*
+     */
+
     public void clearLoadedMaps() {
-        for(MapItemRenderer.Instance mapitemrenderer$instance : this.loadedMaps.values()) {
-            mapitemrenderer$instance.close();
+        for(CanvasRenderer.Instance canvasRendererInstance : this.loadedCanvases.values()) {
+            canvasRendererInstance.close();
         }
 
-        this.loadedMaps.clear();
+        this.loadedCanvases.clear();
     }
 
     @Nullable
-    public MapData getData(@Nullable MapItemRenderer.Instance p_191207_1_) {
-        return p_191207_1_ != null ? p_191207_1_.mapData : null;
+    public ByteBuffer getData(@Nullable CanvasRenderer.Instance canvasRendererInstance) {
+        return canvasRendererInstance != null ? canvasRendererInstance.canvas : null;
     }
 
     public void close() {
@@ -86,90 +89,48 @@ public class CanvasRenderer/* implements AutoCloseable*/ {
 
     @OnlyIn(Dist.CLIENT)
     class Instance implements AutoCloseable {
-        private final MapData mapData;
-        private final DynamicTexture mapTexture;
-        private final RenderType field_228088_d_;
+        private final ByteBuffer canvas;
+        private final DynamicTexture canvasTexture;
+        private final RenderType renderType;
 
-        private Instance(MapData mapdataIn) {
-            this.mapData = mapdataIn;
-            this.mapTexture = new DynamicTexture(128, 128, true);
-            ResourceLocation resourcelocation = MapItemRenderer.this.textureManager.getDynamicTextureLocation("map/" + mapdataIn.getName(), this.mapTexture);
-            this.field_228088_d_ = RenderType.getText(resourcelocation);
+        private Instance(ByteBuffer canvas) {
+            this.canvas = canvas;
+            this.canvasTexture = new DynamicTexture(CanvasItem.CANVAS_SIZE, CanvasItem.CANVAS_SIZE, true);
+            ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.getDynamicTextureLocation("canvas/" + "test", this.canvasTexture);
+            this.renderType = RenderType.getText(dynamicTextureLocation);
         }
 
-        *//**
+        /*
          * Updates a map {@link net.minecraft.client.gui.MapItemRenderer.Instance#mapTexture texture}
-         *//*
+         */
+
         private void updateMapTexture() {
-            for(int i = 0; i < 128; ++i) {
-                for(int j = 0; j < 128; ++j) {
-                    int k = j + i * 128;
-                    int l = this.mapData.colors[k] & 255;
-                    if (l / 4 == 0) {
-                        this.mapTexture.getTextureData().setPixelRGBA(j, i, 0);
-                    } else {
-                        this.mapTexture.getTextureData().setPixelRGBA(j, i, MaterialColor.COLORS[l / 4].getMapColor(l & 3));
-                    }
+            this.canvas.rewind();
+
+            for(int row = 0; row < CanvasItem.CANVAS_SIZE; row++) {
+                for(int col = 0; col < CanvasItem.CANVAS_SIZE; col++) {
+                    int intIndex = row * CanvasItem.CANVAS_SIZE + col;
+                    int color = this.canvas.getInt(intIndex * 4);
+                    this.canvasTexture.getTextureData().setPixelRGBA(col, row, color);
                 }
             }
 
-            this.mapTexture.updateDynamicTexture();
+            ImmersiveMp.LOG.warn("Updated texture");
+
+            this.canvasTexture.updateDynamicTexture();
         }
 
-        private void func_228089_a_(MatrixStack p_228089_1_, IRenderTypeBuffer p_228089_2_, boolean p_228089_3_, int p_228089_4_) {
-            int i = 0;
-            int j = 0;
-            float f = 0.0F;
-            Matrix4f matrix4f = p_228089_1_.getLast().getMatrix();
-            IVertexBuilder ivertexbuilder = p_228089_2_.getBuffer(this.field_228088_d_);
-            ivertexbuilder.pos(matrix4f, 0.0F, 128.0F, -0.01F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(p_228089_4_).endVertex();
-            ivertexbuilder.pos(matrix4f, 128.0F, 128.0F, -0.01F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(p_228089_4_).endVertex();
-            ivertexbuilder.pos(matrix4f, 128.0F, 0.0F, -0.01F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(p_228089_4_).endVertex();
-            ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, -0.01F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(p_228089_4_).endVertex();
-            int k = 0;
-
-            for(MapDecoration mapdecoration : this.mapData.mapDecorations.values()) {
-                if (!p_228089_3_ || mapdecoration.renderOnFrame()) {
-                    if (mapdecoration.render(k)) { k++; continue; }
-                    p_228089_1_.push();
-                    p_228089_1_.translate((double)(0.0F + (float)mapdecoration.getX() / 2.0F + 64.0F), (double)(0.0F + (float)mapdecoration.getY() / 2.0F + 64.0F), (double)-0.02F);
-                    p_228089_1_.rotate(Vector3f.ZP.rotationDegrees((float)(mapdecoration.getRotation() * 360) / 16.0F));
-                    p_228089_1_.scale(4.0F, 4.0F, 3.0F);
-                    p_228089_1_.translate(-0.125D, 0.125D, 0.0D);
-                    byte b0 = mapdecoration.getImage();
-                    float f1 = (float)(b0 % 16 + 0) / 16.0F;
-                    float f2 = (float)(b0 / 16 + 0) / 16.0F;
-                    float f3 = (float)(b0 % 16 + 1) / 16.0F;
-                    float f4 = (float)(b0 / 16 + 1) / 16.0F;
-                    Matrix4f matrix4f1 = p_228089_1_.getLast().getMatrix();
-                    float f5 = -0.001F;
-                    IVertexBuilder ivertexbuilder1 = p_228089_2_.getBuffer(MapItemRenderer.field_228085_d_);
-                    ivertexbuilder1.pos(matrix4f1, -1.0F, 1.0F, (float)k * -0.001F).color(255, 255, 255, 255).tex(f1, f2).lightmap(p_228089_4_).endVertex();
-                    ivertexbuilder1.pos(matrix4f1, 1.0F, 1.0F, (float)k * -0.001F).color(255, 255, 255, 255).tex(f3, f2).lightmap(p_228089_4_).endVertex();
-                    ivertexbuilder1.pos(matrix4f1, 1.0F, -1.0F, (float)k * -0.001F).color(255, 255, 255, 255).tex(f3, f4).lightmap(p_228089_4_).endVertex();
-                    ivertexbuilder1.pos(matrix4f1, -1.0F, -1.0F, (float)k * -0.001F).color(255, 255, 255, 255).tex(f1, f4).lightmap(p_228089_4_).endVertex();
-                    p_228089_1_.pop();
-                    if (mapdecoration.getCustomName() != null) {
-                        FontRenderer fontrenderer = Minecraft.getInstance().fontRenderer;
-                        ITextComponent itextcomponent = mapdecoration.getCustomName();
-                        float f6 = (float)fontrenderer.getStringPropertyWidth(itextcomponent);
-                        float f7 = MathHelper.clamp(25.0F / f6, 0.0F, 6.0F / 9.0F);
-                        p_228089_1_.push();
-                        p_228089_1_.translate((double)(0.0F + (float)mapdecoration.getX() / 2.0F + 64.0F - f6 * f7 / 2.0F), (double)(0.0F + (float)mapdecoration.getY() / 2.0F + 64.0F + 4.0F), (double)-0.025F);
-                        p_228089_1_.scale(f7, f7, 1.0F);
-                        p_228089_1_.translate(0.0D, 0.0D, (double)-0.1F);
-                        fontrenderer.func_243247_a(itextcomponent, 0.0F, 0.0F, -1, false, p_228089_1_.getLast().getMatrix(), p_228089_2_, false, Integer.MIN_VALUE, p_228089_4_);
-                        p_228089_1_.pop();
-                    }
-
-                    ++k;
-                }
-            }
-
+        private void render(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight) {
+            Matrix4f matrix4f = matrixStack.getLast().getMatrix();
+            IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
+            ivertexbuilder.pos(matrix4f, 0.0F, 16.0F, -0.01F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 16.0F, 16.0F, -0.01F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 16.0F, 0.0F, -0.01F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, -0.01F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(combinedLight).endVertex();
         }
 
         public void close() {
-            this.mapTexture.close();
+            this.canvasTexture.close();
         }
-    }*/
+    }
 }
