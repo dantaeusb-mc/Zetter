@@ -58,6 +58,11 @@ public class EaselBlock extends ContainerBlock {
         return true;
     }
 
+    @Override
+    public BlockRenderType getRenderType(BlockState iBlockState) {
+        return BlockRenderType.ENTITYBLOCK_ANIMATED;
+    }
+
     public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (worldIn.isRemote) return ActionResultType.SUCCESS; // on client side, don't do anything
 

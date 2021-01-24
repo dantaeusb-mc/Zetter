@@ -26,6 +26,7 @@ public class ModLockItems
     public static final BlockItem LOCK_TABLE = registerBlockItem("lock_table", ModLockBlocks.LOCK_TABLE);
     public static final BlockItem EASEL = registerBlockItem("easel", ModLockBlocks.EASEL);
     public static final CanvasItem CANVAS_ITEM = (CanvasItem) register("canvas", new CanvasItem());
+    public static final PaletteItem PALETTE_ITEM = (PaletteItem) register("palette", new PaletteItem());
 
     public static final Item ACACIA_LOCKABLE_DOOR = registerLockableDoor("acacia_lockable_door", ModLockBlocks.ACACIA_LOCKABLE_DOOR);
     public static final Item BIRCH_LOCKABLE_DOOR = registerLockableDoor("birch_lockable_door", ModLockBlocks.BIRCH_LOCKABLE_DOOR);

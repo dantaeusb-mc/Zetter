@@ -70,15 +70,10 @@ public class EaselContainer extends Container {
         this.world = invPlayer.player.world;
         this.easelStorage = easelStorage;
 
-        final int SLOT_X_SPACING = 18;
-        final int SLOT_Y_SPACING = 18;
-        final int HOTBAR_XPOS = 8;
-        final int HOTBAR_YPOS = 142;
+        final int PALETTE_SLOT_X_SPACING = 152;
+        final int PALETTE_SLOT_Y_SPACING = 94;
 
-        for (int x = 0; x < 2; x++) {
-            int slotNumber = x;
-            addSlot(new Slot(this.easelStorage, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
-        }
+        this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING));
 
         if (this.world.isRemote()) {
             ImmersiveMp.LOG.warn(canvas);
@@ -90,7 +85,7 @@ public class EaselContainer extends Container {
         } else {
             ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
 
-            if (canvasStack.getItem() == ModLockItems.CANVAS_ITEM) {
+           if (canvasStack.getItem() == ModLockItems.CANVAS_ITEM) {
                 byte[] canvasData = CanvasItem.getCanvasData(canvasStack, true);
                 this.canvas = ByteBuffer.wrap(canvasData);
                 this.canvasAvailable = true;

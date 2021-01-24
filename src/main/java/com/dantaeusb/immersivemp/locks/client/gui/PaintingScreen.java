@@ -140,7 +140,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
         int canvasGlobalLeft = this.guiLeft + CANVAS_POSITION_X;
         int canvasGlobalTop = this.guiTop + CANVAS_POSITION_Y;
 
-        for (int i = 0; i < CanvasItem.CANVAS_SIZE; i++) {
+        for (int i = 0; i < CanvasItem.CANVAS_SQUARE; i++) {
             int localX = i % 16;
             int localY = i / 16;
 

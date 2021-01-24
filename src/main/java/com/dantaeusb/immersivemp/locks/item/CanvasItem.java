@@ -1,18 +1,15 @@
 package com.dantaeusb.immersivemp.locks.item;
 
-import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.core.Helper;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 
-import java.util.UUID;
-
 public class CanvasItem extends AbstractLockItem
 {
     public static final String NBT_TAG_NAME_CANVAS_DATA = "canvasData";
-    public static int CANVAS_SIZE = 16 * 16;
-    public static int CANVAS_BYTE_SIZE = CANVAS_SIZE * 4;
+    public static int CANVAS_SIZE = 16;
+    public static int CANVAS_SQUARE = CANVAS_SIZE * CANVAS_SIZE;
+    public static int CANVAS_BYTE_SIZE = CANVAS_SQUARE * 4;
 
     public CanvasItem() {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
@@ -28,7 +25,7 @@ public class CanvasItem extends AbstractLockItem
         } else {
             canvasData = new byte[CANVAS_BYTE_SIZE];
 
-            for (int i = 0; i < CANVAS_SIZE; i++) {
+            for (int i = 0; i < CANVAS_SQUARE; i++) {
                 int iterator = i * 4;
                 canvasData[iterator] = (byte) 0xFF;
                 canvasData[iterator + 1] = (byte) 0x00;

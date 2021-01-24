@@ -27,6 +27,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -72,6 +73,15 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         }
 
         return ByteBuffer.wrap(CanvasItem.getCanvasData(canvasStack, true));
+    }
+
+    // render
+
+    @Override
+    public AxisAlignedBB getRenderBoundingBox()
+    {
+        return INFINITE_EXTENT_AABB;
+        //return new AxisAlignedBB(this.getPos(), this.getPos().add(1, 2, 1));
     }
 
     // NBT stack
@@ -136,6 +146,8 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public void dropAllContents(World world, BlockPos blockPos) {
         InventoryHelper.dropInventoryItems(world, blockPos, this.easelStorage);
     }
+
+    //
 
     @Override
     public ITextComponent getDisplayName() {
