@@ -1,15 +1,12 @@
 package com.dantaeusb.immersivemp.locks.block;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.inventory.container.LockTableContainer;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingSyncPacket;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.SCanvasNamePacket;
 import com.dantaeusb.immersivemp.locks.tileentity.EaselTileEntity;
 import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
-import net.minecraft.inventory.container.SimpleNamedContainerProvider;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.state.DirectionProperty;
@@ -20,8 +17,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.math.shapes.VoxelShape;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkHooks;
@@ -48,8 +43,8 @@ public class EaselBlock extends ContainerBlock {
     }
 
     @Nullable
-    public TileEntity createNewTileEntity(IBlockReader worldIn) {
-        return new EaselTileEntity();
+    public TileEntity createNewTileEntity(IBlockReader world) {
+        return new EaselTileEntity((World) world);
     }
 
     // not needed if your block implements ITileEntityProvider (in this case implemented by BlockContainer), but it
@@ -73,12 +68,12 @@ public class EaselBlock extends ContainerBlock {
         if (namedContainerProvider != null) {
             if (!(player instanceof ServerPlayerEntity)) return ActionResultType.FAIL;  // should always be true, but just in case...
             ServerPlayerEntity serverPlayerEntity = (ServerPlayerEntity)player;
-            NetworkHooks.openGui(serverPlayerEntity, namedContainerProvider, (packetBuffer) -> this.writeCanvasDataToBuffer(state, worldIn, pos, player, packetBuffer));
+            NetworkHooks.openGui(serverPlayerEntity, namedContainerProvider, (packetBuffer) -> this.writeCanvasIdToNetwork(state, worldIn, pos, player, packetBuffer));
         }
         return ActionResultType.SUCCESS;
     }
 
-    protected void writeCanvasDataToBuffer(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, PacketBuffer networkBuffer) {
+    protected void writeCanvasIdToNetwork(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, PacketBuffer networkBuffer) {
         TileEntity easelTileEntity = worldIn.getTileEntity(pos);
 
         if (!(easelTileEntity instanceof EaselTileEntity)) {
@@ -86,8 +81,7 @@ public class EaselBlock extends ContainerBlock {
             return;
         }
 
-        PaintingSyncPacket.writePacketData(networkBuffer, ((EaselTileEntity) easelTileEntity).getCanvasData());
-
+        SCanvasNamePacket.writeCanvasName(networkBuffer, ((EaselTileEntity) easelTileEntity).getCanvasName());
     }
 
     public BlockState getStateForPlacement(BlockItemUseContext context) {
@@ -102,7 +96,7 @@ public class EaselBlock extends ContainerBlock {
         builder.add(FACING);
     }
 
-    private static final VoxelShape SHAPE = Block.makeCuboidShape(4.0D, 0.0D, 4.0D, 12.0D, 16.0D, 12.0D);
+    private static final VoxelShape SHAPE = Block.makeCuboidShape(2.0D, 0.0D, 2.0D, 14.0D, 12.0D, 12.0D);
 
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
         return SHAPE;

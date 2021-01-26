@@ -25,7 +25,6 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = ImmersiveMp.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModLockBlocks
 {
-    public static final Material WOOD = new Material(MaterialColor.WOOD, false, false, false, false, true, true, PushReaction.NORMAL);
     public static final Material STONE = new Material(MaterialColor.STONE, false, false, false, false, false, true, PushReaction.NORMAL);
     public static final Material WOOL = new Material(MaterialColor.WOOL, false, false, false, false, false, true, PushReaction.NORMAL);
 
@@ -34,9 +33,9 @@ public class ModLockBlocks
 
     private static final List<Block> BLOCKS = new ArrayList<>();
 
-    public static final Block LOCK_TABLE = registerBlockItem("lock_table", new LockTableBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE)));
+    public static final Block LOCK_TABLE = registerBlockItem("lock_table", new LockTableBlock(AbstractBlock.Properties.create(Material.ROCK).hardnessAndResistance(2.5F).sound(SoundType.STONE)));
 
-    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(Block.Properties.create(STONE).hardnessAndResistance(0.5F).sound(SoundType.STONE).notSolid().setOpaque(ModLockBlocks::isntSolid)));
+    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(AbstractBlock.Properties.create(Material.WOOD).hardnessAndResistance(1.5F).sound(SoundType.WOOD).notSolid()));
 
     public static final Block ACACIA_LOCKABLE_DOOR = registerLockableDoor("acacia_lockable_door", new LockableDoorBlock(AbstractBlock.Properties.create(Material.WOOD, Blocks.ACACIA_PLANKS.getMaterialColor()).hardnessAndResistance(3.0F).sound(SoundType.WOOD).notSolid()));
     public static final Block BIRCH_LOCKABLE_DOOR = registerLockableDoor("birch_lockable_door", new LockableDoorBlock(AbstractBlock.Properties.create(Material.WOOD, Blocks.BIRCH_PLANKS.getMaterialColor()).hardnessAndResistance(3.0F).sound(SoundType.WOOD).notSolid()));
@@ -75,9 +74,5 @@ public class ModLockBlocks
     {
         BLOCKS.forEach(block -> event.getRegistry().register(block));
         BLOCKS.clear();
-    }
-
-    private static boolean isntSolid(BlockState state, IBlockReader reader, BlockPos pos) {
-        return false;
     }
 }

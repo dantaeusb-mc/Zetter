@@ -1,7 +1,10 @@
 package com.dantaeusb.immersivemp.locks.client.gui;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
+import com.dantaeusb.immersivemp.locks.core.ModLockNetwork;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.CRequestSyncPacket;
+import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
@@ -15,15 +18,15 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
+import java.util.Iterator;
 import java.util.Map;
 
 @OnlyIn(Dist.CLIENT)
 public class CanvasRenderer implements AutoCloseable {
     private static CanvasRenderer instance;
-
     private final TextureManager textureManager;
     private final Map<String, CanvasRenderer.Instance> loadedCanvases = Maps.newHashMap();
+    private final Map<String, Float> ticksSinceRenderRequested = Maps.newHashMap();
 
     public CanvasRenderer(TextureManager textureManagerIn) {
         this.textureManager = textureManagerIn;
@@ -38,24 +41,72 @@ public class CanvasRenderer implements AutoCloseable {
      * Updates a map texture
      */
 
-    public void updateCanvas(ByteBuffer canvas) {
-        this.getCanvasRendererInstance(canvas).updateMapTexture();
+    public void updateCanvas(CanvasData canvas) {
+        this.getCanvasRendererInstance(canvas, true).updateCanvasTexture();
     }
 
-    public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, ByteBuffer canvas, int combinedLight) {
-        this.getCanvasRendererInstance(canvas).render(matrixStack, renderTypeBuffer, combinedLight);
+    public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, CanvasData canvas, int combinedLight) {
+        this.ticksSinceRenderRequested.put(canvas.getName(), 0.0f);
+
+        CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvas, false);
+
+        if (rendererInstance == null) {
+            this.requestCanvasTexture(canvas.getName());
+            return;
+        }
+
+        rendererInstance.render(matrixStack, renderTypeBuffer, combinedLight);
+    }
+
+    public void update(float renderTickTime) {
+        for (Iterator<Map.Entry<String, Float>> iterator = this.ticksSinceRenderRequested.entrySet().iterator();
+             iterator.hasNext();) {
+            String canvasName = iterator.next().getKey();
+
+            float timeSinceCanvasRenderRequested = this.ticksSinceRenderRequested.getOrDefault(canvasName, 0.0f);
+            timeSinceCanvasRenderRequested += renderTickTime;
+
+            // Keep 5 minutes
+            if (timeSinceCanvasRenderRequested < 20.0f * 60 * 5) {
+                this.ticksSinceRenderRequested.put(canvasName, timeSinceCanvasRenderRequested);
+            } else {
+                ImmersiveMp.LOG.info("Unloading canvas " + canvasName);
+
+                this.loadedCanvases.remove(canvasName);
+                this.ticksSinceRenderRequested.remove(canvasName);
+            }
+        }
+    }
+
+    public void requestCanvasTexture(String canvasName) {
+        float tickSinceLastRequest = 0.0f;
+
+        if (this.ticksSinceRenderRequested.containsKey(canvasName)) {
+            tickSinceLastRequest = this.ticksSinceRenderRequested.get(canvasName);
+        } else {
+            this.ticksSinceRenderRequested.put(canvasName, tickSinceLastRequest);
+        }
+
+        // Wait 5 seconds before asking for texture again
+        if (tickSinceLastRequest == 0.0f || tickSinceLastRequest > 20.0f * 5) {
+            CRequestSyncPacket requestSyncPacket = new CRequestSyncPacket(canvasName);
+            ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);
+
+            this.ticksSinceRenderRequested.put(canvasName, 0.0f);
+        }
     }
 
     /*
      * Returns {@link net.minecraft.client.gui.MapItemRenderer.Instance MapItemRenderer.Instance} with given map data
      */
 
-    private CanvasRenderer.Instance getCanvasRendererInstance(ByteBuffer canvas) {
-        CanvasRenderer.Instance canvasRendererInstance = this.loadedCanvases.get("test");
+    private @Nullable CanvasRenderer.Instance getCanvasRendererInstance(CanvasData canvas, boolean create) {
+        CanvasRenderer.Instance canvasRendererInstance = this.loadedCanvases.get(canvas.getName());
 
-        if (canvasRendererInstance == null) {
+        if (create && canvasRendererInstance == null) {
             canvasRendererInstance = new CanvasRenderer.Instance(canvas);
-            this.loadedCanvases.put("test", canvasRendererInstance);
+            this.loadedCanvases.put(canvas.getName(), canvasRendererInstance);
+
         }
 
         return canvasRendererInstance;
@@ -78,25 +129,20 @@ public class CanvasRenderer implements AutoCloseable {
         this.loadedCanvases.clear();
     }
 
-    @Nullable
-    public ByteBuffer getData(@Nullable CanvasRenderer.Instance canvasRendererInstance) {
-        return canvasRendererInstance != null ? canvasRendererInstance.canvas : null;
-    }
-
     public void close() {
         this.clearLoadedMaps();
     }
 
     @OnlyIn(Dist.CLIENT)
     class Instance implements AutoCloseable {
-        private final ByteBuffer canvas;
+        private final CanvasData canvas;
         private final DynamicTexture canvasTexture;
         private final RenderType renderType;
 
-        private Instance(ByteBuffer canvas) {
+        private Instance(CanvasData canvas) {
             this.canvas = canvas;
             this.canvasTexture = new DynamicTexture(CanvasItem.CANVAS_SIZE, CanvasItem.CANVAS_SIZE, true);
-            ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.getDynamicTextureLocation("canvas/" + "test", this.canvasTexture);
+            ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.getDynamicTextureLocation("canvas/" + this.canvas.getName(), this.canvasTexture);
             this.renderType = RenderType.getText(dynamicTextureLocation);
         }
 
@@ -104,20 +150,26 @@ public class CanvasRenderer implements AutoCloseable {
          * Updates a map {@link net.minecraft.client.gui.MapItemRenderer.Instance#mapTexture texture}
          */
 
-        private void updateMapTexture() {
-            this.canvas.rewind();
-
-            for(int row = 0; row < CanvasItem.CANVAS_SIZE; row++) {
-                for(int col = 0; col < CanvasItem.CANVAS_SIZE; col++) {
-                    int intIndex = row * CanvasItem.CANVAS_SIZE + col;
-                    int color = this.canvas.getInt(intIndex * 4);
-                    this.canvasTexture.getTextureData().setPixelRGBA(col, row, color);
+        private void updateCanvasTexture() {
+            for(int pixelY = 0; pixelY < canvas.getHeight(); pixelY++) {
+                for(int pixelX = 0; pixelX < canvas.getWidth(); pixelX++) {
+                    int color = this.canvas.getColorAt(pixelX, pixelY);
+                    this.canvasTexture.getTextureData().setPixelRGBA(pixelX, pixelY, this.ARGBtoABGR(color));
                 }
             }
 
             ImmersiveMp.LOG.warn("Updated texture");
 
             this.canvasTexture.updateDynamicTexture();
+        }
+
+        private int ARGBtoABGR(int x)
+        {
+            return ((x & 0xFF000000)) |       //AA______
+                   ((x & 0x00FF0000) >> 16) | //______RR
+                   ((x & 0x0000FF00)) |       //____GG__
+                   ((x & 0x000000FF) << 16);  //__BB____
+            // Return value is in format:  0xAABBGGRR
         }
 
         private void render(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight) {

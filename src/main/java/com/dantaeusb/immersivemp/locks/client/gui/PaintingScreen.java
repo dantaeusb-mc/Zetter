@@ -39,8 +39,6 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
 
         this.xSize = 176;
         this.ySize = 166;
-
-        this.container.getCanvas().order(ByteOrder.BIG_ENDIAN);
     }
 
     @Override
@@ -137,18 +135,20 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
     final int CANVAS_SCALE_FACTOR = 5;
 
     protected void drawCanvas(MatrixStack matrixStack) {
-        int canvasGlobalLeft = this.guiLeft + CANVAS_POSITION_X;
-        int canvasGlobalTop = this.guiTop + CANVAS_POSITION_Y;
+        if (this.container.isCanvasAvailable()) {
+            int canvasGlobalLeft = this.guiLeft + CANVAS_POSITION_X;
+            int canvasGlobalTop = this.guiTop + CANVAS_POSITION_Y;
 
-        for (int i = 0; i < CanvasItem.CANVAS_SQUARE; i++) {
-            int localX = i % 16;
-            int localY = i / 16;
+            for (int i = 0; i < CanvasItem.CANVAS_SQUARE; i++) {
+                int localX = i % 16;
+                int localY = i / 16;
 
-            int color = this.container.getColor(this.container.getCanvas(), i);
-            int globalX = canvasGlobalLeft + localX * CANVAS_SCALE_FACTOR;
-            int globalY = canvasGlobalTop + localY * CANVAS_SCALE_FACTOR;
+                int color = this.container.getCanvasData().getColorAt(i);
+                int globalX = canvasGlobalLeft + localX * CANVAS_SCALE_FACTOR;
+                int globalY = canvasGlobalTop + localY * CANVAS_SCALE_FACTOR;
 
-            this.fillGradient(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color, color);
+                this.fillGradient(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color, color);
+            }
         }
     }
 
@@ -190,7 +190,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
             int fromX = paletteGlobalLeft + (i % 2) * PALETTE_OFFSET;
             int fromY = paletteGlobalTop + (i / 2) * PALETTE_OFFSET;
 
-            int color = this.container.getColor(this.container.getPalette(), i);
+            int color = this.container.getPalette().getInt(i * 4);
 
             this.fillGradient(matrixStack, fromX, fromY, fromX + PALETTE_SCALE_FACTOR, fromY + PALETTE_SCALE_FACTOR, color, color);
         }

@@ -3,11 +3,14 @@ package com.dantaeusb.immersivemp.locks.core;
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.network.ClientHandler;
 import com.dantaeusb.immersivemp.locks.network.ServerHandler;
-import com.dantaeusb.immersivemp.locks.network.handler.server.PaintingHandler;
+import com.dantaeusb.immersivemp.locks.network.handler.server.PaintingClientHandler;
+import com.dantaeusb.immersivemp.locks.network.handler.server.PaintingServerHandler;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockDoorOpen;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockTableModePacket;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockTableRenameItemPacket;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.CRequestSyncPacket;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingFrameBufferPacket;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.SCanvasSyncMessage;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,6 +20,7 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 import java.util.Optional;
 
+import static net.minecraftforge.fml.network.NetworkDirection.PLAY_TO_CLIENT;
 import static net.minecraftforge.fml.network.NetworkDirection.PLAY_TO_SERVER;
 
 @Mod.EventBusSubscriber(modid = ImmersiveMp.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -32,7 +36,8 @@ public class ModLockNetwork {
     public static final byte LOCKING_DOOR_RESULT = 12;
 
     public static final byte PAINTING_FRAME = 21;
-    public static final byte PAINTING_SYNC = 22;
+    public static final byte PAINTING_REQUEST_SYNC = 22;
+    public static final byte PAINTING_SYNC = 23;
 
     // Register a channel for your packets.  You can send multiple types of packets on the same channel.  Most mods will only ever
     //  need one channel.
@@ -60,9 +65,19 @@ public class ModLockNetwork {
 
         // Painter
 
-        simpleChannel.registerMessage(LOCKING_DOOR, PaintingFrameBufferPacket.class,
+        simpleChannel.registerMessage(PAINTING_FRAME, PaintingFrameBufferPacket.class,
                 PaintingFrameBufferPacket::writePacketData, PaintingFrameBufferPacket::readPacketData,
-                PaintingHandler::handleFrameBuffer,
+                PaintingServerHandler::handleFrameBuffer,
                 Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(PAINTING_REQUEST_SYNC, CRequestSyncPacket.class,
+                CRequestSyncPacket::writePacketData, CRequestSyncPacket::readPacketData,
+                PaintingServerHandler::handleRequestSync,
+                Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(PAINTING_SYNC, SCanvasSyncMessage.class,
+                SCanvasSyncMessage::writePacketData, SCanvasSyncMessage::readPacketData,
+                PaintingClientHandler::handleSync,
+                Optional.of(PLAY_TO_CLIENT));
     }
 }

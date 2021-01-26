@@ -2,7 +2,9 @@ package com.dantaeusb.immersivemp;
 
 import com.dantaeusb.immersivemp.base.ClientProxy;
 import com.dantaeusb.immersivemp.base.CommonProxy;
+import com.dantaeusb.immersivemp.locks.capability.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.immersivemp.locks.core.ModLockBlocks;
+import com.dantaeusb.immersivemp.locks.core.ModLockCapabilities;
 import com.dantaeusb.immersivemp.locks.core.ModLockGameEvents;
 import com.dantaeusb.immersivemp.locks.core.ModLockIMCEvents;
 import com.dantaeusb.immersivemp.usefultools.debugging.ForgeLoggerTweaker;
@@ -52,17 +54,9 @@ public class ImmersiveMp
         }
 
         quarkEnabled = ModList.get().isLoaded("quark");
-
-        registerCommonEvents();
+        MOD_EVENT_BUS = FMLJavaModLoadingContext.get().getModEventBus();
 
         proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
         proxy.start();
-
-        MOD_EVENT_BUS = FMLJavaModLoadingContext.get().getModEventBus();
-    }
-
-    public void registerCommonEvents() {
-        MinecraftForge.EVENT_BUS.register(new ModLockIMCEvents());
-        MinecraftForge.EVENT_BUS.register(new ModLockGameEvents());
     }
 }

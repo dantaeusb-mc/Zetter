@@ -1,6 +1,8 @@
 package com.dantaeusb.immersivemp.locks.tileentity.storage;
 
 import com.dantaeusb.immersivemp.locks.core.ModLockItems;
+import com.dantaeusb.immersivemp.locks.item.CanvasItem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -209,8 +211,6 @@ public class EaselStorage implements IInventory {
         this.easelContents = new ItemStackHandler(STORAGE_SIZE);
         this.canPlayerAccessInventoryLambda = canPlayerAccessInventoryLambda;
         this.markDirtyNotificationLambda = markDirtyNotificationLambda;
-
-        this.easelContents.setStackInSlot(CANVAS_SLOT, new ItemStack(ModLockItems.CANVAS_ITEM));
     }
 
     // the function that the container should call in order to decide if the

@@ -2,10 +2,13 @@ package com.dantaeusb.immersivemp.locks.client.renderer.tileentity;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.block.EaselBlock;
+import com.dantaeusb.immersivemp.locks.capability.canvastracker.ICanvasTracker;
 import com.dantaeusb.immersivemp.locks.client.gui.CanvasRenderer;
+import com.dantaeusb.immersivemp.locks.core.Helper;
 import com.dantaeusb.immersivemp.locks.core.ModLockBlocks;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.dantaeusb.immersivemp.locks.tileentity.EaselTileEntity;
+import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
@@ -28,6 +31,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
 
 public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity> {
     private final ModelRenderer rack;
@@ -55,7 +60,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         this.canvas = new ModelRenderer(64, 64, 0, 0);
         this.canvas.setRotationPoint(0.0F, 0.0F, 0.0F);
         setRotationAngle(this.canvas, 0.1745F, 0.0F, 0.0F);
-        this.canvas.setTextureOffset(0, 0).addBox(0.0F, 12.0F, 3.0F, 16.0F, 16.0F, 1.0F, 0.0F, false);
+        this.canvas.setTextureOffset(0, 0).addBox(0.0F, 12.0F, 3.0F, 16.0F, 18.0F, 1.0F, 0.0F, false);
 
         this.topPlank = new ModelRenderer(64, 64, 0, 0);
         this.topPlank.setRotationPoint(0.0F, 0.0F, 0.0F);
@@ -88,14 +93,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         boolean flag = world != null;
         BlockState blockState = flag ? tileEntity.getBlockState() : ModLockBlocks.EASEL.getDefaultState().with(EaselBlock.FACING, Direction.SOUTH);
 
-        if (!stoopidUpdate) {
-            CanvasRenderer.getInstance().updateCanvas(tileEntity.getCanvasData());
-            stoopidUpdate = true;
-        }
-
-        ImmersiveMp.LOG.info(combinedLight + " " + combinedOverlay);
-
-        IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.getSolid());
+        IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.getEntityCutout(TEXTURE));
 
         matrixStack.push();
 
@@ -110,22 +108,30 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         frontLegs.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
         canvas.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
 
-        /**
-         * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
-         */
+        if (tileEntity.hasCanvas()) {
+            CanvasData canvasData = getCanvasData(world, tileEntity.getCanvasName());
 
-        final float scaleFactor = 1.0F / 16.0F;
+            if (canvasData != null) {
+                /**
+                 * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
+                 */
 
-        // Scale and prepare
-        matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
-        matrixStack.translate(0.0D, 12.0D, 5.0D);
-        matrixStack.rotate(Vector3f.XP.rotation(0.1745F));
+                final float scaleFactor = 1.0F / 16.0F;
 
-        matrixStack.rotate(Vector3f.ZP.rotationDegrees(180.0F));
-        matrixStack.translate(-16.0D, -16.0D, 0.0D);
-        matrixStack.translate(0.0D, 0.0D, 0.1D);
+                // Scale and prepare
+                matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
+                matrixStack.translate(0.0D, 12.5D, 5.0D);
+                matrixStack.rotate(Vector3f.XP.rotation(0.1745F));
 
-        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, tileEntity.getCanvasData(), combinedLight);
+                matrixStack.rotate(Vector3f.ZP.rotationDegrees(180.0F));
+                matrixStack.translate(-16.0D, -16.0D, 0.0D);
+                matrixStack.translate(0.0D, 0.0D, 0.1D);
+
+                CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, canvasData, combinedLight);
+            } else {
+                CanvasRenderer.getInstance().requestCanvasTexture(tileEntity.getCanvasName());
+            }
+        }
 
         matrixStack.pop();
     }
@@ -134,5 +140,16 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         modelRenderer.rotateAngleX = x;
         modelRenderer.rotateAngleY = y;
         modelRenderer.rotateAngleZ = z;
+    }
+
+    @Nullable
+    public static CanvasData getCanvasData(World world, String canvasName) {
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+
+        if (canvasTracker == null) {
+            return null;
+        }
+
+        return canvasTracker.getCanvasData(canvasName);
     }
 }

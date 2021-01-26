@@ -1,18 +1,14 @@
 package com.dantaeusb.immersivemp.locks.tileentity;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.core.Helper;
-import com.dantaeusb.immersivemp.locks.core.ModLockSounds;
+import com.dantaeusb.immersivemp.locks.core.ModLockItems;
 import com.dantaeusb.immersivemp.locks.core.ModLockTileEntities;
 import com.dantaeusb.immersivemp.locks.inventory.container.EaselContainer;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.dantaeusb.immersivemp.locks.tileentity.storage.EaselStorage;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.DoorBlock;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
@@ -20,30 +16,34 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
-import net.minecraft.state.properties.DoorHingeSide;
-import net.minecraft.state.properties.DoubleBlockHalf;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Direction;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
-import java.util.UUID;
 
 public class EaselTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
     private boolean used = true;
     private final EaselStorage easelStorage; // two items: canvas and palette
 
     private static final String EASEL_STORAGE_TAG = "storage";
+    private String canvasName;
+
+    public EaselTileEntity(World world) {
+        this();
+
+        if (world.isRemote()) {
+            return;
+        }
+
+        ItemStack newCanvas = CanvasItem.setupNewCanvas(world);
+
+        this.easelStorage.setInventorySlotContents(EaselStorage.CANVAS_SLOT, newCanvas);
+    }
 
     public EaselTileEntity() {
         super(ModLockTileEntities.EASEL_TILE_ENTITY);
@@ -61,18 +61,32 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     public void tick() {
-        if (used) {
-        }
     }
 
-    public @Nullable ByteBuffer getCanvasData() {
-        ItemStack canvasStack = this.easelStorage.getCanvasStack();
+    // specific
 
-        if (canvasStack.isEmpty()) {
-            return null;
+    public @Nullable ItemStack getCanvasStack() {
+        return this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
+    }
+
+    public boolean hasCanvas() {
+        ItemStack canvasStack = this.getCanvasStack();
+
+        return !canvasStack.isEmpty();
+    }
+
+    /**
+     * Returns current canvas ID or 0 if no canvas assigned
+     * @return
+     */
+    public String getCanvasName() {
+        ItemStack canvasStack = this.getCanvasStack();
+
+        if (canvasStack != null && canvasStack.isEmpty()) {
+            return "";
         }
 
-        return ByteBuffer.wrap(CanvasItem.getCanvasData(canvasStack, true));
+        return CanvasItem.getCanvasName(canvasStack);
     }
 
     // render
@@ -90,8 +104,10 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public CompoundNBT write(CompoundNBT parentNBTTagCompound)
     {
         super.write(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
+
         CompoundNBT inventoryNBT = this.easelStorage.serializeNBT();
         parentNBTTagCompound.put(EASEL_STORAGE_TAG, inventoryNBT);
+
         return parentNBTTagCompound;
     }
 
@@ -99,8 +115,13 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public void read(BlockState blockState, CompoundNBT parentNBTTagCompound)
     {
         super.read(blockState, parentNBTTagCompound);
+
         CompoundNBT inventoryNBT = parentNBTTagCompound.getCompound(EASEL_STORAGE_TAG);
         this.easelStorage.deserializeNBT(inventoryNBT);
+
+        // Update canvas name cache for renderer
+        this.canvasName = this.getCanvasName();
+
         if (this.easelStorage.getSizeInventory() != EaselStorage.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
@@ -114,14 +135,16 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         CompoundNBT nbtTagCompound = new CompoundNBT();
         write(nbtTagCompound);
 
+        ImmersiveMp.LOG.info("Going to send update packet");
+
         int tileEntityType = 42;
         return new SUpdateTileEntityPacket(this.pos, tileEntityType, nbtTagCompound);
     }
 
     @Override
-    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket pkt) {
+    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet) {
         BlockState blockState = world.getBlockState(pos);
-        read(blockState, pkt.getNbtCompound());
+        read(blockState, packet.getNbtCompound());
     }
 
     @Override

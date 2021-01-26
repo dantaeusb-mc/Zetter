@@ -1,6 +1,8 @@
 package com.dantaeusb.immersivemp.locks.core;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
+import com.dantaeusb.immersivemp.locks.capability.canvastracker.CanvasTrackerCapability;
+import com.dantaeusb.immersivemp.locks.capability.canvastracker.ICanvasTracker;
 import com.dantaeusb.immersivemp.locks.item.ILockingItem;
 import com.dantaeusb.immersivemp.locks.item.KeyItem;
 import net.minecraft.entity.player.PlayerEntity;
@@ -10,7 +12,9 @@ import net.minecraft.item.Items;
 import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 
+import javax.annotation.Nullable;
 import java.util.UUID;
 
 public class Helper {
@@ -74,5 +78,25 @@ public class Helper {
         ImmersiveMp.LOG.debug("Unable to find required key " + requiredKeyId + " in " + playerEntity + " inventory");
 
         return false;
+    }
+
+    // Painting
+
+    public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {
+        ICanvasTracker canvasTracker;
+
+        if (!world.isRemote()) {
+            // looking for a server canvas tracker in the overworld, since canvases are world-independent
+            canvasTracker = world.getServer().func_241755_D_().getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+        } else {
+            canvasTracker = world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+        }
+
+        if (canvasTracker == null) {
+            ImmersiveMp.LOG.error("Cannot find world canvas capability");
+            return null;
+        }
+
+        return canvasTracker;
     }
 }

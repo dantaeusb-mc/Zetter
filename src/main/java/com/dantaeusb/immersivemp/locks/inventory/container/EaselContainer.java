@@ -1,29 +1,27 @@
 package com.dantaeusb.immersivemp.locks.inventory.container;
 
 import com.dantaeusb.immersivemp.ImmersiveMp;
+import com.dantaeusb.immersivemp.locks.capability.canvastracker.CanvasTrackerCapability;
+import com.dantaeusb.immersivemp.locks.capability.canvastracker.ICanvasTracker;
+import com.dantaeusb.immersivemp.locks.client.gui.CanvasRenderer;
 import com.dantaeusb.immersivemp.locks.core.ModLockContainers;
 import com.dantaeusb.immersivemp.locks.core.ModLockItems;
 import com.dantaeusb.immersivemp.locks.core.ModLockNetwork;
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrame;
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrameBuffer;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.SCanvasNamePacket;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingFrameBufferPacket;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingSyncPacket;
 import com.dantaeusb.immersivemp.locks.tileentity.storage.EaselStorage;
+import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IWorldPosCallable;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
-import javax.annotation.Nullable;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -36,7 +34,7 @@ public class EaselContainer extends Container {
     private static final int HOTBAR_SLOT_COUNT = 9;
 
     private boolean canvasAvailable = false;
-    private ByteBuffer canvas;
+    private CanvasData canvas;
     private ByteBuffer palette = ByteBuffer.allocateDirect(PALETTE_SLOTS * 4);
 
     private final EaselStorage easelStorage;
@@ -49,19 +47,22 @@ public class EaselContainer extends Container {
     private long lastFrameTime;
 
     public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
-        return new EaselContainer(windowID, playerInventory, easelStorage, null);
+        return new EaselContainer(windowID, playerInventory, easelStorage);
     }
 
     public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         // it seems like we have to utilize extraData to pass the canvas data
         // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
-        ByteBuffer canvas = PaintingSyncPacket.readPacketData(networkBuffer);
         EaselStorage easelStorage = EaselStorage.createForClientSideContainer();
+        String canvasName = SCanvasNamePacket.readCanvasName(networkBuffer);
 
-        return new EaselContainer(windowID, playerInventory, easelStorage, canvas);
+        EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
+        easelContainer.setCanvas(canvasName);
+
+        return easelContainer;
     }
 
-    public EaselContainer(int windowID, PlayerInventory invPlayer, EaselStorage easelStorage, @Nullable ByteBuffer canvas) {
+    public EaselContainer(int windowID, PlayerInventory invPlayer, EaselStorage easelStorage) {
         super(ModLockContainers.PAINTING, windowID);
 
         if (ModLockContainers.PAINTING == null)
@@ -75,25 +76,10 @@ public class EaselContainer extends Container {
 
         this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING));
 
-        if (this.world.isRemote()) {
-            ImmersiveMp.LOG.warn(canvas);
-
-            if (canvas != null && canvas.limit() == CanvasItem.CANVAS_BYTE_SIZE) {
-                this.canvas = canvas;
-                this.canvasAvailable = true;
-            }
-        } else {
+        if (!this.world.isRemote()) {
             ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
-
-           if (canvasStack.getItem() == ModLockItems.CANVAS_ITEM) {
-                byte[] canvasData = CanvasItem.getCanvasData(canvasStack, true);
-                this.canvas = ByteBuffer.wrap(canvasData);
-                this.canvasAvailable = true;
-            }
-        }
-
-        if (!canvasAvailable) {
-            this.canvas = ByteBuffer.allocateDirect(CanvasItem.CANVAS_BYTE_SIZE);
+            String canvasName = CanvasItem.getCanvasName(canvasStack);
+            this.setCanvas(canvasName);
         }
 
         // Add the players hotbar to the gui - the [xpos, ypos] location of each item
@@ -103,6 +89,40 @@ public class EaselContainer extends Container {
         }*/
 
         this.tempPropagateData();
+    }
+
+    public void setCanvas(String canvasName) {
+        if (canvasName.isEmpty()) {
+            this.canvas = null;
+            this.canvasAvailable = false;
+            return;
+        }
+
+        ICanvasTracker canvasTracker;
+
+        if (this.world.isRemote()) {
+            canvasTracker = this.world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+        } else {
+            canvasTracker = this.world.getServer().func_241755_D_().getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+        }
+
+        if (canvasTracker == null) {
+            ImmersiveMp.LOG.error("Cannot find world canvas capability");
+            this.canvas = null;
+            this.canvasAvailable = false;
+            return;
+        }
+
+        CanvasData canvas = canvasTracker.getCanvasData(canvasName);
+
+        if (canvas == null) {
+            this.canvas = null;
+            this.canvasAvailable = false;
+            return;
+        }
+
+        this.canvas = canvas;
+        this.canvasAvailable = true;
     }
 
     protected void tempPropagateData() {
@@ -126,8 +146,12 @@ public class EaselContainer extends Container {
         return this.palette;
     }
 
-    public ByteBuffer getCanvas() {
+    public CanvasData getCanvasData() {
         return this.canvas;
+    }
+
+    public boolean isCanvasAvailable() {
+        return this.canvasAvailable;
     }
 
     public void tick() {
@@ -142,11 +166,25 @@ public class EaselContainer extends Container {
      * @param color
      */
     public void writePixelOnCanvasClientSide(int pixelX, int pixelY, int color, UUID playerId) {
-        int index = this.getPixelIndex(pixelX, pixelY);
+        if (!this.canvasAvailable) {
+            // Nothing to draw on
+            return;
+        }
+
+        int index = this.canvas.getPixelIndex(pixelX, pixelY);
+
         if (this.writePixelOnCanvas(index, color)) {
             this.checkFrameBuffer();
             this.getFrameBuffer(playerId).writeChange(this.world.getGameTime(), index, color);
+            this.updateTextureClient();
         }
+    }
+
+    /**
+     * Immediately update texture for client - not needed for server cause no renderer used here
+     */
+    protected void updateTextureClient() {
+        CanvasRenderer.getInstance().updateCanvas(this.canvas);
     }
 
     /**
@@ -158,15 +196,6 @@ public class EaselContainer extends Container {
     private void writePixelOnCanvasServerSide(int index, int color) {
         if (this.writePixelOnCanvas(index, color)) {
             //this.checkFrameBuffer();
-
-            ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
-
-            if (canvasStack.getItem() != ModLockItems.CANVAS_ITEM) {
-                ImmersiveMp.LOG.warn("Cannot find canvas to write on!");
-                return;
-            }
-
-            CanvasItem.setCanvasData(canvasStack, this.canvas.array());
         }
     }
 
@@ -175,24 +204,14 @@ public class EaselContainer extends Container {
             return false;
         }
 
-        if (this.canvas.getInt(index) == color) {
+        if (this.canvas.getColorAt(index) == color) {
             // Pixel is not changed
             return false;
         }
 
-        this.getCanvas().putInt(index, color);
+        this.getCanvasData().updateCanvasPixel(index, color);
 
         return true;
-    }
-
-    private int getPixelIndex(int pixelX, int pixelY) {
-        pixelX = MathHelper.clamp(pixelX, 0, 15);
-        pixelY = MathHelper.clamp(pixelY, 0, 15);
-
-        int index = pixelY * 16 + pixelX;
-        index *= 4;
-
-        return index;
     }
 
     protected PaintingFrameBuffer getFrameBuffer(UUID playerId) {
@@ -298,16 +317,6 @@ public class EaselContainer extends Container {
                 return;
             }
         }
-    }
-
-    /**
-     * @todo remove transparency, add to bytebuffer.
-     * @param byteBuffer
-     * @param offset
-     * @return
-     */
-    public int getColor(ByteBuffer byteBuffer, int offset) {
-        return byteBuffer.getInt(offset * 4);
     }
 
     public void setColor(ByteBuffer byteBuffer, int offset, int color) {

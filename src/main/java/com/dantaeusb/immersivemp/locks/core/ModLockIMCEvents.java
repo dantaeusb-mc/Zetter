@@ -4,6 +4,7 @@ import com.dantaeusb.immersivemp.ImmersiveMp;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 
 /**
@@ -11,9 +12,10 @@ import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
  * Using `MinecraftForge.EVENT_BUS.register(new ModLockIMCEvents());` will subscribe handler
  * but it won't do anything. Timing is the issue, probably
  */
+@Mod.EventBusSubscriber(modid = ImmersiveMp.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ModLockIMCEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void serverLoad(FMLServerStartingEvent event)
+    public static void serverLoad(FMLServerStartingEvent event)
     {
         ImmersiveMp.LOG.info("Sending IMCs to CarryOn");
 
