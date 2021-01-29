@@ -10,10 +10,10 @@ public class PaletteItem extends AbstractLockItem
     public static int PALETTE_SIZE = 14;
 
     public PaletteItem() {
-        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
+        super(new Properties().maxDamage(255).group(ItemGroup.TOOLS));
     }
 
-    public static int[] getPaletteColors(ItemStack stack, boolean forceCreate)
+    public static int[] getPaletteColors(ItemStack stack)
     {
         CompoundNBT compoundNBT = stack.getTag();
 
@@ -21,9 +21,7 @@ public class PaletteItem extends AbstractLockItem
         if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_PALETTE_COLORS)) {
             paletteColors = compoundNBT.getIntArray(NBT_TAG_NAME_PALETTE_COLORS);
         } else {
-            paletteColors = new int[PALETTE_SIZE];
-
-            
+            paletteColors = getDefaultPaletteColors();
         }
 
         return paletteColors;
@@ -59,7 +57,18 @@ public class PaletteItem extends AbstractLockItem
      */
     public static void setPaletteColors(ItemStack stack, int[] paletteColors)
     {
+        if (paletteColors.length != PALETTE_SIZE) {
+            return;
+        }
+
         CompoundNBT compoundNBT = stack.getOrCreateTag();
         compoundNBT.putIntArray(NBT_TAG_NAME_PALETTE_COLORS, paletteColors);
+    }
+
+    public static void updatePaletteColor(ItemStack stack, int paletteSlot, int color) {
+        int[] colors = PaletteItem.getPaletteColors(stack);
+        colors[paletteSlot] = color;
+
+        PaletteItem.setPaletteColors(stack, colors);
     }
 }

@@ -32,11 +32,21 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
         return this.canvases.get(canvasName);
     }
 
-
+    /**
+     * We can't replace the object cause it'll keep references to old object
+     * in GUI and renderer.
+     * @param newCanvasData
+     */
     @Override
-    public void registerCanvasData(CanvasData canvasData) {
-        this.canvases.put(canvasData.getName(), canvasData);
-        CanvasRenderer.getInstance().updateCanvas(canvasData);
+    public void registerCanvasData(CanvasData newCanvasData) {
+        if (this.canvases.containsKey(newCanvasData.getName())) {
+            CanvasData registeredCanvasData = this.canvases.get(newCanvasData.getName());
+            registeredCanvasData.copyFrom(newCanvasData);
+        } else {
+            this.canvases.put(newCanvasData.getName(), newCanvasData);
+        }
+
+        CanvasRenderer.getInstance().updateCanvas(newCanvasData);
     }
 
     @Override

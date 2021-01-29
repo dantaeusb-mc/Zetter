@@ -3,7 +3,8 @@ package com.dantaeusb.immersivemp.locks.client.gui;
 import com.dantaeusb.immersivemp.ImmersiveMp;
 import com.dantaeusb.immersivemp.locks.core.ModLockNetwork;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.CRequestSyncPacket;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.CanvasRequestPacket;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.CanvasUnloadRequestPacket;
 import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -20,6 +21,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Vector;
 
 @OnlyIn(Dist.CLIENT)
 public class CanvasRenderer implements AutoCloseable {
@@ -27,6 +29,7 @@ public class CanvasRenderer implements AutoCloseable {
     private final TextureManager textureManager;
     private final Map<String, CanvasRenderer.Instance> loadedCanvases = Maps.newHashMap();
     private final Map<String, Float> ticksSinceRenderRequested = Maps.newHashMap();
+    private final Vector<String> reloadRequests = new Vector<>();
 
     public CanvasRenderer(TextureManager textureManagerIn) {
         this.textureManager = textureManagerIn;
@@ -59,23 +62,38 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     public void update(float renderTickTime) {
-        for (Iterator<Map.Entry<String, Float>> iterator = this.ticksSinceRenderRequested.entrySet().iterator();
-             iterator.hasNext();) {
+        Iterator<Map.Entry<String, Float>> iterator = this.ticksSinceRenderRequested.entrySet().iterator();
+
+        while (iterator.hasNext()) {
             String canvasName = iterator.next().getKey();
 
             float timeSinceCanvasRenderRequested = this.ticksSinceRenderRequested.getOrDefault(canvasName, 0.0f);
             timeSinceCanvasRenderRequested += renderTickTime;
 
-            // Keep 5 minutes
-            if (timeSinceCanvasRenderRequested < 20.0f * 60 * 5) {
+            // Keep 3 minutes
+            if (timeSinceCanvasRenderRequested < 20.0f * 60 * 3) {
                 this.ticksSinceRenderRequested.put(canvasName, timeSinceCanvasRenderRequested);
             } else {
-                ImmersiveMp.LOG.info("Unloading canvas " + canvasName);
-
-                this.loadedCanvases.remove(canvasName);
-                this.ticksSinceRenderRequested.remove(canvasName);
+                this.unloadCanvas(canvasName);
+                iterator.remove();
             }
         }
+    }
+
+    /**
+     * Saying to the server that we no longer want to recieve updates
+     * on this canvas since we're not using it
+     * @param canvasName
+     */
+    protected void unloadCanvas(String canvasName) {
+        ImmersiveMp.LOG.info("Unloading canvas " + canvasName);
+
+        this.loadedCanvases.remove(canvasName);
+
+        // Notifying server that we're no longer tracking it
+        // @todo [LOW] better just check tile entity who's around
+        CanvasUnloadRequestPacket unloadPacket = new CanvasUnloadRequestPacket(canvasName);
+        ModLockNetwork.simpleChannel.sendToServer(unloadPacket);
     }
 
     public void requestCanvasTexture(String canvasName) {
@@ -89,7 +107,7 @@ public class CanvasRenderer implements AutoCloseable {
 
         // Wait 5 seconds before asking for texture again
         if (tickSinceLastRequest == 0.0f || tickSinceLastRequest > 20.0f * 5) {
-            CRequestSyncPacket requestSyncPacket = new CRequestSyncPacket(canvasName);
+            CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(canvasName);
             ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);
 
             this.ticksSinceRenderRequested.put(canvasName, 0.0f);
@@ -112,16 +130,11 @@ public class CanvasRenderer implements AutoCloseable {
         return canvasRendererInstance;
     }
 
-    @Nullable
-    public CanvasRenderer.Instance getCanvasInstanceIfExists(String canvasName) {
-        return this.loadedCanvases.get(canvasName);
-    }
-
     /*
      * Clears the currently loaded maps and removes their corresponding textures
      */
 
-    public void clearLoadedMaps() {
+    public void clearLoadedCanvases() {
         for(CanvasRenderer.Instance canvasRendererInstance : this.loadedCanvases.values()) {
             canvasRendererInstance.close();
         }
@@ -130,7 +143,7 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     public void close() {
-        this.clearLoadedMaps();
+        this.clearLoadedCanvases();
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -151,14 +164,12 @@ public class CanvasRenderer implements AutoCloseable {
          */
 
         private void updateCanvasTexture() {
-            for(int pixelY = 0; pixelY < canvas.getHeight(); pixelY++) {
-                for(int pixelX = 0; pixelX < canvas.getWidth(); pixelX++) {
+            for(int pixelY = 0; pixelY < this.canvas.getHeight(); pixelY++) {
+                for(int pixelX = 0; pixelX < this.canvas.getWidth(); pixelX++) {
                     int color = this.canvas.getColorAt(pixelX, pixelY);
                     this.canvasTexture.getTextureData().setPixelRGBA(pixelX, pixelY, this.ARGBtoABGR(color));
                 }
             }
-
-            ImmersiveMp.LOG.warn("Updated texture");
 
             this.canvasTexture.updateDynamicTexture();
         }

@@ -36,6 +36,8 @@ public class EaselStorage implements IInventory {
     public static final int CANVAS_SLOT = 0;
     public static final int PALETTE_SLOT = 1;
 
+    private final ItemStackHandler easelContents;
+
     /**
      * Use this constructor to create a ChestContents which is linked to its parent TileEntity.
      * On the server, this link will be used by the Container to request information and provide notifications to the parent
@@ -60,8 +62,32 @@ public class EaselStorage implements IInventory {
         return new EaselStorage();
     }
 
+    private EaselStorage() {
+        this.easelContents = new ItemStackHandler(STORAGE_SIZE) {
+
+        };
+    }
+
+    private EaselStorage(Predicate<PlayerEntity> canPlayerAccessInventoryLambda, Notify markDirtyNotificationLambda) {
+        this();
+        this.canPlayerAccessInventoryLambda = canPlayerAccessInventoryLambda;
+        this.markDirtyNotificationLambda = markDirtyNotificationLambda;
+    }
+
     public ItemStack getCanvasStack() {
         return this.getStackInSlot(CANVAS_SLOT);
+    }
+
+    public ItemStack getPaletteStack() {
+        return this.getStackInSlot(PALETTE_SLOT);
+    }
+
+    public ItemStack extractCanvas() {
+        return this.easelContents.extractItem(CANVAS_SLOT, 1, false);
+    }
+
+    public void setCanvasStack(ItemStack canvasStack) {
+        this.easelContents.setStackInSlot(CANVAS_SLOT, canvasStack);
     }
 
     // ----Methods used to load / save the contents to NBT
@@ -203,16 +229,6 @@ public class EaselStorage implements IInventory {
 
     // ---------
 
-    private EaselStorage() {
-        this.easelContents = new ItemStackHandler(STORAGE_SIZE);
-    }
-
-    private EaselStorage(Predicate<PlayerEntity> canPlayerAccessInventoryLambda, Notify markDirtyNotificationLambda) {
-        this.easelContents = new ItemStackHandler(STORAGE_SIZE);
-        this.canPlayerAccessInventoryLambda = canPlayerAccessInventoryLambda;
-        this.markDirtyNotificationLambda = markDirtyNotificationLambda;
-    }
-
     // the function that the container should call in order to decide if the
     // given player can access the container's Inventory or not.  Only valid server side
     //  default is "true".
@@ -232,6 +248,4 @@ public class EaselStorage implements IInventory {
     // container has been closed by a player
     // default is "do nothing"
     private Notify closeInventoryNotificationLambda = ()->{};
-
-    private final ItemStackHandler easelContents;
 }

@@ -41,14 +41,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
     private final ModelRenderer backLeg;
     private final ModelRenderer frontLegs;
 
-    public static final ResourceLocation TEXTURE = new ResourceLocation("minecraft:textures/block/spruce_planks.png");
-
-    //private final DynamicTexture canvasTexture;
-    /**
-     * @see {@link net.minecraft.client.gui.MapItemRenderer}
-     */
-    //private final TextureManager textureManager;
-    //private final RenderType canvasRenderType;
+    public static final ResourceLocation TEXTURE = new ResourceLocation("immersivemp:textures/paintings/entity/easel.png");
 
     public EaselTileEntityRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);
@@ -57,26 +50,26 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         this.rack.setRotationPoint(0.0F, 0, 0.0F);
         this.rack.setTextureOffset(0, 0).addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F, 0.0F, false);
 
-        this.canvas = new ModelRenderer(64, 64, 0, 0);
+        this.canvas = new ModelRenderer(64, 64, 6, 5);
         this.canvas.setRotationPoint(0.0F, 0.0F, 0.0F);
         setRotationAngle(this.canvas, 0.1745F, 0.0F, 0.0F);
-        this.canvas.setTextureOffset(0, 0).addBox(0.0F, 12.0F, 3.0F, 16.0F, 18.0F, 1.0F, 0.0F, false);
+        this.canvas.addBox(0.0F, 12.0F, 3.0F, 16.0F, 18.0F, 1.0F, 0.0F, false);
 
         this.topPlank = new ModelRenderer(64, 64, 0, 0);
         this.topPlank.setRotationPoint(0.0F, 0.0F, 0.0F);
         setRotationAngle(topPlank, 0.1745F, 0.0F, 0.0F);
-        this.topPlank.setTextureOffset(0, 0).addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F, 0.0F, false);
+        this.topPlank.addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F, 0.0F, false);
 
-        this.backLeg = new ModelRenderer(64, 64, 0, 0);
+        this.backLeg = new ModelRenderer(64, 64, 0, 6);
         this.backLeg.setRotationPoint(0.0F, 0.0F, 15.0F);
         setRotationAngle(backLeg, -0.2182F, 0.0F, 0.0F);
-        this.backLeg.setTextureOffset(0, 0).addBox(7.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
+        this.backLeg.addBox(7.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
 
-        this.frontLegs = new ModelRenderer(64, 64, 0, 0);
+        this.frontLegs = new ModelRenderer(64, 64, 0, 6);
         this.frontLegs.setRotationPoint(0.0F, 0.0F, -3.0F);
         setRotationAngle(frontLegs, 0.1745F, 0.0F, 0.0F);
-        this.frontLegs.setTextureOffset(0, 0).addBox(12.0F, 0.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
-        this.frontLegs.setTextureOffset(0, 0).addBox(2.0F, 0.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
+        this.frontLegs.addBox(12.0F, 1.0F, 7.0F, 2.0F, 31.0F, 1.0F, 0.0F, false);
+        this.frontLegs.addBox(2.0F, 1.0F, 7.0F, 2.0F, 31.0F, 1.0F, 0.0F, false);
 
         //this.canvasTexture = new DynamicTexture(CanvasItem.CANVAS_SIZE, CanvasItem.CANVAS_SIZE, true);
         //this.textureManager = Minecraft.getInstance().getTextureManager();

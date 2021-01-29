@@ -8,9 +8,7 @@ import com.dantaeusb.immersivemp.locks.network.handler.server.PaintingServerHand
 import com.dantaeusb.immersivemp.locks.network.packet.CLockDoorOpen;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockTableModePacket;
 import com.dantaeusb.immersivemp.locks.network.packet.CLockTableRenameItemPacket;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.CRequestSyncPacket;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingFrameBufferPacket;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.SCanvasSyncMessage;
+import com.dantaeusb.immersivemp.locks.network.packet.painting.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -35,12 +33,13 @@ public class ModLockNetwork {
     public static final byte LOCKING_DOOR = 11;
     public static final byte LOCKING_DOOR_RESULT = 12;
 
-    public static final byte PAINTING_FRAME = 21;
-    public static final byte PAINTING_REQUEST_SYNC = 22;
-    public static final byte PAINTING_SYNC = 23;
+    public static final byte PAINTING_FRAME_CLIENT = 21;
+    public static final byte PAINTING_REQUEST_CANVAS = 22;
+    public static final byte PAINTING_UNLOAD_CANVAS = 23;
+    public static final byte PAINTING_SYNC = 24;
+    public static final byte PALETTE_UPDATE_CLIENT = 25;
+    public static final byte PALETTE_UPDATE_SERVER = 26;
 
-    // Register a channel for your packets.  You can send multiple types of packets on the same channel.  Most mods will only ever
-    //  need one channel.
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onCommonSetupEvent(FMLCommonSetupEvent event) {
@@ -65,19 +64,29 @@ public class ModLockNetwork {
 
         // Painter
 
-        simpleChannel.registerMessage(PAINTING_FRAME, PaintingFrameBufferPacket.class,
+        simpleChannel.registerMessage(PAINTING_FRAME_CLIENT, PaintingFrameBufferPacket.class,
                 PaintingFrameBufferPacket::writePacketData, PaintingFrameBufferPacket::readPacketData,
                 PaintingServerHandler::handleFrameBuffer,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_REQUEST_SYNC, CRequestSyncPacket.class,
-                CRequestSyncPacket::writePacketData, CRequestSyncPacket::readPacketData,
+        simpleChannel.registerMessage(PAINTING_REQUEST_CANVAS, CanvasRequestPacket.class,
+                CanvasRequestPacket::writePacketData, CanvasRequestPacket::readPacketData,
                 PaintingServerHandler::handleRequestSync,
+                Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(PAINTING_UNLOAD_CANVAS, CanvasUnloadRequestPacket.class,
+                CanvasUnloadRequestPacket::writePacketData, CanvasUnloadRequestPacket::readPacketData,
+                PaintingServerHandler::handleUnloadRequest,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_SYNC, SCanvasSyncMessage.class,
                 SCanvasSyncMessage::writePacketData, SCanvasSyncMessage::readPacketData,
                 PaintingClientHandler::handleSync,
                 Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(PALETTE_UPDATE_CLIENT, CPaletteUpdatePacket.class,
+                CPaletteUpdatePacket::writePacketData, CPaletteUpdatePacket::readPacketData,
+                PaintingServerHandler::handlePaletteUpdate,
+                Optional.of(PLAY_TO_SERVER));
     }
 }

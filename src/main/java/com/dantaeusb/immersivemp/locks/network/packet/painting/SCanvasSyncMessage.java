@@ -7,14 +7,20 @@ import net.minecraft.network.PacketBuffer;
 import java.nio.ByteBuffer;
 
 public class SCanvasSyncMessage {
-    private CanvasData canvasData;
+    private final CanvasData canvasData;
+    private final long timestamp;
 
-    public SCanvasSyncMessage(CanvasData canvasData) {
+    public SCanvasSyncMessage(CanvasData canvasData, long timestamp) {
         this.canvasData = canvasData;
+        this.timestamp = timestamp;
     }
 
     public CanvasData getCanvasData() {
         return canvasData;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     /**
@@ -22,6 +28,7 @@ public class SCanvasSyncMessage {
      */
     public static SCanvasSyncMessage readPacketData(PacketBuffer buf) {
         try {
+            long timestamp = buf.readLong();
             String canvasName = buf.readString();
             int width = buf.readInt();
             int height = buf.readInt();
@@ -32,7 +39,7 @@ public class SCanvasSyncMessage {
             CanvasData readCanvasData = new CanvasData(canvasName);
             readCanvasData.initData(width, height, unwrappedColorData);
 
-            return new SCanvasSyncMessage(readCanvasData);
+            return new SCanvasSyncMessage(readCanvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             ImmersiveMp.LOG.warn("Exception while reading SPaintingSyncPacket: " + e);
             return null;
@@ -43,6 +50,7 @@ public class SCanvasSyncMessage {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(PacketBuffer networkBuffer) {
+        networkBuffer.writeLong(this.timestamp);
         networkBuffer.writeString(this.canvasData.getName());
         networkBuffer.writeInt(this.canvasData.getWidth());
         networkBuffer.writeInt(this.canvasData.getHeight());
@@ -52,6 +60,6 @@ public class SCanvasSyncMessage {
     @Override
     public String toString()
     {
-        return "SPaintingSyncMessage[canvas=" + this.canvasData + "]";
+        return "SPaintingSyncMessage[canvas=" + this.canvasData + ",timestamp=" + this.timestamp + "]";
     }
 }

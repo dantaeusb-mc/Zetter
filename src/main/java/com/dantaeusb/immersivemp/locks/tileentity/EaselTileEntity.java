@@ -33,18 +33,6 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     private static final String EASEL_STORAGE_TAG = "storage";
     private String canvasName;
 
-    public EaselTileEntity(World world) {
-        this();
-
-        if (world.isRemote()) {
-            return;
-        }
-
-        ItemStack newCanvas = CanvasItem.setupNewCanvas(world);
-
-        this.easelStorage.setInventorySlotContents(EaselStorage.CANVAS_SLOT, newCanvas);
-    }
-
     public EaselTileEntity() {
         super(ModLockTileEntities.EASEL_TILE_ENTITY);
 
@@ -64,6 +52,10 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     // specific
+
+    public EaselStorage getEaselStorage() {
+        return this.easelStorage;
+    }
 
     public @Nullable ItemStack getCanvasStack() {
         return this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);

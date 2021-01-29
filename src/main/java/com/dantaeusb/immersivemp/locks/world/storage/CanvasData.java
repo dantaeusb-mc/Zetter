@@ -14,6 +14,12 @@ public class CanvasData extends WorldSavedData {
     private byte[] color;
     private ByteBuffer canvasBuffer;
 
+    /**
+     * @todo: add work with sealed attribute to avoid unnecessary tracking and server communication
+     * Sealed canvas cannot be modified
+     */
+    private boolean isSealed = false;
+
     private int width;
     private int height;
 
@@ -39,7 +45,7 @@ public class CanvasData extends WorldSavedData {
         ByteBuffer defaultColorBuffer = ByteBuffer.wrap(defaultColor);
 
         for (int x = 0; x < width * height; x++) {
-            defaultColorBuffer.putInt(x * 4, 0xFF000000);
+            defaultColorBuffer.putInt(x * 4, 0xFFE0DACE);
         }
 
         this.initData(width, height, defaultColor);
@@ -52,11 +58,11 @@ public class CanvasData extends WorldSavedData {
         this.markDirty();
     }
 
-    /**
-     * Mostly to be used on server - update whole canvas and rewrap
-     */
-    public void updateCanvas(byte[] color) {
-        this.updateColorData(color);
+    public void copyFrom(CanvasData templateCanvasData) {
+        this.isSealed = templateCanvasData.isSealed();
+        this.width = templateCanvasData.getWidth();
+        this.height = templateCanvasData.getHeight();
+        this.updateColorData(templateCanvasData.color);
         this.markDirty();
     }
 
@@ -66,12 +72,11 @@ public class CanvasData extends WorldSavedData {
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
     }
 
-    public void updateCanvasPixel(int pixelX, int pixelY, int color) {
-        this.canvasBuffer.putInt(this.getColorAt(pixelX, pixelY) * 4, color);
-        this.markDirty();
-    }
-
     public void updateCanvasPixel(int index, int color) {
+        if (this.isSealed) {
+            ImmersiveMp.LOG.warn("Tried to update sealed canvas " + this);
+        }
+
         this.canvasBuffer.putInt(index * 4, color);
         this.markDirty();
     }
@@ -86,6 +91,10 @@ public class CanvasData extends WorldSavedData {
 
     public int getHeight() {
         return this.height;
+    }
+
+    public boolean isSealed() {
+        return this.isSealed;
     }
 
     public ByteBuffer getColorDataBuffer() {

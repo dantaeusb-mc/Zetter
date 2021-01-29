@@ -1,21 +1,19 @@
 package com.dantaeusb.immersivemp.locks.network.packet.painting;
 
-import com.dantaeusb.immersivemp.ImmersiveMp;
-import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrameBuffer;
-import com.dantaeusb.immersivemp.locks.item.CanvasItem;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.network.PacketBuffer;
 
-import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
-
-public class CRequestSyncPacket {
+/**
+ * Absolute copy of request packet but we have to copy them cause
+ * there's no way to determine which purpose packet is used for
+ * unless they're different classes for some reason
+ */
+public class CanvasUnloadRequestPacket {
     private String canvasName;
 
-    public CRequestSyncPacket() {
+    public CanvasUnloadRequestPacket() {
     }
 
-    public CRequestSyncPacket(String canvasName) {
+    public CanvasUnloadRequestPacket(String canvasName) {
         this.canvasName = canvasName;
     }
 
@@ -23,8 +21,8 @@ public class CRequestSyncPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CRequestSyncPacket readPacketData(PacketBuffer buf) {
-        CRequestSyncPacket packet = new CRequestSyncPacket();
+    public static CanvasUnloadRequestPacket readPacketData(PacketBuffer buf) {
+        CanvasUnloadRequestPacket packet = new CanvasUnloadRequestPacket();
 
         packet.canvasName = buf.readString();
 
