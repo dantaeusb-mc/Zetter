@@ -49,6 +49,9 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, CanvasData canvas, int combinedLight) {
+        // We won't ever render or request 0 canvas, as 0 is a fallback value
+        if (canvas.getName().equals(CanvasData.getCanvasName(0))) return;
+
         this.ticksSinceRenderRequested.put(canvas.getName(), 0.0f);
 
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvas, false);
@@ -96,7 +99,15 @@ public class CanvasRenderer implements AutoCloseable {
         ModLockNetwork.simpleChannel.sendToServer(unloadPacket);
     }
 
+    /**
+     * @todo: usually called from both TE renderer and internally. Probably should be avoiding one of the calls
+     * @todo: not every texture request is render request. Bit misleading
+     * @param canvasName
+     */
     public void requestCanvasTexture(String canvasName) {
+        // We won't ever render or request 0 canvas, as 0 is a fallback value
+        if (canvasName.equals(CanvasData.getCanvasName(0))) return;
+
         float tickSinceLastRequest = 0.0f;
 
         if (this.ticksSinceRenderRequested.containsKey(canvasName)) {

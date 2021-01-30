@@ -24,6 +24,8 @@ public class CanvasData extends WorldSavedData {
     private int height;
 
     public static final String NAME_PREFIX = ImmersiveMp.MOD_ID + "_canvas_";
+
+    private static final String NBT_TAG_NAME_SEALED = "sealed";
     private static final String NBT_TAG_NAME_WIDTH = "width";
     private static final String NBT_TAG_NAME_HEIGHT = "height";
     private static final String NBT_TAG_NAME_COLOR = "color";
@@ -59,7 +61,11 @@ public class CanvasData extends WorldSavedData {
     }
 
     public void copyFrom(CanvasData templateCanvasData) {
-        this.isSealed = templateCanvasData.isSealed();
+        if (this.isSealed) {
+            ImmersiveMp.LOG.error("Cannot copy to sealed canvas");
+            return;
+        }
+
         this.width = templateCanvasData.getWidth();
         this.height = templateCanvasData.getHeight();
         this.updateColorData(templateCanvasData.color);
@@ -97,6 +103,10 @@ public class CanvasData extends WorldSavedData {
         return this.isSealed;
     }
 
+    public void seal() {
+        this.isSealed = true;
+    }
+
     public ByteBuffer getColorDataBuffer() {
         this.canvasBuffer.rewind();
         return this.canvasBuffer.asReadOnlyBuffer();
@@ -127,13 +137,15 @@ public class CanvasData extends WorldSavedData {
     /**
      * reads in data from the NBTTagCompound into this MapDataBase
      */
-    public void read(CompoundNBT nbt) {
-        this.width = nbt.getInt(NBT_TAG_NAME_WIDTH);
-        this.height = nbt.getInt(NBT_TAG_NAME_HEIGHT);
-        this.updateColorData(nbt.getByteArray(NBT_TAG_NAME_COLOR));
+    public void read(CompoundNBT compound) {
+        this.isSealed = compound.getBoolean(NBT_TAG_NAME_SEALED);
+        this.width = compound.getInt(NBT_TAG_NAME_WIDTH);
+        this.height = compound.getInt(NBT_TAG_NAME_HEIGHT);
+        this.updateColorData(compound.getByteArray(NBT_TAG_NAME_COLOR));
     }
 
     public CompoundNBT write(CompoundNBT compound) {
+        compound.putBoolean(NBT_TAG_NAME_SEALED, this.isSealed);
         compound.putInt(NBT_TAG_NAME_WIDTH, this.width);
         compound.putInt(NBT_TAG_NAME_HEIGHT, this.height);
         compound.putByteArray(NBT_TAG_NAME_COLOR, this.color);

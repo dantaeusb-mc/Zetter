@@ -7,6 +7,7 @@ import com.dantaeusb.immersivemp.locks.capability.canvastracker.ICanvasTracker;
 import com.dantaeusb.immersivemp.locks.client.gui.CanvasRenderer;
 import com.dantaeusb.immersivemp.locks.core.Helper;
 import com.dantaeusb.immersivemp.locks.core.ModLockContainers;
+import com.dantaeusb.immersivemp.locks.core.ModLockItems;
 import com.dantaeusb.immersivemp.locks.core.ModLockNetwork;
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrame;
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrameBuffer;
@@ -26,6 +27,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.world.World;
 
 import java.util.*;
@@ -92,7 +94,11 @@ public class EaselContainer extends Container {
         final int HOTBAR_YPOS = 161;
         final int SLOT_X_SPACING = 18;
 
-        this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING));
+        this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
+            public boolean isItemValid(ItemStack stack) {
+                return stack.getItem() == ModLockItems.PALETTE_ITEM;
+            }
+        });
 
         if (!this.world.isRemote()) {
             ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
@@ -108,7 +114,7 @@ public class EaselContainer extends Container {
     }
 
     public void setCanvas(String canvasName) {
-        if (canvasName.isEmpty()) {
+        if (canvasName.isEmpty() || canvasName.equals(CanvasData.getCanvasName(0))) {
             this.canvas = null;
             this.canvasReady = false;
             return;
@@ -236,15 +242,12 @@ public class EaselContainer extends Container {
     }
 
     /**
-     * Todo: notify all clients about that
      * @param index
      * @param color
      * @return
      */
     private void writePixelOnCanvasServerSide(int index, int color) {
-        if (this.writePixelOnCanvas(index, color)) {
-            //this.checkFrameBuffer();
-        }
+        this.writePixelOnCanvas(index, color); // do nothing for now
     }
 
     private boolean writePixelOnCanvas(int index, int color) {
@@ -400,6 +403,61 @@ public class EaselContainer extends Container {
                 return;
             }
         }
+    }
+
+    /*
+      Common handlers
+     */
+
+    /**
+     *
+     * @param playerIn
+     * @param sourceSlotIndex
+     * @return
+     */
+    @Override
+    public ItemStack transferStackInSlot(PlayerEntity playerIn, int sourceSlotIndex)
+    {
+        ItemStack outStack = ItemStack.EMPTY;
+        Slot sourceSlot = this.inventorySlots.get(sourceSlotIndex);
+
+        if (sourceSlot != null && sourceSlot.getHasStack()) {
+            ItemStack sourceStack = sourceSlot.getStack();
+            outStack = sourceStack.copy();
+
+            // Palette
+            if (sourceSlotIndex == 0) {
+                if (!this.mergeItemStack(sourceStack, 2, 10, true)) {
+                    return ItemStack.EMPTY;
+                }
+
+                sourceSlot.onSlotChange(sourceStack, outStack);
+
+            // Inventory
+            } else {
+                if (sourceStack.getItem() == ModLockItems.PALETTE_ITEM) {
+                    if (!this.mergeItemStack(sourceStack, 0, 1, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else {
+                    return ItemStack.EMPTY;
+                }
+            }
+
+            if (sourceStack.isEmpty()) {
+                sourceSlot.putStack(ItemStack.EMPTY);
+            } else {
+                sourceSlot.onSlotChanged();
+            }
+
+            if (sourceStack.getCount() == outStack.getCount()) {
+                return ItemStack.EMPTY;
+            }
+
+            sourceSlot.onTake(playerIn, sourceStack);
+        }
+
+        return outStack;
     }
 
     /**

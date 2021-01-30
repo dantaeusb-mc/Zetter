@@ -48,7 +48,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
 
         this.rack = new ModelRenderer(64, 64, 0, 0);
         this.rack.setRotationPoint(0.0F, 0, 0.0F);
-        this.rack.setTextureOffset(0, 0).addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F, 0.0F, false);
+        this.rack.addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F, 0.0F, false);
 
         this.canvas = new ModelRenderer(64, 64, 6, 5);
         this.canvas.setRotationPoint(0.0F, 0.0F, 0.0F);
@@ -102,6 +102,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         canvas.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
 
         if (tileEntity.hasCanvas()) {
+            // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
             CanvasData canvasData = getCanvasData(world, tileEntity.getCanvasName());
 
             if (canvasData != null) {

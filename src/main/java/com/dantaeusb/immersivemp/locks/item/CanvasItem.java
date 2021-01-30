@@ -5,6 +5,7 @@ import com.dantaeusb.immersivemp.locks.capability.canvastracker.ICanvasTracker;
 import com.dantaeusb.immersivemp.locks.core.Helper;
 import com.dantaeusb.immersivemp.locks.core.ModLockItems;
 import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.RegistryKey;
@@ -24,31 +25,6 @@ public class CanvasItem extends AbstractLockItem
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
     }
 
-    public static ItemStack setupNewCanvas(World worldIn) {
-        ItemStack canvasStack = new ItemStack(ModLockItems.CANVAS_ITEM);
-        createCanvasData(canvasStack, worldIn);
-
-        return canvasStack;
-    }
-
-    /**
-     *
-     * @see {@link FilledMapItem#getData(ItemStack, World)}
-     * @param stack
-     * @param world
-     * @return
-     */
-    @Nullable
-    public static CanvasData getData(ItemStack stack, World world) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
-
-        if (canvasTracker == null) {
-            return null;
-        }
-
-        return canvasTracker.getCanvasData(getCanvasName(stack));
-    }
-
     /**
      *
      * @see {@link FilledMapItem#getMapData(ItemStack, World)}
@@ -58,11 +34,11 @@ public class CanvasItem extends AbstractLockItem
      */
     @Nullable
     public static CanvasData getCanvasData(ItemStack stack, World worldIn) {
-        // FORGE: Add instance method for mods to override
         Item canvas = stack.getItem();
         if (canvas instanceof CanvasItem) {
             return ((CanvasItem)canvas).getCustomCanvasData(stack, worldIn);
         }
+
         return null;
     }
 
@@ -70,15 +46,22 @@ public class CanvasItem extends AbstractLockItem
      *
      * @see {@link FilledMapItem#getCustomMapData(ItemStack, World)}
      * @param stack
-     * @param worldIn
+     * @param world
      * @return
      */
     @Nullable
-    protected CanvasData getCustomCanvasData(ItemStack stack, World worldIn) {
-        CanvasData canvasData = getData(stack, worldIn);
+    protected CanvasData getCustomCanvasData(ItemStack stack, World world) {
+        CanvasData canvasData = null;
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
-        if ((canvasData == null || canvasData.getName() == CanvasData.getCanvasName(0)) && worldIn instanceof ServerWorld) {
-            canvasData = createCanvasData(stack, worldIn);
+        if (canvasTracker != null) {
+            canvasData = canvasTracker.getCanvasData(getCanvasName(stack));
+        } else {
+            ImmersiveMp.LOG.error("Unable to find CanvasTracker capability");
+        }
+
+        if ((canvasData == null || canvasData.getName().equals(CanvasData.getCanvasName(0))) && world instanceof ServerWorld) {
+            canvasData = createCanvasData(stack, world);
         }
 
         return canvasData;
@@ -106,13 +89,20 @@ public class CanvasItem extends AbstractLockItem
         int canvasId = 0;
         if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_CANVAS_ID)) {
             canvasId = compoundNBT.getInt(NBT_TAG_NAME_CANVAS_ID);
-        } else {
-            ImmersiveMp.LOG.warn("Cannot find NBT-saved canvas id");
         }
 
         return canvasId;
     }
 
+
+    /**
+     * Called when item is crafted/smelted. Used only by maps so far.
+     */
+    public void onCreated(ItemStack stack, World worldIn, PlayerEntity playerIn) {
+        if (worldIn.isRemote) return;
+
+        createCanvasData(stack, worldIn);
+    }
     /**
      *
      * @see {@link FilledMapItem#createMapData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}

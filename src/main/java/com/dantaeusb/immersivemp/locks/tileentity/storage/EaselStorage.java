@@ -74,6 +74,10 @@ public class EaselStorage implements IInventory {
         this.markDirtyNotificationLambda = markDirtyNotificationLambda;
     }
 
+    /**
+     * @todo: move all interactions to TE
+     * @return
+     */
     public ItemStack getCanvasStack() {
         return this.getStackInSlot(CANVAS_SLOT);
     }

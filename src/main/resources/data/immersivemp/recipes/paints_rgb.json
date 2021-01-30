@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shepeless",
+  "ingredients": [{
+    "item": "minecraft:cyan_dye"
+  }],
+  "result": {
+    "item": "immersivemp:easel"
+  }
+}

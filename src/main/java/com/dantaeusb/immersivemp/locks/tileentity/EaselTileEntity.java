@@ -6,6 +6,7 @@ import com.dantaeusb.immersivemp.locks.core.ModLockTileEntities;
 import com.dantaeusb.immersivemp.locks.inventory.container.EaselContainer;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.dantaeusb.immersivemp.locks.tileentity.storage.EaselStorage;
+import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -31,7 +32,6 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     private final EaselStorage easelStorage; // two items: canvas and palette
 
     private static final String EASEL_STORAGE_TAG = "storage";
-    private String canvasName;
 
     public EaselTileEntity() {
         super(ModLockTileEntities.EASEL_TILE_ENTITY);
@@ -57,18 +57,34 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         return this.easelStorage;
     }
 
-    public @Nullable ItemStack getCanvasStack() {
-        return this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
-    }
-
     public boolean hasCanvas() {
         ItemStack canvasStack = this.getCanvasStack();
 
         return !canvasStack.isEmpty();
     }
 
+    public @Nullable ItemStack getCanvasStack() {
+        return this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
+    }
+
+    public boolean putCanvasStack(ItemStack itemStack) {
+        if (itemStack.getItem() != ModLockItems.CANVAS_ITEM) {
+            return false;
+        }
+
+        if (this.hasCanvas()) {
+            return false;
+        }
+
+        // Initialize data if it's not yet
+        CanvasItem.getCanvasData(itemStack, this.world);
+        this.easelStorage.setCanvasStack(itemStack);
+
+        return true;
+    }
+
     /**
-     * Returns current canvas ID or 0 if no canvas assigned
+     * Returns current canvas name or empty string if no canvas assigned
      * @return
      */
     public String getCanvasName() {
@@ -79,6 +95,17 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         }
 
         return CanvasItem.getCanvasName(canvasStack);
+    }
+
+    @Nullable
+    public CanvasData getCanvasData() {
+        ItemStack canvasStack = this.getCanvasStack();
+
+        if (canvasStack.isEmpty() || canvasStack.getItem() != ModLockItems.CANVAS_ITEM) {
+            return null;
+        }
+
+        return  CanvasItem.getCanvasData(canvasStack, this.world);
     }
 
     // render
@@ -110,9 +137,6 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
 
         CompoundNBT inventoryNBT = parentNBTTagCompound.getCompound(EASEL_STORAGE_TAG);
         this.easelStorage.deserializeNBT(inventoryNBT);
-
-        // Update canvas name cache for renderer
-        this.canvasName = this.getCanvasName();
 
         if (this.easelStorage.getSizeInventory() != EaselStorage.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");

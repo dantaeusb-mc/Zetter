@@ -88,6 +88,12 @@ public class PaintingServerHandler {
         canvasTracker.trackCanvas(sendingPlayer.getUniqueID(), packetIn.getCanvasName());
 
         CanvasData canvasData = canvasTracker.getCanvasData(packetIn.getCanvasName());
+
+        if (canvasData == null) {
+            ImmersiveMp.LOG.error("Player " + sendingPlayer + " requested non-existent canvas: " + packetIn.getCanvasName());
+            return;
+        }
+
         SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasData, server.getServerTime());
 
         ModLockNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
