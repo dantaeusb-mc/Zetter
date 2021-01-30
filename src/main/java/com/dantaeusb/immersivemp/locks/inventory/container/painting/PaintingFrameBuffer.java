@@ -14,7 +14,7 @@ import java.util.*;
 public class PaintingFrameBuffer {
     // this will allow to use byte time offset in data frame
 
-    public static int FRAME_TIME_LIMIT = 10; // send packet every 0.5 seconds
+    public static int FRAME_TIME_LIMIT = 500; // send packet every 0.5 seconds
 
     private static final int MAX_FRAMES = 10;
     private static final int FRAME_SIZE = 1 + 2 + 2 + 4; // flag, time offset, position, color

@@ -15,6 +15,7 @@ import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.pathfinding.PathType;
 import net.minecraft.state.DirectionProperty;
@@ -206,6 +207,7 @@ public class EaselBlock extends ContainerBlock {
 
         if (!(easelTileEntity instanceof EaselTileEntity)) {
             ImmersiveMp.LOG.error("Cannot find EaselTileEntity to send canvas data to client");
+
             return;
         }
 
@@ -215,6 +217,16 @@ public class EaselBlock extends ContainerBlock {
     public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
         worldIn.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER), 3);
     }
+
+    /*
+     * Not sure if needed, it'll remove second part anyway
+    public void onBlockHarvested(World worldIn, BlockPos pos, BlockState state, PlayerEntity player) {
+        if (!worldIn.isRemote && player.isCreative()) {
+            DoublePlantBlock.removeBottomHalf(worldIn, pos, state, player);
+        }
+
+        super.onBlockHarvested(worldIn, pos, state, player);
+    }*/
 
     /**
      * Shape

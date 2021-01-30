@@ -9,13 +9,13 @@
           "conditions": [
             {
               "condition": "minecraft:block_state_property",
-              "block": "immersivemp:spruce_lockable_door",
+              "block": "immersivemp:acacia_lockable_door",
               "properties": {
                 "half": "lower"
               }
             }
           ],
-          "name": "minecraft:spruce_door"
+          "name": "minecraft:acacia_door"
         }
       ],
       "conditions": [

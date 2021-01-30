@@ -1,22 +1,19 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "LLL",
-    "III",
-    "SSS"
+    "PP",
+    "PP",
+    "SS"
   ],
   "key": {
-    "L": {
-      "item": "minecraft:smooth_stone_slab"
-    },
-    "I": {
-      "item": "minecraft:iron_ingot"
+    "P": {
+      "tag": "minecraft:planks"
     },
     "S": {
-      "item": "minecraft:smooth_stone"
+      "item": "minecraft:stick"
     }
   },
   "result": {
-    "item": "immersivemp:lock_table"
+    "item": "immersivemp:easel"
   }
 }

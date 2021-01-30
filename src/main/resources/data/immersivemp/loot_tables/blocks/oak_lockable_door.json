@@ -9,13 +9,13 @@
           "conditions": [
             {
               "condition": "minecraft:block_state_property",
-              "block": "immersivemp:dark_oak_lockable_door",
+              "block": "immersivemp:oak_lockable_door",
               "properties": {
                 "half": "lower"
               }
             }
           ],
-          "name": "minecraft:dark_oak_door"
+          "name": "minecraft:oak_door"
         }
       ],
       "conditions": [

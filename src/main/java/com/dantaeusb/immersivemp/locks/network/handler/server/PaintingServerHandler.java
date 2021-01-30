@@ -9,6 +9,7 @@ import com.dantaeusb.immersivemp.locks.network.packet.painting.*;
 import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -94,7 +95,7 @@ public class PaintingServerHandler {
             return;
         }
 
-        SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasData, server.getServerTime());
+        SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasData, System.currentTimeMillis());
 
         ModLockNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
     }

@@ -2,18 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "PP",
-    "PP",
-    "SS"
+    "PP"
   ],
   "key": {
     "P": {
-      "item": "minecraft:planks"
-    },
-    "S": {
-      "item": "minecraft:stick"
+      "item": "minecraft:paper"
     }
   },
   "result": {
-    "item": "immersivemp:easel"
+    "item": "immersivemp:canvas"
   }
 }

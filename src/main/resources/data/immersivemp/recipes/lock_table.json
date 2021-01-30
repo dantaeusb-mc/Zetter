@@ -1,8 +1,5 @@
 {
   "type": "minecraft:crafting_shaped",
-  "input": {
-    "item": "minecraft:spruce_door"
-  },
   "pattern": [
     "LLL",
     "III",

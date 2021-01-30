@@ -13,6 +13,7 @@ import net.minecraft.state.properties.DoubleBlockHalf;
 import net.minecraft.tileentity.LockableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -31,7 +32,7 @@ import net.minecraftforge.fml.server.ServerLifecycleHooks;
 @Mod.EventBusSubscriber(modid = ImmersiveMp.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ModLockGameEvents {
     @SubscribeEvent(priority = EventPriority.LOW)
-    public void onPlayerInteract(PlayerInteractEvent.RightClickBlock event) {
+    public static void onPlayerInteract(PlayerInteractEvent.RightClickBlock event) {
         if(!event.getWorld().isRemote || event.getPlayer().isDiscrete() || event.isCanceled() || event.getResult() == Result.DENY || event.getUseBlock() == Result.DENY) {
             return;
         }
@@ -45,8 +46,6 @@ public class ModLockGameEvents {
             event.setCanceled(true);
             event.setResult(Result.DENY);
 
-            ImmersiveMp.LOG.info("Sending from hand " + event.getHand().name());
-
             // We, however, will consume & ignore event on main hand and proceed with OFF_HAND
             if (event.getHand() == Hand.MAIN_HAND) {
                 return;
@@ -54,7 +53,6 @@ public class ModLockGameEvents {
 
             CLockDoorOpen doorPacket = new CLockDoorOpen(pos);
             ModLockNetwork.simpleChannel.sendToServer(doorPacket);
-
         }
     }
 
@@ -74,9 +72,9 @@ public class ModLockGameEvents {
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public static void onRenderTickStart(TickEvent.RenderTickEvent event) {
-        if (event.phase == TickEvent.Phase.START && Minecraft.getInstance().world != null) {
-            CanvasRenderer.getInstance().update(event.renderTickTime);
+    public static void onRenderTickStart(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && Minecraft.getInstance().world != null) {
+            CanvasRenderer.getInstance().update(Util.milliTime());
         }
     }
 }

@@ -25,9 +25,6 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = ImmersiveMp.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModLockBlocks
 {
-    public static final Material STONE = new Material(MaterialColor.STONE, false, false, false, false, false, true, PushReaction.NORMAL);
-    public static final Material WOOL = new Material(MaterialColor.WOOL, false, false, false, false, false, true, PushReaction.NORMAL);
-
     public static final List<Block> BLOCK_ITEMS = new ArrayList<>();
     public static final List<Block> LOCKABLE_DOORS = new ArrayList<>();
 

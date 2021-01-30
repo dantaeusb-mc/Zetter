@@ -9,11 +9,13 @@ import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Timer;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -28,8 +30,11 @@ public class CanvasRenderer implements AutoCloseable {
     private static CanvasRenderer instance;
     private final TextureManager textureManager;
     private final Map<String, CanvasRenderer.Instance> loadedCanvases = Maps.newHashMap();
-    private final Map<String, Float> ticksSinceRenderRequested = Maps.newHashMap();
-    private final Vector<String> reloadRequests = new Vector<>();
+
+    private final Timer timer = new Timer(20.0F, 0L);
+
+    private final Map<String, Integer> ticksSinceRenderRequested = Maps.newHashMap();
+    private final  Map<String, TextureRequest> textureRequestTimeout = Maps.newHashMap();
 
     public CanvasRenderer(TextureManager textureManagerIn) {
         this.textureManager = textureManagerIn;
@@ -52,33 +57,63 @@ public class CanvasRenderer implements AutoCloseable {
         // We won't ever render or request 0 canvas, as 0 is a fallback value
         if (canvas.getName().equals(CanvasData.getCanvasName(0))) return;
 
-        this.ticksSinceRenderRequested.put(canvas.getName(), 0.0f);
+        this.ticksSinceRenderRequested.put(canvas.getName(), 0);
 
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvas, false);
 
         if (rendererInstance == null) {
-            this.requestCanvasTexture(canvas.getName());
+            this.queueCanvasTextureUpdate(canvas.getName());
             return;
         }
 
         rendererInstance.render(matrixStack, renderTypeBuffer, combinedLight);
     }
 
-    public void update(float renderTickTime) {
-        Iterator<Map.Entry<String, Float>> iterator = this.ticksSinceRenderRequested.entrySet().iterator();
+    /*
+     * Track textures state
+     */
+
+    /**
+     *
+     * @param gameTime
+     */
+    public void update(long gameTime) {
+        // @todo: [LOW] Not sure if this timer needed on ClientTick event
+        int partialTicks = this.timer.getPartialTicks(gameTime);
+
+        if (partialTicks > 0) {
+            this.updateTicksSinceRender(partialTicks);
+            this.updateTextureRequestTimeout(partialTicks);
+        }
+    }
+
+    private void updateTicksSinceRender(int partialTicks) {
+        Iterator<Map.Entry<String, Integer>> iterator = this.ticksSinceRenderRequested.entrySet().iterator();
 
         while (iterator.hasNext()) {
             String canvasName = iterator.next().getKey();
 
-            float timeSinceCanvasRenderRequested = this.ticksSinceRenderRequested.getOrDefault(canvasName, 0.0f);
-            timeSinceCanvasRenderRequested += renderTickTime;
+            int timeSinceRenderRequested = this.ticksSinceRenderRequested.getOrDefault(canvasName, 0);
+            timeSinceRenderRequested += partialTicks;
 
             // Keep 3 minutes
-            if (timeSinceCanvasRenderRequested < 20.0f * 60 * 3) {
-                this.ticksSinceRenderRequested.put(canvasName, timeSinceCanvasRenderRequested);
+            if (timeSinceRenderRequested < 20.0f * 60 * 3) {
+                this.ticksSinceRenderRequested.put(canvasName, timeSinceRenderRequested);
             } else {
                 this.unloadCanvas(canvasName);
                 iterator.remove();
+            }
+        }
+    }
+
+    private void updateTextureRequestTimeout(int partialTicks) {
+        for (Map.Entry<String, TextureRequest> textureRequestEntry : this.textureRequestTimeout.entrySet()) {
+            TextureRequest textureRequest = textureRequestEntry.getValue();
+
+            if (textureRequest.canUpdate()) {
+                this.requestCanvasTexture(textureRequest);
+            } else {
+                textureRequest.tick(partialTicks);
             }
         }
     }
@@ -93,6 +128,10 @@ public class CanvasRenderer implements AutoCloseable {
 
         this.loadedCanvases.remove(canvasName);
 
+        this.textureRequestTimeout.remove(canvasName);
+        // Not needed cause called from its iterator
+        // this.ticksSinceRenderRequested.remove(canvasName);
+
         // Notifying server that we're no longer tracking it
         // @todo [LOW] better just check tile entity who's around
         CanvasUnloadRequestPacket unloadPacket = new CanvasUnloadRequestPacket(canvasName);
@@ -100,33 +139,37 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     /**
-     * @todo: usually called from both TE renderer and internally. Probably should be avoiding one of the calls
-     * @todo: not every texture request is render request. Bit misleading
+     * @todo: Still makes double-request on first load, markDirty called before update
      * @param canvasName
      */
-    public void requestCanvasTexture(String canvasName) {
-        // We won't ever render or request 0 canvas, as 0 is a fallback value
-        if (canvasName.equals(CanvasData.getCanvasName(0))) return;
+    public void queueCanvasTextureUpdate(String canvasName) {
+        if (this.textureRequestTimeout.containsKey(canvasName)) {
+            TextureRequest textureRequest = this.textureRequestTimeout.get(canvasName);
 
-        float tickSinceLastRequest = 0.0f;
+            // Already requested
+            if (textureRequest.isNeedUpdate()) return;
 
-        if (this.ticksSinceRenderRequested.containsKey(canvasName)) {
-            tickSinceLastRequest = this.ticksSinceRenderRequested.get(canvasName);
+            textureRequest.markDirty();
         } else {
-            this.ticksSinceRenderRequested.put(canvasName, tickSinceLastRequest);
-        }
-
-        // Wait 5 seconds before asking for texture again
-        if (tickSinceLastRequest == 0.0f || tickSinceLastRequest > 20.0f * 5) {
-            CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(canvasName);
-            ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);
-
-            this.ticksSinceRenderRequested.put(canvasName, 0.0f);
+            this.textureRequestTimeout.put(canvasName, new TextureRequest(canvasName));
         }
     }
 
+    /**
+     * @param canvasName
+     */
+    protected void requestCanvasTexture(TextureRequest request) {
+        // We won't ever render or request 0 canvas, as 0 is a fallback value
+        if (request.getCanvasName().equals(CanvasData.getCanvasName(0))) return;
+
+        CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(request.getCanvasName());
+        ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);
+
+        request.update();
+    }
+
     /*
-     * Returns {@link net.minecraft.client.gui.MapItemRenderer.Instance MapItemRenderer.Instance} with given map data
+     * Renderer instances
      */
 
     private @Nullable CanvasRenderer.Instance getCanvasRendererInstance(CanvasData canvas, boolean create) {
@@ -205,6 +248,46 @@ public class CanvasRenderer implements AutoCloseable {
 
         public void close() {
             this.canvasTexture.close();
+        }
+    }
+
+    static class TextureRequest {
+        private final int TEXTURE_REQUEST_TIMEOUT = 20; // Not often than once in a second
+
+        private final String canvasName;
+        private boolean needUpdate = true;
+        private int timeout = 0;
+
+        TextureRequest(String canvasName) {
+            this.canvasName = canvasName;
+        }
+
+        public void markDirty() {
+            this.needUpdate = true;
+        }
+
+        public boolean isNeedUpdate() {
+            return this.needUpdate;
+        }
+
+        public void update() {
+            this.needUpdate = false;
+            this.timeout = TEXTURE_REQUEST_TIMEOUT;
+        }
+
+        public String getCanvasName() {
+            return this.canvasName;
+        }
+
+        public void tick(int ticks) {
+            // We don't need to tick that one
+            if (!this.needUpdate &&  this.timeout <= 0) return;
+
+            this.timeout -= ticks;
+        }
+
+        public boolean canUpdate() {
+            return this.needUpdate && this.timeout < 0;
         }
     }
 }

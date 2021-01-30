@@ -1,19 +1,11 @@
 {
-  "type": "minecraft:crafting_shepeless",
-  "pattern": [
-    "WP",
-    "PP",
-    "SS"
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "immersivemp:paints"},
+    {"tag": "minecraft:planks"}
   ],
-  "key": {
-    "P": {
-      "tag": "minecraft:planks"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
-  },
   "result": {
-    "item": "immersivemp:easel"
+    "item": "immersivemp:palette",
+    "count": 1
   }
 }

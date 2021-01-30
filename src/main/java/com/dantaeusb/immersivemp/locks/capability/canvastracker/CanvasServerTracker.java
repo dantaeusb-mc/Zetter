@@ -89,7 +89,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasName)) {
                 ServerPlayerEntity playerEntity = server.getPlayerList().getPlayerByUUID(playerTrackingCanvas.playerId);
 
-                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(this.getCanvasData(canvasName), this.world.getGameTime());
+                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(this.getCanvasData(canvasName), System.currentTimeMillis());
                 ModLockNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }
@@ -105,6 +105,13 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
      */
     public void trackCanvas(UUID playerId, String canvasName) {
         Vector<PlayerTrackingCanvas> trackingEntries = this.getTrackingEntries(canvasName);
+
+        for (PlayerTrackingCanvas playerTrackingCanvas : trackingEntries) {
+            if (playerTrackingCanvas.playerId == playerId) {
+                return;
+            }
+        }
+
         trackingEntries.add(new PlayerTrackingCanvas(playerId, canvasName));
     }
 

@@ -123,7 +123,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
 
                 CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, canvasData, combinedLight);
             } else {
-                CanvasRenderer.getInstance().requestCanvasTexture(tileEntity.getCanvasName());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(tileEntity.getCanvasName());
             }
         }
 

@@ -18,24 +18,28 @@
 
 ### Paintings
 
+#### RC:
+
+* \[HIGH\] Frame item & TE;
+
 #### Release tasks:
 
-* \[CRIT\] Implement client sync process & deferred sync requests;
-* \[HIGH\] Frame item & TE;
 * \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;
-* \[HIGH\] Disallow to use canvas with id 0;
-* \[MED\] If canvas closed before packetbuffer sent, packetbuffer got lots and changes will disappear;
+* \[MED\] Make sure never use canvas with id 0;
 * \[MED\] Implement canvas sealing;
+* \[MED\] Textures on client renderer kept between worlds;
 * \[LOW\] Fix plank texture on easel;
 * \[LOW\] Fix leg top transparent on easel;
 * \[LOW\] Implement bucket tool;
+* \[LOW\] Close or update screen when canvas removed;
 
 #### Features:
 
 * Pencil size with more palette "damage";
 * Pencil color jitter;
 * Pencil transparency;
-* Show canvas in hands like map
+* Show canvas in hands like map;
+* Texture dispatcher which will prevent not only client request canvases too quick but server to sync canvases too frequent;
 
 ### Economy
 

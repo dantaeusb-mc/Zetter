@@ -51,8 +51,11 @@ public class PaintingClientHandler {
         CanvasData canvasData = packetIn.getCanvasData();
 
         if (player.openContainer instanceof EaselContainer) {
-            // Pushing changes that were added after sync packet was created
-            ((EaselContainer) player.openContainer).processSync(canvasData, packetIn.getTimestamp());
+            // If it's the same canvas player is editing
+            if (canvasData.getName().equals(((EaselContainer) player.openContainer).getCanvasData().getName())) {
+                // Pushing changes that were added after sync packet was created
+                ((EaselContainer) player.openContainer).processSync(canvasData, packetIn.getTimestamp());
+            }
         }
 
         // Get overworld world instance

@@ -13,7 +13,6 @@ import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFram
 import com.dantaeusb.immersivemp.locks.inventory.container.painting.PaintingFrameBuffer;
 import com.dantaeusb.immersivemp.locks.item.CanvasItem;
 import com.dantaeusb.immersivemp.locks.item.PaletteItem;
-import com.dantaeusb.immersivemp.locks.network.packet.painting.CanvasRequestPacket;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.CPaletteUpdatePacket;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.SCanvasNamePacket;
 import com.dantaeusb.immersivemp.locks.network.packet.painting.PaintingFrameBufferPacket;
@@ -21,19 +20,18 @@ import com.dantaeusb.immersivemp.locks.tileentity.storage.EaselStorage;
 import com.dantaeusb.immersivemp.locks.world.storage.CanvasData;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.ClientPlayNetHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.util.Util;
 import net.minecraft.world.World;
 
 import java.util.*;
 
 public class EaselContainer extends Container {
-    public static int FRAME_TIMEOUT = 20 * 5;  // 5 second limit to keep changes buffer, if packet processed later disregard it
+    public static int FRAME_TIMEOUT = 5000;  // 5 second limit to keep changes buffer, if packet processed later disregard it
 
     private final PlayerEntity player;
     private final World world;
@@ -52,13 +50,11 @@ public class EaselContainer extends Container {
     // Only player's buffer on client, all users on server
     private PaintingFrameBuffer canvasChanges;
 
-    //
-    private PaintingFrameBuffer paletteChanges;
-
     private final LinkedList<PaintingFrame> lastFrames = new LinkedList<>();
 
-    private boolean invalidCache = false;
-    private long lastFrameTime;
+    private long lastFrameBufferSendClock = 0L;
+    private long lastSyncReceivedClock = 0L;
+    private long lastPushedFrameClock = 0L;
 
     public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
         return new EaselContainer(windowID, playerInventory, easelStorage);
@@ -85,7 +81,7 @@ public class EaselContainer extends Container {
         this.player = invPlayer.player;
         this.world = invPlayer.player.world;
         this.easelStorage = easelStorage;
-        this.canvasChanges = new PaintingFrameBuffer(this.world.getGameTime());
+        this.canvasChanges = new PaintingFrameBuffer(System.currentTimeMillis());
 
         final int PALETTE_SLOT_X_SPACING = 152;
         final int PALETTE_SLOT_Y_SPACING = 94;
@@ -221,7 +217,7 @@ public class EaselContainer extends Container {
             this.checkFrameBuffer();
             this.getCanvasChanges().writeChange(this.world.getGameTime(), index, color);
 
-            PaintingFrame newFrame = new PaintingFrame(this.world.getGameTime(), (short) index, color, playerId);
+            PaintingFrame newFrame = new PaintingFrame(System.currentTimeMillis(), (short) index, color, playerId);
             this.placeFrame(newFrame);
             this.updateTextureClient();
         }
@@ -279,7 +275,7 @@ public class EaselContainer extends Container {
     protected void checkFrameBuffer() {
         if (this.getCanvasChanges().isEmpty()) {
             try {
-                this.canvasChanges.updateStartFrameTime(this.world.getGameTime());
+                this.canvasChanges.updateStartFrameTime(System.currentTimeMillis());
             } catch (Exception e) {
                 ImmersiveMp.LOG.error("Cannot update Painting Frame Buffer start time: " + e.getMessage());
             }
@@ -287,16 +283,15 @@ public class EaselContainer extends Container {
             return;
         }
 
-        if (this.canvasChanges.shouldBeSent(this.world.getGameTime())) {
+        if (this.canvasChanges.shouldBeSent(System.currentTimeMillis())) {
             if (this.world.isRemote()) {
                 this.canvasChanges.getFrames(this.player.getUniqueID());
-                PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(this.canvasChanges);
-                ModLockNetwork.simpleChannel.sendToServer(modePacket);
+                PaintingFrameBufferPacket paintingFrameBufferPacket = new PaintingFrameBufferPacket(this.canvasChanges);
+                ModLockNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
+
+                this.lastFrameBufferSendClock = System.currentTimeMillis();
             } else {
                 ImmersiveMp.LOG.warn("Unnecessary Painting Frame Buffer check on server");
-                //PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(frameBuffer);
-                //PlayerEntity playerEntity = this.world.getPlayerByUuid(playerId);
-                //ModLockNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(playerEntity), modePacket);
             }
 
             // It'll be created on request next time
@@ -306,7 +301,7 @@ public class EaselContainer extends Container {
 
     protected PaintingFrameBuffer getCanvasChanges() {
         if (this.canvasChanges == null) {
-            this.canvasChanges = new PaintingFrameBuffer(this.world.getGameTime());
+            this.canvasChanges = new PaintingFrameBuffer(System.currentTimeMillis());
         }
 
         return this.canvasChanges;
@@ -321,14 +316,14 @@ public class EaselContainer extends Container {
 
         for (PaintingFrame frame: paintingFrameBuffer.getFrames(ownerId)) {
             if (currentTime - frame.getFrameTime() > FRAME_TIMEOUT) {
-                this.invalidCache = true;
+                // Update will be sent to player anyway, and they'll request new sync if they're confused
                 ImmersiveMp.LOG.info("Skipping painting frame, too old");
                 continue;
             }
 
             // @todo: this doesn't work due to the fact that container is created per-player.
             // Check if the new packed claims to be older than the last processed frame
-            if (frame.getFrameTime() <= this.lastFrameTime) {
+            /*if (frame.getFrameTime() <= this.lastFrameTime) {
                 // If two players changed same pixel but new packet claims to be older than processed, let's sync player's canvases
                 for (PaintingFrame oldFrame: this.lastFrames) {
                     if (oldFrame.getPixelIndex() == frame.getPixelIndex() && oldFrame.getColor() != frame.getColor() && oldFrame.getFrameTime() > frame.getFrameTime()) {
@@ -346,10 +341,9 @@ public class EaselContainer extends Container {
 
                     continue;
                 }
-            }
+            }*/
 
             this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
-            this.lastFrameTime = frame.getFrameTime();
         }
 
         ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.getName());
@@ -361,18 +355,50 @@ public class EaselContainer extends Container {
      * @param timestamp
      */
     public void processSync(CanvasData canvasData, long timestamp) {
-        /**
+        /*
          * Adjust the time to the extreme case when sync packet was generated at the same time we sent prev frame
-         * +10% latency jitter should be enough in most cases. Cause latency works both sides same way, only one
-         * latency adjustment seems enough
+         * +10% latency jitter should be enough in most cases. This will check from which moment we can trust client
+         * But if we added any adjustment from recent client work, we'll request a new sync anyway,
+         * to have 100%-sure synced state
           */
-
-        // @todo: reduce timeframe by replacing PaintingFrameBuffer.FRAME_TIME_LIMIT with time since last request sent
+        int timeSinceLastBufferSent = (int) (System.currentTimeMillis() - this.lastFrameBufferSendClock);
         int latency = Minecraft.getInstance().getConnection().getPlayerInfo(this.player.getUniqueID()).getResponseTime();
-        long adjustedTimestamp = (long) (timestamp - (latency * 1.1f) - PaintingFrameBuffer.FRAME_TIME_LIMIT);
+
+        latency *= 1.1; // 10% jitter
+        latency = Math.min(latency, 50);
+
+        /*
+         * Check if packed is very likely to be newer than everything we have
+         * This _might_ cause desync if latency dropped quickly
+         * But it seems very unlikely
+         *
+         * Server sent new sync packet not longer than sent previous and we received it with latency
+         * Last buffer received by server at the time we sent it plus latency
+         *
+         * This should never be called first, at least after one request->sync cycle happening below
+         */
+        /*if (this.lastSyncReceivedClock != 0 && this.lastSyncReceivedClock + latency * 2L < this.lastPushedFrameClock) {
+            ImmersiveMp.LOG.debug("Quite sure sync packet is newer than all our data");
+
+            this.lastSyncReceivedClock = System.currentTimeMillis();
+            return;
+        }*/
+
+        long adjustedTimestamp = timestamp;
+
+        // If last packet was sent too long ago, trust server
+        // Multiply by 50 cause 50 is tick time in milliseconds (1000/20)
+        if (timeSinceLastBufferSent <= latency + PaintingFrameBuffer.FRAME_TIME_LIMIT) {
+            // If not, we trust client only for pixels that were edited before last request sent + latency
+            adjustedTimestamp = timestamp - latency - timeSinceLastBufferSent;
+            ImmersiveMp.LOG.debug("Adjusting received timestamp by " + (latency + timeSinceLastBufferSent));
+        } else {
+            ImmersiveMp.LOG.debug("Not adjusting received timestamp");
+        }
         
         boolean mightDesync = false;
 
+        // @todo: reasonable to remove older frames right there
         for (PaintingFrame oldFrame: this.lastFrames) {
             if (oldFrame.getFrameTime() >= adjustedTimestamp) {
                 canvasData.updateCanvasPixel(oldFrame.getPixelIndex(), oldFrame.getColor());
@@ -380,19 +406,20 @@ public class EaselContainer extends Container {
             }
         }
 
-        // @todo: Need some kind of deferred request so it wont spam server
         if (mightDesync) {
-            //CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(this.canvas.getName());
-            //ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getName());
         }
+
+        this.lastSyncReceivedClock = System.currentTimeMillis();
     }
 
     protected void placeFrame(PaintingFrame frame) {
         this.lastFrames.add(frame);
+        this.lastPushedFrameClock = System.currentTimeMillis();
     }
 
     protected void dropOldFrames() {
-        long minTime = this.world.getGameTime() - FRAME_TIMEOUT;
+        long minTime = Util.milliTime() - FRAME_TIMEOUT * 50;
 
         for (Iterator<PaintingFrame> iterator = this.lastFrames.iterator(); iterator.hasNext(); ) {
             PaintingFrame oldFrame = iterator.next();
@@ -408,6 +435,22 @@ public class EaselContainer extends Container {
     /*
       Common handlers
      */
+
+    /**
+     * Called when the container is closed.
+     * Push painting frames so it will be saved
+     */
+    public void onContainerClosed(PlayerEntity playerIn) {
+        super.onContainerClosed(playerIn);
+
+        if (this.world.isRemote() && !this.getCanvasChanges().isEmpty()) {
+            this.canvasChanges.getFrames(playerIn.getUniqueID());
+            PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(this.canvasChanges);
+            ModLockNetwork.simpleChannel.sendToServer(modePacket);
+
+            this.lastFrameBufferSendClock = System.currentTimeMillis();
+        }
+    }
 
     /**
      *
