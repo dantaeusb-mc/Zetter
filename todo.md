@@ -9,31 +9,32 @@
 
 * \[HIGH\] Remove craft of the lock without key;
 * \[HIGH\] Fix client/server state issues with multiple ingots;
+* \[HIGH\] Drop lockable doors with NBT data when broken;
 * \[MED\] Force close door on quick action;
 * \[LOW\] Fix delay in blockstate (probably change open state manually);
 
-#### Features:
+#### Planned features:
 
-* RFID cards maybe;
+* RFID cards with near-field redstone activation maybe;
 
 ### Paintings
 
-#### RC:
+#### Beta:
 
 * \[HIGH\] Frame item & TE;
+* \[MED\] Implement canvas sealing;
+* \[MED\] Textures on client renderer kept between worlds;
 
 #### Release tasks:
 
 * \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;
 * \[MED\] Make sure never use canvas with id 0;
-* \[MED\] Implement canvas sealing;
-* \[MED\] Textures on client renderer kept between worlds;
 * \[LOW\] Fix plank texture on easel;
 * \[LOW\] Fix leg top transparent on easel;
 * \[LOW\] Implement bucket tool;
 * \[LOW\] Close or update screen when canvas removed;
 
-#### Features:
+#### Planned features:
 
 * Pencil size with more palette "damage";
 * Pencil color jitter;

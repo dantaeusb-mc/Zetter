@@ -8,9 +8,14 @@
   "block.immersivemp.oak_lockable_door": "Запирающаяся дубовая дверь",
   "block.immersivemp.spruce_lockable_door": "Запирающаяся еловая дверь",
   "block.immersivemp.warped_lockable_door": "Запирающаяся искажённая дверь",
+  "block.immersivemp.easel": "Мольберт",
   "container.immersivemp.lock_table": "Создание замков и ключей",
+  "container.immersivemp.easel": "Мольберт",
   "item.immersivemp.key": "Ключ",
   "item.immersivemp.lock": "Замок",
+  "item.immersivemp.canvas": "Холст",
+  "item.immersivemp.paints": "Краски",
+  "item.immersivemp.palette": "Палитра",
   "immersivemp.subtitles.door.lock": "Дверь заперта",
   "immersivemp.subtitles.door.unlock": "Дверь отперта"
 }

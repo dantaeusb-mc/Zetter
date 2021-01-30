@@ -8,10 +8,14 @@
   "block.immersivemp.oak_lockable_door": "Oak Lockable Door",
   "block.immersivemp.spruce_lockable_door": "Spruce Lockable Door",
   "block.immersivemp.warped_lockable_door": "Warped Lockable Door",
+  "block.immersivemp.easel": "Easel",
   "container.immersivemp.lock_table": "Create Keys & Locks",
   "container.immersivemp.easel": "Easel",
   "item.immersivemp.key": "Key",
   "item.immersivemp.lock": "Lock",
+  "item.immersivemp.canvas": "Canvas",
+  "item.immersivemp.paints": "Paints",
+  "item.immersivemp.palette": "Palette",
   "immersivemp.subtitles.door.lock": "Door Locked",
   "immersivemp.subtitles.door.unlock": "Door Unlocked"
 }
