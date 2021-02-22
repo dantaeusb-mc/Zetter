@@ -190,7 +190,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
 
     @Override
     public ITextComponent getDisplayName() {
-        return new TranslationTextComponent("container.immersivemp.easel");
+        return new TranslationTextComponent("container.zetter.easel");
     }
 
     /**

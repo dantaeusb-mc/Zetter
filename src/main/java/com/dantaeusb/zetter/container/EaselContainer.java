@@ -336,7 +336,7 @@ public class EaselContainer extends Container {
 
                 // Will never happen, see above
                 if (this.invalidCache) {
-                    ImmersiveMp.LOG.warn("Two clients changed same pixel in unknown order, syncing");
+                    Zetter.LOG.warn("Two clients changed same pixel in unknown order, syncing");
 
                     CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(this.canvas.getName());
                     ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);

@@ -1,9 +1,0 @@
-{
-  "type": "immersivemp:locking_recipe",
-  "input": {
-    "item": "minecraft:jungle_door"
-  },
-  "output": {
-    "item": "immersivemp:jungle_lockable_door"
-  }
-}

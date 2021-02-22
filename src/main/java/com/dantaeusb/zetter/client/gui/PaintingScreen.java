@@ -20,10 +20,10 @@ import java.util.function.BiFunction;
 
 public class PaintingScreen extends ContainerScreen<EaselContainer> {
 
-    protected final ITextComponent title = new TranslationTextComponent("container.immersivemp.lock_table");
+    protected final ITextComponent title = new TranslationTextComponent("container.zetter.easel");
 
     // This is the resource location for the background image
-    private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("immersivemp", "textures/paintings/gui/painting.png");
+    private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/paintings/gui/painting.png");
 
     private int currentPaletteSlot = 0;
 
@@ -561,7 +561,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
     protected void initFields() {
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
-        this.textField = new TextFieldWidget(this.font, this.guiLeft + TEXTBOX_POSITION_X + 4, this.guiTop + TEXTBOX_POSITION_Y + 4, TEXTBOX_WIDTH - 7, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
+        this.textField = new TextFieldWidget(this.font, this.guiLeft + TEXTBOX_POSITION_X + 4, this.guiTop + TEXTBOX_POSITION_Y + 4, TEXTBOX_WIDTH - 7, 12, new TranslationTextComponent("container.zetter.easel"));
         this.textField.setCanLoseFocus(false);
         this.textField.setTextColor(-1);
         this.textField.setDisabledTextColour(-1);

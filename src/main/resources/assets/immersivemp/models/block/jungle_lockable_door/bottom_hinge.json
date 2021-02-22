@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/door_bottom_rh",
-  "textures": {
-    "top": "immersivemp:locks/block/jungle_door_top",
-    "bottom": "immersivemp:locks/block/jungle_door_bottom"
-  }
-}

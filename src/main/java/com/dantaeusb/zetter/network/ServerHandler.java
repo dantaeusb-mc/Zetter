@@ -168,4 +168,8 @@ public class ServerHandler {
             paintingContainer.setPaletteColor(packetIn.getSlotIndex(), packetIn.getColor());
         }
     }
+
+    public static boolean isThisProtocolAcceptedByServer(String protocolVersion) {
+        return ModNetwork.MESSAGE_PROTOCOL_VERSION.equals(protocolVersion);
+    }
 }

@@ -1,9 +1,0 @@
-{
-  "type": "immersivemp:locking_recipe",
-  "input": {
-    "item": "minecraft:dark_oak_door"
-  },
-  "output": {
-    "item": "immersivemp:dark_oak_lockable_door"
-  }
-}

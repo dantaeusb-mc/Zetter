@@ -4,6 +4,7 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.container.EaselContainer;
+import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.painting.PaintingFrameBufferPacket;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
 import com.dantaeusb.zetter.storage.CanvasData;
@@ -97,5 +98,9 @@ public class ClientHandler {
 
             paintingContainer.processFrameBuffer(packetIn.getFrameBuffer(), sendingPlayer.getUniqueID());
         }
+    }
+
+    public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {
+        return ModNetwork.MESSAGE_PROTOCOL_VERSION.equals(protocolVersion);
     }
 }

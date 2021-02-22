@@ -8,6 +8,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 
 import java.util.Optional;
@@ -31,6 +32,10 @@ public class ModNetwork {
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onCommonSetupEvent(FMLCommonSetupEvent event) {
+        simpleChannel = NetworkRegistry.newSimpleChannel(simpleChannelRL, () -> MESSAGE_PROTOCOL_VERSION,
+                ClientHandler::isThisProtocolAcceptedByClient,
+                ServerHandler::isThisProtocolAcceptedByServer);
+
         simpleChannel.registerMessage(PAINTING_FRAME_CLIENT, PaintingFrameBufferPacket.class,
                 PaintingFrameBufferPacket::writePacketData, PaintingFrameBufferPacket::readPacketData,
                 ServerHandler::handleFrameBuffer,

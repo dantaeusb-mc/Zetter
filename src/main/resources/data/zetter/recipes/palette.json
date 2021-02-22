@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "zetter:paints"},
+    {"tag": "minecraft:planks"}
+  ],
+  "result": {
+    "item": "zetter:palette",
+    "count": 1
+  }
+}
