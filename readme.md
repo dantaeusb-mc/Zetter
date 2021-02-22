@@ -1,9 +1,6 @@
-### Immersive Multiplayer Mod
+### Zetter - Minecraft Painting Mod
 
-### Compatibility
 
-* Quark
-* CarryOn
 
 ### Licensing
 
