@@ -113,6 +113,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     @Override
     public AxisAlignedBB getRenderBoundingBox()
     {
+        // @todo: change this
         return INFINITE_EXTENT_AABB;
         //return new AxisAlignedBB(this.getPos(), this.getPos().add(1, 2, 1));
     }

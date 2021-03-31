@@ -141,6 +141,11 @@ public class CanvasRenderer implements AutoCloseable {
      * @param canvasName
      */
     public void queueCanvasTextureUpdate(String canvasName) {
+        if (canvasName == null) {
+            Zetter.LOG.debug("Tried to queue null canvas");
+            return;
+        }
+
         if (this.textureRequestTimeout.containsKey(canvasName)) {
             TextureRequest textureRequest = this.textureRequestTimeout.get(canvasName);
 
@@ -239,10 +244,11 @@ public class CanvasRenderer implements AutoCloseable {
         private void render(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight) {
             Matrix4f matrix4f = matrixStack.getLast().getMatrix();
             IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
-            ivertexbuilder.pos(matrix4f, 0.0F, 16.0F, -0.01F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, 16.0F, 16.0F, -0.01F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, 16.0F, 0.0F, -0.01F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, -0.01F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(combinedLight).endVertex();
+
+            ivertexbuilder.pos(matrix4f, 0.0F, 16.0F, 0F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 16.0F, 16.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 16.0F, 0.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, 0F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(combinedLight).endVertex();
         }
 
         public void close() {

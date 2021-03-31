@@ -3,11 +3,14 @@ package com.dantaeusb.zetter.core;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
 public class Helper {
+    public static String fallbackCanvasName = CanvasData.NAME_PREFIX + "0";
+
     public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {
         ICanvasTracker canvasTracker;
 
@@ -24,5 +27,11 @@ public class Helper {
         }
 
         return canvasTracker;
+    }
+
+    public static boolean canvasCheck(int canvasId) {
+
+
+        return true;
     }
 }

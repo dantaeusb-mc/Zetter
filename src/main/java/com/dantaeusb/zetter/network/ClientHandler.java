@@ -5,13 +5,11 @@ import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.painting.PaintingFrameBufferPacket;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.LogicalSidedProvider;
 import net.minecraftforge.fml.network.NetworkEvent;
@@ -66,38 +64,6 @@ public class ClientHandler {
         }
 
         canvasTracker.registerCanvasData(canvasData);
-    }
-
-    /**
-     * Client frame buffer process - needed when multiple users editing painting at once
-     *
-     * @param packetIn
-     * @param ctxSupplier
-     */
-    public static void handleFrameBuffer(final PaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.CLIENT) {
-            Zetter.LOG.warn("CPaintingUpdatePacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
-        }
-
-        ctx.enqueueWork(() -> processFrameBuffer(packetIn, sendingPlayer));
-    }
-
-    public static void processFrameBuffer(final PaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
-        if (sendingPlayer.openContainer instanceof EaselContainer) {
-            EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
-
-            paintingContainer.processFrameBuffer(packetIn.getFrameBuffer(), sendingPlayer.getUniqueID());
-        }
     }
 
     public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {

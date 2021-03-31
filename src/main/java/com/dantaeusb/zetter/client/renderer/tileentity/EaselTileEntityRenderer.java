@@ -106,8 +106,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
                 matrixStack.rotate(Vector3f.XP.rotation(0.1745F));
 
                 matrixStack.rotate(Vector3f.ZP.rotationDegrees(180.0F));
-                matrixStack.translate(-16.0D, -16.0D, 0.0D);
-                matrixStack.translate(0.0D, 0.0D, 0.1D);
+                matrixStack.translate(-16.0D, -16.0D, 0.1D);
 
                 CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, canvasData, combinedLight);
             } else {

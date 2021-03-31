@@ -3,11 +3,15 @@ package com.dantaeusb.zetter.item;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.core.Helper;
+import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
 import net.minecraft.util.RegistryKey;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
@@ -18,7 +22,6 @@ public class CanvasItem extends Item
     public static final String NBT_TAG_NAME_CANVAS_ID = "canvasId";
     public static int CANVAS_SIZE = 16;
     public static int CANVAS_SQUARE = CANVAS_SIZE * CANVAS_SIZE;
-    public static int CANVAS_BYTE_SIZE = CANVAS_SQUARE * 4;
 
     public CanvasItem() {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
@@ -93,7 +96,6 @@ public class CanvasItem extends Item
         return canvasId;
     }
 
-
     /**
      * Called when item is crafted/smelted. Used only by maps so far.
      */
@@ -102,6 +104,7 @@ public class CanvasItem extends Item
 
         createCanvasData(stack, worldIn);
     }
+
     /**
      *
      * @see {@link FilledMapItem#createMapData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}
@@ -121,4 +124,41 @@ public class CanvasItem extends Item
         stack.getOrCreateTag().putInt(NBT_TAG_NAME_CANVAS_ID, newId);
         return canvasData;
     }
+
+    /**
+     * Hanging painting
+     */
+
+    public ActionResultType onItemUse(ItemUseContext context) {
+        BlockPos blockPos = context.getPos();
+        Direction direction = context.getFace();
+        BlockPos facePos = blockPos.offset(direction);
+        PlayerEntity player = context.getPlayer();
+        ItemStack stack = context.getItem();
+
+        if (player != null && !this.canPlace(player, direction, stack, facePos)) {
+            return ActionResultType.FAIL;
+        } else {
+            World world = context.getWorld();
+
+            CustomPaintingEntity paintingEntity = new CustomPaintingEntity(world, facePos, direction, getCanvasName(stack));
+
+            if (paintingEntity.onValidSurface()) {
+                if (!world.isRemote) {
+                    paintingEntity.playPlaceSound();
+                    world.addEntity(paintingEntity);
+                }
+
+                stack.shrink(1);
+                return ActionResultType.func_233537_a_(world.isRemote);
+            } else {
+                return ActionResultType.CONSUME;
+            }
+        }
+    }
+
+    protected boolean canPlace(PlayerEntity playerIn, Direction directionIn, ItemStack itemStackIn, BlockPos posIn) {
+        return !directionIn.getAxis().isVertical() && playerIn.canPlayerEdit(posIn, directionIn, itemStackIn);
+    }
+
 }
