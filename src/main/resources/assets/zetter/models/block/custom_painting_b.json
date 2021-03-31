@@ -1,0 +1,39 @@
+{
+    "textures": {
+        "particle": "block/oak_planks",
+        "wood": "block/oak_planks",
+        "back": "zetter:block/custom_painting"
+    },
+    "elements": [
+        {   "from": [ 0, 0, 0 ],
+            "to": [ 16, 16, 0 ],
+            "faces": {
+                "north": { "uv": [ 3, 3, 13, 13 ], "texture": "#back" }
+            }
+        },
+        {   "from": [ 0, 0, 0 ],
+            "to": [ 16, 0, 1 ],
+            "faces": {
+                "down":  { "uv": [  2,  0, 14,  1 ], "texture": "#wood" }
+            }
+        },
+        {   "from": [ 0, 0, 0 ],
+            "to": [ 0, 16, 1 ],
+            "faces": {
+                "west":  { "uv": [ 15,  2, 16,  3 ], "texture": "#wood" }
+            }
+        },
+        {   "from": [ 0, 16, 0 ],
+            "to": [ 16, 16, 1 ],
+            "faces": {
+                "east":  { "uv": [  0,  3,  1, 13 ], "texture": "#wood" }
+            }
+        },
+        {   "from": [ 16, 0, 0 ],
+            "to": [ 16, 16, 1 ],
+            "faces": {
+                "top":  { "uv": [  2,  0, 14,  1 ], "texture": "#wood" }
+            }
+        }
+    ]
+}
