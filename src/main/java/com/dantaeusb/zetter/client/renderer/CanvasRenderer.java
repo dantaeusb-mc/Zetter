@@ -1,4 +1,4 @@
-package com.dantaeusb.zetter.client.gui;
+package com.dantaeusb.zetter.client.renderer;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.ModNetwork;

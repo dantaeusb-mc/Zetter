@@ -2,7 +2,7 @@ package com.dantaeusb.zetter.core;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import com.dantaeusb.zetter.client.gui.CanvasRenderer;
+import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Util;

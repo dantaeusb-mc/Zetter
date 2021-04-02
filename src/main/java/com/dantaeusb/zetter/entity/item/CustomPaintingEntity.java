@@ -2,19 +2,15 @@ package com.dantaeusb.zetter.entity.item;
 
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModEntities;
+import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.item.BoatEntity;
 import net.minecraft.entity.item.HangingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.datasync.DataParameter;
-import net.minecraft.network.datasync.DataSerializers;
-import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -142,6 +138,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     public void readSpawnData(PacketBuffer buffer) {
         this.facingDirection = Direction.byHorizontalIndex(buffer.readByte());
         this.canvasName = buffer.readString(64);
+
+        this.updateFacingWithBoundingBox(this.facingDirection);
     }
 
     public int getWidthPixels() {
@@ -153,41 +151,31 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     /**
+     * Checks if the entity is in range to render.
+     */
+    @OnlyIn(Dist.CLIENT)
+    public boolean isInRangeToRenderDist(double distance) {
+        double d0 = 16.0D;
+        d0 = d0 * 64.0D * getRenderDistanceWeight();
+        return distance < d0 * d0;
+    }
+
+    /**
      * Called when this entity is broken. Entity parameter may be null.
      */
     public void onBroken(@Nullable Entity brokenEntity) {
         if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
             this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
-            if (brokenEntity instanceof PlayerEntity) {
-                PlayerEntity playerentity = (PlayerEntity)brokenEntity;
-                if (playerentity.abilities.isCreativeMode) {
-                    return;
-                }
-            }
 
-            // todo: change this
-            this.entityDropItem(Items.PAINTING);
+            ItemStack canvasStack = new ItemStack(ModItems.CANVAS_ITEM);
+            CanvasItem.setCanvasName(canvasStack, this.canvasName);
+
+            this.entityDropItem(canvasStack);
         }
     }
 
     public void playPlaceSound() {
         this.playSound(SoundEvents.ENTITY_PAINTING_PLACE, 1.0F, 1.0F);
-    }
-
-    /**
-     * Sets the location and Yaw/Pitch of an entity in the world
-     */
-    public void setLocationAndAngles(double x, double y, double z, float yaw, float pitch) {
-        this.setPosition(x, y, z);
-    }
-
-    /**
-     * Sets a target for the client to interpolate towards over the next few ticks
-     */
-    @OnlyIn(Dist.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
-        BlockPos blockpos = this.hangingPosition.add(x - this.getPosX(), y - this.getPosY(), z - this.getPosZ());
-        this.setPosition(blockpos.getX(), blockpos.getY(), blockpos.getZ());
     }
 
     /* This sends a vanilla spawn packet, which is then silently discarded when it reaches the client.

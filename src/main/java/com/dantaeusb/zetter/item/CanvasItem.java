@@ -10,10 +10,12 @@ import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 
@@ -77,6 +79,19 @@ public class CanvasItem extends Item
      */
     public static String getCanvasName(ItemStack stack) {
         return CanvasData.getCanvasName(getCanvasId(stack));
+    }
+
+
+    /**
+     *
+     * @see {@link FilledMapItem#getMapName(ItemStack)}
+     * @param stack
+     * @return
+     */
+    public static void setCanvasName(ItemStack stack, String canvasName) {
+        String number = StringUtils.substring(canvasName, CanvasData.NAME_PREFIX.length());
+        int id = Integer.parseInt(number);
+        stack.getOrCreateTag().putInt(NBT_TAG_NAME_CANVAS_ID, id);
     }
 
     /**
@@ -149,7 +164,7 @@ public class CanvasItem extends Item
                     world.addEntity(paintingEntity);
                 }
 
-                stack.shrink(1);
+                player.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
                 return ActionResultType.func_233537_a_(world.isRemote);
             } else {
                 return ActionResultType.CONSUME;

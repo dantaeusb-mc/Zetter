@@ -1,7 +1,7 @@
 package com.dantaeusb.zetter.block;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.core.ModLockItems;
+import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasNamePacket;
 import com.dantaeusb.zetter.tileentity.EaselTileEntity;
 import net.minecraft.block.*;
@@ -93,7 +93,7 @@ public class EaselBlock extends ContainerBlock {
             ItemStack easelCanvasStack = easelTileEntity.getEaselStorage().getCanvasStack();
 
             if (easelCanvasStack.isEmpty()) {
-                if (heldItem.getItem() == ModLockItems.CANVAS_ITEM && easelTileEntity.putCanvasStack(heldItem)) {
+                if (heldItem.getItem() == ModItems.CANVAS_ITEM && easelTileEntity.putCanvasStack(heldItem)) {
                     player.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
                     world.notifyBlockUpdate(tileEntityPos, state, state, 2);
 

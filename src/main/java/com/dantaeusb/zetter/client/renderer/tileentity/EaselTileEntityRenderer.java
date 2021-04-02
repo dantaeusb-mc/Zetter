@@ -2,7 +2,7 @@ package com.dantaeusb.zetter.client.renderer.tileentity;
 
 import com.dantaeusb.zetter.block.EaselBlock;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import com.dantaeusb.zetter.client.gui.CanvasRenderer;
+import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModBlocks;
 import com.dantaeusb.zetter.tileentity.EaselTileEntity;

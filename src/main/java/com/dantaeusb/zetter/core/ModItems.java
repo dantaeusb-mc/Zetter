@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class ModLockItems
+public class ModItems
 {
     private static final List<Item> ITEMS = new ArrayList<>();
 

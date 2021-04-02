@@ -1,7 +1,7 @@
 package com.dantaeusb.zetter.canvastracker;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.client.gui.CanvasRenderer;
+import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Maps;
 import net.minecraft.world.World;

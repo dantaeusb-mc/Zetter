@@ -4,10 +4,10 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import com.dantaeusb.zetter.client.gui.CanvasRenderer;
+import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModContainers;
-import com.dantaeusb.zetter.core.ModLockItems;
+import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.container.painting.PaintingFrame;
 import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
@@ -94,7 +94,7 @@ public class EaselContainer extends Container {
 
         this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean isItemValid(ItemStack stack) {
-                return stack.getItem() == ModLockItems.PALETTE_ITEM;
+                return stack.getItem() == ModItems.PALETTE_ITEM;
             }
         });
 
@@ -470,7 +470,7 @@ public class EaselContainer extends Container {
 
             // Inventory
             } else {
-                if (sourceStack.getItem() == ModLockItems.PALETTE_ITEM) {
+                if (sourceStack.getItem() == ModItems.PALETTE_ITEM) {
                     if (!this.mergeItemStack(sourceStack, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }

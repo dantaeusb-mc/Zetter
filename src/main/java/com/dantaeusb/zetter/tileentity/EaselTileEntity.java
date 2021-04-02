@@ -1,7 +1,7 @@
 package com.dantaeusb.zetter.tileentity;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.core.ModLockItems;
+import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.core.ModTileEntities;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.item.CanvasItem;
@@ -68,7 +68,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     public boolean putCanvasStack(ItemStack itemStack) {
-        if (itemStack.getItem() != ModLockItems.CANVAS_ITEM) {
+        if (itemStack.getItem() != ModItems.CANVAS_ITEM) {
             return false;
         }
 
@@ -101,7 +101,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public CanvasData getCanvasData() {
         ItemStack canvasStack = this.getCanvasStack();
 
-        if (canvasStack.isEmpty() || canvasStack.getItem() != ModLockItems.CANVAS_ITEM) {
+        if (canvasStack.isEmpty() || canvasStack.getItem() != ModItems.CANVAS_ITEM) {
             return null;
         }
 
