@@ -6,10 +6,12 @@ import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.client.renderer.texture.ITickable;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.StringUtils;
 import net.minecraft.util.text.TranslationTextComponent;
+
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
     final static int TEXTBOX_WIDTH = 82;
@@ -18,9 +20,19 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     final static int MODE_BUTTON_WIDTH = 17;
     final static int MODE_BUTTON_HEIGHT = 16;
 
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("\\p{XDigit}{1,6}");
+    private static final Pattern HEX_COLOR_STRICT_PATTERN = Pattern.compile("(\\p{XDigit}{3}|\\p{XDigit}{6})");
+
     TextFieldWidget textField;
 
-    private Mode textAreaMode;
+    Predicate<String> hexColorValidator = (text) -> {
+        if (StringUtils.isNullOrEmpty(text)) {
+            return true;
+        } else {
+            Matcher matcher = HEX_COLOR_PATTERN.matcher(text);
+            return matcher.matches();
+        }
+    };
 
     public ColorCodeWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, TEXTBOX_WIDTH + MODE_BUTTON_WIDTH * 2, TEXTBOX_HEIGHT, new TranslationTextComponent("container.zetter.painting.tools"));
@@ -41,12 +53,44 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
         this.textField.setDisabledTextColour(-1);
         this.textField.setEnableBackgroundDrawing(false);
         this.textField.setMaxStringLength(32);
+        this.textField.setResponder(this::applyColor);
+
+        this.textField.setValidator(this.hexColorValidator);
+
         //this.textField.setResponder(this::renameItem);
         this.parentScreen.addChildren(this.textField);
     }
 
     public void tick() {
         this.textField.tick();
+    }
+
+    private void applyColor(String text) {
+        Matcher matcher = HEX_COLOR_STRICT_PATTERN.matcher(text);
+        if (!matcher.matches()) {
+            return;
+        }
+
+        try {
+            // Get #AABBCC from #ABC
+            if (text.length() == 3) {
+                StringBuilder longText = new StringBuilder();
+                for (int i = 0; i < 3; i++)
+                {
+                    longText.append(text.charAt(i));
+                    longText.append(text.charAt(i));
+                }
+
+                text = longText.toString();
+            }
+
+            int color = Integer.parseInt(text, 16) | 0xFF000000;
+            this.parentScreen.updateCurrentPaletteColor(color);
+            this.parentScreen.pushPaletteUpdateColor();
+        } catch (NumberFormatException exception) {
+            Zetter.LOG.error("Invalid color number");
+            return;
+        }
     }
 
     /**
@@ -59,7 +103,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.textField.isFocused()) {
-            return this.textField.keyPressed(keyCode, scanCode, modifiers) || this.textField.canWrite() || super.keyPressed(keyCode, scanCode, modifiers);
+            return this.textField.keyPressed(keyCode, scanCode, modifiers) || this.textField.canWrite();
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -73,16 +117,21 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
         // Quick check
         if (PaintingScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, iMouseX, iMouseY)) {
             this.textField.setFocused2(true);
-            return true;
+            return super.mouseClicked(mouseX, mouseY, button);
         }
 
         this.textField.setFocused2(false);
-        return false;
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        return this.textField.charTyped(codePoint, modifiers);
     }
 
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         drawTextbox(matrixStack);
-        drawModeButtons(matrixStack);
+        //drawModeButtons(matrixStack);
 
         this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
@@ -94,21 +143,5 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
         int textboxV = TEXTBOX_POSITION_V + (this.textField.isFocused() ? TEXTBOX_HEIGHT : 0);
 
         this.blit(matrixStack, this.x, this.y, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
-    }
-
-    protected void drawModeButtons(MatrixStack matrixStack) {
-        final int MODE_BUTTON_POSITION_U = 176;
-        final int MODE_BUTTON_POSITION_V = 64;
-
-        int modeNameV = MODE_BUTTON_POSITION_V + (this.textAreaMode == Mode.NAME ? MODE_BUTTON_WIDTH : 0);
-        int modeColorV = MODE_BUTTON_POSITION_V + (this.textAreaMode == Mode.COLOR ? MODE_BUTTON_HEIGHT : 0);
-
-        this.blit(matrixStack, this.x - MODE_BUTTON_WIDTH - 1, this.y, MODE_BUTTON_POSITION_U, modeNameV, MODE_BUTTON_WIDTH, MODE_BUTTON_HEIGHT);
-        this.blit(matrixStack, this.x + TEXTBOX_WIDTH + 1, this.y, MODE_BUTTON_POSITION_U + MODE_BUTTON_WIDTH, modeColorV, MODE_BUTTON_WIDTH, MODE_BUTTON_HEIGHT);
-    }
-
-    public enum Mode {
-        NAME,
-        COLOR
     }
 }
