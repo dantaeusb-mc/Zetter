@@ -29,16 +29,31 @@ displayURL="https://github.com/dantaeusb-mc/Zetter" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
 logoFile="examplemod.png" #optional
 # A text field displayed in the mod UI
-credits="Dmitry Burlakov <dantaeusb@live.com>" #optional
+credits='''
+Thanks to
+Forge Discord:
+diesieben07#0714
+Kovak#5505
+Woodland Creature#3144
+gigaherz#9173
+
+greyminecraftcoder and all MinecraftByExample contributors
+
+Vazkii and Quark team for opening their source code as I often used it as a reference
+''' #optional
 # A text field displayed in the mod UI
-authors="dantaeusb" #optional
+authors="Dmitry Burlakov <dantaeusb@live.com>" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-This is a long form description of the mod. You can write whatever you want here
+Zetter is a Minecraft mod with a simple goal of adding custom drawing interface to
+create and use custom pictures in Minecraft.
 
-Have some lorem ipsum.
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed mollis lacinia magna. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed sagittis luctus odio eu tempus. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque volutpat ligula eget lacus auctor sagittis. In hac habitasse platea dictumst. Nunc gravida elit vitae sem vehicula efficitur. Donec mattis ipsum et arcu lobortis, eleifend sagittis sem rutrum. Cras pharetra quam eget posuere fermentum. Sed id tincidunt justo. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Core values of this mod:
+1. Encourage players to create own pixel artworks and use it in their creations;
+2. Do not change vanilla gameplay in any way and try to be as much close to vanilla Minecraft feel as possible;
+3. Drawing should be fun and simple;
+4. Let power users to be power users as much as it doesn't overcomplicate UI;
+5. Server administrators should be able to easily moderate player artworks and decide what is appropriate on their server.
 '''
 [[dependencies.zetter]] #optional
     # the modid of the dependency

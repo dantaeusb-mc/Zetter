@@ -1,14 +1,16 @@
 ### Common
 
-* A special interface for economy and personal items (locks and money GUI overlay)
 * Avoid proxies and OnlyIn
 
 #### Alpha:
 
-* \[HIGH\] When canvas placed on the wall without using on the easel it's transparent;
+* \[HIGH\] Redraw interface to remove unused buttons;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
-* \[MED\] Implement color paste;
 * \[LOW\] Remove infinity bounds in getRenderBoundingBox.
+
+#### Beta: 
+
+* \[HIGH\] When canvas placed on the wall without using on the easel it's transparent;
 
 #### Release tasks:
 
@@ -18,6 +20,7 @@
 * \[MED\] Add back texture for the frame;
 * \[LOW\] Fix plank texture on an easel;
 * \[LOW\] Fix leg top transparent on an easel;
+* \[LOW\] Looks like if color in palette somehow got wrong value it's broken;
 * \[LOW\] Implement bucket tool;
 * \[LOW\] Close or update screen when canvas removed;
 * \[LOW\] Remove network getters/setters: they're useless, and it's actually a bad pattern;

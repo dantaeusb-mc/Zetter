@@ -111,6 +111,8 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
     public void updateCurrentPaletteColor(int color) {
         this.container.setPaletteColor(this.paletteWidget.getCurrentPaletteSlot(), color);
         this.slidersWidget.updateSlidersWithCurrentColor();
+        // Triggers eternal loop
+        //this.colorCodeWidget.updateColorValue(color);
     }
 
     public void pushPaletteUpdateColor() {

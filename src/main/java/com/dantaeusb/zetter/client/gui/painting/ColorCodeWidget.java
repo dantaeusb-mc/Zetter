@@ -17,7 +17,8 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     final static int TEXTBOX_WIDTH = 82;
     final static int TEXTBOX_HEIGHT = 16;
 
-    final static int MODE_BUTTON_WIDTH = 17;
+    final static int TEXTBOX_TEXT_OFFSET = 8;
+
     final static int MODE_BUTTON_HEIGHT = 16;
 
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("\\p{XDigit}{1,6}");
@@ -35,13 +36,13 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     };
 
     public ColorCodeWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TEXTBOX_WIDTH + MODE_BUTTON_WIDTH * 2, TEXTBOX_HEIGHT, new TranslationTextComponent("container.zetter.painting.tools"));
+        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslationTextComponent("container.zetter.painting.tools"));
     }
 
     public void initFields() {
         this.textField = new TextFieldWidget(
                 this.parentScreen.getFont(),
-                this.x + 4,
+                this.x + TEXTBOX_TEXT_OFFSET + 4,
                 this.y + 4,
                 TEXTBOX_WIDTH - 7,
                 12,
@@ -63,6 +64,12 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
 
     public void tick() {
         this.textField.tick();
+    }
+
+    public void updateColorValue(int color) {
+        // Drop alpha channel
+        color = color & 0x00FFFFFF;
+        this.textField.setText(Integer.toHexString(color));
     }
 
     private void applyColor(String text) {
