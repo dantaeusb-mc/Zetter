@@ -121,7 +121,7 @@ jar {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.1.0", // We are version 1 of ourselves
+            "Specification-Version": "0.1.0-a", // We are version 1 of ourselves
             "Implementation-Title": project.name,
             "Implementation-Version": "${version}",
             "Implementation-Vendor" :"dantaeusb",

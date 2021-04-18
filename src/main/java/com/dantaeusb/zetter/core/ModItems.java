@@ -19,6 +19,7 @@ public class ModItems
     private static final List<Item> ITEMS = new ArrayList<>();
 
     public static final BlockItem EASEL = registerBlockItem("easel", ModBlocks.EASEL);
+    public static final BlockItem ARTIST_TABLE = registerBlockItem("artist_table", ModBlocks.ARTIST_TABLE);
     public static final CanvasItem CANVAS_ITEM = (CanvasItem) register("canvas", new CanvasItem());
     public static final PaintsItem PAINTS_ITEM = (PaintsItem) register("paints", new PaintsItem());
     public static final PaletteItem PALETTE_ITEM = (PaletteItem) register("palette", new PaletteItem());

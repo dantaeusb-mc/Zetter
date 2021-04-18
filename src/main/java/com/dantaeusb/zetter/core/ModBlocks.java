@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.core;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.block.ArtistTableBlock;
 import com.dantaeusb.zetter.block.EaselBlock;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
@@ -15,9 +16,10 @@ import java.util.List;
 public class ModBlocks
 {
     public static final List<Block> BLOCK_ITEMS = new ArrayList<>();
-    public static final List<Block> LOCKABLE_DOORS = new ArrayList<>();
 
     private static final List<Block> BLOCKS = new ArrayList<>();
+
+    public static final Block ARTIST_TABLE = registerBlockItem("artist_table", new ArtistTableBlock(AbstractBlock.Properties.create(Material.WOOD).hardnessAndResistance(2.5F).sound(SoundType.WOOD)));
 
     public static final Block EASEL = registerBlockItem("easel", new EaselBlock(AbstractBlock.Properties.create(Material.WOOD).hardnessAndResistance(1.5F).sound(SoundType.WOOD).notSolid()));
 

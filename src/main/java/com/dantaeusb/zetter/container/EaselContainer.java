@@ -58,22 +58,6 @@ public class EaselContainer extends Container {
     private long lastSyncReceivedClock = 0L;
     private long lastPushedFrameClock = 0L;
 
-    public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
-        return new EaselContainer(windowID, playerInventory, easelStorage);
-    }
-
-    public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
-        // it seems like we have to utilize extraData to pass the canvas data
-        // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
-        EaselStorage easelStorage = EaselStorage.createForClientSideContainer();
-        String canvasName = SCanvasNamePacket.readCanvasName(networkBuffer);
-
-        EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
-        easelContainer.setCanvas(canvasName);
-
-        return easelContainer;
-    }
-
     public EaselContainer(int windowID, PlayerInventory invPlayer, EaselStorage easelStorage) {
         super(ModContainers.PAINTING, windowID);
 
@@ -109,6 +93,22 @@ public class EaselContainer extends Container {
             int slotNumber = x;
             addSlot(new Slot(invPlayer, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
         }
+    }
+
+    public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
+        return new EaselContainer(windowID, playerInventory, easelStorage);
+    }
+
+    public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
+        // it seems like we have to utilize extraData to pass the canvas data
+        // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
+        EaselStorage easelStorage = EaselStorage.createForClientSideContainer();
+        String canvasName = SCanvasNamePacket.readCanvasName(networkBuffer);
+
+        EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
+        easelContainer.setCanvas(canvasName);
+
+        return easelContainer;
     }
 
     public void setCanvas(String canvasName) {

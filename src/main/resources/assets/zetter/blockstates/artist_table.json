@@ -1,0 +1,19 @@
+{
+    "variants": {
+        "facing=east": {
+            "model": "zetter:block/artist_table",
+            "y": 270
+        },
+        "facing=north": {
+            "model": "zetter:block/artist_table",
+            "y": 180
+        },
+        "facing=south": {
+            "model": "zetter:block/artist_table"
+        },
+        "facing=west": {
+            "model": "zetter:block/artist_table",
+            "y": 90
+        }
+    }
+}

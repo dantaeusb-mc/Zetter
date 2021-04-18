@@ -2,6 +2,7 @@ package com.dantaeusb.zetter.base;
 
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
+import com.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import com.dantaeusb.zetter.client.renderer.entity.CustomPaintingRenderer;
 import com.dantaeusb.zetter.client.renderer.tileentity.EaselTileEntityRenderer;
 import com.dantaeusb.zetter.core.*;
@@ -33,6 +34,7 @@ public class ClientProxy extends CommonProxy {
 
     public void clientSetup(FMLClientSetupEvent event) {
         ScreenManager.registerFactory(ModContainers.PAINTING, PaintingScreen::new);
+        ScreenManager.registerFactory(ModContainers.ARTIST_TABLE, ArtistTableScreen::new);
 
         RenderTypeLookup.setRenderLayer(ModBlocks.EASEL, RenderType.getCutout());
         ClientRegistry.bindTileEntityRenderer(ModTileEntities.EASEL_TILE_ENTITY, EaselTileEntityRenderer::new);

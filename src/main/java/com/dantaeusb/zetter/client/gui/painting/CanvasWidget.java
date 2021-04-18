@@ -16,7 +16,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable,
 
     public CanvasWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.painting.canvas"));
-
     }
 
     /**
