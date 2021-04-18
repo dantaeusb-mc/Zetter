@@ -11,9 +11,24 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IWorldPosCallable;
+import net.minecraft.util.Tuple;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.World;
 
+import java.awt.geom.Rectangle2D;
+import java.util.Vector;
+
 public class ArtistTableContainer extends Container {
+    // @todo: move to helper
+    public static final int[][] paintingShapes = new int[][]{
+            {1, 1},
+            {1, 2},
+            {2, 1},
+            {2, 3},
+            {3, 3},
+            {4, 2},
+            {4, 3}
+    };
 
     private final PlayerEntity player;
     private final World world;
@@ -195,6 +210,51 @@ public class ArtistTableContainer extends Container {
         /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
             return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
         }, true);*/
+    }
+
+    public boolean checkCanvasLayout() {
+        Tuple<Integer, Integer> min = null;
+        Tuple<Integer, Integer> max = null;
+
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < 4; x++) {
+                if (this.inventoryCanvas.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
+                    if (min == null) {
+                        min = new Tuple<>(x ,y);
+                    }
+
+                    max = new Tuple<>(x ,y);
+                }
+            }
+        }
+
+        if (min == null || max == null) {
+            return false;
+        }
+
+        int length = max.getA() + 1 - min.getA();
+        int height = max.getB() + 1 - min.getB();
+
+        for (int y = 0; y < 3; y++) {
+            for (int x = 0; x < 4; x++) {
+                if (this.inventoryCanvas.getStackInSlot(y * 4 + x) == ItemStack.EMPTY) {
+                    if (x >= min.getA() && x <= max.getA()) {
+                        if (y >= min.getB() && y <= max.getB()) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        boolean shapeAvailable = false;
+        for (int[] shape: ArtistTableContainer.paintingShapes) {
+            if (length == shape[0] && height == shape[1]) {
+                shapeAvailable = true;
+            }
+        }
+
+        return shapeAvailable;
     }
 
     public IInventory getInventoryCanvas() {

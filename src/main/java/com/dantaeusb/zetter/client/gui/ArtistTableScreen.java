@@ -107,7 +107,9 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         this.blit(matrixStack, this.guiLeft + 7, this.guiTop + 99, 0, this.ySize + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : 16), 110, 16);
 
-        this.combinedCanvasWidget.render(matrixStack);
+        if (this.getContainer().checkCanvasLayout()) {
+            this.combinedCanvasWidget.render(matrixStack);
+        }
     }
 
     /**
