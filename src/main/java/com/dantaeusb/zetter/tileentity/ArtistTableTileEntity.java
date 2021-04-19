@@ -1,12 +1,11 @@
 package com.dantaeusb.zetter.tileentity;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.core.ModTileEntities;
-import com.dantaeusb.zetter.container.EaselContainer;
-import com.dantaeusb.zetter.item.CanvasItem;
-import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
-import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
+import com.dantaeusb.zetter.tileentity.storage.ArtistTableFrameStorage;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -27,15 +26,18 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class EaselTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
-    private final EaselStorage easelStorage; // two items: canvas and palette
+public class ArtistTableTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
+    private static final String ARTIST_CANVAS_STORAGE_TAG = "canvas_storage";
+    private static final String ARTIST_FRAME_STORAGE_TAG = "frame_storage";
 
-    private static final String EASEL_STORAGE_TAG = "storage";
+    private final ArtistTableCanvasStorage canvasStorage;
+    private final ArtistTableFrameStorage frameStorage;
 
-    public EaselTileEntity() {
-        super(ModTileEntities.EASEL_TILE_ENTITY);
+    public ArtistTableTileEntity() {
+        super(ModTileEntities.ARTIST_TABLE_TILE_ENTITY);
 
-        this.easelStorage = EaselStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
+        this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
+        this.frameStorage = ArtistTableFrameStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
     }
 
     public boolean canPlayerAccessInventory(PlayerEntity player) {
@@ -49,65 +51,6 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
 
     public void tick() {
     }
-
-    // specific
-
-    public EaselStorage getEaselStorage() {
-        return this.easelStorage;
-    }
-
-    public boolean hasCanvas() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        return !canvasStack.isEmpty();
-    }
-
-    public @Nullable ItemStack getCanvasStack() {
-        return this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
-    }
-
-    public boolean putCanvasStack(ItemStack itemStack) {
-        if (itemStack.getItem() != ModItems.CANVAS_ITEM) {
-            return false;
-        }
-
-        if (this.hasCanvas()) {
-            return false;
-        }
-
-        // Initialize data if it's not yet
-        CanvasItem.getCanvasData(itemStack, this.world);
-        this.easelStorage.setCanvasStack(itemStack);
-
-        return true;
-    }
-
-    /**
-     * Returns current canvas name or empty string if no canvas assigned
-     * @return
-     */
-    public String getCanvasName() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack != null && canvasStack.isEmpty()) {
-            return "";
-        }
-
-        return CanvasItem.getCanvasName(canvasStack);
-    }
-
-    @Nullable
-    public CanvasData getCanvasData() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack.isEmpty() || canvasStack.getItem() != ModItems.CANVAS_ITEM) {
-            return null;
-        }
-
-        return  CanvasItem.getCanvasData(canvasStack, this.world);
-    }
-
-    // render
 
     @Override
     public AxisAlignedBB getRenderBoundingBox()
@@ -124,8 +67,11 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     {
         super.write(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
 
-        CompoundNBT inventoryNBT = this.easelStorage.serializeNBT();
-        parentNBTTagCompound.put(EASEL_STORAGE_TAG, inventoryNBT);
+        CompoundNBT canvasNbt = this.canvasStorage.serializeNBT();
+        parentNBTTagCompound.put(ARTIST_CANVAS_STORAGE_TAG, canvasNbt);
+
+        CompoundNBT frameNbt = this.frameStorage.serializeNBT();
+        parentNBTTagCompound.put(ARTIST_FRAME_STORAGE_TAG, frameNbt);
 
         return parentNBTTagCompound;
     }
@@ -135,10 +81,16 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     {
         super.read(blockState, parentNBTTagCompound);
 
-        CompoundNBT inventoryNBT = parentNBTTagCompound.getCompound(EASEL_STORAGE_TAG);
-        this.easelStorage.deserializeNBT(inventoryNBT);
+        CompoundNBT canvasNbt = parentNBTTagCompound.getCompound(ARTIST_CANVAS_STORAGE_TAG);
+        this.canvasStorage.deserializeNBT(canvasNbt);
 
-        if (this.easelStorage.getSizeInventory() != EaselStorage.STORAGE_SIZE)
+        CompoundNBT frameNbt = parentNBTTagCompound.getCompound(ARTIST_FRAME_STORAGE_TAG);
+        this.frameStorage.deserializeNBT(frameNbt);
+
+        if (
+                this.canvasStorage.getSizeInventory() != ArtistTableCanvasStorage.STORAGE_SIZE
+             || this.frameStorage.getSizeInventory() != ArtistTableFrameStorage.STORAGE_SIZE
+        )
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
 
@@ -153,7 +105,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
 
         Zetter.LOG.info("Going to send update packet");
 
-        int tileEntityType = 42;
+        int tileEntityType = 43;
         return new SUpdateTileEntityPacket(this.pos, tileEntityType, nbtTagCompound);
     }
 
@@ -183,14 +135,15 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
      * @param blockPos
      */
     public void dropAllContents(World world, BlockPos blockPos) {
-        InventoryHelper.dropInventoryItems(world, blockPos, this.easelStorage);
+        InventoryHelper.dropInventoryItems(world, blockPos, this.canvasStorage);
+        InventoryHelper.dropInventoryItems(world, blockPos, this.frameStorage);
     }
 
     //
 
     @Override
     public ITextComponent getDisplayName() {
-        return new TranslationTextComponent("container.zetter.easel");
+        return new TranslationTextComponent("container.zetter.artistTable");
     }
 
     /**
@@ -203,6 +156,21 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     @Nullable
     @Override
     public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-        return EaselContainer.createContainerServerSide(windowID, playerInventory, this.easelStorage);
+        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage, this.frameStorage);
+    }
+
+    static public boolean isItemValidForCanvasArea(ItemStack itemStack)
+    {
+        return itemStack.getItem() == ModItems.CANVAS_ITEM;
+    }
+
+    static public boolean isItemValidForFrameMainMaterial(ItemStack itemStack)
+    {
+        return true;
+    }
+
+    static public boolean isItemValidForFrameDetailMaterial(ItemStack itemStack)
+    {
+        return true;
     }
 }

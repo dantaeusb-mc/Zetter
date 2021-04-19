@@ -122,6 +122,15 @@ public class ServerHandler {
         ctx.enqueueWork(() -> processUnloadRequest(packetIn, sendingPlayer));
     }
 
+    /**
+     * @todo: Think about removing this
+     * Not sure if it's needed, this can cause condition when canvas is unloaded while
+     * other players would like to track it. Unloading on back-end should happen
+     * by requests timeout and I believe this should work properly already
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processUnloadRequest(final CanvasUnloadRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         // Get overworld world instance
         MinecraftServer server = sendingPlayer.getServerWorld().getServer();

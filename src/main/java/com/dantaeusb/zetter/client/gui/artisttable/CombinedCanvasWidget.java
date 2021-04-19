@@ -41,7 +41,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
         matrixStack.push();
         matrixStack.translate(this.x, this.y, 1.0F);
 
-        IInventory canvasInventory = this.parentScreen.getContainer().getInventoryCanvas();
+        IInventory canvasInventory = this.parentScreen.getContainer().getCanvasStorage();
 
         for (int i = 0; i < canvasInventory.getSizeInventory(); i++) {
             ItemStack canvasStack = canvasInventory.getStackInSlot(i);
