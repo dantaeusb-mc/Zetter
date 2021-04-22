@@ -21,6 +21,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.storage.MapData;
 
 import javax.annotation.Nullable;
+import java.awt.*;
 
 public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* implements IContainerListener*/ {
     protected final ITextComponent title = new TranslationTextComponent("container.zetter.artistTable");
@@ -31,7 +32,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
     private CombinedCanvasWidget combinedCanvasWidget;
 
-    private Button buttonSign;
+    private int tick = 0;
 
     public ArtistTableScreen(ArtistTableContainer artistTableContainer, PlayerInventory playerInventory, ITextComponent title) {
         super(artistTableContainer, playerInventory, title);
@@ -53,12 +54,6 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
-        final int SIGN_BUTTON_XPOS = 125;
-        final int SIGN_BUTTON_YPOS = 99;
-
-        this.buttonSign = this.addButton(new Button(this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, 44, 20, DialogTexts.GUI_DONE, (p_214201_1_) -> {
-
-        }));
         this.initFields();
     }
 
@@ -93,6 +88,8 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
     @Override
     public void tick() {
+        this.tick++;
+
         super.tick();
     }
 
@@ -105,9 +102,44 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         // Draw input
 
-        this.blit(matrixStack, this.guiLeft + 7, this.guiTop + 99, 0, this.ySize + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : 16), 110, 16);
+        this.blit(matrixStack, this.guiLeft + 7, this.guiTop + 99, 0, this.ySize + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : 16), 100, 16);
 
-        if (this.getContainer().checkCanvasLayout()) {
+        final int SIGN_BUTTON_XPOS = 111;
+        final int SIGN_BUTTON_YPOS = 99;
+        final int SIGN_BUTTON_UPOS = 100;
+        final int SIGN_BUTTON_VPOS = 202;
+        final int SIGN_BUTTON_WIDTH = 36;
+        final int SIGN_BUTTON_HEIGHT = 16;
+
+        if (this.getContainer().canvasReady()) {
+            int buttonVOffset = SIGN_BUTTON_VPOS;
+
+            if (isInRect(this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT, x, y)) {
+                buttonVOffset += SIGN_BUTTON_HEIGHT * 2;
+            }
+
+            this.blit(matrixStack, this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_UPOS, buttonVOffset, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT);
+        } else {
+            this.blit(matrixStack, this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_UPOS, SIGN_BUTTON_VPOS + SIGN_BUTTON_HEIGHT, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT);
+        }
+
+        final int LOADING_XPOS = 129;
+        final int LOADING_YPOS = 60;
+        final int LOADING_UPOS = 136;
+        final int LOADING_VPOS = 202;
+        final int LOADING_WIDTH = 16;
+        final int LOADING_HEIGHT = 10;
+
+        if (this.getContainer().canvasLoading()) {
+            final int animation = this.tick % 40;
+            int frame = animation / 10; // 0-3
+
+            frame = frame > 2 ? 1 : frame; // 3rd frame is the same as 1st frame
+
+            this.blit(matrixStack, this.guiLeft + LOADING_XPOS, this.guiTop + LOADING_YPOS, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT);
+        }
+
+        if (this.getContainer().canvasReady()) {
             this.combinedCanvasWidget.render(matrixStack);
         }
     }
@@ -119,6 +151,17 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
      */
     @Override
     protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
+        final int LABEL_XPOS = 5;
+        final int LABEL_YPOS = 5;
+        this.font.func_243248_b(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
+
+        final int FONT_Y_SPACING = 10;
+        final int PLAYER_INV_LABEL_XPOS = ArtistTableContainer.PLAYER_INVENTORY_XPOS;
+        final int PLAYER_INV_LABEL_YPOS = ArtistTableContainer.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
+
+        // draw the label for the player inventory slots
+        this.font.func_243248_b(matrixStack, this.playerInventory.getDisplayName(),
+                PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
     }
 
     /**
@@ -144,6 +187,11 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
      * @return
      */
     public boolean allowedToNameItem() {
-        return false;
+        return this.container.canvasReady();
+    }
+
+    // Returns true if the given x,y coordinates are within the given rectangle
+    public static boolean isInRect(int x, int y, int xSize, int ySize, int mouseX, int mouseY){
+        return ((mouseX >= x && mouseX <= x+xSize) && (mouseY >= y && mouseY <= y+ySize));
     }
 }

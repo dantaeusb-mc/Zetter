@@ -1,7 +1,9 @@
 package com.dantaeusb.zetter.container;
 
+import com.dantaeusb.zetter.container.artisttable.CanvasCombination;
 import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModItems;
+import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.tileentity.ArtistTableTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableFrameStorage;
@@ -13,23 +15,9 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
+import net.minecraft.world.World;
 
 public class ArtistTableContainer extends Container {
-    // @todo: move to helper
-    public static final int[][] paintingShapes = new int[][]{
-            {1, 1},
-            {1, 2},
-            {1, 3},
-            {2, 1},
-            {2, 2},
-            {2, 3},
-            {3, 1},
-            {3, 2},
-            {3, 3},
-            {4, 2},
-            {4, 3}
-    };
-
     private static final int HOTBAR_SLOT_COUNT = 9;
 
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
@@ -39,12 +27,18 @@ public class ArtistTableContainer extends Container {
     private static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
-    private static final int FRAME_SLOTS_COUNT = 2;
+    private final World world;
 
     private ArtistTableCanvasStorage canvasStorage;
     private ArtistTableFrameStorage frameStorage;
 
+    private CanvasCombination canvasCombination;
+
     protected final CraftResultInventory inventoryOut = new CraftResultInventory();
+
+    // gui position of the player inventory grid
+    public static final int PLAYER_INVENTORY_XPOS = 8;
+    public static final int PLAYER_INVENTORY_YPOS = 120;
 
     public ArtistTableContainer(int windowID, PlayerInventory invPlayer,
                                 ArtistTableCanvasStorage canvasStorage,
@@ -54,8 +48,12 @@ public class ArtistTableContainer extends Container {
         if (ModContainers.ARTIST_TABLE == null)
             throw new IllegalStateException("Must initialise containerTypeArtistTableContainer before constructing a ArtistTableContainer!");
 
+        this.world = invPlayer.player.world;
+
         this.canvasStorage = canvasStorage;
         this.frameStorage = frameStorage;
+
+        this.canvasStorage.setMarkDirtyNotificationLambda(this::updateCanvasCombination);
 
         final int SLOT_X_SPACING = 18;
         final int SLOT_Y_SPACING = 18;
@@ -66,10 +64,6 @@ public class ArtistTableContainer extends Container {
         for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
             this.addSlot(new Slot(invPlayer, x, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
         }
-
-        // gui position of the player inventory grid
-        final int PLAYER_INVENTORY_XPOS = 8;
-        final int PLAYER_INVENTORY_YPOS = 120;
 
         // Add the rest of the players inventory to the gui
         for (int y = 0; y < PLAYER_INVENTORY_ROW_COUNT; y++) {
@@ -101,6 +95,8 @@ public class ArtistTableContainer extends Container {
 
         this.addSlot(new SlotFrameMainMaterialInput(this.frameStorage, 0, FRAME_XPOS, FRAME_YPOS));
         this.addSlot(new SlotFrameDetailMaterialInput(this.frameStorage, 1, FRAME_XPOS + SLOT_X_SPACING, FRAME_YPOS));
+
+        this.updateCanvasCombination();
     }
 
     public static ArtistTableContainer createContainerServerSide(int windowID, PlayerInventory playerInventory,
@@ -131,6 +127,22 @@ public class ArtistTableContainer extends Container {
     public void onContainerClosed(PlayerEntity playerIn) {
         super.onContainerClosed(playerIn);
 
+    }
+
+    private void updateCanvasCombination() {
+        this.canvasCombination = new CanvasCombination(this.canvasStorage, this.world);
+    }
+
+    public CanvasCombination getCanvasCombination() {
+        return this.canvasCombination;
+    }
+
+    public boolean canvasReady() {
+        return this.canvasCombination.valid == CanvasCombination.State.READY;
+    }
+
+    public boolean canvasLoading() {
+        return this.canvasCombination.valid == CanvasCombination.State.NOT_LOADED;
     }
 
     /**
@@ -192,60 +204,6 @@ public class ArtistTableContainer extends Container {
         /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
             return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
         }, true);*/
-    }
-
-    public boolean checkCanvasLayout() {
-        Tuple<Integer, Integer> min = null;
-        Tuple<Integer, Integer> max = null;
-
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 4; x++) {
-                if (this.canvasStorage.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
-                    if (min == null) {
-                        min = new Tuple<>(x ,y);
-                    }
-
-                    if (max == null) {
-                        max = new Tuple<>(x ,y);
-                        continue;
-                    }
-
-                    if (max.getA() < x) {
-                        max = new Tuple<>(x, max.getB());
-                    } if (max.getB() < y) {
-                        max = new Tuple<>(max.getA(), y);
-                    }
-                }
-            }
-        }
-
-        if (min == null || max == null) {
-            return false;
-        }
-
-        int length = max.getA() + 1 - min.getA();
-        int height = max.getB() + 1 - min.getB();
-
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 4; x++) {
-                if (this.canvasStorage.getStackInSlot(y * 4 + x) == ItemStack.EMPTY) {
-                    if (x >= min.getA() && x <= max.getA()) {
-                        if (y >= min.getB() && (y <= max.getB())) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-
-        boolean shapeAvailable = false;
-        for (int[] shape: ArtistTableContainer.paintingShapes) {
-            if (length == shape[0] && height == shape[1]) {
-                shapeAvailable = true;
-            }
-        }
-
-        return shapeAvailable;
     }
 
     public class SlotCanvas extends Slot {

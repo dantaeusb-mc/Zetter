@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
 
 public class CombinedCanvasWidget extends AbstractArtistTableWidget implements IRenderable, IGuiEventListener {
     private static final int CANVAS_SCALE_FACTOR = 1;
-    private static final int size = CanvasItem.CANVAS_SIZE * CANVAS_SCALE_FACTOR;
+    private static final int size = Helper.CANVAS_TEXTURE_RESOLUTION * CANVAS_SCALE_FACTOR;
 
     public CombinedCanvasWidget(ArtistTableScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.painting.canvas"));
@@ -41,20 +41,9 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
         matrixStack.push();
         matrixStack.translate(this.x, this.y, 1.0F);
 
-        IInventory canvasInventory = this.parentScreen.getContainer().getCanvasStorage();
+        CanvasData canvasData = this.parentScreen.getContainer().getCanvasCombination().canvasData;
 
-        for (int i = 0; i < canvasInventory.getSizeInventory(); i++) {
-            ItemStack canvasStack = canvasInventory.getStackInSlot(i);
-
-            if (canvasStack.getItem() == ModItems.CANVAS_ITEM) {
-                String canvasName = CanvasItem.getCanvasName(canvasStack);
-
-                int y = i / 4;
-                int x = i - y * 4;
-
-               this.drawCanvas(matrixStack, this.getCanvasData(Minecraft.getInstance().world, canvasName),x * 16.0F, y * 16.0F, 1.0F);
-            }
-        }
+        this.drawCanvas(matrixStack, canvasData, 0, 0, 1.0F);
 
         matrixStack.pop();
     }

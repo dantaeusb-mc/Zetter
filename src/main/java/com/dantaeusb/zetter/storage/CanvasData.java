@@ -8,6 +8,10 @@ import net.minecraft.world.storage.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * It's not enough to just init data, we need to register it with
+ * @see com.dantaeusb.zetter.canvastracker.CanvasServerTracker::registerCanvasData();
+ */
 public class CanvasData extends WorldSavedData {
     private byte[] color;
     private ByteBuffer canvasBuffer;

@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.client.gui.painting;
 
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.IGuiEventListener;
@@ -10,7 +11,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class CanvasWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
     private static final int CANVAS_SCALE_FACTOR = 5;
-    private static final int size = CanvasItem.CANVAS_SIZE * CANVAS_SCALE_FACTOR;
+    private static final int size = Helper.CANVAS_TEXTURE_RESOLUTION * CANVAS_SCALE_FACTOR;
 
     private boolean canvasDragging = false;
 
@@ -71,7 +72,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable,
             return;
         }
 
-        for (int i = 0; i < CanvasItem.CANVAS_SQUARE; i++) {
+        for (int i = 0; i < Helper.CANVAS_TEXTURE_RESOLUTION * Helper.CANVAS_TEXTURE_RESOLUTION; i++) {
             int localX = i % 16;
             int localY = i / 16;
 

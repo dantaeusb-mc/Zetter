@@ -22,8 +22,6 @@ import javax.annotation.Nullable;
 public class CanvasItem extends Item
 {
     public static final String NBT_TAG_NAME_CANVAS_ID = "canvasId";
-    public static int CANVAS_SIZE = 16;
-    public static int CANVAS_SQUARE = CANVAS_SIZE * CANVAS_SIZE;
 
     public CanvasItem() {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
@@ -133,7 +131,7 @@ public class CanvasItem extends Item
         int newId = canvasTracker.getNextId();
 
         CanvasData canvasData = new CanvasData(newId);
-        canvasData.initData(CANVAS_SIZE, CANVAS_SIZE);
+        canvasData.initData(Helper.CANVAS_TEXTURE_RESOLUTION, Helper.CANVAS_TEXTURE_RESOLUTION);
         canvasTracker.registerCanvasData(canvasData);
 
         stack.getOrCreateTag().putInt(NBT_TAG_NAME_CANVAS_ID, newId);

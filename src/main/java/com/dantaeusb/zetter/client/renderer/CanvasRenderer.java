@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.client.renderer;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.network.packet.painting.CanvasRequestPacket;
@@ -42,10 +43,6 @@ public class CanvasRenderer implements AutoCloseable {
     public static CanvasRenderer getInstance() {
         return instance;
     }
-
-    /*
-     * Updates a map texture
-     */
 
     public void updateCanvas(CanvasData canvas) {
         this.getCanvasRendererInstance(canvas, true).updateCanvasTexture(canvas);
@@ -179,10 +176,9 @@ public class CanvasRenderer implements AutoCloseable {
         CanvasRenderer.Instance canvasRendererInstance = this.loadedCanvases.get(canvas.getName());
 
         if (create && canvasRendererInstance == null) {
-            canvasRendererInstance = new CanvasRenderer.Instance(canvas.getName());
+            canvasRendererInstance = new CanvasRenderer.Instance(canvas.getName(), canvas.getWidth(), canvas.getHeight());
             canvasRendererInstance.updateCanvasTexture(canvas);
             this.loadedCanvases.put(canvas.getName(), canvasRendererInstance);
-
         }
 
         return canvasRendererInstance;
@@ -210,11 +206,21 @@ public class CanvasRenderer implements AutoCloseable {
         private final DynamicTexture canvasTexture;
         private final RenderType renderType;
 
+        private final int width;
+        private final int height;
+
         private Instance(String canvasName) {
+            this(canvasName, Helper.CANVAS_TEXTURE_RESOLUTION, Helper.CANVAS_TEXTURE_RESOLUTION);
+        }
+
+        private Instance(String canvasName, int width, int height) {
             this.canvasName = canvasName;
-            this.canvasTexture = new DynamicTexture(CanvasItem.CANVAS_SIZE, CanvasItem.CANVAS_SIZE, true);
+            this.canvasTexture = new DynamicTexture(width, height, true);
             ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.getDynamicTextureLocation("canvas/" + canvasName, this.canvasTexture);
             this.renderType = RenderType.getText(dynamicTextureLocation);
+
+            this.width = width;
+            this.height = height;
         }
 
         /*
@@ -245,9 +251,9 @@ public class CanvasRenderer implements AutoCloseable {
             Matrix4f matrix4f = matrixStack.getLast().getMatrix();
             IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 
-            ivertexbuilder.pos(matrix4f, 0.0F, 16.0F, 0F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, 16.0F, 16.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, 16.0F, 0.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 0.0F, (float) this.height, 0F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, (float) this.width, (float) this.height, 0F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, (float) this.width, 0.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
             ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, 0F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(combinedLight).endVertex();
         }
 

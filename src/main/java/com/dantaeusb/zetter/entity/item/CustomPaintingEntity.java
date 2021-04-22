@@ -143,11 +143,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     public int getWidthPixels() {
-        return CanvasItem.CANVAS_SIZE;
+        return Helper.CANVAS_TEXTURE_RESOLUTION;
     }
 
     public int getHeightPixels() {
-        return CanvasItem.CANVAS_SIZE;
+        return Helper.CANVAS_TEXTURE_RESOLUTION;
     }
 
     /**

@@ -9,6 +9,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class Helper {
+    public static final int CANVAS_TEXTURE_RESOLUTION = 16;
+
     public static String fallbackCanvasName = CanvasData.NAME_PREFIX + "0";
 
     public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {
@@ -27,11 +29,5 @@ public class Helper {
         }
 
         return canvasTracker;
-    }
-
-    public static boolean canvasCheck(int canvasId) {
-
-
-        return true;
     }
 }
