@@ -23,6 +23,7 @@ public class ModItems
     public static final CanvasItem CANVAS_ITEM = (CanvasItem) register("canvas", new CanvasItem());
     public static final PaintsItem PAINTS_ITEM = (PaintsItem) register("paints", new PaintsItem());
     public static final PaletteItem PALETTE_ITEM = (PaletteItem) register("palette", new PaletteItem());
+    public static final CustomPaintingItem CUSTOM_PAINTING_ITEM = (CustomPaintingItem) register("custom_painting", new CustomPaintingItem());
 
     private static BlockItem registerBlockItem(String name, Block block)
     {

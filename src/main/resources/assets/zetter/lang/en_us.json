@@ -1,7 +1,9 @@
 {
   "block.zetter.easel": "Easel",
+  "container.zetter.artistTable": "Artist Table",
   "container.zetter.easel": "Easel",
   "item.zetter.canvas": "Canvas",
   "item.zetter.paints": "Paints",
-  "item.zetter.palette": "Palette"
+  "item.zetter.palette": "Palette",
+  "item.zetter.custom_painting": "Painting"
 }

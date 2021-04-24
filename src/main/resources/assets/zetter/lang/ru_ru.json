@@ -1,7 +1,9 @@
 {
-  "block.immersivemp.easel": "Мольберт",
-  "container.immersivemp.easel": "Мольберт",
-  "item.immersivemp.canvas": "Холст",
-  "item.immersivemp.paints": "Краски",
-  "item.immersivemp.palette": "Палитра"
+  "block.zetter.easel": "Мольберт",
+  "container.zetter.artistTable": "Стол художника",
+  "container.zetter.easel": "Мольберт",
+  "item.zetter.canvas": "Холст",
+  "item.zetter.paints": "Краски",
+  "item.zetter.palette": "Палитра",
+  "item.zetter.custom_painting": "Картина"
 }

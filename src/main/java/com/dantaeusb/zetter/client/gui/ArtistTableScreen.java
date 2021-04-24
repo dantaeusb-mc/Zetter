@@ -1,26 +1,16 @@
 package com.dantaeusb.zetter.client.gui;
 
 import com.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
-import com.dantaeusb.zetter.client.gui.painting.*;
-import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
-import com.dantaeusb.zetter.storage.CanvasData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.DialogTexts;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.IContainerListener;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.storage.MapData;
 
-import javax.annotation.Nullable;
 import java.awt.*;
 
 public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* implements IContainerListener*/ {
@@ -38,7 +28,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
         super(artistTableContainer, playerInventory, title);
 
         this.xSize = 176;
-        this.ySize = 202;
+        this.ySize = 209;
     }
 
     @Override
@@ -51,8 +41,6 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
         this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
 
         this.children.add(this.combinedCanvasWidget);
-
-        this.minecraft.keyboardListener.enableRepeatEvents(true);
 
         this.initFields();
     }
@@ -83,14 +71,23 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
+
         super.render(matrixStack, mouseX, mouseY, partialTicks);
+
+        this.renderNameField(matrixStack, mouseX, mouseY, partialTicks);
+        this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+    }
+
+    public void renderNameField(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        this.nameField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
     public void tick() {
-        this.tick++;
-
         super.tick();
+
+        this.tick++;
+        this.nameField.tick();
     }
 
     @Override
@@ -106,8 +103,8 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         final int SIGN_BUTTON_XPOS = 111;
         final int SIGN_BUTTON_YPOS = 99;
-        final int SIGN_BUTTON_UPOS = 100;
-        final int SIGN_BUTTON_VPOS = 202;
+        final int SIGN_BUTTON_UPOS = 176;
+        final int SIGN_BUTTON_VPOS = 0;
         final int SIGN_BUTTON_WIDTH = 36;
         final int SIGN_BUTTON_HEIGHT = 16;
 
@@ -125,8 +122,8 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         final int LOADING_XPOS = 129;
         final int LOADING_YPOS = 60;
-        final int LOADING_UPOS = 136;
-        final int LOADING_VPOS = 202;
+        final int LOADING_UPOS = 100;
+        final int LOADING_VPOS = this.ySize;
         final int LOADING_WIDTH = 16;
         final int LOADING_HEIGHT = 10;
 
@@ -178,7 +175,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return this.nameField.keyPressed(keyCode, scanCode, modifiers) || this.nameField.canWrite() || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     /**

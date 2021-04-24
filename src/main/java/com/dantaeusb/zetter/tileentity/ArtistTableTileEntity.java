@@ -5,7 +5,6 @@ import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.core.ModTileEntities;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
-import com.dantaeusb.zetter.tileentity.storage.ArtistTableFrameStorage;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -28,16 +27,13 @@ import javax.annotation.Nullable;
 
 public class ArtistTableTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
     private static final String ARTIST_CANVAS_STORAGE_TAG = "canvas_storage";
-    private static final String ARTIST_FRAME_STORAGE_TAG = "frame_storage";
 
     private final ArtistTableCanvasStorage canvasStorage;
-    private final ArtistTableFrameStorage frameStorage;
 
     public ArtistTableTileEntity() {
         super(ModTileEntities.ARTIST_TABLE_TILE_ENTITY);
 
         this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
-        this.frameStorage = ArtistTableFrameStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
     }
 
     public boolean canPlayerAccessInventory(PlayerEntity player) {
@@ -70,9 +66,6 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
         CompoundNBT canvasNbt = this.canvasStorage.serializeNBT();
         parentNBTTagCompound.put(ARTIST_CANVAS_STORAGE_TAG, canvasNbt);
 
-        CompoundNBT frameNbt = this.frameStorage.serializeNBT();
-        parentNBTTagCompound.put(ARTIST_FRAME_STORAGE_TAG, frameNbt);
-
         return parentNBTTagCompound;
     }
 
@@ -84,13 +77,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
         CompoundNBT canvasNbt = parentNBTTagCompound.getCompound(ARTIST_CANVAS_STORAGE_TAG);
         this.canvasStorage.deserializeNBT(canvasNbt);
 
-        CompoundNBT frameNbt = parentNBTTagCompound.getCompound(ARTIST_FRAME_STORAGE_TAG);
-        this.frameStorage.deserializeNBT(frameNbt);
-
-        if (
-                this.canvasStorage.getSizeInventory() != ArtistTableCanvasStorage.STORAGE_SIZE
-             || this.frameStorage.getSizeInventory() != ArtistTableFrameStorage.STORAGE_SIZE
-        )
+        if (this.canvasStorage.getSizeInventory() != ArtistTableCanvasStorage.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
 
@@ -136,7 +123,6 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
      */
     public void dropAllContents(World world, BlockPos blockPos) {
         InventoryHelper.dropInventoryItems(world, blockPos, this.canvasStorage);
-        InventoryHelper.dropInventoryItems(world, blockPos, this.frameStorage);
     }
 
     //
@@ -156,7 +142,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     @Nullable
     @Override
     public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage, this.frameStorage);
+        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage);
     }
 
     static public boolean isItemValidForCanvasArea(ItemStack itemStack)

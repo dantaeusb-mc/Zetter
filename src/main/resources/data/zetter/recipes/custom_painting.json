@@ -1,0 +1,11 @@
+{
+  "type": "zetter:framing",
+  "ingredients": [
+    {"item": "minecraft:iron_nugget"},
+    {"tag": "minecraft:planks"}
+  ],
+  "result": {
+    "item": "zetter:custom_painting",
+    "count": 1
+  }
+}

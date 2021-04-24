@@ -5,10 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.ICraftingRecipe;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipe;
+import net.minecraft.item.crafting.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
@@ -19,14 +16,15 @@ import net.minecraftforge.registries.ForgeRegistryEntry;
 /**
  * Only for frames, toggle
  */
-public class FrameRecipe implements ICraftingRecipe {
+public class FramingRecipe implements ICraftingRecipe {
     public static final Serializer SERIALIZER = new Serializer();
+    public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "framing");
 
     private final ResourceLocation id;
     private final Ingredient input;
     private final ItemStack output;
 
-    public FrameRecipe(ResourceLocation id, Ingredient input, ItemStack output) {
+    public FramingRecipe(ResourceLocation id, Ingredient input, ItemStack output) {
         this.id = id;
         this.input = input;
         this.output = output;
@@ -102,6 +100,10 @@ public class FrameRecipe implements ICraftingRecipe {
         return this.output;
     }
 
+    /**
+     * @todo: Not sure if that's the right thing use CRAFTING_SPECIAL_BOOKCLONING here
+     * @return
+     */
     public IRecipeSerializer<?> getSerializer() {
         return IRecipeSerializer.CRAFTING_SPECIAL_BOOKCLONING;
     }
@@ -113,42 +115,41 @@ public class FrameRecipe implements ICraftingRecipe {
         return width >= 3 && height >= 3;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<FrameRecipe> {
+    private static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<FramingRecipe> {
 
         Serializer() {
-            setRegistryName("zetter:frame_recipe");
-            //setRegistryName(new ResourceLocation(ImmersiveMp.MOD_ID, "locking_recipe"));
+            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "framing"));
         }
 
         @Override
-        public FrameRecipe read(ResourceLocation recipeId, JsonObject json) {
+        public FramingRecipe read(ResourceLocation recipeId, JsonObject json) {
             // Reads a recipe from json.
 
             // Reads the input. Accepts items, tags, and anything else that
             // Ingredient.deserialize can understand.
-            final JsonElement inputElement = JSONUtils.isJsonArray(json, "input") ? JSONUtils.getJsonArray(json, "input") : JSONUtils.getJsonObject(json, "input");
+            final JsonElement inputElement = JSONUtils.isJsonArray(json, "ingredients") ? JSONUtils.getJsonArray(json, "ingredients") : JSONUtils.getJsonObject(json, "ingredients");
             final Ingredient input = Ingredient.deserialize(inputElement);
 
             // Reads the output. The common utility method in ShapedRecipe is what all vanilla
             // recipe classes use for this.
-            final ItemStack output = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "output"));
+            final ItemStack output = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
 
-            return new FrameRecipe(recipeId, input, output);
+            return new FramingRecipe(recipeId, input, output);
         }
 
         @Override
-        public FrameRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public FramingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
 
             // Reads a recipe from a packet buffer. This code is called on the client.
             final Ingredient input = Ingredient.read(buffer);
             final ItemStack output = buffer.readItemStack();
             final ResourceLocation blockId = buffer.readResourceLocation();
 
-            return new FrameRecipe(recipeId, input, output);
+            return new FramingRecipe(recipeId, input, output);
         }
 
         @Override
-        public void write(PacketBuffer buffer, FrameRecipe recipe) {
+        public void write(PacketBuffer buffer, FramingRecipe recipe) {
 
             // Writes the recipe to a packet buffer. This is called on the server when a player
             // connects or when /reload is used.

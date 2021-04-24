@@ -2,14 +2,18 @@ package com.dantaeusb.zetter.base;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
+import com.dantaeusb.zetter.item.crafting.FramingRecipe;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.stream.Collectors;
 
 public class CommonProxy {
     public void start() {
+        ForgeRegistries.RECIPE_SERIALIZERS.register(FramingRecipe.SERIALIZER);
+
         IEventBus modEventBus = Zetter.MOD_EVENT_BUS;
         registerListeners(modEventBus);
     }
