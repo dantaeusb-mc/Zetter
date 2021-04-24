@@ -1,14 +1,19 @@
 package com.dantaeusb.zetter.item.crafting;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.ModCraftingRecipes;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.registries.ForgeRegistryEntry;
@@ -21,10 +26,10 @@ public class FramingRecipe implements ICraftingRecipe {
     public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "framing");
 
     private final ResourceLocation id;
-    private final Ingredient input;
+    private final NonNullList<Ingredient> input;
     private final ItemStack output;
 
-    public FramingRecipe(ResourceLocation id, Ingredient input, ItemStack output) {
+    public FramingRecipe(ResourceLocation id, NonNullList<Ingredient> input, ItemStack output) {
         this.id = id;
         this.input = input;
         this.output = output;
@@ -38,54 +43,33 @@ public class FramingRecipe implements ICraftingRecipe {
 
     @Override
     public String toString () {
-        return "FrameRecipe [input=" + this.input + ", output=" + this.output + ", id=" + this.id + "]";
+        return "FramingRecipe [input=" + this.input + ", output=" + this.output + ", id=" + this.id + "]";
     }
 
     /**
      * Used to check if a recipe matches current crafting inventory
+     * @todo: Maybe we can just extend ShapelessRecipe
      */
     public boolean matches(CraftingInventory craftingInventory, World world) {
-        ItemStack lockableStack = ItemStack.EMPTY;
-        ItemStack lockStack = ItemStack.EMPTY;
+        java.util.List<ItemStack> inputs = new java.util.ArrayList<>();
+        int i = 0;
 
-        return !(lockableStack.isEmpty() || lockStack.isEmpty());
+        for(int j = 0; j < craftingInventory.getSizeInventory(); ++j) {
+            ItemStack itemstack = craftingInventory.getStackInSlot(j);
+            if (!itemstack.isEmpty()) {
+                ++i;
+                inputs.add(itemstack);
+            }
+        }
+
+        return i == this.input.size() && net.minecraftforge.common.util.RecipeMatcher.findMatches(inputs,  this.input) != null;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
     public ItemStack getCraftingResult(CraftingInventory craftingInventory) {
-        ItemStack lockableStack = ItemStack.EMPTY;
-        ItemStack lockStack = ItemStack.EMPTY;
-
-        for(int j = 0; j < craftingInventory.getSizeInventory(); ++j) {
-            ItemStack stackInSlot = craftingInventory.getStackInSlot(j);
-
-            if (!stackInSlot.isEmpty()) {
-                if (this.input.test(stackInSlot)) {
-                    if (!lockableStack.isEmpty()) {
-                        return ItemStack.EMPTY;
-                    }
-
-                    lockableStack = stackInSlot;
-                } else {
-                    if (!lockStack.isEmpty()) {
-                        return ItemStack.EMPTY;
-                    }
-
-                    lockStack = stackInSlot;
-                }
-            }
-        }
-
-        if (!lockStack.isEmpty() && lockStack.hasTag()) {
-            ItemStack outStack = this.output.copy();
-            CompoundNBT compoundnbt = lockStack.getTag().copy();
-            outStack.setTag(compoundnbt);
-            return outStack;
-        } else {
-            return ItemStack.EMPTY;
-        }
+        return this.output.copy();
     }
 
     /**
@@ -93,6 +77,10 @@ public class FramingRecipe implements ICraftingRecipe {
      */
     public boolean isDynamic() {
         return true;
+    }
+
+    public IRecipeType<?> getType() {
+        return ModCraftingRecipes.FRAMING_RECIPE_TYPE;
     }
 
     @Override
@@ -123,37 +111,51 @@ public class FramingRecipe implements ICraftingRecipe {
 
         @Override
         public FramingRecipe read(ResourceLocation recipeId, JsonObject json) {
-            // Reads a recipe from json.
+            NonNullList<Ingredient> ingredientsList = readIngredients(JSONUtils.getJsonArray(json, "ingredients"));
 
-            // Reads the input. Accepts items, tags, and anything else that
-            // Ingredient.deserialize can understand.
-            final JsonElement inputElement = JSONUtils.isJsonArray(json, "ingredients") ? JSONUtils.getJsonArray(json, "ingredients") : JSONUtils.getJsonObject(json, "ingredients");
-            final Ingredient input = Ingredient.deserialize(inputElement);
+            if (ingredientsList.isEmpty()) {
+                throw new JsonParseException("No ingredients for shapeless recipe");
+            }
 
-            // Reads the output. The common utility method in ShapedRecipe is what all vanilla
-            // recipe classes use for this.
-            final ItemStack output = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
-
-            return new FramingRecipe(recipeId, input, output);
+            ItemStack outStack = ShapedRecipe.deserializeItem(JSONUtils.getJsonObject(json, "result"));
+            return new FramingRecipe(recipeId, ingredientsList, outStack);
         }
 
         @Override
         public FramingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-
             // Reads a recipe from a packet buffer. This code is called on the client.
-            final Ingredient input = Ingredient.read(buffer);
-            final ItemStack output = buffer.readItemStack();
-            final ResourceLocation blockId = buffer.readResourceLocation();
+            int i = buffer.readVarInt();
+            NonNullList<Ingredient> ingredientsList = NonNullList.withSize(i, Ingredient.EMPTY);
 
-            return new FramingRecipe(recipeId, input, output);
+            for(int j = 0; j < ingredientsList.size(); ++j) {
+                ingredientsList.set(j, Ingredient.read(buffer));
+            }
+
+            ItemStack outStack = buffer.readItemStack();
+            return new FramingRecipe(recipeId, ingredientsList, outStack);
+        }
+
+        private static NonNullList<Ingredient> readIngredients(JsonArray ingredientArray) {
+            NonNullList<Ingredient> ingredientsList = NonNullList.create();
+
+            for(int i = 0; i < ingredientArray.size(); ++i) {
+                Ingredient ingredient = Ingredient.deserialize(ingredientArray.get(i));
+                if (!ingredient.hasNoMatchingItems()) {
+                    ingredientsList.add(ingredient);
+                }
+            }
+
+            return ingredientsList;
         }
 
         @Override
         public void write(PacketBuffer buffer, FramingRecipe recipe) {
+            buffer.writeVarInt(recipe.input.size());
 
-            // Writes the recipe to a packet buffer. This is called on the server when a player
-            // connects or when /reload is used.
-            recipe.input.write(buffer);
+            for(Ingredient ingredient : recipe.input) {
+                ingredient.write(buffer);
+            }
+
             buffer.writeItemStack(recipe.output);
         }
     }
