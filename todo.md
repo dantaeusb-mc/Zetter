@@ -17,6 +17,8 @@
 * \[MED\] Implement canvas naming & sealing _in the picture sewing table_;
 * \[MED\] Make sure never use canvas with id 0;
 * \[MED\] Add back texture for the frame;
+* \[MED\] Use ObjectHolders;
+* \[MED\] Rename canvas name to canvas code;
 * \[LOW\] Fix plank texture on an easel;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
 * \[LOW\] Fix leg top transparent on an easel;

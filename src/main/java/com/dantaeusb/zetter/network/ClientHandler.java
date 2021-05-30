@@ -3,6 +3,7 @@ package com.dantaeusb.zetter.network;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
@@ -53,6 +54,12 @@ public class ClientHandler {
                 // Pushing changes that were added after sync packet was created
                 ((EaselContainer) player.openContainer).processSync(canvasData, packetIn.getTimestamp());
             }
+        }
+
+        if  (player.openContainer instanceof ArtistTableContainer) {
+            // If player's combining canvases
+
+            ((ArtistTableContainer) player.openContainer).updateCanvasCombination();
         }
 
         // Get overworld world instance

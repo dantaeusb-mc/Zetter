@@ -1,0 +1,22 @@
+{
+    "textures": {
+        "particle": "block/oak_planks",
+        "wood": "block/oak_planks",
+        "back": "zetter:block/custom_painting"
+    },
+    "elements": [
+        {   "from": [ 0, 0, 16 ],
+            "to": [ 16, 16, 16 ],
+            "faces": {
+                "south": { "uv": [0, 0, 16, 16], "texture": "#back" }
+            }
+        },
+        {   "from": [ 0, 16, 15 ],
+            "to": [ 16, 16, 16 ],
+            "faces": {
+                "up":  { "uv": [0, 0, 16, 1], "texture": "#wood" }
+            },
+            "comment": "Top edge"
+        }
+    ]
+}

@@ -3,7 +3,6 @@ package com.dantaeusb.zetter.client.renderer;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.network.packet.painting.CanvasRequestPacket;
 import com.dantaeusb.zetter.network.packet.painting.CanvasUnloadRequestPacket;
 import com.dantaeusb.zetter.storage.CanvasData;
@@ -28,7 +27,7 @@ import java.util.Map;
 public class CanvasRenderer implements AutoCloseable {
     private static CanvasRenderer instance;
     private final TextureManager textureManager;
-    private final Map<String, CanvasRenderer.Instance> loadedCanvases = Maps.newHashMap();
+    private final Map<String, CanvasRenderer.Instance> canvasRendererInstances = Maps.newHashMap();
 
     private final Timer timer = new Timer(20.0F, 0L);
 
@@ -44,8 +43,21 @@ public class CanvasRenderer implements AutoCloseable {
         return instance;
     }
 
-    public void updateCanvas(CanvasData canvas) {
+    /**
+     * Update canvas data directly when manipulating, for real updates like
+     * server sync it's better to re-initialize renderer
+     *
+     * Only updates texture
+     * @param canvas
+     */
+    public void updateCanvasTexture(CanvasData canvas) {
         this.getCanvasRendererInstance(canvas, true).updateCanvasTexture(canvas);
+    }
+
+    public void addCanvas(CanvasData canvas) {
+        this.canvasRendererInstances.remove(canvas.getName());
+
+        this.createCanvasRendererInstance(canvas);
     }
 
     public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, CanvasData canvas, int combinedLight) {
@@ -121,7 +133,7 @@ public class CanvasRenderer implements AutoCloseable {
     protected void unloadCanvas(String canvasName) {
         Zetter.LOG.info("Unloading canvas " + canvasName);
 
-        this.loadedCanvases.remove(canvasName);
+        this.canvasRendererInstances.remove(canvasName);
 
         this.textureRequestTimeout.remove(canvasName);
         // Not needed cause called from its iterator
@@ -173,15 +185,19 @@ public class CanvasRenderer implements AutoCloseable {
      */
 
     private @Nullable CanvasRenderer.Instance getCanvasRendererInstance(CanvasData canvas, boolean create) {
-        CanvasRenderer.Instance canvasRendererInstance = this.loadedCanvases.get(canvas.getName());
+        CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvas.getName());
 
         if (create && canvasRendererInstance == null) {
-            canvasRendererInstance = new CanvasRenderer.Instance(canvas.getName(), canvas.getWidth(), canvas.getHeight());
-            canvasRendererInstance.updateCanvasTexture(canvas);
-            this.loadedCanvases.put(canvas.getName(), canvasRendererInstance);
+            this.createCanvasRendererInstance(canvas);
         }
 
         return canvasRendererInstance;
+    }
+
+    private void createCanvasRendererInstance(CanvasData canvas) {
+        CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(canvas.getName(), canvas.getWidth(), canvas.getHeight());
+        canvasRendererInstance.updateCanvasTexture(canvas);
+        this.canvasRendererInstances.put(canvas.getName(), canvasRendererInstance);
     }
 
     /*
@@ -189,11 +205,11 @@ public class CanvasRenderer implements AutoCloseable {
      */
 
     public void clearLoadedCanvases() {
-        for(CanvasRenderer.Instance canvasRendererInstance : this.loadedCanvases.values()) {
+        for(CanvasRenderer.Instance canvasRendererInstance : this.canvasRendererInstances.values()) {
             canvasRendererInstance.close();
         }
 
-        this.loadedCanvases.clear();
+        this.canvasRendererInstances.clear();
     }
 
     public void close() {

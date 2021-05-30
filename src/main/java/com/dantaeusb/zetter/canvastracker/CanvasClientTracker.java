@@ -32,14 +32,11 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
      */
     @Override
     public void registerCanvasData(CanvasData newCanvasData) {
-        if (this.canvases.containsKey(newCanvasData.getName())) {
-            CanvasData registeredCanvasData = this.canvases.get(newCanvasData.getName());
-            registeredCanvasData.copyFrom(newCanvasData);
-        } else {
-            this.canvases.put(newCanvasData.getName(), newCanvasData);
-        }
+        // Remove existing entry if we have one to replace with a new one
+        this.canvases.remove(newCanvasData.getName());
+        this.canvases.put(newCanvasData.getName(), newCanvasData);
 
-        CanvasRenderer.getInstance().updateCanvas(newCanvasData);
+        CanvasRenderer.getInstance().addCanvas(newCanvasData);
     }
 
     @Override

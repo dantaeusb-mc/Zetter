@@ -1,5 +1,6 @@
 package com.dantaeusb.zetter.container.artisttable;
 
+import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModItems;
@@ -95,8 +96,7 @@ public class CanvasCombination {
                         /**
                          * @todo: move request out of here, request with data load attempts but avoid loading unavailable canvases
                          */
-                        CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(CanvasItem.getCanvasName(currentStack));
-                        ModNetwork.simpleChannel.sendToServer(requestSyncPacket);
+                        CanvasRenderer.getInstance().queueCanvasTextureUpdate(CanvasItem.getCanvasName(currentStack));
 
                         canvasesReady = false;
                     }
@@ -133,8 +133,6 @@ public class CanvasCombination {
     }
 
     public static CanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, World world) {
-        CanvasData combinedCanvasData = new CanvasData("combined_canvas");
-
         final int pixelWidth = rectangle.width * Helper.CANVAS_TEXTURE_RESOLUTION;
         final int pixelHeight = rectangle.height * Helper.CANVAS_TEXTURE_RESOLUTION;
 
@@ -162,10 +160,12 @@ public class CanvasCombination {
             }
         }
 
+        CanvasData combinedCanvasData = new CanvasData("combined_canvas");
+
         combinedCanvasData.initData(
-                pixelWidth,
-                pixelHeight,
-                color.array()
+            pixelWidth,
+            pixelHeight,
+            color.array()
         );
 
         Helper.getWorldCanvasTracker(world).registerCanvasData(combinedCanvasData);

@@ -3,7 +3,7 @@ package com.dantaeusb.zetter.entity.item;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModEntities;
 import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.item.CanvasItem;
+import com.dantaeusb.zetter.item.CustomPaintingItem;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.item.HangingEntity;
@@ -15,6 +15,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,17 +30,24 @@ import javax.annotation.Nullable;
 public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
     public static final String NBT_TAG_FACING = "Facing";
     public static final String NBT_TAG_CANVAS_NAME = "CanvasName";
+    public static final String NBT_TAG_TITLE = "Title";
+    public static final String NBT_TAG_AUTHOR_NAME = "AuthorName";
 
     protected String canvasName;
+    protected String paintingName;
+    protected String authorName;
 
     public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, World worldIn) {
         super(type, worldIn);
     }
 
-    public CustomPaintingEntity(World worldIn, BlockPos pos, Direction facing, String canvasName) {
+    public CustomPaintingEntity(World worldIn, BlockPos pos, Direction facing, String canvasName, String paintingName, String authorName) {
         super(ModEntities.CUSTOM_PAINTING_ENTITY, worldIn, pos);
 
         this.canvasName = canvasName;
+        this.paintingName = paintingName;
+        this.authorName = authorName;
+
         this.updateFacingWithBoundingBox(facing);
     }
 
@@ -113,6 +121,9 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     public void writeAdditional(CompoundNBT compound) {
         compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
         compound.putString(NBT_TAG_CANVAS_NAME, this.canvasName);
+        compound.putString(NBT_TAG_TITLE, this.paintingName);
+        compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
+
         super.writeAdditional(compound);
     }
 
@@ -124,6 +135,14 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
         if (compound.contains(NBT_TAG_CANVAS_NAME, 8)) {
             this.canvasName = compound.getString(NBT_TAG_CANVAS_NAME);
+        }
+
+        if (compound.contains(NBT_TAG_TITLE, 8)) {
+            this.paintingName = compound.getString(NBT_TAG_TITLE);
+        }
+
+        if (compound.contains(NBT_TAG_AUTHOR_NAME, 8)) {
+            this.authorName = compound.getString(NBT_TAG_AUTHOR_NAME);
         }
 
         super.readAdditional(compound);
@@ -167,8 +186,10 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
             this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
 
-            ItemStack canvasStack = new ItemStack(ModItems.CANVAS_ITEM);
-            CanvasItem.setCanvasName(canvasStack, this.canvasName);
+            ItemStack canvasStack = new ItemStack(ModItems.CUSTOM_PAINTING_ITEM);
+            CustomPaintingItem.setCanvasName(canvasStack, this.canvasName);
+            canvasStack.setDisplayName(new StringTextComponent(this.paintingName));
+            CustomPaintingItem.setAuthor(canvasStack, this.authorName);
 
             this.entityDropItem(canvasStack);
         }

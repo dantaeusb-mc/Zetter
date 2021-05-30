@@ -2,6 +2,8 @@ package com.dantaeusb.zetter.client.gui;
 
 import com.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
+import com.dantaeusb.zetter.core.ModNetwork;
+import com.dantaeusb.zetter.network.packet.painting.CCreatePaintingPacket;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
@@ -62,10 +64,19 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
     // Listener interface - to track name field availability
 
     private void renameItem(String name) {
-        //this.container.updateItemName(name);
+        // do nothing
+    }
 
-        //CLockTableRenameItemPacket renameItemPacket = new CLockTableRenameItemPacket(name);
-        //ModLockNetwork.simpleChannel.sendToServer(renameItemPacket);
+    private void createPainting() {
+        CCreatePaintingPacket modePacket = new CCreatePaintingPacket(
+                this.container.windowId,
+                this.nameField.getText(),
+                this.container.getCanvasCombination().canvasData
+        );
+
+        ModNetwork.simpleChannel.sendToServer(modePacket);
+
+        this.nameField.setText("");
     }
 
     @Override
@@ -90,6 +101,11 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
         this.nameField.tick();
     }
 
+    private final int SIGN_BUTTON_XPOS = 111;
+    private final int SIGN_BUTTON_YPOS = 99;
+    private final int SIGN_BUTTON_WIDTH = 36;
+    private final int SIGN_BUTTON_HEIGHT = 16;
+
     @Override
     protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -101,14 +117,10 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         this.blit(matrixStack, this.guiLeft + 7, this.guiTop + 99, 0, this.ySize + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : 16), 100, 16);
 
-        final int SIGN_BUTTON_XPOS = 111;
-        final int SIGN_BUTTON_YPOS = 99;
         final int SIGN_BUTTON_UPOS = 176;
         final int SIGN_BUTTON_VPOS = 0;
-        final int SIGN_BUTTON_WIDTH = 36;
-        final int SIGN_BUTTON_HEIGHT = 16;
 
-        if (this.getContainer().canvasReady()) {
+        if (this.getContainer().isFrameReady() && this.getContainer().isCanvasReady()) {
             int buttonVOffset = SIGN_BUTTON_VPOS;
 
             if (isInRect(this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT, x, y)) {
@@ -136,7 +148,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
             this.blit(matrixStack, this.guiLeft + LOADING_XPOS, this.guiTop + LOADING_YPOS, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT);
         }
 
-        if (this.getContainer().canvasReady()) {
+        if (this.getContainer().isCanvasReady()) {
             this.combinedCanvasWidget.render(matrixStack);
         }
     }
@@ -159,6 +171,15 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
         // draw the label for the player inventory slots
         this.font.func_243248_b(matrixStack, this.playerInventory.getDisplayName(),
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isInRect(this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT, (int) mouseX, (int) mouseY)) {
+            this.createPainting();
+        }
+
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**
@@ -184,7 +205,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
      * @return
      */
     public boolean allowedToNameItem() {
-        return this.container.canvasReady();
+        return this.container.isCanvasReady();
     }
 
     // Returns true if the given x,y coordinates are within the given rectangle

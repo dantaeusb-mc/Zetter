@@ -3,6 +3,7 @@ package com.dantaeusb.zetter.network;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
+import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.network.packet.painting.*;
@@ -147,7 +148,6 @@ public class ServerHandler {
         canvasTracker.stopTrackingCanvas(sendingPlayer.getUniqueID(), packetIn.getCanvasName());
     }
 
-
     /**
      * Called when a message is received of the appropriate type.
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
@@ -175,6 +175,37 @@ public class ServerHandler {
         if (sendingPlayer.openContainer instanceof EaselContainer) {
             EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
             paintingContainer.setPaletteColor(packetIn.getSlotIndex(), packetIn.getColor());
+        }
+    }
+
+
+    /**
+     * Called when a message is received of the appropriate type.
+     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
+     * @param message The message
+     */
+    public static void handleCreatePainting(final CCreatePaintingPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
+        ctx.setPacketHandled(true);
+
+        if (sideReceived != LogicalSide.SERVER) {
+            Zetter.LOG.warn("CCreatePaintingPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
+            return;
+        }
+
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
+        if (sendingPlayer == null) {
+            Zetter.LOG.warn("EntityPlayerMP was null when CCreatePaintingPacket was received");
+        }
+
+        ctx.enqueueWork(() -> processCreatePainting(packetIn, sendingPlayer));
+    }
+
+    public static void processCreatePainting(final CCreatePaintingPacket packetIn, ServerPlayerEntity sendingPlayer) {
+        if (sendingPlayer.openContainer instanceof ArtistTableContainer) {
+            ArtistTableContainer artistTableContainer = (ArtistTableContainer)sendingPlayer.openContainer;
+            artistTableContainer.createPainting(sendingPlayer, packetIn.getPaintingName(), packetIn.getCanvasData());
         }
     }
 

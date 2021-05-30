@@ -1,10 +1,12 @@
 package com.dantaeusb.zetter.container;
 
+import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.container.artisttable.CanvasCombination;
 import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModCraftingRecipes;
 import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.item.crafting.FramingRecipe;
+import com.dantaeusb.zetter.item.CustomPaintingItem;
+import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.tileentity.ArtistTableTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
 import net.minecraft.entity.player.PlayerEntity;
@@ -17,8 +19,6 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
 
 public class ArtistTableContainer extends Container {
     private static final int HOTBAR_SLOT_COUNT = 9;
@@ -33,6 +33,8 @@ public class ArtistTableContainer extends Container {
     private final World world;
 
     private ArtistTableCanvasStorage canvasStorage;
+
+    private boolean frameReady = false;
 
     private final CraftingInventory frameStorage = new CraftingInventory(this, 2, 1) {
         public void markDirty() {
@@ -140,7 +142,7 @@ public class ArtistTableContainer extends Container {
 
     }
 
-    private void updateCanvasCombination() {
+    public void updateCanvasCombination() {
         this.canvasCombination = new CanvasCombination(this.canvasStorage, this.world);
     }
 
@@ -148,7 +150,11 @@ public class ArtistTableContainer extends Container {
         return this.canvasCombination;
     }
 
-    public boolean canvasReady() {
+    public boolean isFrameReady() {
+        return this.frameReady;
+    }
+
+    public boolean isCanvasReady() {
         return this.canvasCombination.valid == CanvasCombination.State.READY;
     }
 
@@ -166,10 +172,30 @@ public class ArtistTableContainer extends Container {
             IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameStorage, this.world).orElse(null);
 
             if (recipe != null) {
-                this.inventoryOut.setInventorySlotContents(0, recipe.getRecipeOutput());
+                this.frameReady = true;
+                return;
             }
         }
+
+        this.frameReady = false;
     }
+
+    public void createPainting(PlayerEntity authorPlayer, String paintingName, CanvasData originalCanvasData) {
+        IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameStorage, this.world).orElse(null);
+
+        if (recipe == null) {
+            Zetter.LOG.error("Received message to create painting but no frame recipe was found");
+            return;
+        }
+
+        ItemStack outStack = recipe.getRecipeOutput().copy();
+        CustomPaintingItem.copyCanvasData(outStack, originalCanvasData, this.world);
+        CustomPaintingItem.setTitle(outStack, paintingName);
+        CustomPaintingItem.setAuthor(outStack, authorPlayer.getName().getString());
+
+         this.inventoryOut.setInventorySlotContents(0, outStack);
+    }
+
     /**
      *
      * @param playerIn
@@ -239,20 +265,6 @@ public class ArtistTableContainer extends Container {
         }
 
         this.inventoryOut.setInventorySlotContents(0, recipe.getRecipeOutput());
-    }
-
-    protected boolean canFrame(@Nullable IRecipe<?> recipe) {
-        if (!this.frameStorage.isEmpty() && recipe != null) {
-            ItemStack output = recipe.getRecipeOutput();
-
-            if (output.isEmpty()) {
-                return false;
-            } else {
-                return true;
-            }
-        } else {
-            return false;
-        }
     }
 
     /**

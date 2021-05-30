@@ -236,7 +236,7 @@ public class EaselContainer extends Container {
      * Immediately update texture for client - not needed for server cause no renderer used here
      */
     protected void updateTextureClient() {
-        CanvasRenderer.getInstance().updateCanvas(this.canvas);
+        CanvasRenderer.getInstance().updateCanvasTexture(this.canvas);
     }
 
     /**

@@ -26,22 +26,14 @@ public class SCanvasSyncMessage {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SCanvasSyncMessage readPacketData(PacketBuffer buf) {
+    public static SCanvasSyncMessage readPacketData(PacketBuffer networkBuffer) {
         try {
-            long timestamp = buf.readLong();
-            String canvasName = buf.readString();
-            int width = buf.readInt();
-            int height = buf.readInt();
-            ByteBuffer colorData = buf.readBytes(buf.writerIndex() - buf.readerIndex()).nioBuffer();
-            byte[] unwrappedColorData = new byte[width * height * 4];
-            colorData.get(unwrappedColorData);
-
-            CanvasData readCanvasData = new CanvasData(canvasName);
-            readCanvasData.initData(width, height, unwrappedColorData);
+            long timestamp = networkBuffer.readLong();
+            CanvasData readCanvasData = CanvasContainer.readPacketCanvasData(networkBuffer);
 
             return new SCanvasSyncMessage(readCanvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
-            Zetter.LOG.warn("Exception while reading SPaintingSyncPacket: " + e);
+            Zetter.LOG.warn("Exception while reading SCanvasSyncMessage: " + e);
             return null;
         }
     }
@@ -51,15 +43,12 @@ public class SCanvasSyncMessage {
      */
     public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeLong(this.timestamp);
-        networkBuffer.writeString(this.canvasData.getName());
-        networkBuffer.writeInt(this.canvasData.getWidth());
-        networkBuffer.writeInt(this.canvasData.getHeight());
-        networkBuffer.writeBytes(this.canvasData.getColorDataBuffer());
+        CanvasContainer.writePacketCanvasData(networkBuffer, this.canvasData);
     }
 
     @Override
     public String toString()
     {
-        return "SPaintingSyncMessage[canvas=" + this.canvasData + ",timestamp=" + this.timestamp + "]";
+        return "SCanvasSyncMessage[canvas=" + this.canvasData + ",timestamp=" + this.timestamp + "]";
     }
 }

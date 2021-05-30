@@ -79,7 +79,6 @@ public class CanvasItem extends Item
         return CanvasData.getCanvasName(getCanvasId(stack));
     }
 
-
     /**
      *
      * @see {@link FilledMapItem#getMapName(ItemStack)}
@@ -137,41 +136,4 @@ public class CanvasItem extends Item
         stack.getOrCreateTag().putInt(NBT_TAG_NAME_CANVAS_ID, newId);
         return canvasData;
     }
-
-    /**
-     * Hanging painting
-     */
-
-    public ActionResultType onItemUse(ItemUseContext context) {
-        BlockPos blockPos = context.getPos();
-        Direction direction = context.getFace();
-        BlockPos facePos = blockPos.offset(direction);
-        PlayerEntity player = context.getPlayer();
-        ItemStack stack = context.getItem();
-
-        if (player != null && !this.canPlace(player, direction, stack, facePos)) {
-            return ActionResultType.FAIL;
-        } else {
-            World world = context.getWorld();
-
-            CustomPaintingEntity paintingEntity = new CustomPaintingEntity(world, facePos, direction, getCanvasName(stack));
-
-            if (paintingEntity.onValidSurface()) {
-                if (!world.isRemote) {
-                    paintingEntity.playPlaceSound();
-                    world.addEntity(paintingEntity);
-                }
-
-                player.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
-                return ActionResultType.func_233537_a_(world.isRemote);
-            } else {
-                return ActionResultType.CONSUME;
-            }
-        }
-    }
-
-    protected boolean canPlace(PlayerEntity playerIn, Direction directionIn, ItemStack itemStackIn, BlockPos posIn) {
-        return !directionIn.getAxis().isVertical() && playerIn.canPlayerEdit(posIn, directionIn, itemStackIn);
-    }
-
 }
