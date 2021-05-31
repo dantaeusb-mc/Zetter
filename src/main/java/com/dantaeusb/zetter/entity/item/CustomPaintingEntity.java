@@ -102,61 +102,6 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      */
     protected void updateBoundingBox() {
         if (this.facingDirection != null) {
-            /*// Destructing assignment or vec2i would be handy
-            double halfThick = 0.5D - (1.0D / 32.0D);
-
-            int offsetHorizontal = this.getRenderOffset()[0];
-
-            double yOffset = (double) this.getRenderOffset()[1];
-            double xOffset = (double)this.facingDirection.getXOffset() * offsetHorizontal;
-            double zOffset = (double)this.facingDirection.getZOffset() * offsetHorizontal;
-
-            double xStart = (double)this.hangingPosition.getX() + xOffset;
-            double yStart = (double)this.hangingPosition.getY() + yOffset;
-            double zStart = (double)this.hangingPosition.getZ() + zOffset;
-
-            // Block position -> middle of the block -> adjust on facing direction
-            *//*double xCenter = (double)this.hangingPosition.getX() + 0.5D - (double)this.facingDirection.getXOffset() * halfThick;
-            double yCenter = (double)this.hangingPosition.getY() + 0.5D - (double)this.facingDirection.getYOffset() * halfThick;
-            double zCenter = (double)this.hangingPosition.getZ() + 0.5D - (double)this.facingDirection.getZOffset() * halfThick;
-            this.setRawPosition(xCenter, yCenter, zCenter);*//*
-
-            // It's "cubic diameter" right now
-            double xLength = this.getWidthPixels();
-            double yLength = this.getHeightPixels();
-            double zLength = this.getWidthPixels();
-
-            Direction.Axis direction$axis = this.facingDirection.getAxis();
-
-            // We have 1 pixel thickness (length in facing direction) for picture
-            switch(direction$axis) {
-                case X:
-                    xLength = 1.0D;
-                    break;
-                case Y:
-                    yLength = 1.0D;
-                    break;
-                case Z:
-                    zLength = 1.0D;
-            }
-
-            // Divide by pixel amounts by two to get radius in pixels
-            xLength = xLength / 16.0D;
-            yLength = yLength / 16.0D;
-            zLength = zLength / 16.0D;
-
-            final double xCenter = xStart - xLength / 2.0D;
-            final double yCenter = yStart - yLength / 2.0D;
-            final double zCenter = zStart - zLength / 2.0D;
-
-            this.setRawPosition(xCenter, yCenter, zCenter);
-
-            final double xEnd = xStart - xLength;
-            final double yEnd = yStart - yLength;
-            final double zEnd = zStart - zLength;*/
-
-            //this.setBoundingBox(new AxisAlignedBB(xStart, yStart, zStart, xEnd, yEnd, zEnd));
-
             double xCenter = (double)this.hangingPosition.getX() + 0.5D;
             double yCenter = (double)this.hangingPosition.getY() + 0.5D;
             double zCenter = (double)this.hangingPosition.getZ() + 0.5D;
@@ -193,9 +138,9 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             zWidth = zWidth / 16.0D / 2.0D;
 
             this.setBoundingBox(new AxisAlignedBB(
-                    xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
-                    xCenter + xWidth, yCenter + yHeight, zCenter + zWidth)
-            );
+                xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
+                xCenter + xWidth, yCenter + yHeight, zCenter + zWidth
+            ));
         }
     }
 
@@ -308,7 +253,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             ItemStack canvasStack = new ItemStack(ModItems.CUSTOM_PAINTING_ITEM);
             CustomPaintingItem.setCanvasName(canvasStack, this.canvasCode);
-            canvasStack.setDisplayName(new StringTextComponent(this.paintingName));
+            CustomPaintingItem.setTitle(canvasStack, new StringTextComponent(this.paintingName));
             CustomPaintingItem.setAuthor(canvasStack, this.authorName);
             CustomPaintingItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
