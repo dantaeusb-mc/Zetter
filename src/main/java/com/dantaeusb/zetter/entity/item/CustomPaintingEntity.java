@@ -253,7 +253,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             ItemStack canvasStack = new ItemStack(ModItems.CUSTOM_PAINTING_ITEM);
             CustomPaintingItem.setCanvasName(canvasStack, this.canvasCode);
-            CustomPaintingItem.setTitle(canvasStack, new StringTextComponent(this.paintingName));
+            CustomPaintingItem.setTitle(canvasStack, this.paintingName);
             CustomPaintingItem.setAuthor(canvasStack, this.authorName);
             CustomPaintingItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
