@@ -22,9 +22,6 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class CustomPaintingItem extends Item {
-    public static final String NBT_TAG_CANVAS_NAME = "CanvasName";
-    public static final String NBT_TAG_TITLE = "Title";
-    public static final String NBT_TAG_AUTHOR = "Author";
 
     public CustomPaintingItem() {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
@@ -43,25 +40,34 @@ public class CustomPaintingItem extends Item {
     }
 
     public static void setCanvasName(ItemStack stack, String canvasName) {
-        stack.getOrCreateTag().putString(NBT_TAG_CANVAS_NAME, canvasName);
+        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_CANVAS_CODE, canvasName);
     }
 
     public static void setTitle(ItemStack stack, String title) {
-        stack.getOrCreateTag().putString(NBT_TAG_TITLE, title);
+        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_TITLE, title);
     }
 
     public static String getTitle(ItemStack stack) {
         CompoundNBT compoundNBT = stack.getTag();
-        return compoundNBT.getString(NBT_TAG_TITLE);
+        return compoundNBT.getString(CustomPaintingEntity.NBT_TAG_TITLE);
     }
 
     public static void setAuthor(ItemStack stack, String author) {
-        stack.getOrCreateTag().putString(NBT_TAG_AUTHOR, author);
+        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_AUTHOR_NAME, author);
     }
 
     public static String getAuthor(ItemStack stack) {
         CompoundNBT compoundNBT = stack.getTag();
-        return compoundNBT.getString(NBT_TAG_AUTHOR);
+        return compoundNBT.getString(CustomPaintingEntity.NBT_TAG_AUTHOR_NAME);
+    }
+
+    public static void setBlockSize(ItemStack stack, int[] blockSize) {
+        stack.getOrCreateTag().putIntArray(CustomPaintingEntity.NBT_TAG_BLOCK_SIZE, blockSize);
+    }
+
+    public static int[] getBlockSize(ItemStack stack) {
+        CompoundNBT compoundNBT = stack.getTag();
+        return compoundNBT.getIntArray(CustomPaintingEntity.NBT_TAG_BLOCK_SIZE);
     }
 
     /**
@@ -79,7 +85,7 @@ public class CustomPaintingItem extends Item {
         paintingCanvasData.copyFrom(originalCanvasData);
         canvasTracker.registerCanvasData(paintingCanvasData);
 
-        stack.getOrCreateTag().putString(NBT_TAG_CANVAS_NAME, paintingCanvasData.getName());
+        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_CANVAS_CODE, paintingCanvasData.getName());
         return paintingCanvasData;
     }
 
@@ -87,7 +93,7 @@ public class CustomPaintingItem extends Item {
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         if (stack.hasTag()) {
             CompoundNBT nbt = stack.getTag();
-            String s = nbt.getString(NBT_TAG_AUTHOR);
+            String s = nbt.getString(CustomPaintingEntity.NBT_TAG_AUTHOR_NAME);
             if (!StringUtils.isNullOrEmpty(s)) {
                 tooltip.add((new TranslationTextComponent("book.byAuthor", s)).mergeStyle(TextFormatting.GRAY));
             }
@@ -112,9 +118,8 @@ public class CustomPaintingItem extends Item {
         } else {
             World world = context.getWorld();
 
-            String canvasName = getCanvasName(stack);
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
-                    world, facePos, direction, canvasName, getTitle(stack), getAuthor(stack)
+                    world, facePos, direction, getCanvasName(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
             );
 
             if (paintingEntity.onValidSurface()) {
@@ -140,8 +145,8 @@ public class CustomPaintingItem extends Item {
         CompoundNBT compoundNBT = stack.getTag();
 
         String canvasName = CanvasData.getCanvasName(0);
-        if (compoundNBT != null && compoundNBT.contains(NBT_TAG_CANVAS_NAME)) {
-            canvasName = compoundNBT.getString(NBT_TAG_CANVAS_NAME);
+        if (compoundNBT != null && compoundNBT.contains(CustomPaintingEntity.NBT_TAG_CANVAS_CODE)) {
+            canvasName = compoundNBT.getString(CustomPaintingEntity.NBT_TAG_CANVAS_CODE);
         }
 
         return canvasName;

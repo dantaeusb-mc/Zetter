@@ -5,36 +5,52 @@
         "back": "zetter:block/custom_painting"
     },
     "elements": [
-        {   "from": [ 0, 0, 16 ],
-            "to": [ 16, 16, 16 ],
+        {   "from": [ 0, 0, 1 ],
+            "to": [ 16, 16, 1 ],
             "faces": {
                 "south": { "uv": [0, 0, 16, 16], "texture": "#back" }
             }
         },
-        {   "from": [ 0, 16, 15 ],
-            "to": [ 16, 16, 16 ],
+        {   "from": [ 0, 15, 0 ],
+            "to": [ 16, 16, 1 ],
             "faces": {
-                "up":  { "uv": [0, 0, 16, 1], "texture": "#wood" }
+                "north":  { "uv": [0, 0, 16, 1], "texture": "#wood" },
+                "up":  { "uv": [0, 0, 16, 1], "texture": "#wood" },
+                "east":  { "uv": [0, 0, 1, 1], "texture": "#wood" },
+                "down":  { "uv": [0, 0, 16, 1], "texture": "#wood" },
+                "west":  { "uv": [0, 0, 1, 1], "texture": "#wood" }
             },
             "comment": "Top edge"
         },
-        {   "from": [ 16, 0, 15 ],
-            "to": [ 16, 16, 16 ],
+        {   "from": [ 0, 1, 0 ],
+            "to": [ 1, 15, 1 ],
             "faces": {
-                "east":  { "uv": [0, 0, 1, 16], "texture": "#wood" }
+                "north":  { "uv": [0, 0, 1, 16], "texture": "#wood" },
+                "up":  { "uv": [0, 0, 1, 1], "texture": "#wood" },
+                "east":  { "uv": [0, 0, 1, 16], "texture": "#wood" },
+                "down":  { "uv": [0, 0, 1, 1], "texture": "#wood" },
+                "west":  { "uv": [0, 0, 1, 16], "texture": "#wood" }
             },
             "comment": "Right edge"
         },
-        {   "from": [ 0, 0, 15 ],
-            "to": [ 16, 0, 16 ],
+        {   "from": [ 0, 0, 0 ],
+            "to": [ 16, 1, 1 ],
             "faces": {
-                "down":  { "uv": [0, 0, 16, 1], "texture": "#wood" }
+                "north":  { "uv": [0, 0, 16, 1], "texture": "#wood" },
+                "up":  { "uv": [0, 0, 16, 1], "texture": "#wood" },
+                "east":  { "uv": [0, 0, 1, 1], "texture": "#wood" },
+                "down":  { "uv": [0, 0, 16, 1], "texture": "#wood" },
+                "west":  { "uv": [0, 0, 1, 1], "texture": "#wood" }
             },
             "comment": "Bottom edge"
         },
-        {   "from": [ 0, 0, 15 ],
-            "to": [ 0, 16, 16 ],
+        {   "from": [ 15, 1, 0 ],
+            "to": [ 16, 15, 1 ],
             "faces": {
+                "north":  { "uv": [0, 0, 1, 16], "texture": "#wood" },
+                "up":  { "uv": [0, 0, 1, 1], "texture": "#wood" },
+                "east":  { "uv": [0, 0, 1, 16], "texture": "#wood" },
+                "down":  { "uv": [0, 0, 1, 1], "texture": "#wood" },
                 "west":  { "uv": [0, 0, 1, 16], "texture": "#wood" }
             },
             "comment": "Left edge"

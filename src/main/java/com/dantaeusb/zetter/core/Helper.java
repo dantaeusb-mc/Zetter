@@ -11,6 +11,8 @@ import javax.annotation.Nullable;
 public class Helper {
     public static final int CANVAS_TEXTURE_RESOLUTION = 16;
 
+    public static final String COMBINED_CANVAS_NAME = "combined_canvas";
+    public static final String FALLBACK_CANVAS_NAME = "fallback_canvas";
     public static String fallbackCanvasName = CanvasData.NAME_PREFIX + "0";
 
     public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {

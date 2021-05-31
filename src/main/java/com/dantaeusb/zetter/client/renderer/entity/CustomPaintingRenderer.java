@@ -3,7 +3,6 @@ package com.dantaeusb.zetter.client.renderer.entity;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import com.dantaeusb.zetter.client.renderer.entity.model.SmallFrameModel;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.CanvasData;
@@ -15,7 +14,6 @@ import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.model.IBakedModel;
 import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -30,6 +28,8 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 
 public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity> {
+    private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/bat.png");
+    
     public static final HashMap<String, ModelResourceLocation> SMALL_FRAME_MODELS = new HashMap<String, ModelResourceLocation>() {{
         put("1x1", new ModelResourceLocation("zetter:block/custom_painting/1x1"));
         put("1x2", new ModelResourceLocation("zetter:block/custom_painting/1x2"));
@@ -45,10 +45,6 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         put("bottom_right", new ModelResourceLocation("zetter:block/custom_painting/bottom_right"));
     }};
 
-    private static final ResourceLocation[] FRAME_TEXTURES = new ResourceLocation[] {
-            new ResourceLocation(Zetter.MOD_ID, "textures/paintings/entity/frame/small.png"),
-    };
-
     public CustomPaintingRenderer(EntityRendererManager renderManager) {
         super(renderManager);
     }
@@ -58,6 +54,9 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
         matrixStack.push();
 
+        /**
+         * @todo: use this offset
+         */
         Vector3d vector3d = this.getRenderOffset(entity, partialTicks);
         matrixStack.translate(-vector3d.getX(), -vector3d.getY(), -vector3d.getZ());
 
@@ -72,14 +71,15 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         matrixStack.rotate(Vector3f.YP.rotationDegrees(180.0F - entity.rotationYaw));
 
         // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-        CanvasData canvasData = getCanvasData(world, entity.getCanvasName());
+        CanvasData canvasData = getCanvasData(world, entity.getCanvasCode());
 
         // Copied from ItemFrameRenderer
-        boolean flag = entity.isInvisible();
+        final boolean flag = entity.isInvisible();
+        final double[] renderOffset = entity.getRenderOffset();
 
         if (!flag && canvasData != null) {
             matrixStack.push();
-            matrixStack.translate(-0.5D, -0.5D, 0.5D - (1.0D / 16.0D));
+            matrixStack.translate(renderOffset[0] - 1.0F, renderOffset[1] - 1.0F, 0.5D - (1.0D / 16.0D));
 
             int iHeight = (int) (canvasData.getHeight() / 16.0F);
             int iWidth = (int) (canvasData.getWidth() / 16.0F);
@@ -89,9 +89,17 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
                 this.renderModel(key, matrixStack, renderBuffers, combinedLight);
             } else {
-
+                /**
+                 * @todo: use block pos
+                 */
                 for (int v = 0; v < iHeight; v++) {
                     for (int h = 0; h < iWidth; h++) {
+                        final double translateX = -h;
+                        final double translateY= -v;
+
+                        matrixStack.translate(translateX, translateY, 0D);
+                        //int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, new BlockPos(i1, j1, k1));
+
                         // composite model
                         if (v == 0) {
                             if (h == 0) {
@@ -118,6 +126,8 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                                 //this.renderModel("bottom", matrixStack, renderBuffers, combinedLight);
                             }
                         }
+
+                        matrixStack.translate(-translateX, -translateY, 0D);
                     }
                 }
             }
@@ -129,7 +139,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             matrixStack.push();
             // We want to move picture one pixel in facing direction
             // And half a block towards top left
-            matrixStack.translate(-0.5D, -0.5D, 0.5D - (1.0D / 32.0D));
+            matrixStack.translate(renderOffset[0] - 1.0D, renderOffset[1] - 1.0D, 0.5D - (1.0D / 32.0D));
 
             final float scaleFactor = 1.0F / 16.0F;
 
@@ -141,7 +151,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, canvasData, combinedLight);
             matrixStack.pop();
         } else {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(entity.getCanvasName());
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(entity.getCanvasCode());
         }
 
         matrixStack.pop();
@@ -175,8 +185,9 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
     /**
      * Returns the location of an entity's texture.
+     * @todo: do something with this
      */
     public ResourceLocation getEntityTexture(CustomPaintingEntity entity) {
-        return FRAME_TEXTURES[0];
+        return TEXTURE;
     }
 }

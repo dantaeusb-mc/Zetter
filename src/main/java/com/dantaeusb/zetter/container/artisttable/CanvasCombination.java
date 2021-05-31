@@ -20,11 +20,11 @@ public class CanvasCombination {
     public static final int[][] paintingShapes = new int[][]{
             {1, 1},
             {1, 2},
-            {1, 3},
+            //{1, 3}, @todo: add small frame
             {2, 1},
             {2, 2},
             {2, 3},
-            {3, 1},
+            //{3, 1}, @todo: add small frame
             {3, 2},
             {3, 3},
             {4, 2},

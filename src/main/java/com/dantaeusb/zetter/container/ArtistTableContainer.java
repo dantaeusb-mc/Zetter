@@ -2,6 +2,7 @@ package com.dantaeusb.zetter.container;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.container.artisttable.CanvasCombination;
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModCraftingRecipes;
 import com.dantaeusb.zetter.core.ModItems;
@@ -192,8 +193,14 @@ public class ArtistTableContainer extends Container {
         CustomPaintingItem.copyCanvasData(outStack, originalCanvasData, this.world);
         CustomPaintingItem.setTitle(outStack, paintingName);
         CustomPaintingItem.setAuthor(outStack, authorPlayer.getName().getString());
+        CustomPaintingItem.setBlockSize(
+                outStack,
+                new int[]{
+                        originalCanvasData.getWidth() / Helper.CANVAS_TEXTURE_RESOLUTION,
+                        originalCanvasData.getHeight() / Helper.CANVAS_TEXTURE_RESOLUTION
+                });
 
-         this.inventoryOut.setInventorySlotContents(0, outStack);
+        this.inventoryOut.setInventorySlotContents(0, outStack);
     }
 
     /**
@@ -245,26 +252,6 @@ public class ArtistTableContainer extends Container {
         }
 
         return outStack;
-    }
-
-    protected void createCustomPainting() {
-        ItemStack mainMaterialStack = this.frameStorage.getStackInSlot(0);
-        ItemStack detailMaterialStack = this.frameStorage.getStackInSlot(1);
-
-        IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameStorage, this.world).orElse(null);
-
-        if (recipe.getRecipeOutput() == null) {
-            return;
-        }
-
-        if (!mainMaterialStack.isEmpty() && mainMaterialStack.getCount() > 1) {
-            mainMaterialStack.shrink(1);
-            this.frameStorage.setInventorySlotContents(0, mainMaterialStack);
-        } else {
-            this.frameStorage.setInventorySlotContents(0, ItemStack.EMPTY);
-        }
-
-        this.inventoryOut.setInventorySlotContents(0, recipe.getRecipeOutput());
     }
 
     /**

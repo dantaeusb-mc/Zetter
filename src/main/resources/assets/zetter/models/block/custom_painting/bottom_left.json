@@ -1,27 +1,33 @@
 {
     "textures": {
         "particle": "block/oak_planks",
-        "wood": "block/oak_planks",
-        "back": "zetter:block/custom_painting"
+        "frame": "zetter:paintings/entity/frame/dark_oak/bottom_left"
     },
     "elements": [
-        {   "from": [ 0, 0, 16 ],
-            "to": [ 16, 16, 16 ],
+        {   "from": [ 0, 0, 1 ],
+            "to": [ 16, 16, 1 ],
             "faces": {
-                "south": { "uv": [0, 0, 16, 16], "texture": "#back" }
+                "south": { "uv": [0, 0, 16, 16], "texture": "#frame" }
             }
         },
-        {   "from": [ 0, 0, 15 ],
-            "to": [ 16, 0, 16 ],
+        {   "from": [ 0, 0, 0 ],
+            "to": [ 16, 1, 1 ],
             "faces": {
-                "down":  { "uv": [0, 0, 16, 1], "texture": "#wood" }
+                "north":  { "uv": [0, 14, 16, 15], "texture": "#frame" },
+                "up":  { "uv": [0, 15, 16, 16], "texture": "#frame" },
+                "east":  { "uv": [0, 0, 1, 1], "texture": "#frame" },
+                "down":  { "uv": [0, 15, 16, 16], "texture": "#frame" }
             },
             "comment": "Bottom edge"
         },
-        {   "from": [ 0, 0, 15 ],
-            "to": [ 0, 16, 16 ],
+        {   "from": [ 15, 1, 0 ],
+            "to": [ 16, 16, 1 ],
             "faces": {
-                "west":  { "uv": [0, 0, 1, 16], "texture": "#wood" }
+                "north":  { "uv": [0, 0, 1, 16], "texture": "#frame" },
+                "up":  { "uv": [0, 0, 1, 1], "texture": "#frame" },
+                "east":  { "uv": [0, 0, 1, 16], "texture": "#frame" },
+                "down":  { "uv": [0, 0, 1, 1], "texture": "#frame" },
+                "west":  { "uv": [0, 0, 1, 16], "texture": "#frame" }
             },
             "comment": "Left edge"
         }
