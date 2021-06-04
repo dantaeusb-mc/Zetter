@@ -154,6 +154,15 @@ public class ArtistTableContainer extends Container {
                         originalCanvasData.getHeight() / Helper.CANVAS_TEXTURE_RESOLUTION
                 });
 
+        if (!authorPlayer.isCreative()) {
+            for (int i = 0; i < FRAME_SLOT_COUNT; i++) {
+                this.frameInventory.decrStackSize(i, 1);
+            }
+
+            this.canvasStorage.clear();
+        }
+
+
         this.inventoryOut.setInventorySlotContents(0, outStack);
     }
 

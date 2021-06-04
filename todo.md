@@ -4,8 +4,6 @@
 
 #### Release tasks:
 
-* \[HIGH\] Use only 1 item when creating frame;
-* \[HIGH\] Fix frame offset when placing on certain walls;
 * \[MED\] Implement script builder for models;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
