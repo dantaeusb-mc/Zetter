@@ -1,13 +1,12 @@
 package com.dantaeusb.zetter.container.artisttable;
 
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.item.CanvasItem;
-import com.dantaeusb.zetter.network.packet.painting.CanvasRequestPacket;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
@@ -20,11 +19,11 @@ public class CanvasCombination {
     public static final int[][] paintingShapes = new int[][]{
             {1, 1},
             {1, 2},
-            //{1, 3}, @todo: add small frame
+            {1, 3},
             {2, 1},
             {2, 2},
             {2, 3},
-            //{3, 1}, @todo: add small frame
+            {3, 1},
             {3, 2},
             {3, 3},
             {4, 2},
@@ -35,7 +34,7 @@ public class CanvasCombination {
     public final Rectangle rectangle;
 
     @Nullable
-    public final CanvasData canvasData;
+    public final DummyCanvasData canvasData;
 
     public CanvasCombination(ArtistTableCanvasStorage canvasStorage, World world) {
         Tuple<Integer, Integer> min = null;
@@ -96,7 +95,10 @@ public class CanvasCombination {
                         /**
                          * @todo: move request out of here, request with data load attempts but avoid loading unavailable canvases
                          */
-                        CanvasRenderer.getInstance().queueCanvasTextureUpdate(CanvasItem.getCanvasName(currentStack));
+                        CanvasRenderer.getInstance().queueCanvasTextureUpdate(
+                                AbstractCanvasData.Type.CANVAS,
+                                CanvasItem.getCanvasCode(currentStack)
+                        );
 
                         canvasesReady = false;
                     }
@@ -132,7 +134,7 @@ public class CanvasCombination {
         this.canvasData = CanvasCombination.createCanvasData(canvasStorage, rectangle, world);
     }
 
-    public static CanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, World world) {
+    public static DummyCanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, World world) {
         final int pixelWidth = rectangle.width * Helper.CANVAS_TEXTURE_RESOLUTION;
         final int pixelHeight = rectangle.height * Helper.CANVAS_TEXTURE_RESOLUTION;
 
@@ -160,7 +162,7 @@ public class CanvasCombination {
             }
         }
 
-        CanvasData combinedCanvasData = new CanvasData("combined_canvas");
+        DummyCanvasData combinedCanvasData = Helper.getCombinedCanvas();
 
         combinedCanvasData.initData(
             pixelWidth,
@@ -168,7 +170,9 @@ public class CanvasCombination {
             color.array()
         );
 
-        Helper.getWorldCanvasTracker(world).registerCanvasData(combinedCanvasData);
+        if (world.isRemote()) {
+            Helper.getWorldCanvasTracker(world).registerCanvasData(combinedCanvasData);
+        }
 
         return combinedCanvasData;
     }

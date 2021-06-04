@@ -10,7 +10,7 @@
                 "south": { "uv": [0, 0, 16, 16], "texture": "#back" }
             }
         },
-        {   "from": [ 0, 1, 0 ],
+        {   "from": [ 0, 0, 0 ],
             "to": [ 1, 16, 1 ],
             "faces": {
                 "north":  { "uv": [0, 0, 1, 16], "texture": "#wood" },

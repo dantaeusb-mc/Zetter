@@ -7,6 +7,7 @@ import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
@@ -46,13 +47,14 @@ public class ClientHandler {
 
     public static void processSync(final SCanvasSyncMessage packetIn, ClientWorld world) {
         ClientPlayerEntity player = Minecraft.getInstance().player;
-        CanvasData canvasData = packetIn.getCanvasData();
+        AbstractCanvasData canvasData = packetIn.getCanvasData();
 
         if (player.openContainer instanceof EaselContainer) {
             // If it's the same canvas player is editing
             if (canvasData.getName().equals(((EaselContainer) player.openContainer).getCanvasData().getName())) {
                 // Pushing changes that were added after sync packet was created
-                ((EaselContainer) player.openContainer).processSync(canvasData, packetIn.getTimestamp());
+                // @todo: remove cast
+                ((EaselContainer) player.openContainer).processSync((CanvasData) canvasData, packetIn.getTimestamp());
             }
         }
 

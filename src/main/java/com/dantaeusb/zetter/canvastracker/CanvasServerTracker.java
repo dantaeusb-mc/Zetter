@@ -3,7 +3,10 @@ package com.dantaeusb.zetter.canvastracker;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.DummyCanvasData;
+import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
@@ -17,7 +20,8 @@ import java.util.Vector;
 
 public class CanvasServerTracker extends CanvasDefaultTracker {
     private final World world;
-    private int lastId;
+    private int lastCanvasId;
+    private int lastPaintingId;
 
     private final Map<String, Vector<PlayerTrackingCanvas>> trackedCanvases = new HashMap<>();
     private final Vector<String> desyncCanvases = new Vector<>();
@@ -25,8 +29,8 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
 
     public CanvasServerTracker(World world) {
         this.world = world;
-        this.lastId = 0;
-        Zetter.LOG.info("CanvasServerTracker");
+        this.lastCanvasId = 0;
+        this.lastPaintingId = 0;
     }
 
     @Override
@@ -35,25 +39,50 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     }
 
     @Override
-    public int getNextId() {
-        return ++this.lastId;
-    }
-    public int getLastId() {
-        return this.lastId;
+    public int getNextCanvasId() {
+        return ++this.lastCanvasId;
     }
 
-    public void setLastId(int id) {
-        this.lastId = id;
+    public int getLastCanvasId() {
+        return this.lastCanvasId;
     }
 
-    public void markCanvasDesync(String canvasName) {
-        this.desyncCanvases.add(canvasName);
+    public void setLastCanvasId(int id) {
+        this.lastCanvasId = id;
+    }
+
+    @Override
+    public int getNextPaintingId() {
+        return ++this.lastPaintingId;
+    }
+
+    public int getLastPaintingId() {
+        return this.lastPaintingId;
+    }
+
+    public void setLastPaintingId(int id) {
+        this.lastPaintingId = id;
+    }
+
+    public void markCanvasDesync(String canvasCode) {
+        this.desyncCanvases.add(canvasCode);
     }
 
     @Override
     @Nullable
-    public CanvasData getCanvasData(String canvasName) {
-        return this.world.getServer().func_241755_D_().getSavedData().get(() -> new CanvasData(canvasName), canvasName);
+    public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
+        return (T) this.world.getServer().func_241755_D_().getSavedData().get(
+            () -> {
+                if (type.equals(CanvasData.class)) {
+                    return new CanvasData(canvasCode);
+                } else if (type.equals(PaintingData.class)) {
+                    return new PaintingData(canvasCode);
+                }
+
+                return new DummyCanvasData(canvasCode);
+            },
+            canvasCode
+        );
     }
 
     /**
@@ -64,7 +93,12 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
      * func_241755_D_ = getOverworld
      */
     @Override
-    public void registerCanvasData(CanvasData canvasData) {
+    public void registerCanvasData(AbstractCanvasData canvasData) {
+        if (canvasData instanceof DummyCanvasData) {
+            Zetter.LOG.error("Trying to register dummy canvas on server side");
+            return;
+        }
+
         this.world.getServer().func_241755_D_().getSavedData().set(canvasData);
     }
 
@@ -75,8 +109,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     public void tick() {
         this.ticksFromLastSync++;
 
-        // A bit random to avoid thousands of things being made every second
-        if (this.ticksFromLastSync < 23) {
+        if (this.ticksFromLastSync < 20) {
             return;
         }
 
@@ -85,11 +118,11 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
          */
         MinecraftServer server = this.world.getServer();
 
-        for (String canvasName : this.desyncCanvases) {
-            for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasName)) {
+        for (String canvasCode : this.desyncCanvases) {
+            for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
                 ServerPlayerEntity playerEntity = server.getPlayerList().getPlayerByUUID(playerTrackingCanvas.playerId);
 
-                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(this.getCanvasData(canvasName), System.currentTimeMillis());
+                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(this.getCanvasData(canvasCode, DummyCanvasData.class), System.currentTimeMillis());
                 ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }
@@ -127,9 +160,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     }
 
     private Vector<PlayerTrackingCanvas> getTrackingEntries(String canvasName) {
-        Vector<PlayerTrackingCanvas> trackingEntries = this.trackedCanvases.computeIfAbsent(canvasName, k -> new Vector<>());
-
-        return trackingEntries;
+        return this.trackedCanvases.computeIfAbsent(canvasName, k -> new Vector<>());
     }
 
     private static class PlayerTrackingCanvas {

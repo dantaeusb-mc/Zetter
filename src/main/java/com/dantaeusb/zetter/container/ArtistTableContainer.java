@@ -7,7 +7,7 @@ import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModCraftingRecipes;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CustomPaintingItem;
-import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.tileentity.ArtistTableTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
 import net.minecraft.entity.player.PlayerEntity;
@@ -19,6 +19,7 @@ import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.world.World;
 
 public class ArtistTableContainer extends Container {
@@ -30,6 +31,9 @@ public class ArtistTableContainer extends Container {
     private static final int CANVAS_ROW_COUNT = 3;
     private static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
+    public static final int FRAME_SLOT_COUNT = 2;
+
+    private final IWorldPosCallable worldPosCallable;
 
     private final World world;
 
@@ -37,7 +41,7 @@ public class ArtistTableContainer extends Container {
 
     private boolean frameReady = false;
 
-    private final CraftingInventory frameStorage = new CraftingInventory(this, 2, 1) {
+    private final CraftingInventory frameInventory = new CraftingInventory(this, FRAME_SLOT_COUNT, 1) {
         public void markDirty() {
             super.markDirty();
             ArtistTableContainer.this.onCraftMatrixChanged(this);
@@ -53,16 +57,15 @@ public class ArtistTableContainer extends Container {
     public static final int PLAYER_INVENTORY_YPOS = 127;
 
     public ArtistTableContainer(int windowID, PlayerInventory invPlayer,
-                                ArtistTableCanvasStorage canvasStorage) {
+                                ArtistTableCanvasStorage canvasStorage,
+                                final IWorldPosCallable worldPosCallable) {
         super(ModContainers.ARTIST_TABLE, windowID);
 
-        if (ModContainers.ARTIST_TABLE == null)
-            throw new IllegalStateException("Must initialise containerTypeArtistTableContainer before constructing a ArtistTableContainer!");
+        this.worldPosCallable = worldPosCallable;
 
         this.world = invPlayer.player.world;
 
         this.canvasStorage = canvasStorage;
-
         this.canvasStorage.setMarkDirtyNotificationLambda(this::updateCanvasCombination);
 
         final int SLOT_X_SPACING = 18;
@@ -103,8 +106,8 @@ public class ArtistTableContainer extends Container {
         final int FRAME_XPOS = 30;
         final int FRAME_YPOS = 15;
 
-        this.addSlot(new SlotFrameMainMaterialInput(this.frameStorage, 0, FRAME_XPOS, FRAME_YPOS));
-        this.addSlot(new SlotFrameDetailMaterialInput(this.frameStorage, 1, FRAME_XPOS + SLOT_X_SPACING, FRAME_YPOS));
+        this.addSlot(new SlotFrameMainMaterialInput(this.frameInventory, 0, FRAME_XPOS, FRAME_YPOS));
+        this.addSlot(new SlotFrameDetailMaterialInput(this.frameInventory, 1, FRAME_XPOS + SLOT_X_SPACING, FRAME_YPOS));
 
         // gui position of the player material slots
         final int OUTPUT_XPOS = 152;
@@ -116,31 +119,42 @@ public class ArtistTableContainer extends Container {
     }
 
     public static ArtistTableContainer createContainerServerSide(int windowID, PlayerInventory playerInventory,
-                                                                 ArtistTableCanvasStorage canvasStorage) {
-        return new ArtistTableContainer(windowID, playerInventory, canvasStorage);
+                                                                 ArtistTableCanvasStorage canvasStorage,
+                                                                 final IWorldPosCallable worldPosCallable) {
+        return new ArtistTableContainer(windowID, playerInventory, canvasStorage, worldPosCallable);
     }
 
     public static ArtistTableContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         ArtistTableCanvasStorage canvasStorage = ArtistTableCanvasStorage.createForClientSideContainer();
 
-        return new ArtistTableContainer(windowID, playerInventory, canvasStorage);
+        return new ArtistTableContainer(windowID, playerInventory, canvasStorage, IWorldPosCallable.DUMMY);
     }
-
-    public ArtistTableCanvasStorage getCanvasStorage() {
-        return this.canvasStorage;
-    }
-
-    /*
-      Common handlers
-     */
-
     /**
-     * Called when the container is closed.
-     * Push painting frames so it will be saved
+     * Called from network when player presses a button
+     * @param authorPlayer
+     * @param paintingName
+     * @param originalCanvasData
      */
-    public void onContainerClosed(PlayerEntity playerIn) {
-        super.onContainerClosed(playerIn);
+    public void createPainting(PlayerEntity authorPlayer, String paintingName, AbstractCanvasData originalCanvasData) {
+        IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameInventory, this.world).orElse(null);
 
+        if (recipe == null) {
+            Zetter.LOG.error("Received message to create painting but no frame recipe was found");
+            return;
+        }
+
+        ItemStack outStack = recipe.getRecipeOutput().copy();
+        CustomPaintingItem.copyCanvasData(outStack, originalCanvasData, this.world);
+        CustomPaintingItem.setTitle(outStack, paintingName);
+        CustomPaintingItem.setAuthor(outStack, authorPlayer.getName().getString());
+        CustomPaintingItem.setBlockSize(
+                outStack,
+                new int[]{
+                        originalCanvasData.getWidth() / Helper.CANVAS_TEXTURE_RESOLUTION,
+                        originalCanvasData.getHeight() / Helper.CANVAS_TEXTURE_RESOLUTION
+                });
+
+        this.inventoryOut.setInventorySlotContents(0, outStack);
     }
 
     public void updateCanvasCombination() {
@@ -163,14 +177,18 @@ public class ArtistTableContainer extends Container {
         return this.canvasCombination.valid == CanvasCombination.State.NOT_LOADED;
     }
 
+    /*
+      Common handlers
+     */
+
     /**
      * Callback for when the crafting matrix is changed.
      */
     public void onCraftMatrixChanged(IInventory inventoryIn) {
         super.onCraftMatrixChanged(inventoryIn);
 
-        if (inventoryIn == this.frameStorage) {
-            IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameStorage, this.world).orElse(null);
+        if (inventoryIn == this.frameInventory) {
+            IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameInventory, this.world).orElse(null);
 
             if (recipe != null) {
                 this.frameReady = true;
@@ -181,26 +199,12 @@ public class ArtistTableContainer extends Container {
         this.frameReady = false;
     }
 
-    public void createPainting(PlayerEntity authorPlayer, String paintingName, CanvasData originalCanvasData) {
-        IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameStorage, this.world).orElse(null);
-
-        if (recipe == null) {
-            Zetter.LOG.error("Received message to create painting but no frame recipe was found");
-            return;
-        }
-
-        ItemStack outStack = recipe.getRecipeOutput().copy();
-        CustomPaintingItem.copyCanvasData(outStack, originalCanvasData, this.world);
-        CustomPaintingItem.setTitle(outStack, paintingName);
-        CustomPaintingItem.setAuthor(outStack, authorPlayer.getName().getString());
-        CustomPaintingItem.setBlockSize(
-                outStack,
-                new int[]{
-                        originalCanvasData.getWidth() / Helper.CANVAS_TEXTURE_RESOLUTION,
-                        originalCanvasData.getHeight() / Helper.CANVAS_TEXTURE_RESOLUTION
-                });
-
-        this.inventoryOut.setInventorySlotContents(0, outStack);
+    /**
+     * Called to determine if the current slot is valid for the stack merging (double-click) code. The stack passed in is
+     * null for the initial slot that was double-clicked.
+     */
+    public boolean canMergeSlot(ItemStack stack, Slot slotIn) {
+        return slotIn.inventory != this.inventoryOut && super.canMergeSlot(stack, slotIn);
     }
 
     /**
@@ -262,6 +266,18 @@ public class ArtistTableContainer extends Container {
         /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
             return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
         }, true);*/
+    }
+
+    /**
+     * Called when the container is closed.
+     */
+    public void onContainerClosed(PlayerEntity playerIn) {
+        super.onContainerClosed(playerIn);
+
+        this.worldPosCallable.consume((world, blockPos) -> {
+            this.clearContainer(playerIn, playerIn.world, this.frameInventory);
+            this.clearContainer(playerIn, playerIn.world, this.inventoryOut);
+        });
     }
 
     public class SlotCanvas extends Slot {

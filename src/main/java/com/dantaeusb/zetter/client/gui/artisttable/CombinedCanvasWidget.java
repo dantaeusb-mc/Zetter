@@ -8,7 +8,9 @@ import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -41,14 +43,14 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
         matrixStack.push();
         matrixStack.translate(this.x, this.y, 1.0F);
 
-        CanvasData canvasData = this.parentScreen.getContainer().getCanvasCombination().canvasData;
+        DummyCanvasData canvasData = this.parentScreen.getContainer().getCanvasCombination().canvasData;
 
         this.drawCanvas(matrixStack, canvasData, 0, 0, 1.0F);
 
         matrixStack.pop();
     }
 
-    private void drawCanvas(MatrixStack matrixStack, @Nullable CanvasData canvasData, float x, float y, float scale) {
+    private void drawCanvas(MatrixStack matrixStack, @Nullable DummyCanvasData canvasData, float x, float y, float scale) {
         if (canvasData != null) {
             matrixStack.push();
             matrixStack.translate(x, y, 1.0F);
@@ -70,6 +72,6 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName);
+        return canvasTracker.getCanvasData(canvasName, CanvasData.class);
     }
 }

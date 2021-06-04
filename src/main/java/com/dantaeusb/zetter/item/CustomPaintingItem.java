@@ -1,9 +1,10 @@
 package com.dantaeusb.zetter.item;
 
-import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
@@ -39,8 +40,8 @@ public class CustomPaintingItem extends Item {
         return super.getDisplayName(stack);
     }
 
-    public static void setCanvasName(ItemStack stack, String canvasName) {
-        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_CANVAS_CODE, canvasName);
+    public static void setCanvasCode(ItemStack stack, String canvasCode) {
+        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE, canvasCode);
     }
 
     public static void setTitle(ItemStack stack, String title) {
@@ -76,17 +77,12 @@ public class CustomPaintingItem extends Item {
      * @return
      * @see {@link FilledMapItem#createMapData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}
      */
-    public static CanvasData copyCanvasData(ItemStack stack, CanvasData originalCanvasData, World worldIn) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(worldIn);
+    public static PaintingData copyCanvasData(ItemStack stack, AbstractCanvasData originalCanvasData, World worldIn) {
+        PaintingData paintingData = Helper.createNewPainting(worldIn);
+        paintingData.copyFrom(originalCanvasData);
 
-        int newId = canvasTracker.getNextId();
-
-        CanvasData paintingCanvasData = new CanvasData(newId);
-        paintingCanvasData.copyFrom(originalCanvasData);
-        canvasTracker.registerCanvasData(paintingCanvasData);
-
-        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_CANVAS_CODE, paintingCanvasData.getName());
-        return paintingCanvasData;
+        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE, paintingData.getName());
+        return paintingData;
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -119,7 +115,7 @@ public class CustomPaintingItem extends Item {
             World world = context.getWorld();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
-                    world, facePos, direction, getCanvasName(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
+                    world, facePos, direction, getCanvasCode(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
             );
 
             if (paintingEntity.onValidSurface()) {
@@ -141,15 +137,15 @@ public class CustomPaintingItem extends Item {
      * @return
      * @see {@link FilledMapItem#getMapId(ItemStack)}
      */
-    public static String getCanvasName(ItemStack stack) {
+    public static String getCanvasCode(ItemStack stack) {
         CompoundNBT compoundNBT = stack.getTag();
 
-        String canvasName = CanvasData.getCanvasName(0);
-        if (compoundNBT != null && compoundNBT.contains(CustomPaintingEntity.NBT_TAG_CANVAS_CODE)) {
-            canvasName = compoundNBT.getString(CustomPaintingEntity.NBT_TAG_CANVAS_CODE);
+        String canvasCode = CanvasData.getCanvasCode(0);
+        if (compoundNBT != null && compoundNBT.contains(CustomPaintingEntity.NBT_TAG_PAINTING_CODE)) {
+            canvasCode = compoundNBT.getString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE);
         }
 
-        return canvasName;
+        return canvasCode;
     }
 
     protected boolean canPlace(PlayerEntity playerIn, Direction directionIn, ItemStack itemStackIn, BlockPos posIn) {

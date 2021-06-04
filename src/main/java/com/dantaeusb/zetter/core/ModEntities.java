@@ -34,7 +34,7 @@ public class ModEntities
     @SuppressWarnings("unused")
     @OnlyIn(Dist.CLIENT)
     public static void onModelRegistryEvent(ModelRegistryEvent event) {
-        for (ModelResourceLocation modelLocation : CustomPaintingRenderer.SMALL_FRAME_MODELS.values()) {
+        for (ModelResourceLocation modelLocation : CustomPaintingRenderer.FRAME_MODELS.values()) {
             ModelLoader.addSpecialModel(modelLocation);
         }
     }

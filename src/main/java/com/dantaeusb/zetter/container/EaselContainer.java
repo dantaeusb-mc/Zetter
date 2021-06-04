@@ -16,6 +16,7 @@ import com.dantaeusb.zetter.item.PaletteItem;
 import com.dantaeusb.zetter.network.packet.painting.CPaletteUpdatePacket;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasNamePacket;
 import com.dantaeusb.zetter.network.packet.painting.PaintingFrameBufferPacket;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
 import com.dantaeusb.zetter.storage.CanvasData;
 import javafx.util.Pair;
@@ -84,7 +85,7 @@ public class EaselContainer extends Container {
 
         if (!this.world.isRemote()) {
             ItemStack canvasStack = this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
-            String canvasName = CanvasItem.getCanvasName(canvasStack);
+            String canvasName = CanvasItem.getCanvasCode(canvasStack);
             this.setCanvas(canvasName);
         }
 
@@ -112,7 +113,7 @@ public class EaselContainer extends Container {
     }
 
     public void setCanvas(String canvasName) {
-        if (canvasName.isEmpty() || canvasName.equals(CanvasData.getCanvasName(0))) {
+        if (canvasName.isEmpty() || canvasName.equals(CanvasData.getCanvasCode(0))) {
             this.canvas = null;
             this.canvasReady = false;
             return;
@@ -133,7 +134,7 @@ public class EaselContainer extends Container {
             return;
         }
 
-        CanvasData canvas = canvasTracker.getCanvasData(canvasName);
+        CanvasData canvas = canvasTracker.getCanvasData(canvasName, CanvasData.class);
 
         if (canvas == null) {
             this.canvas = null;
@@ -399,7 +400,7 @@ public class EaselContainer extends Container {
         }
 
         if (mightDesync) {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getName());
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getType(), canvasData.getName());
         }
 
         this.lastSyncReceivedClock = System.currentTimeMillis();

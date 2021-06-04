@@ -7,7 +7,10 @@ import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.network.packet.painting.*;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.DummyCanvasData;
+import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
@@ -52,6 +55,11 @@ public class ServerHandler {
     /**
      * Called when a message is received of the appropriate type.
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
+     *
+     * Apparently we can't create just Dummy Canvas Data instances -- world would not recognize the
+     * save data when it's another class! So we need to provide expected type in message as well.
+     * Though it seems unnecessary, this actually adds some level of type-safety about it.
+     *
      * @param message The message
      */
     public static void handleRequestSync(final CanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -88,7 +96,15 @@ public class ServerHandler {
         // Notify canvas manager that player is tracking canvas from no ow
         canvasTracker.trackCanvas(sendingPlayer.getUniqueID(), packetIn.getCanvasName());
 
-        CanvasData canvasData = canvasTracker.getCanvasData(packetIn.getCanvasName());
+        AbstractCanvasData canvasData;
+
+        if (packetIn.getCanvasType() == AbstractCanvasData.Type.CANVAS) {
+            canvasData = canvasTracker.getCanvasData(packetIn.getCanvasName(), CanvasData.class);
+        } else if (packetIn.getCanvasType() == AbstractCanvasData.Type.PAINTING) {
+            canvasData = canvasTracker.getCanvasData(packetIn.getCanvasName(), PaintingData.class);
+        } else {
+            canvasData = canvasTracker.getCanvasData(packetIn.getCanvasName(), DummyCanvasData.class);
+        }
 
         if (canvasData == null) {
             Zetter.LOG.error("Player " + sendingPlayer + " requested non-existent canvas: " + packetIn.getCanvasName());

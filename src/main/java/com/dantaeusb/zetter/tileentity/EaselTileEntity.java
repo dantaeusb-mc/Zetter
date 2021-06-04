@@ -93,7 +93,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
             return "";
         }
 
-        return CanvasItem.getCanvasName(canvasStack);
+        return CanvasItem.getCanvasCode(canvasStack);
     }
 
     @Nullable

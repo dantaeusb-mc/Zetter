@@ -1,14 +1,17 @@
 package com.dantaeusb.zetter.network.packet.painting;
 
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.network.PacketBuffer;
 
 public class CanvasRequestPacket {
     private String canvasName;
+    private AbstractCanvasData.Type type;
 
     public CanvasRequestPacket() {
     }
 
-    public CanvasRequestPacket(String canvasName) {
+    public CanvasRequestPacket(AbstractCanvasData.Type type, String canvasName) {
+        this.type = type;
         this.canvasName = canvasName;
     }
 
@@ -19,6 +22,7 @@ public class CanvasRequestPacket {
     public static CanvasRequestPacket readPacketData(PacketBuffer buf) {
         CanvasRequestPacket packet = new CanvasRequestPacket();
 
+        packet.type = AbstractCanvasData.Type.values()[buf.readInt()];
         packet.canvasName = buf.readString(32767);
 
         return packet;
@@ -28,10 +32,15 @@ public class CanvasRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(PacketBuffer buf) {
+        buf.writeInt(this.type.ordinal());
         buf.writeString(this.canvasName);
     }
 
     public String getCanvasName() {
         return this.canvasName;
+    }
+
+    public AbstractCanvasData.Type getCanvasType() {
+        return this.type;
     }
 }

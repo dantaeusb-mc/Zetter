@@ -17,6 +17,7 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
@@ -26,7 +27,8 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class ArtistTableTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
-    private static final String ARTIST_CANVAS_STORAGE_TAG = "canvas_storage";
+    private static final String ARTIST_TABLE_FRAME_STORAGE_TAG = "frame_storage";
+    private static final String ARTIST_TABLE_CANVAS_STORAGE_TAG = "canvas_storage";
 
     private final ArtistTableCanvasStorage canvasStorage;
 
@@ -64,7 +66,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
         super.write(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
 
         CompoundNBT canvasNbt = this.canvasStorage.serializeNBT();
-        parentNBTTagCompound.put(ARTIST_CANVAS_STORAGE_TAG, canvasNbt);
+        parentNBTTagCompound.put(ARTIST_TABLE_CANVAS_STORAGE_TAG, canvasNbt);
 
         return parentNBTTagCompound;
     }
@@ -74,7 +76,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     {
         super.read(blockState, parentNBTTagCompound);
 
-        CompoundNBT canvasNbt = parentNBTTagCompound.getCompound(ARTIST_CANVAS_STORAGE_TAG);
+        CompoundNBT canvasNbt = parentNBTTagCompound.getCompound(ARTIST_TABLE_CANVAS_STORAGE_TAG);
         this.canvasStorage.deserializeNBT(canvasNbt);
 
         if (this.canvasStorage.getSizeInventory() != ArtistTableCanvasStorage.STORAGE_SIZE)
@@ -142,7 +144,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     @Nullable
     @Override
     public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage);
+        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage, IWorldPosCallable.of(this.world, this.pos));
     }
 
     static public boolean isItemValidForCanvasArea(ItemStack itemStack)

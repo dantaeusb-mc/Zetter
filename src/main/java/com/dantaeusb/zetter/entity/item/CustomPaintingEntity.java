@@ -17,7 +17,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -31,7 +30,7 @@ import javax.annotation.Nullable;
 
 public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
     public static final String NBT_TAG_FACING = "Facing";
-    public static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
+    public static final String NBT_TAG_PAINTING_CODE = "PaintingCode";
     public static final String NBT_TAG_TITLE = "Title";
     public static final String NBT_TAG_AUTHOR_NAME = "AuthorName";
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
@@ -68,7 +67,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public String getCanvasCode() {
         if (this.canvasCode == null) {
-            return Helper.fallbackCanvasName;
+            return Helper.FALLBACK_CANVAS_CODE;
         }
 
         return this.canvasCode;
@@ -160,7 +159,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public void writeAdditional(CompoundNBT compound) {
         compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
-        compound.putString(NBT_TAG_CANVAS_CODE, this.canvasCode);
+        compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
         compound.putString(NBT_TAG_TITLE, this.paintingName);
         compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
         compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
@@ -181,8 +180,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     public void readAdditional(CompoundNBT compound) {
         this.facingDirection = Direction.byHorizontalIndex(compound.getByte(NBT_TAG_FACING));
 
-        if (compound.contains(NBT_TAG_CANVAS_CODE, 8)) {
-            this.canvasCode = compound.getString(NBT_TAG_CANVAS_CODE);
+        if (compound.contains(NBT_TAG_PAINTING_CODE, 8)) {
+            this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
         }
 
         if (compound.contains(NBT_TAG_TITLE, 8)) {
@@ -248,11 +247,12 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Called when this entity is broken. Entity parameter may be null.
      */
     public void onBroken(@Nullable Entity brokenEntity) {
+        // @todo: remove item if canvas code is set to fallback code
         if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
             this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
 
             ItemStack canvasStack = new ItemStack(ModItems.CUSTOM_PAINTING_ITEM);
-            CustomPaintingItem.setCanvasName(canvasStack, this.canvasCode);
+            CustomPaintingItem.setCanvasCode(canvasStack, this.canvasCode);
             CustomPaintingItem.setTitle(canvasStack, this.paintingName);
             CustomPaintingItem.setAuthor(canvasStack, this.authorName);
             CustomPaintingItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});

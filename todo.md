@@ -2,33 +2,32 @@
 
 * Avoid proxies and OnlyIn
 
-#### Alpha:
-
-* \[LOW\] Remove infinity bounds in getRenderBoundingBox.
-
 #### Beta: 
 
-* \[HIGH\] Disallow to put canvases without frames on the wall;
+* \[LOW\] Remove infinity bounds in getRenderBoundingBox.
 * \[MED\] Rename canvas name to canvas code;
 
 #### Release tasks:
 
-* \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;
+* \[HIGH\] Use only 1 item when creating frame;
+* \[MED\] Implement script builder for models;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
-* \[MED\] Implement canvas naming & sealing _in the picture sewing table_;
-* \[MED\] Make sure never use canvas with id 0;
-* \[MED\] Add back texture for the frame;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
+* \[MED\] Use specific light levels for every partial canvas;
 * \[MED\] Use ObjectHolders;
-* \[MED\] 1x3 and 3x1 frames;
 * \[LOW\] Fix plank texture on an easel;
+* \[LOW\] Fix leg top transparent on an easel;
+* \[LOW\] Implement bucket tool;
+* \[LOW\] Close or update screen when canvas removed from easel;
+* \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern;
+  
+#### Would-be-nice-to-do
+
+* \[HIGH\] I don't like how different classes of canvas data created, would be nice to invent something better;
+* \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;
+* \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
 * \[LOW\] Remove unnecessary edges in composite frames;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
-* \[LOW\] Fix leg top transparent on an easel;
-* \[LOW\] Looks like if color in palette somehow got wrong value it's broken;
-* \[LOW\] Implement bucket tool;
-* \[LOW\] Close or update screen when canvas removed;
-* \[LOW\] Remove network getters/setters: they're useless, and it's actually a bad pattern;
 
 #### Planned features:
 

@@ -5,6 +5,7 @@ import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModBlocks;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.tileentity.EaselTileEntity;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.mojang.blaze3d.matrix.MatrixStack;
@@ -110,7 +111,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
 
                 CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, canvasData, combinedLight);
             } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(tileEntity.getCanvasName());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, tileEntity.getCanvasName());
             }
         }
 
@@ -131,6 +132,6 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName);
+        return canvasTracker.getCanvasData(canvasName, CanvasData.class);
     }
 }

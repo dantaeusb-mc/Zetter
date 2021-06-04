@@ -1,22 +1,22 @@
 package com.dantaeusb.zetter.network.packet.painting;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.network.PacketBuffer;
 
 import java.nio.ByteBuffer;
 
 public class SCanvasSyncMessage {
-    private final CanvasData canvasData;
+    private final AbstractCanvasData canvasData;
     private final long timestamp;
 
-    public SCanvasSyncMessage(CanvasData canvasData, long timestamp) {
+    public SCanvasSyncMessage(AbstractCanvasData canvasData, long timestamp) {
         this.canvasData = canvasData;
         this.timestamp = timestamp;
     }
 
-    public CanvasData getCanvasData() {
-        return canvasData;
+    public AbstractCanvasData getCanvasData() {
+        return this.canvasData;
     }
 
     public long getTimestamp() {
@@ -29,7 +29,7 @@ public class SCanvasSyncMessage {
     public static SCanvasSyncMessage readPacketData(PacketBuffer networkBuffer) {
         try {
             long timestamp = networkBuffer.readLong();
-            CanvasData readCanvasData = CanvasContainer.readPacketCanvasData(networkBuffer);
+            AbstractCanvasData readCanvasData = CanvasContainer.readPacketCanvasData(networkBuffer);
 
             return new SCanvasSyncMessage(readCanvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {

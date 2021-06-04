@@ -1,19 +1,19 @@
 package com.dantaeusb.zetter.network.packet.painting;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.network.PacketBuffer;
 
 public class CCreatePaintingPacket {
     private int windowId;
     private String paintingName;
-    private CanvasData canvasData;
+    private AbstractCanvasData canvasData;
 
     public CCreatePaintingPacket() {
 
     }
 
-    public CCreatePaintingPacket(int windowId, String paintingName, CanvasData canvasData) {
+    public CCreatePaintingPacket(int windowId, String paintingName, AbstractCanvasData canvasData) {
         this.windowId = windowId;
         this.paintingName = paintingName;
         this.canvasData = canvasData;
@@ -54,7 +54,7 @@ public class CCreatePaintingPacket {
         return this.paintingName;
     }
 
-    public CanvasData getCanvasData() {
+    public AbstractCanvasData getCanvasData() {
         return this.canvasData;
     }
 }
