@@ -1,6 +1,6 @@
 ### Zetter - Minecraft Painting Mod
 
-
+Info: https://www.curseforge.com/minecraft/mc-mods/zetter
 
 ### Licensing
 
