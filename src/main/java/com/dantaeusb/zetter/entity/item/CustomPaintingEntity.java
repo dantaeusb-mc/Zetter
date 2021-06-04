@@ -180,9 +180,6 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     public void writeAdditional(CompoundNBT compound) {
-        final int[] msgHangingPos = new int[]{this.hangingPosition.getX(), this.hangingPosition.getY(), this.hangingPosition.getZ()};
-
-        compound.putIntArray(NBT_TAG_HANGING_POS, msgHangingPos);
         compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
         compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
         compound.putString(NBT_TAG_TITLE, this.paintingName);
@@ -196,9 +193,6 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
     public void readAdditional(CompoundNBT compound) {
-        final int[] msgHangingPos = compound.getIntArray(NBT_TAG_HANGING_POS);
-        this.hangingPosition = new BlockPos(msgHangingPos[0], msgHangingPos[1], msgHangingPos[2]);
-
         this.facingDirection = Direction.byHorizontalIndex(compound.getByte(NBT_TAG_FACING));
         this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
         this.paintingName = compound.getString(NBT_TAG_TITLE);
@@ -215,6 +209,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     public void writeSpawnData(PacketBuffer buffer) {
+        buffer.writeBlockPos(this.hangingPosition);
         buffer.writeByte((byte)this.facingDirection.getHorizontalIndex());
 
         buffer.writeString(this.canvasCode, 64);
@@ -226,6 +221,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     public void readSpawnData(PacketBuffer buffer) {
+        this.hangingPosition = buffer.readBlockPos();
         this.facingDirection = Direction.byHorizontalIndex(buffer.readByte());
 
         this.canvasCode = buffer.readString(64);

@@ -67,10 +67,5 @@ public class ModNetwork {
                 CCreatePaintingPacket::writePacketData, CCreatePaintingPacket::readPacketData,
                 ServerHandler::handleCreatePainting,
                 Optional.of(PLAY_TO_SERVER));
-
-        /*simpleChannel.registerMessage(PAINTING_SPAWN, SSpawnCustomPaintingPacket.class,
-                SSpawnCustomPaintingPacket::writePacketData, SSpawnCustomPaintingPacket::readPacketData,
-                ClientHandler::handleSpawnPainting,
-                Optional.of(PLAY_TO_CLIENT));*/
     }
 }
