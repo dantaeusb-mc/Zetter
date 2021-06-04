@@ -27,7 +27,6 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 
 public class ArtistTableTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
-    private static final String ARTIST_TABLE_FRAME_STORAGE_TAG = "frame_storage";
     private static final String ARTIST_TABLE_CANVAS_STORAGE_TAG = "canvas_storage";
 
     private final ArtistTableCanvasStorage canvasStorage;

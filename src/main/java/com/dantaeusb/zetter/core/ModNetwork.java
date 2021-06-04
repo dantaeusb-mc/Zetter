@@ -29,6 +29,7 @@ public class ModNetwork {
     public static final byte PALETTE_UPDATE_CLIENT = 25;
     public static final byte PALETTE_UPDATE_SERVER = 26;
     public static final byte PAINTING_CREATE = 27;
+    public static final byte PAINTING_SPAWN = 28;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -66,5 +67,10 @@ public class ModNetwork {
                 CCreatePaintingPacket::writePacketData, CCreatePaintingPacket::readPacketData,
                 ServerHandler::handleCreatePainting,
                 Optional.of(PLAY_TO_SERVER));
+
+        /*simpleChannel.registerMessage(PAINTING_SPAWN, SSpawnCustomPaintingPacket.class,
+                SSpawnCustomPaintingPacket::writePacketData, SSpawnCustomPaintingPacket::readPacketData,
+                ClientHandler::handleSpawnPainting,
+                Optional.of(PLAY_TO_CLIENT));*/
     }
 }

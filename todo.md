@@ -2,26 +2,23 @@
 
 * Avoid proxies and OnlyIn
 
-#### Beta: 
-
-* \[LOW\] Remove infinity bounds in getRenderBoundingBox.
-* \[MED\] Rename canvas name to canvas code;
-
 #### Release tasks:
 
 * \[HIGH\] Use only 1 item when creating frame;
+* \[HIGH\] Fix frame offset when placing on certain walls;
 * \[MED\] Implement script builder for models;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas;
 * \[MED\] Use ObjectHolders;
+* \[MED\] Remove infinity bounds in getRenderBoundingBox;
 * \[LOW\] Fix plank texture on an easel;
 * \[LOW\] Fix leg top transparent on an easel;
 * \[LOW\] Implement bucket tool;
 * \[LOW\] Close or update screen when canvas removed from easel;
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern;
   
-#### Would-be-nice-to-do
+#### Would-be-nice-to-do:
 
 * \[HIGH\] I don't like how different classes of canvas data created, would be nice to invent something better;
 * \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;

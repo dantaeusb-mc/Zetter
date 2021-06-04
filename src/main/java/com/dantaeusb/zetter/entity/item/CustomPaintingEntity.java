@@ -9,6 +9,7 @@ import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.item.HangingEntity;
+import net.minecraft.entity.item.PaintingType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
@@ -17,6 +18,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -29,6 +31,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
+    public static final String NBT_TAG_HANGING_POS = "Hanging";
     public static final String NBT_TAG_FACING = "Facing";
     public static final String NBT_TAG_PAINTING_CODE = "PaintingCode";
     public static final String NBT_TAG_TITLE = "Title";
@@ -48,12 +51,12 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     protected int blockWidth;
     protected int blockHeight;
 
-    public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, World worldIn) {
-        super(type, worldIn);
+    public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, World world) {
+        super(type, world);
     }
 
-    public CustomPaintingEntity(World worldIn, BlockPos pos, Direction facing, String canvasCode, String paintingName, String authorName, int[] blockSize) {
-        super(ModEntities.CUSTOM_PAINTING_ENTITY, worldIn, pos);
+    public CustomPaintingEntity(World world, BlockPos pos, Direction facing, String canvasCode, String paintingName, String authorName, int[] blockSize) {
+        super(ModEntities.CUSTOM_PAINTING_ENTITY, world, pos);
 
         this.canvasCode = canvasCode;
         this.paintingName = paintingName;
@@ -71,6 +74,18 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         }
 
         return this.canvasCode;
+    }
+
+    public String getPaintingName() {
+        return this.paintingName;
+    }
+
+    public String getAuthorName() {
+        return this.authorName;
+    }
+
+    public int[] getBlockSize() {
+        return new int[]{this.blockWidth, this.blockHeight};
     }
 
     protected float getEyeHeight(Pose poseIn, EntitySize sizeIn) {
@@ -115,16 +130,16 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             yCenter = yCenter + vCenterOffset;
 
-            Direction direction = this.facingDirection.rotateY();
+            Direction direction = this.facingDirection.rotateYCCW();
 
             xCenter = xCenter + hCenterOffset * (double)direction.getXOffset();
             zCenter = zCenter + hCenterOffset * (double)direction.getZOffset();
 
             this.setRawPosition(xCenter, yCenter, zCenter);
 
-            double xWidth = (double)this.getWidthPixels();
-            double yHeight = (double)this.getHeightPixels();
-            double zWidth = (double)this.getWidthPixels();
+            double xWidth = this.getWidthPixels();
+            double yHeight = this.getHeightPixels();
+            double zWidth = this.getWidthPixels();
 
             if (this.facingDirection.getAxis() == Direction.Axis.Z) {
                 zWidth = 1.0D;
@@ -154,17 +169,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * the opposite
      */
     private double offs(int pixelSize) {
-        return pixelSize % (Helper.CANVAS_TEXTURE_RESOLUTION * 2) == 0 ? -0.5D : 0.0D;
-    }
-
-    public void writeAdditional(CompoundNBT compound) {
-        compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
-        compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
-        compound.putString(NBT_TAG_TITLE, this.paintingName);
-        compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
-        compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
-
-        super.writeAdditional(compound);
+        return pixelSize % (Helper.CANVAS_TEXTURE_RESOLUTION * 2) == 0 ? 0.5D : 0.0D;
     }
 
     public double[] getRenderOffset() {
@@ -174,23 +179,30 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         return new double[]{xOffset, yOffset};
     }
 
+    public void writeAdditional(CompoundNBT compound) {
+        final int[] msgHangingPos = new int[]{this.hangingPosition.getX(), this.hangingPosition.getY(), this.hangingPosition.getZ()};
+
+        compound.putIntArray(NBT_TAG_HANGING_POS, msgHangingPos);
+        compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
+        compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
+        compound.putString(NBT_TAG_TITLE, this.paintingName);
+        compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
+        compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
+
+        super.writeAdditional(compound);
+    }
+
     /**
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
     public void readAdditional(CompoundNBT compound) {
+        final int[] msgHangingPos = compound.getIntArray(NBT_TAG_HANGING_POS);
+        this.hangingPosition = new BlockPos(msgHangingPos[0], msgHangingPos[1], msgHangingPos[2]);
+
         this.facingDirection = Direction.byHorizontalIndex(compound.getByte(NBT_TAG_FACING));
-
-        if (compound.contains(NBT_TAG_PAINTING_CODE, 8)) {
-            this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
-        }
-
-        if (compound.contains(NBT_TAG_TITLE, 8)) {
-            this.paintingName = compound.getString(NBT_TAG_TITLE);
-        }
-
-        if (compound.contains(NBT_TAG_AUTHOR_NAME, 8)) {
-            this.authorName = compound.getString(NBT_TAG_AUTHOR_NAME);
-        }
+        this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
+        this.paintingName = compound.getString(NBT_TAG_TITLE);
+        this.authorName = compound.getString(NBT_TAG_AUTHOR_NAME);
 
         if (compound.contains(NBT_TAG_BLOCK_SIZE)) {
             int[] blockSize = compound.getIntArray(NBT_TAG_BLOCK_SIZE);
@@ -204,7 +216,10 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public void writeSpawnData(PacketBuffer buffer) {
         buffer.writeByte((byte)this.facingDirection.getHorizontalIndex());
+
         buffer.writeString(this.canvasCode, 64);
+        buffer.writeString(this.paintingName, 64);
+        buffer.writeString(this.authorName, 64);
 
         buffer.writeInt(this.blockWidth);
         buffer.writeInt(this.blockHeight);
@@ -212,7 +227,10 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public void readSpawnData(PacketBuffer buffer) {
         this.facingDirection = Direction.byHorizontalIndex(buffer.readByte());
+
         this.canvasCode = buffer.readString(64);
+        this.paintingName = buffer.readString(64);
+        this.authorName = buffer.readString(64);
 
         this.blockWidth = buffer.readInt();
         this.blockHeight = buffer.readInt();
@@ -259,6 +277,25 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             this.entityDropItem(canvasStack);
         }
+    }
+
+    /**
+     * Sets the location and Yaw/Pitch of an entity in the world
+     * Do not re-center bounding box
+     * Copied from PaintingEntity
+     */
+    public void setLocationAndAngles(double x, double y, double z, float yaw, float pitch) {
+        this.setPosition(x, y, z);
+    }
+
+    /**
+     * Sets a target for the client to interpolate towards over the next few ticks
+     * Copied from PaintingEntity
+     */
+    @OnlyIn(Dist.CLIENT)
+    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+        BlockPos blockpos = this.hangingPosition.add(x - this.getPosX(), y - this.getPosY(), z - this.getPosZ());
+        this.setPosition(blockpos.getX(), blockpos.getY(), blockpos.getZ());
     }
 
     public void playPlaceSound() {
