@@ -9,11 +9,11 @@
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas;
 * \[MED\] Use ObjectHolders;
-* \[MED\] Remove infinity bounds in getRenderBoundingBox;
-* \[LOW\] Fix plank texture on an easel;
-* \[LOW\] Fix leg top transparent on an easel;
+* \[MED\] Remove infinity bounds in getRenderBoundingBox; *
+* \[LOW\] Fix plank texture on an easel; *
+* \[LOW\] Fix leg top transparent on an easel; *
 * \[LOW\] Implement bucket tool;
-* \[LOW\] Close or update screen when canvas removed from easel;
+* \[LOW\] Close or update screen when canvas removed from easel; *
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern;
   
 #### Would-be-nice-to-do:

@@ -57,12 +57,8 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         this.frontLegs = new ModelRenderer(64, 64, 0, 6);
         this.frontLegs.setRotationPoint(0.0F, 0.0F, -3.0F);
         setRotationAngle(frontLegs, 0.1745F, 0.0F, 0.0F);
-        this.frontLegs.addBox(12.0F, 1.0F, 7.0F, 2.0F, 31.0F, 1.0F, 0.0F, false);
-        this.frontLegs.addBox(2.0F, 1.0F, 7.0F, 2.0F, 31.0F, 1.0F, 0.0F, false);
-
-        //this.canvasTexture = new DynamicTexture(CanvasItem.CANVAS_SIZE, CanvasItem.CANVAS_SIZE, true);
-        //this.textureManager = Minecraft.getInstance().getTextureManager();
-        //this.canvasRenderType = this.textureManager.getDynamicTextureLocation("canvas/" + mapdataIn.getName(), this.canvasTexture);
+        this.frontLegs.addBox(12.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
+        this.frontLegs.addBox(2.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
     }
 
     /**
