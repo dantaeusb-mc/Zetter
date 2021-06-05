@@ -12,6 +12,15 @@ export interface Sides {
     [Side.RIGHT]: boolean,
 }
 
+export enum Direction {
+    UP = "up",
+    DOWN = "down",
+    NORTH = "north",
+    SOUTH = "south",
+    EAST = "east",
+    WEST = "west"
+}
+
 export interface Vector3i {
     x: number;
     y: number;
@@ -24,12 +33,12 @@ export interface MinecraftModelFace {
 }
 
 export interface MinecraftModelFaces {
-    up?: MinecraftModelFace;
-    down?: MinecraftModelFace;
-    north?: MinecraftModelFace;
-    south?: MinecraftModelFace;
-    east?: MinecraftModelFace;
-    west?: MinecraftModelFace;
+    [Direction.UP]?: MinecraftModelFace;
+    [Direction.DOWN]?: MinecraftModelFace;
+    [Direction.NORTH]?: MinecraftModelFace;
+    [Direction.SOUTH]?: MinecraftModelFace;
+    [Direction.EAST]?: MinecraftModelFace;
+    [Direction.WEST]?: MinecraftModelFace;
 }
 
 export interface MinecraftModelElement {

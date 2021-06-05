@@ -34,25 +34,35 @@ import java.util.HashMap;
 
 public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/bat.png");
-    
-    public static final HashMap<String, ModelResourceLocation> FRAME_MODELS = new HashMap<String, ModelResourceLocation>() {{
-        put("1x1", new ModelResourceLocation("zetter:block/custom_painting/1x1"));
-        put("top_left", new ModelResourceLocation("zetter:block/custom_painting/top_left"));
-        put("top", new ModelResourceLocation("zetter:block/custom_painting/top"));
-        put("top_right", new ModelResourceLocation("zetter:block/custom_painting/top_right"));
-        put("left", new ModelResourceLocation("zetter:block/custom_painting/left"));
-        put("right", new ModelResourceLocation("zetter:block/custom_painting/right"));
-        put("bottom_left", new ModelResourceLocation("zetter:block/custom_painting/bottom_left"));
-        put("bottom", new ModelResourceLocation("zetter:block/custom_painting/bottom"));
-        put("bottom_right", new ModelResourceLocation("zetter:block/custom_painting/bottom_right"));
-        put("top_u", new ModelResourceLocation("zetter:block/custom_painting/top_u"));
-        put("left_u", new ModelResourceLocation("zetter:block/custom_painting/left_u"));
-        put("right_u", new ModelResourceLocation("zetter:block/custom_painting/right_u"));
-        put("bottom_u", new ModelResourceLocation("zetter:block/custom_painting/bottom_u"));
-        put("center", new ModelResourceLocation("zetter:block/custom_painting/center"));
-        put("center_horizontal", new ModelResourceLocation("zetter:block/custom_painting/center_horizontal"));
-        put("center_vertical", new ModelResourceLocation("zetter:block/custom_painting/center_vertical"));
-    }};
+
+    public static final String[] MODEL_CODES = {
+        "1x1",
+        "top_left",
+        "top",
+        "top_right",
+        "left",
+        "right",
+        "bottom_left",
+        "bottom",
+        "bottom_right",
+        "top_u",
+        "bottom_u",
+        "left_u",
+        "right_u",
+        "center",
+        "center_horizontal",
+        "center_vertical"
+    };
+
+    public static final HashMap<String, ModelResourceLocation> FRAME_MODELS = new HashMap<String, ModelResourceLocation>();
+
+    static {
+        for (String modelCode: CustomPaintingRenderer.MODEL_CODES) {
+            for (CustomPaintingEntity.Materials material: CustomPaintingEntity.Materials.values()) {
+                CustomPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation("zetter:frame/" + material + "/" + modelCode));
+            }
+        }
+    }
 
     public CustomPaintingRenderer(EntityRendererManager renderManager) {
         super(renderManager);
@@ -97,7 +107,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             int iWidth = (int) (canvasData.getWidth() / 16.0F);
 
             if (iWidth == 1 && iHeight == 1) {
-                this.renderModel("1x1", matrixStack, renderBuffers, combinedLight);
+                this.renderModel(entity, "1x1", matrixStack, renderBuffers, combinedLight);
             } else if (iWidth == 1) {
                 for (int v = 0; v < iHeight; v++) {
                     matrixStack.translate(0, -v, 0D);
@@ -105,11 +115,11 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                     int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, CustomPaintingRenderer.getOffsetBlockPos(entity, 0, v));
 
                     if (v == 0) {
-                        this.renderModel("top_u", matrixStack, renderBuffers, offsetCombinedLight);
+                        this.renderModel(entity, "top_u", matrixStack, renderBuffers, offsetCombinedLight);
                     } else if (v + 1 == iHeight) {
-                        this.renderModel("bottom_u", matrixStack, renderBuffers, offsetCombinedLight);
+                        this.renderModel(entity, "bottom_u", matrixStack, renderBuffers, offsetCombinedLight);
                     } else {
-                        this.renderModel("center_vertical", matrixStack, renderBuffers, offsetCombinedLight);
+                        this.renderModel(entity, "center_vertical", matrixStack, renderBuffers, offsetCombinedLight);
                     }
 
                     matrixStack.translate(0, v, 0D);
@@ -121,11 +131,11 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                     int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, CustomPaintingRenderer.getOffsetBlockPos(entity, h, 0));
 
                     if (h == 0) {
-                        this.renderModel("left_u", matrixStack, renderBuffers, offsetCombinedLight);
+                        this.renderModel(entity, "left_u", matrixStack, renderBuffers, offsetCombinedLight);
                     } else if (h + 1 == iWidth) {
-                        this.renderModel("right_u", matrixStack, renderBuffers, offsetCombinedLight);
+                        this.renderModel(entity, "right_u", matrixStack, renderBuffers, offsetCombinedLight);
                     } else {
-                        this.renderModel("center_horizontal", matrixStack, renderBuffers, offsetCombinedLight);
+                        this.renderModel(entity, "center_horizontal", matrixStack, renderBuffers, offsetCombinedLight);
                     }
 
                     matrixStack.translate(h, 0, 0D);
@@ -142,27 +152,27 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
                         if (v == 0) {
                             if (h == 0) {
-                                this.renderModel("top_left", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "top_left", matrixStack, renderBuffers, offsetCombinedLight);
                             } else if (h + 1 == iWidth) {
-                                this.renderModel("top_right", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "top_right", matrixStack, renderBuffers, offsetCombinedLight);
                             } else {
-                                this.renderModel("top", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "top", matrixStack, renderBuffers, offsetCombinedLight);
                             }
                         } else if (v + 1 == iHeight) {
                             if (h == 0) {
-                                this.renderModel("bottom_left", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "bottom_left", matrixStack, renderBuffers, offsetCombinedLight);
                             } else if (h + 1 == iWidth) {
-                                this.renderModel("bottom_right", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "bottom_right", matrixStack, renderBuffers, offsetCombinedLight);
                             } else {
-                                this.renderModel("bottom", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "bottom", matrixStack, renderBuffers, offsetCombinedLight);
                             }
                         } else {
                             if (h == 0) {
-                                this.renderModel("left", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "left", matrixStack, renderBuffers, offsetCombinedLight);
                             } else if (h + 1 == iWidth) {
-                                this.renderModel("right", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "right", matrixStack, renderBuffers, offsetCombinedLight);
                             } else {
-                                this.renderModel("center", matrixStack, renderBuffers, offsetCombinedLight);
+                                this.renderModel(entity, "center", matrixStack, renderBuffers, offsetCombinedLight);
                             }
                         }
 
@@ -198,8 +208,8 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         super.render(entity, entityYaw, partialTicks, matrixStack, renderBuffers, combinedLight);
     }
 
-    private void renderModel(String key, MatrixStack matrixStack, IRenderTypeBuffer renderBuffers, int combinedLight) {
-        ModelResourceLocation modelResourceLocation = FRAME_MODELS.get(key);
+    private void renderModel(CustomPaintingEntity entity, String key, MatrixStack matrixStack, IRenderTypeBuffer renderBuffers, int combinedLight) {
+        ModelResourceLocation modelResourceLocation = FRAME_MODELS.get(entity.getMaterial() + "/" + key);
 
         MatrixStack.Entry currentMatrix = matrixStack.getLast();
         IVertexBuilder vertexBuffer = renderBuffers.getBuffer(RenderType.getSolid());

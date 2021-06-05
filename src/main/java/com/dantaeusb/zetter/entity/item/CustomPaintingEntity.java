@@ -4,6 +4,7 @@ import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModEntities;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CustomPaintingItem;
+import com.google.common.collect.Maps;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
@@ -29,14 +30,16 @@ import org.apache.commons.lang3.Validate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Map;
 
 public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
-    public static final String NBT_TAG_HANGING_POS = "Hanging";
     public static final String NBT_TAG_FACING = "Facing";
     public static final String NBT_TAG_PAINTING_CODE = "PaintingCode";
     public static final String NBT_TAG_TITLE = "Title";
     public static final String NBT_TAG_AUTHOR_NAME = "AuthorName";
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
+    public static final String NBT_TAG_MATERIAL = "Material";
 
     protected String canvasCode;
     protected String paintingName;
@@ -50,6 +53,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      */
     protected int blockWidth;
     protected int blockHeight;
+
+    protected Materials material;
 
     public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, World world) {
         super(type, world);
@@ -86,6 +91,10 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public int[] getBlockSize() {
         return new int[]{this.blockWidth, this.blockHeight};
+    }
+
+    public Materials getMaterial() {
+        return this.material;
     }
 
     protected float getEyeHeight(Pose poseIn, EntitySize sizeIn) {
@@ -185,6 +194,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         compound.putString(NBT_TAG_TITLE, this.paintingName);
         compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
         compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
+        compound.putString(NBT_TAG_MATERIAL, this.material.toString());
 
         super.writeAdditional(compound);
     }
@@ -203,6 +213,12 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             this.blockWidth = blockSize[0];
             this.blockHeight = blockSize[1];
         }
+        if (compound.contains(NBT_TAG_MATERIAL)) {
+            this.material = Materials.fromString(compound.getString(NBT_TAG_MATERIAL));
+        } else {
+            // @todo: replace to OAK on release
+            this.material = Materials.DARK_OAK;
+        }
 
         super.readAdditional(compound);
         this.updateFacingWithBoundingBox(this.facingDirection);
@@ -218,6 +234,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
         buffer.writeInt(this.blockWidth);
         buffer.writeInt(this.blockHeight);
+
+        buffer.writeString(this.material.toString(), 64);
     }
 
     public void readSpawnData(PacketBuffer buffer) {
@@ -230,6 +248,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
         this.blockWidth = buffer.readInt();
         this.blockHeight = buffer.readInt();
+
+        this.material = Materials.fromString(buffer.readString(64));
 
         this.updateFacingWithBoundingBox(this.facingDirection);
     }
@@ -298,12 +318,39 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.playSound(SoundEvents.ENTITY_PAINTING_PLACE, 1.0F, 1.0F);
     }
 
-    /* This sends a vanilla spawn packet, which is then silently discarded when it reaches the client.
-     * Your entity will be present on the server and can cause effects, but the client will not have a copy of the entity
-     * and hence it will not render. */
     @Nonnull
     @Override
     public IPacket<?> createSpawnPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
+    }
+
+    public enum Materials {
+        ACACIA("acacia"),
+        BIRCH("birch"),
+        DARK_OAK("dark_oak"),
+        JUNGLE("jungle"),
+        OAK("oak"),
+        SPRUCE("spruce");
+
+        private static final Map<String, Materials> LOOKUP = Maps.uniqueIndex(
+                Arrays.asList(Materials.values()),
+                Materials::toString
+        );
+
+        private final String text;
+
+        Materials(final String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+
+        @Nullable
+        public static Materials fromString(String stringValue) {
+            return LOOKUP.get(stringValue);
+        }
     }
 }

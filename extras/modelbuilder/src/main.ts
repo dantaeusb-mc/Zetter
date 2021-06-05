@@ -1,5 +1,14 @@
-import { Side, Sides, Vector3i, MinecraftModelElement, MinecraftModelFaces, MinecraftModelFace } from './interfaces';
-import { models } from "./models"
+import {
+    Direction,
+    MinecraftModelElement,
+    MinecraftModelFace,
+    MinecraftModelFaces,
+    Side,
+    Sides,
+    Vector3i
+} from './interfaces';
+import {models} from "./models";
+import {materials} from "./variations";
 import * as fs from 'fs';
 
 class Box {
@@ -18,7 +27,20 @@ class Box {
     }
 
     public shrink(side: Side, amount: number): void {
-
+        switch (side) {
+            case Side.TOP:
+                this.to.y = this.to.y - amount;
+                return;
+            case Side.BOTTOM:
+                this.from.y = this.from.y + amount;
+                return;
+            case Side.LEFT:
+                this.to.x = this.to.x - amount;
+                return;
+            case Side.RIGHT:
+                this.to.x = this.to.x + amount;
+                return;
+        }
     }
 
     public removeFace(side: Side) {
@@ -28,34 +50,97 @@ class Box {
     public getFaces(): MinecraftModelFaces {
         let builtFaces: MinecraftModelFaces = {
             north: {
-                uv: [0, 0, 0, 0],
+                uv: this.calculateUV(Direction.NORTH),
                 texture: this.textureId
             }
         };
 
         for (let side in this.faces) {
             if (this.faces[side]) {
-                builtFaces[Box.getFaceKeyFromSide(side)] = this.buildFace();
+                const direction: Direction = Box.getDirectionFromSide(side);
+                builtFaces[direction] = this.buildFace(direction);
             }
         }
 
         return builtFaces;
     }
 
-    private buildFace(): MinecraftModelFace {
+    private buildFace(direction: Direction): MinecraftModelFace {
         return {
-            // @todo: incorrect, could be 1x1
-            uv: [0, 0, this.getWidth(), this.getHeight()],
+            uv:  this.calculateUV(direction),
             texture: this.textureId
         }
     }
 
-    public getWidth(): number {
-        return this.to.x - this.from.x;
-    }
+    private calculateUV(direction: Direction): number[] {
+        let fromX: number = 0;
+        let fromY: number = 0;
+        let width: number = 0;
+        let height: number = 0;
 
-    public getHeight(): number {
-        return this.to.y - this.from.y;
+        if (direction == Direction.NORTH) {
+            switch (this.edge) {
+                case Side.TOP:
+                    fromY = 1;
+                    break;
+                case Side.BOTTOM:
+                    fromY = 14;
+                    break;
+                case Side.LEFT:
+                    fromX = 1;
+                    break;
+                case Side.RIGHT:
+                    fromX = 14;
+                    break;
+            }
+        } else {
+            switch (this.edge) {
+                case Side.TOP:
+                    fromY = 0;
+                    break;
+                case Side.BOTTOM:
+                    fromY = 15;
+                    break;
+                case Side.LEFT:
+                    fromX = 0;
+                    break;
+                case Side.RIGHT:
+                    fromX = 15;
+                    break;
+            }
+        }
+
+
+        switch (direction) {
+            // Y axis
+            case Direction.UP:
+            case Direction.DOWN:
+                width = this.to.x - this.from.x;
+                height = this.to.z - this.from.z;
+                break;
+            // Z axis
+            case Direction.NORTH:
+            case Direction.SOUTH:
+                width = this.to.x - this.from.x;
+                height = this.to.y - this.from.y;
+                break;
+            // X axis
+            case Direction.EAST:
+            case Direction.WEST:
+                width = this.to.z - this.from.z;
+                height = this.to.y - this.from.y;
+                break;
+        }
+
+        const toX = fromX + width;
+        const toY = fromY + height;
+
+        if (toX > 16 || toY > 16) {
+            console.warn(`One of the UV maps are calculated incorrectly: ${fromX}, ${fromY}, ${toX}, ${toY}`);
+            console.debug(`Direction: ${direction}, from: ${JSON.stringify(this.from)}, to: ${JSON.stringify(this.to)}`);
+        }
+
+        return [fromX, fromY, toX, toY];
     }
 
     public toJSON(): MinecraftModelElement {
@@ -67,56 +152,62 @@ class Box {
         };
     }
 
-    public static getFaceKeyFromSide(side: string): string {
+    public static getDirectionFromSide(side: string): Direction {
         switch (side) {
             case Side.TOP:
-                return "up";
+                return Direction.UP;
             case Side.BOTTOM:
-                return "down";
+                return Direction.DOWN;
             case Side.LEFT:
-                return "east";
+                return Direction.EAST;
             case Side.RIGHT:
-                return "west";
+                return Direction.WEST;
         }
     }
 }
 
-class FramePart {
+class FrameModel {
     edges: Sides;
     connections: Sides;
     parts: Box[] = [];
-    textureId: string;
+    textureId: string = "#frame";
 
-    constructor(edges: {[key in Side]: boolean}, connections: {[key in Side]: boolean}) {
+    constructor(edges: {[key in Side]: boolean}) {
         this.edges = edges;
-        this.connections = connections;
+        this.connections = { ...edges };
+
+        Object.keys(this.edges).map((key) => this.connections[key] = !edges[key]);
 
         this.buildBoxes();
     }
 
     private buildBoxes(): void {
-        for (let edgeSide in this.edges) {
+        for (let edgeSide of Object.keys(this.edges)) {
             if (!this.edges[edgeSide]) {
                 continue;
             }
 
-            const box: Box = FramePart.getBox(edgeSide, this.textureId);
+            const box: Box = FrameModel.getBox(edgeSide, this.textureId);
 
-            if (Side[edgeSide] === Side.LEFT || Side[edgeSide] === Side.RIGHT) {
+            if (edgeSide === Side.LEFT || edgeSide === Side.RIGHT) {
                 // Glue with top edge
                 if (this.hasEdge(Side.TOP)) {
                     box.shrink(Side.TOP, 1);
                     box.removeFace(Side.TOP);
+
+                    console.log(`Shrinking ${edgeSide} on top`);
                 }
 
                 // Glue with bottom edge
                 if (this.hasEdge(Side.BOTTOM)) {
                     box.shrink(Side.BOTTOM, 1);
                     box.removeFace(Side.BOTTOM);
+
+                    console.log(`Shrinking ${edgeSide} on bottom`);
                 }
             }
 
-            // For fuck's sake, there's still no way to iterate over enum in TS
+            // For fucks sake, there's still no way to iterate over enum in TS
             for (let faceSide of Object.keys(Side).map(key => Side[key])) {
                 if(this.edgeConnected(Side[edgeSide], faceSide)) {
                     box.removeFace(faceSide);
@@ -131,10 +222,6 @@ class FramePart {
 
     public toJSON() {
         return {
-            textures: {
-                particle: "block/oak_planks",
-                frame: "block/oak_planks",
-            },
             elements: this.parts
         };
     }
@@ -168,37 +255,86 @@ class FramePart {
             case Side.BOTTOM:
                 return new Box({x: 0,y: 0, z: 0}, {x: 16,y: 1, z: 1}, textureId, Side.BOTTOM);
             case Side.LEFT:
-                return new Box({x: 15,y: 0, z: 0}, {x: 16,y: 15, z: 1}, textureId, Side.LEFT);
+                return new Box({x: 15,y: 0, z: 0}, {x: 16,y: 16, z: 1}, textureId, Side.LEFT);
             case Side.RIGHT:
-                return new Box({x: 0,y: 1, z: 0}, {x: 1,y: 16, z: 1}, textureId, Side.RIGHT);
+                return new Box({x: 0,y: 0, z: 0}, {x: 1,y: 16, z: 1}, textureId, Side.RIGHT);
         }
     }
 }
 
-class FrameModelsBuilder {
-    particleTexture: string;
-    frameTexture: string;
-    titleTexture?: string;
+interface TexturedFrameModel {
+    parent: string,
+    textures: {
+        particle: string,
+        frame: string
+    }
+}
 
-    constructor(particleTexture: string, frameTexture: string) {
-        let builtModels = [];
+// Build parent frames
+(function () {
+    if (!fs.existsSync(`result/model/`)) {
+        fs.mkdirSync(`result/model/`);
+    }
+
+    if (!fs.existsSync(`result/model/parent/`)) {
+        fs.mkdirSync(`result/model/parent/`);
+    }
+
+    for (let modelName in models) {
+        const currentModel = models[modelName];
+
+        console.log(`Processing ${modelName}`);
+
+        const newFrameModel = new FrameModel(currentModel.edges);
+
+        fs.writeFileSync(`result/model/parent/${modelName}.json`, JSON.stringify(newFrameModel));
+    }
+})();
+
+// Build styled frames
+(function () {
+    for (let material of materials) {
+        console.log(`Processing ${material} model variation`);
 
         for (let modelName in models) {
-            const currentModel = models[modelName];
+            const newFrameModel: TexturedFrameModel = {
+                parent: `zetter:block/frame/parent/${modelName}`,
+                textures: {
+                    particle: `block/${material}_planks`,
+                    frame: `zetter:paintings/entity/frame/${material}/${modelName}`
+                }
+            };
 
-            console.log(modelName);
+            if (!fs.existsSync(`result/model/${material}/`)) {
+                fs.mkdirSync(`result/model/${material}/`);
+            }
 
-            console.log(JSON.stringify(currentModel));
-
-            const newFramePart = new FramePart(currentModel.edges, currentModel.connections);
-
-            builtModels[modelName] = newFramePart;
-
-            fs.writeFileSync("result/" + modelName + ".json", JSON.stringify(newFramePart));
+            fs.writeFileSync(`result/model/${material}/${modelName}.json`, JSON.stringify(newFrameModel));
         }
-
-        console.log(JSON.stringify(builtModels));
     }
-}
+})();
 
-new FrameModelsBuilder("block/dark_oak_planks", "zetter:paintings/entity/frame/dark_oak/bottom_right")
+// Build blockstates
+(function () {
+    if (!fs.existsSync(`result/blockstates/`)) {
+        fs.mkdirSync(`result/blockstates/`);
+    }
+
+    for (let material of materials) {
+        console.log(`Processing ${material} state variation`);
+
+        for (let modelName in models) {
+            const newFrameBlockState = {
+                "variants": {
+                    "": { "model": `zetter:block/frame/${material}/${modelName}` }
+                }
+            };
+
+            if (!fs.existsSync(`result/blockstates/${material}/`)) {
+                fs.mkdirSync(`result/blockstates/${material}/`);
+            }
+
+            fs.writeFileSync(`result/blockstates/${material}/${modelName}.json`, JSON.stringify(newFrameBlockState));
+        }
+    }
+})();

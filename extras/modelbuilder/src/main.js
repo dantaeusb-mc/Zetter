@@ -1,7 +1,19 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 exports.__esModule = true;
 var interfaces_1 = require("./interfaces");
 var models_1 = require("./models");
+var variations_1 = require("./variations");
 var fs = require("fs");
 var Box = (function () {
     function Box(from, to, textureId, edge) {
@@ -12,6 +24,20 @@ var Box = (function () {
         this.edge = edge;
     }
     Box.prototype.shrink = function (side, amount) {
+        switch (side) {
+            case interfaces_1.Side.TOP:
+                this.to.y = this.to.y - amount;
+                return;
+            case interfaces_1.Side.BOTTOM:
+                this.from.y = this.from.y + amount;
+                return;
+            case interfaces_1.Side.LEFT:
+                this.to.x = this.to.x - amount;
+                return;
+            case interfaces_1.Side.RIGHT:
+                this.to.x = this.to.x + amount;
+                return;
+        }
     };
     Box.prototype.removeFace = function (side) {
         this.faces[side] = false;
@@ -19,28 +45,85 @@ var Box = (function () {
     Box.prototype.getFaces = function () {
         var builtFaces = {
             north: {
-                uv: [0, 0, 0, 0],
+                uv: this.calculateUV(interfaces_1.Direction.NORTH),
                 texture: this.textureId
             }
         };
         for (var side in this.faces) {
             if (this.faces[side]) {
-                builtFaces[Box.getFaceKeyFromSide(side)] = this.buildFace();
+                var direction = Box.getDirectionFromSide(side);
+                builtFaces[direction] = this.buildFace(direction);
             }
         }
         return builtFaces;
     };
-    Box.prototype.buildFace = function () {
+    Box.prototype.buildFace = function (direction) {
         return {
-            uv: [0, 0, this.getWidth(), this.getHeight()],
+            uv: this.calculateUV(direction),
             texture: this.textureId
         };
     };
-    Box.prototype.getWidth = function () {
-        return this.to.x - this.from.x;
-    };
-    Box.prototype.getHeight = function () {
-        return this.to.y - this.from.y;
+    Box.prototype.calculateUV = function (direction) {
+        var fromX = 0;
+        var fromY = 0;
+        var width = 0;
+        var height = 0;
+        if (direction == interfaces_1.Direction.NORTH) {
+            switch (this.edge) {
+                case interfaces_1.Side.TOP:
+                    fromY = 1;
+                    break;
+                case interfaces_1.Side.BOTTOM:
+                    fromY = 14;
+                    break;
+                case interfaces_1.Side.LEFT:
+                    fromX = 1;
+                    break;
+                case interfaces_1.Side.RIGHT:
+                    fromX = 14;
+                    break;
+            }
+        }
+        else {
+            switch (this.edge) {
+                case interfaces_1.Side.TOP:
+                    fromY = 0;
+                    break;
+                case interfaces_1.Side.BOTTOM:
+                    fromY = 15;
+                    break;
+                case interfaces_1.Side.LEFT:
+                    fromX = 0;
+                    break;
+                case interfaces_1.Side.RIGHT:
+                    fromX = 15;
+                    break;
+            }
+        }
+        switch (direction) {
+            case interfaces_1.Direction.UP:
+            case interfaces_1.Direction.DOWN:
+                width = this.to.x - this.from.x;
+                height = this.to.z - this.from.z;
+                break;
+            case interfaces_1.Direction.NORTH:
+            case interfaces_1.Direction.SOUTH:
+                width = this.to.x - this.from.x;
+                height = this.to.y - this.from.y;
+                break;
+            case interfaces_1.Direction.EAST:
+            case interfaces_1.Direction.WEST:
+                width = this.to.z - this.from.z;
+                height = this.to.y - this.from.y;
+                break;
+        }
+        var toX = fromX + width;
+        var toY = fromY + height;
+        if (toX > 16 || toY > 16) {
+            console.warn("One of the UV maps are calculated incorrectly: " + fromX + ", " + fromY + ", " + toX + ", " + toY);
+            console.debug("Direction: " + direction + ", from: " + JSON.stringify(this.from) + ", to: " + JSON.stringify(this.to));
+        }
+        return [fromX, fromY, toX, toY];
     };
     Box.prototype.toJSON = function () {
         return {
@@ -50,45 +133,51 @@ var Box = (function () {
             comment: this.edge
         };
     };
-    Box.getFaceKeyFromSide = function (side) {
+    Box.getDirectionFromSide = function (side) {
         switch (side) {
             case interfaces_1.Side.TOP:
-                return "up";
+                return interfaces_1.Direction.UP;
             case interfaces_1.Side.BOTTOM:
-                return "down";
+                return interfaces_1.Direction.DOWN;
             case interfaces_1.Side.LEFT:
-                return "east";
+                return interfaces_1.Direction.EAST;
             case interfaces_1.Side.RIGHT:
-                return "west";
+                return interfaces_1.Direction.WEST;
         }
     };
     return Box;
 }());
-var FramePart = (function () {
-    function FramePart(edges, connections) {
+var FrameModel = (function () {
+    function FrameModel(edges) {
+        var _this = this;
         this.parts = [];
+        this.textureId = "#frame";
         this.edges = edges;
-        this.connections = connections;
+        this.connections = __assign({}, edges);
+        Object.keys(this.edges).map(function (key) { return _this.connections[key] = !edges[key]; });
         this.buildBoxes();
     }
-    FramePart.prototype.buildBoxes = function () {
-        for (var edgeSide in this.edges) {
+    FrameModel.prototype.buildBoxes = function () {
+        for (var _i = 0, _a = Object.keys(this.edges); _i < _a.length; _i++) {
+            var edgeSide = _a[_i];
             if (!this.edges[edgeSide]) {
                 continue;
             }
-            var box = FramePart.getBox(edgeSide, this.textureId);
-            if (interfaces_1.Side[edgeSide] === interfaces_1.Side.LEFT || interfaces_1.Side[edgeSide] === interfaces_1.Side.RIGHT) {
+            var box = FrameModel.getBox(edgeSide, this.textureId);
+            if (edgeSide === interfaces_1.Side.LEFT || edgeSide === interfaces_1.Side.RIGHT) {
                 if (this.hasEdge(interfaces_1.Side.TOP)) {
                     box.shrink(interfaces_1.Side.TOP, 1);
                     box.removeFace(interfaces_1.Side.TOP);
+                    console.log("Shrinking " + edgeSide + " on top");
                 }
                 if (this.hasEdge(interfaces_1.Side.BOTTOM)) {
                     box.shrink(interfaces_1.Side.BOTTOM, 1);
                     box.removeFace(interfaces_1.Side.BOTTOM);
+                    console.log("Shrinking " + edgeSide + " on bottom");
                 }
             }
-            for (var _i = 0, _a = Object.keys(interfaces_1.Side).map(function (key) { return interfaces_1.Side[key]; }); _i < _a.length; _i++) {
-                var faceSide = _a[_i];
+            for (var _b = 0, _c = Object.keys(interfaces_1.Side).map(function (key) { return interfaces_1.Side[key]; }); _b < _c.length; _b++) {
+                var faceSide = _c[_b];
                 if (this.edgeConnected(interfaces_1.Side[edgeSide], faceSide)) {
                     box.removeFace(faceSide);
                 }
@@ -96,19 +185,15 @@ var FramePart = (function () {
             this.parts.push(box);
         }
     };
-    FramePart.prototype.toJSON = function () {
+    FrameModel.prototype.toJSON = function () {
         return {
-            textures: {
-                particle: "block/oak_planks",
-                frame: "block/oak_planks"
-            },
             elements: this.parts
         };
     };
-    FramePart.prototype.hasEdge = function (side) {
+    FrameModel.prototype.hasEdge = function (side) {
         return this.edges[side];
     };
-    FramePart.prototype.edgeConnected = function (edgeSide, faceSide) {
+    FrameModel.prototype.edgeConnected = function (edgeSide, faceSide) {
         switch (edgeSide) {
             case interfaces_1.Side.TOP:
             case interfaces_1.Side.BOTTOM:
@@ -120,36 +205,73 @@ var FramePart = (function () {
                     || (faceSide == interfaces_1.Side.BOTTOM && this.hasConnection(interfaces_1.Side.BOTTOM));
         }
     };
-    FramePart.prototype.hasConnection = function (side) {
+    FrameModel.prototype.hasConnection = function (side) {
         return this.connections[side];
     };
-    FramePart.getBox = function (side, textureId) {
+    FrameModel.getBox = function (side, textureId) {
         switch (side) {
             case interfaces_1.Side.TOP:
                 return new Box({ x: 0, y: 15, z: 0 }, { x: 16, y: 16, z: 1 }, textureId, interfaces_1.Side.TOP);
             case interfaces_1.Side.BOTTOM:
                 return new Box({ x: 0, y: 0, z: 0 }, { x: 16, y: 1, z: 1 }, textureId, interfaces_1.Side.BOTTOM);
             case interfaces_1.Side.LEFT:
-                return new Box({ x: 15, y: 0, z: 0 }, { x: 16, y: 15, z: 1 }, textureId, interfaces_1.Side.LEFT);
+                return new Box({ x: 15, y: 0, z: 0 }, { x: 16, y: 16, z: 1 }, textureId, interfaces_1.Side.LEFT);
             case interfaces_1.Side.RIGHT:
-                return new Box({ x: 0, y: 1, z: 0 }, { x: 1, y: 16, z: 1 }, textureId, interfaces_1.Side.RIGHT);
+                return new Box({ x: 0, y: 0, z: 0 }, { x: 1, y: 16, z: 1 }, textureId, interfaces_1.Side.RIGHT);
         }
     };
-    return FramePart;
+    return FrameModel;
 }());
-var FrameModelsBuilder = (function () {
-    function FrameModelsBuilder(particleTexture, frameTexture) {
-        var builtModels = [];
-        for (var modelName in models_1.models) {
-            var currentModel = models_1.models[modelName];
-            console.log(modelName);
-            console.log(JSON.stringify(currentModel));
-            var newFramePart = new FramePart(currentModel.edges, currentModel.connections);
-            builtModels[modelName] = newFramePart;
-            fs.writeFileSync("result/" + modelName + ".json", JSON.stringify(newFramePart));
-        }
-        console.log(JSON.stringify(builtModels));
+(function () {
+    if (!fs.existsSync("result/model/")) {
+        fs.mkdirSync("result/model/");
     }
-    return FrameModelsBuilder;
-}());
-new FrameModelsBuilder("block/dark_oak_planks", "zetter:paintings/entity/frame/dark_oak/bottom_right");
+    if (!fs.existsSync("result/model/parent/")) {
+        fs.mkdirSync("result/model/parent/");
+    }
+    for (var modelName in models_1.models) {
+        var currentModel = models_1.models[modelName];
+        console.log("Processing " + modelName);
+        var newFrameModel = new FrameModel(currentModel.edges);
+        fs.writeFileSync("result/model/parent/" + modelName + ".json", JSON.stringify(newFrameModel));
+    }
+})();
+(function () {
+    for (var _i = 0, materials_1 = variations_1.materials; _i < materials_1.length; _i++) {
+        var material = materials_1[_i];
+        console.log("Processing " + material + " model variation");
+        for (var modelName in models_1.models) {
+            var newFrameModel = {
+                parent: "zetter:block/frame/parent/" + modelName,
+                textures: {
+                    particle: "block/" + material + "_planks",
+                    frame: "zetter:paintings/entity/frame/" + material + "/" + modelName
+                }
+            };
+            if (!fs.existsSync("result/model/" + material + "/")) {
+                fs.mkdirSync("result/model/" + material + "/");
+            }
+            fs.writeFileSync("result/model/" + material + "/" + modelName + ".json", JSON.stringify(newFrameModel));
+        }
+    }
+})();
+(function () {
+    if (!fs.existsSync("result/blockstates/")) {
+        fs.mkdirSync("result/blockstates/");
+    }
+    for (var _i = 0, materials_2 = variations_1.materials; _i < materials_2.length; _i++) {
+        var material = materials_2[_i];
+        console.log("Processing " + material + " state variation");
+        for (var modelName in models_1.models) {
+            var newFrameBlockState = {
+                "variants": {
+                    "": { "model": "zetter:block/frame/" + material + "/" + modelName }
+                }
+            };
+            if (!fs.existsSync("result/blockstates/" + material + "/")) {
+                fs.mkdirSync("result/blockstates/" + material + "/");
+            }
+            fs.writeFileSync("result/blockstates/" + material + "/" + modelName + ".json", JSON.stringify(newFrameBlockState));
+        }
+    }
+})();

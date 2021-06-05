@@ -1,0 +1,1 @@
+{"elements":[{"from":[15,0,0],"to":[16,16,1],"faces":{"north":{"uv":[1,0,2,16],"texture":"#frame"},"up":{"uv":[0,0,1,1],"texture":"#frame"},"down":{"uv":[0,0,1,1],"texture":"#frame"},"east":{"uv":[0,0,1,16],"texture":"#frame"},"west":{"uv":[0,0,1,16],"texture":"#frame"}},"comment":"left"}]}
