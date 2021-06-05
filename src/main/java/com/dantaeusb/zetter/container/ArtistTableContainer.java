@@ -242,7 +242,7 @@ public class ArtistTableContainer extends Container {
 
             // Inventory
             } else {
-                if (sourceStack.getItem() == ModItems.PALETTE_ITEM) {
+                if (sourceStack.getItem() == ModItems.PALETTE) {
                     if (!this.mergeItemStack(sourceStack, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }

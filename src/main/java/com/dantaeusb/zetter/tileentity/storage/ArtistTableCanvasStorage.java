@@ -131,7 +131,7 @@ public class ArtistTableCanvasStorage implements IInventory {
 
     @Override
     public boolean isItemValidForSlot(int index, ItemStack stack) {
-        if (stack.getItem() == ModItems.CANVAS_ITEM) {
+        if (stack.getItem() == ModItems.CANVAS) {
             return stackHandler.isItemValid(index, stack);
         }
 

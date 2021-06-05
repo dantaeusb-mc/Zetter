@@ -16,7 +16,6 @@ import com.dantaeusb.zetter.item.PaletteItem;
 import com.dantaeusb.zetter.network.packet.painting.CPaletteUpdatePacket;
 import com.dantaeusb.zetter.network.packet.painting.SCanvasNamePacket;
 import com.dantaeusb.zetter.network.packet.painting.PaintingFrameBufferPacket;
-import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
 import com.dantaeusb.zetter.storage.CanvasData;
 import javafx.util.Pair;
@@ -79,7 +78,7 @@ public class EaselContainer extends Container {
 
         this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean isItemValid(ItemStack stack) {
-                return stack.getItem() == ModItems.PALETTE_ITEM;
+                return stack.getItem() == ModItems.PALETTE;
             }
         });
 
@@ -471,7 +470,7 @@ public class EaselContainer extends Container {
 
             // Inventory
             } else {
-                if (sourceStack.getItem() == ModItems.PALETTE_ITEM) {
+                if (sourceStack.getItem() == ModItems.PALETTE) {
                     if (!this.mergeItemStack(sourceStack, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }

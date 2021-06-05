@@ -148,7 +148,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
 
     static public boolean isItemValidForCanvasArea(ItemStack itemStack)
     {
-        return itemStack.getItem() == ModItems.CANVAS_ITEM;
+        return itemStack.getItem() == ModItems.CANVAS;
     }
 
     static public boolean isItemValidForFrameMainMaterial(ItemStack itemStack)

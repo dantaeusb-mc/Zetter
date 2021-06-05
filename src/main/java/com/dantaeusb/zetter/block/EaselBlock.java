@@ -93,7 +93,7 @@ public class EaselBlock extends ContainerBlock {
             ItemStack easelCanvasStack = easelTileEntity.getEaselStorage().getCanvasStack();
 
             if (easelCanvasStack.isEmpty()) {
-                if (heldItem.getItem() == ModItems.CANVAS_ITEM && easelTileEntity.putCanvasStack(heldItem)) {
+                if (heldItem.getItem() == ModItems.CANVAS && easelTileEntity.putCanvasStack(heldItem)) {
                     player.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
                     world.notifyBlockUpdate(tileEntityPos, state, state, 2);
 

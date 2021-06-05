@@ -2,10 +2,10 @@
   "type": "zetter:framing",
   "ingredients": [
     {"item": "minecraft:iron_nugget"},
-    {"tag": "minecraft:planks"}
+    {"item": "minecraft:acacia_planks"}
   ],
   "result": {
-    "item": "zetter:custom_painting",
+    "item": "zetter:acacia_custom_painting",
     "count": 1
   }
 }

@@ -67,7 +67,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     public boolean putCanvasStack(ItemStack itemStack) {
-        if (itemStack.getItem() != ModItems.CANVAS_ITEM) {
+        if (itemStack.getItem() != ModItems.CANVAS) {
             return false;
         }
 
@@ -100,7 +100,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public CanvasData getCanvasData() {
         ItemStack canvasStack = this.getCanvasStack();
 
-        if (canvasStack.isEmpty() || canvasStack.getItem() != ModItems.CANVAS_ITEM) {
+        if (canvasStack.isEmpty() || canvasStack.getItem() != ModItems.CANVAS) {
             return null;
         }
 

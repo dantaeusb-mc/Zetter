@@ -23,9 +23,12 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class CustomPaintingItem extends Item {
+    private CustomPaintingEntity.Materials material;
 
-    public CustomPaintingItem() {
+    public CustomPaintingItem(CustomPaintingEntity.Materials material) {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
+
+        this.material = material;
     }
 
     public ITextComponent getDisplayName(ItemStack stack) {
@@ -38,6 +41,10 @@ public class CustomPaintingItem extends Item {
         }
 
         return super.getDisplayName(stack);
+    }
+
+    public CustomPaintingEntity.Materials getMaterial() {
+        return this.material;
     }
 
     public static void setCanvasCode(ItemStack stack, String canvasCode) {
@@ -115,7 +122,7 @@ public class CustomPaintingItem extends Item {
             World world = context.getWorld();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
-                    world, facePos, direction, getCanvasCode(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
+                    world, facePos, direction, this.material, getCanvasCode(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
             );
 
             if (paintingEntity.onValidSurface()) {

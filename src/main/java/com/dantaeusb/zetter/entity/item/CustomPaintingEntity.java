@@ -10,7 +10,6 @@ import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.item.HangingEntity;
-import net.minecraft.entity.item.PaintingType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
@@ -19,7 +18,6 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -60,8 +58,10 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         super(type, world);
     }
 
-    public CustomPaintingEntity(World world, BlockPos pos, Direction facing, String canvasCode, String paintingName, String authorName, int[] blockSize) {
+    public CustomPaintingEntity(World world, BlockPos pos, Direction facing, Materials material, String canvasCode, String paintingName, String authorName, int[] blockSize) {
         super(ModEntities.CUSTOM_PAINTING_ENTITY, world, pos);
+
+        this.material = material;
 
         this.canvasCode = canvasCode;
         this.paintingName = paintingName;
@@ -285,7 +285,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
             this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
 
-            ItemStack canvasStack = new ItemStack(ModItems.CUSTOM_PAINTING_ITEM);
+            ItemStack canvasStack = new ItemStack(ModItems.PAINTINGS.get(this.material.toString()));
             CustomPaintingItem.setCanvasCode(canvasStack, this.canvasCode);
             CustomPaintingItem.setTitle(canvasStack, this.paintingName);
             CustomPaintingItem.setAuthor(canvasStack, this.authorName);

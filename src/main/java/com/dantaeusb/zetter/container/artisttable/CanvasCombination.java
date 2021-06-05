@@ -83,7 +83,7 @@ public class CanvasCombination {
                             return;
                         }
                     }
-                } else if (currentStack.getItem() == ModItems.CANVAS_ITEM) {
+                } else if (currentStack.getItem() == ModItems.CANVAS) {
                     if ((x < min.getA() || x > max.getA()) || (y < min.getB() || y > max.getB())) {
                         this.valid = State.INVALID_SHAPE;
                         this.rectangle = CanvasCombination.getZeroRect();
