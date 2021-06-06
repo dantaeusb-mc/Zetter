@@ -6,5 +6,6 @@
   "item.zetter.canvas": "Холст",
   "item.zetter.paints": "Краски",
   "item.zetter.palette": "Палитра",
-  "item.zetter.custom_painting": "Картина"
+  "item.zetter.custom_painting": "Картина",
+  "item.zetter.customPaintingByAuthor": "\"%1$s\", автор %2$s"
 }

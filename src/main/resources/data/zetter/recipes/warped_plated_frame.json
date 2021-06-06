@@ -1,11 +1,11 @@
 {
   "type": "zetter:framing",
   "ingredients": [
-    {"item": "minecraft:iron_nugget"},
+    {"item": "minecraft:gold_nugget"},
     {"item": "minecraft:warped_planks"}
   ],
   "result": {
-    "item": "zetter:warped_custom_painting",
+    "item": "zetter:warped_plated_frame",
     "count": 1
   }
 }

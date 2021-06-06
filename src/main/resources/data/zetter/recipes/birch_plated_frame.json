@@ -1,0 +1,11 @@
+{
+  "type": "zetter:framing",
+  "ingredients": [
+    {"item": "minecraft:gold_nugget"},
+    {"item": "minecraft:birch_planks"}
+  ],
+  "result": {
+    "item": "zetter:birch_plated_frame",
+    "count": 1
+  }
+}

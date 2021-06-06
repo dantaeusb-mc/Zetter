@@ -3,21 +3,25 @@ package com.dantaeusb.zetter.entity.item;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModEntities;
 import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.item.CustomPaintingItem;
+import com.dantaeusb.zetter.item.FrameItem;
 import com.google.common.collect.Maps;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.item.HangingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,6 +42,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     public static final String NBT_TAG_AUTHOR_NAME = "AuthorName";
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
     public static final String NBT_TAG_MATERIAL = "Material";
+    public static final String NBT_TAG_HAS_PLATE = "HasPlate";
 
     protected String canvasCode;
     protected String paintingName;
@@ -52,16 +57,19 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     protected int blockWidth;
     protected int blockHeight;
 
+    protected boolean hasPlate;
+
     protected Materials material;
 
     public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, World world) {
         super(type, world);
     }
 
-    public CustomPaintingEntity(World world, BlockPos pos, Direction facing, Materials material, String canvasCode, String paintingName, String authorName, int[] blockSize) {
+    public CustomPaintingEntity(World world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, String paintingName, String authorName, int[] blockSize) {
         super(ModEntities.CUSTOM_PAINTING_ENTITY, world, pos);
 
         this.material = material;
+        this.hasPlate = hasPlate;
 
         this.canvasCode = canvasCode;
         this.paintingName = paintingName;
@@ -99,6 +107,10 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public Materials getMaterial() {
         return this.material;
+    }
+
+    public boolean hasPlate() {
+        return this.hasPlate;
     }
 
     protected float getEyeHeight(Pose poseIn, EntitySize sizeIn) {
@@ -192,6 +204,20 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         return new double[]{xOffset, yOffset};
     }
 
+    @Override
+    public ActionResultType processInitialInteract(PlayerEntity player, Hand hand) {
+        if (!player.getEntityWorld().isRemote()) {
+            return ActionResultType.CONSUME;
+        }
+
+        player.sendStatusMessage(
+                new TranslationTextComponent("item.zetter.customPaintingByAuthor", this.paintingName, this.authorName),
+                true
+        );
+
+        return ActionResultType.CONSUME;
+    }
+
     public void writeAdditional(CompoundNBT compound) {
         compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
         compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
@@ -199,6 +225,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
         compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
         compound.putString(NBT_TAG_MATERIAL, this.material.toString());
+        compound.putBoolean(NBT_TAG_HAS_PLATE, this.hasPlate);
 
         super.writeAdditional(compound);
     }
@@ -217,11 +244,19 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             this.blockWidth = blockSize[0];
             this.blockHeight = blockSize[1];
         }
+
         if (compound.contains(NBT_TAG_MATERIAL)) {
             this.material = Materials.fromString(compound.getString(NBT_TAG_MATERIAL));
         } else {
             // @todo: replace to OAK on release
             this.material = Materials.DARK_OAK;
+        }
+
+        if (compound.contains(NBT_TAG_HAS_PLATE)) {
+            this.hasPlate = compound.getBoolean(NBT_TAG_HAS_PLATE);
+        } else {
+            // @todo: remove on release?
+            this.hasPlate = false;
         }
 
         super.readAdditional(compound);
@@ -240,6 +275,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         buffer.writeInt(this.blockHeight);
 
         buffer.writeString(this.material.toString(), 64);
+        buffer.writeBoolean(this.hasPlate);
     }
 
     public void readSpawnData(PacketBuffer buffer) {
@@ -254,6 +290,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.blockHeight = buffer.readInt();
 
         this.material = Materials.fromString(buffer.readString(64));
+        this.hasPlate = buffer.readBoolean();
 
         this.updateFacingWithBoundingBox(this.facingDirection);
     }
@@ -289,11 +326,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
             this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
 
-            ItemStack canvasStack = new ItemStack(ModItems.PAINTINGS.get(this.material.toString()));
-            CustomPaintingItem.setCanvasCode(canvasStack, this.canvasCode);
-            CustomPaintingItem.setTitle(canvasStack, this.paintingName);
-            CustomPaintingItem.setAuthor(canvasStack, this.authorName);
-            CustomPaintingItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
+            ItemStack canvasStack = new ItemStack(ModItems.PAINTINGS.get(Helper.getFrameKey(this.material, this.hasPlate)));
+            FrameItem.setCanvasCode(canvasStack, this.canvasCode);
+            FrameItem.setTitle(canvasStack, this.paintingName);
+            FrameItem.setAuthor(canvasStack, this.authorName);
+            FrameItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
             this.entityDropItem(canvasStack);
         }

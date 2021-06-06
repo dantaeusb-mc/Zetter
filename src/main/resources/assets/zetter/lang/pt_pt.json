@@ -6,5 +6,6 @@
   "item.zetter.canvas": "Tela",
   "item.zetter.paints": "Tintas",
   "item.zetter.palette": "Godê",
-  "item.zetter.custom_painting": "Pintura"
+  "item.zetter.custom_painting": "Pintura",
+  "item.zetter.customPaintingByAuthor": "\"%1$s\" por %2$s"
 }

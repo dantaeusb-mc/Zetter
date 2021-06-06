@@ -6,7 +6,7 @@ import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModCraftingRecipes;
 import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.item.CustomPaintingItem;
+import com.dantaeusb.zetter.item.FrameItem;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.tileentity.ArtistTableTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
@@ -144,10 +144,10 @@ public class ArtistTableContainer extends Container {
         }
 
         ItemStack outStack = recipe.getRecipeOutput().copy();
-        CustomPaintingItem.copyCanvasData(outStack, originalCanvasData, this.world);
-        CustomPaintingItem.setTitle(outStack, paintingName);
-        CustomPaintingItem.setAuthor(outStack, authorPlayer.getName().getString());
-        CustomPaintingItem.setBlockSize(
+        FrameItem.copyCanvasData(outStack, originalCanvasData, this.world);
+        FrameItem.setTitle(outStack, paintingName);
+        FrameItem.setAuthor(outStack, authorPlayer.getName().getString());
+        FrameItem.setBlockSize(
                 outStack,
                 new int[]{
                         originalCanvasData.getWidth() / Helper.CANVAS_TEXTURE_RESOLUTION,

@@ -4,6 +4,7 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
@@ -81,6 +82,16 @@ public class Helper {
         canvasTracker.registerCanvasData(canvasData);
 
         return canvasData;
+    }
+
+    public static String getFrameKey(CustomPaintingEntity.Materials material, boolean plated) {
+        String key = material.toString();
+
+        if (plated) {
+            key += "/plated";
+        }
+
+        return key;
     }
 
     private class DataStorage {

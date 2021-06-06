@@ -2,10 +2,10 @@
   "type": "zetter:framing",
   "ingredients": [
     {"item": "minecraft:iron_nugget"},
-    {"item": "minecraft:acacia_planks"}
+    {"item": "minecraft:warped_planks"}
   ],
   "result": {
-    "item": "zetter:acacia_custom_painting",
+    "item": "zetter:warped_frame",
     "count": 1
   }
 }

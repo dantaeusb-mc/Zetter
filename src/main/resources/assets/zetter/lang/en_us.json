@@ -6,5 +6,21 @@
   "item.zetter.canvas": "Canvas",
   "item.zetter.paints": "Paints",
   "item.zetter.palette": "Palette",
-  "item.zetter.custom_painting": "Painting"
+  "item.zetter.acacia_frame": "Acacia Frame",
+  "item.zetter.acacia_plated_frame": "Acacia Frame with Plate",
+  "item.zetter.birch_frame": "Birch Frame",
+  "item.zetter.birch_plated_frame": "Birch Frame with Plate",
+  "item.zetter.crimson_frame": "Crimson Frame",
+  "item.zetter.crimson_plated_frame": "Crimson Frame with Plate",
+  "item.zetter.dark_oak_frame": "Dark Oak Frame",
+  "item.zetter.dark_oak_plated_frame": "Dark Oak Frame with Plate",
+  "item.zetter.jungle_frame": "Jungle Frame",
+  "item.zetter.jungle_plated_frame": "Jungle Frame with Plate",
+  "item.zetter.oak_frame": "Oak Frame",
+  "item.zetter.oak_plated_frame": "Oak Frame with Plate",
+  "item.zetter.spruce_frame": "Spruce Frame",
+  "item.zetter.spruce_plated_frame": "Spruce Frame with Plate",
+  "item.zetter.warped_frame": "Warped Frame",
+  "item.zetter.warped_plated_frame": "Warped Frame with Plate",
+  "item.zetter.customPaintingByAuthor": "\"%1$s\" by %2$s"
 }

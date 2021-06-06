@@ -2,10 +2,10 @@
   "type": "zetter:framing",
   "ingredients": [
     {"item": "minecraft:iron_nugget"},
-    {"item": "minecraft:spruce_planks"}
+    {"item": "minecraft:jungle_planks"}
   ],
   "result": {
-    "item": "zetter:spruce_custom_painting",
+    "item": "zetter:jungle_frame",
     "count": 1
   }
 }

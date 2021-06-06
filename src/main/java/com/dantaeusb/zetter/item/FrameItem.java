@@ -3,7 +3,6 @@ package com.dantaeusb.zetter.item;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
-import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,13 +21,15 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class CustomPaintingItem extends Item {
+public class FrameItem extends Item {
     private CustomPaintingEntity.Materials material;
+    private boolean hasPlate;
 
-    public CustomPaintingItem(CustomPaintingEntity.Materials material) {
+    public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
 
         this.material = material;
+        this.hasPlate = plated;
     }
 
     public ITextComponent getDisplayName(ItemStack stack) {
@@ -45,6 +46,10 @@ public class CustomPaintingItem extends Item {
 
     public CustomPaintingEntity.Materials getMaterial() {
         return this.material;
+    }
+
+    public boolean hasPlate() {
+        return this.hasPlate;
     }
 
     public static void setCanvasCode(ItemStack stack, String canvasCode) {
@@ -119,10 +124,14 @@ public class CustomPaintingItem extends Item {
         if (player != null && !this.canPlace(player, direction, stack, facePos)) {
             return ActionResultType.FAIL;
         } else {
+            if (FrameItem.getCanvasCode(stack).equals(Helper.FALLBACK_CANVAS_CODE)) {
+                return ActionResultType.FAIL;
+            }
+
             World world = context.getWorld();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
-                    world, facePos, direction, this.material, getCanvasCode(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
+                    world, facePos, direction, this.material, this.hasPlate, getCanvasCode(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
             );
 
             if (paintingEntity.onValidSurface()) {
@@ -147,7 +156,7 @@ public class CustomPaintingItem extends Item {
     public static String getCanvasCode(ItemStack stack) {
         CompoundNBT compoundNBT = stack.getTag();
 
-        String canvasCode = CanvasData.getCanvasCode(0);
+        String canvasCode = Helper.FALLBACK_CANVAS_CODE;
         if (compoundNBT != null && compoundNBT.contains(CustomPaintingEntity.NBT_TAG_PAINTING_CODE)) {
             canvasCode = compoundNBT.getString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE);
         }

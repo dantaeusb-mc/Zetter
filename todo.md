@@ -4,6 +4,7 @@
 
 #### Release tasks:
 
+* \[HIGH\] Release crash when placing creative picture;
 * \[MED\] Painting name plate and show title and author by right click;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
