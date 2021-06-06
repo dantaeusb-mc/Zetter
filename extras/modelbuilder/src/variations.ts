@@ -4,5 +4,7 @@ export const materials = [
     "dark_oak",
     "jungle",
     "oak",
-    "spruce"
+    "spruce",
+    "crimson",
+    "warped",
 ];
