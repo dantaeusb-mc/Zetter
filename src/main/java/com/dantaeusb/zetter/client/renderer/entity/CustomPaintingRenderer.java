@@ -10,6 +10,7 @@ import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
+import jdk.nashorn.internal.ir.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockRendererDispatcher;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
@@ -148,7 +149,8 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                     for (int h = 0; h < iWidth; h++) {
                         matrixStack.translate(-h, -v, 0D);
 
-                        int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, CustomPaintingRenderer.getOffsetBlockPos(entity, h, v));
+                        BlockPos test = CustomPaintingRenderer.getOffsetBlockPos(entity, h, v);
+                        int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, test);
 
                         if (v == 0) {
                             if (h == 0) {
@@ -225,12 +227,13 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         Direction facingDirection = entity.getHorizontalFacing();
         facingDirection = facingDirection.rotateYCCW();
 
-        final int[] renderOffset = Arrays.stream(entity.getRenderOffset()).mapToInt(num -> (int) Math.floor(num)).toArray();
+        int xOffset = ((entity.getBlockWidth() + 1) / 2) - 1;
+        int yOffset = ((entity.getBlockHeight() + 1) / 2) - 1;
 
         return entity.getHangingPosition().add(
-            (h - renderOffset[0]) * facingDirection.getXOffset(),
-            (v - renderOffset[1]),
-            (h - renderOffset[0]) * facingDirection.getZOffset()
+                (xOffset + h) * facingDirection.getXOffset(),
+                yOffset + v,
+                (xOffset + h) * facingDirection.getZOffset()
         );
     }
 

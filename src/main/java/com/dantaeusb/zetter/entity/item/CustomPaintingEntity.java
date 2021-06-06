@@ -89,8 +89,12 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         return this.authorName;
     }
 
-    public int[] getBlockSize() {
-        return new int[]{this.blockWidth, this.blockHeight};
+    public int getBlockWidth() {
+        return this.blockWidth;
+    }
+
+    public int getBlockHeight() {
+        return this.blockHeight;
     }
 
     public Materials getMaterial() {
@@ -330,7 +334,9 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         DARK_OAK("dark_oak"),
         JUNGLE("jungle"),
         OAK("oak"),
-        SPRUCE("spruce");
+        SPRUCE("spruce"),
+        CRIMSON("crimson"),
+        WARPED("warped");
 
         private static final Map<String, Materials> LOOKUP = Maps.uniqueIndex(
                 Arrays.asList(Materials.values()),

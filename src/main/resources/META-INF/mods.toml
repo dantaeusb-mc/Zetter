@@ -31,6 +31,10 @@ logoFile="examplemod.png" #optional
 # A text field displayed in the mod UI
 credits='''
 Thanks to
+
+Translations:
+StuarteLitro for PT_br translation
+
 Forge Discord:
 diesieben07#0714
 Kovak#5505
@@ -38,8 +42,8 @@ Woodland Creature#3144
 gigaherz#9173
 ChampionAsh5357#5519
 
+Examples and references:
 greyminecraftcoder and all MinecraftByExample contributors
-
 Vazkii and Quark team for opening their source code as I often used it as a reference
 ''' #optional
 # A text field displayed in the mod UI

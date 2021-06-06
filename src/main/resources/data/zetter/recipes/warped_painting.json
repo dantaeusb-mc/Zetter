@@ -2,10 +2,10 @@
   "type": "zetter:framing",
   "ingredients": [
     {"item": "minecraft:iron_nugget"},
-    {"item": "minecraft:crimson_planks"}
+    {"item": "minecraft:warped_planks"}
   ],
   "result": {
-    "item": "zetter:spruce_custom_painting",
+    "item": "zetter:warped_custom_painting",
     "count": 1
   }
 }

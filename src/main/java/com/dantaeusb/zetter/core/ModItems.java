@@ -36,6 +36,8 @@ public class ModItems
     public static final CustomPaintingItem JUNGLE_PAINTING = registerPainting("jungle_custom_painting", new CustomPaintingItem(CustomPaintingEntity.Materials.JUNGLE));
     public static final CustomPaintingItem OAK_PAINTING = registerPainting("oak_custom_painting", new CustomPaintingItem(CustomPaintingEntity.Materials.OAK));
     public static final CustomPaintingItem SPRUCE_PAINTING = registerPainting("spruce_custom_painting", new CustomPaintingItem(CustomPaintingEntity.Materials.SPRUCE));
+    public static final CustomPaintingItem CRIMSON_PAINTING = registerPainting("crimson_custom_painting", new CustomPaintingItem(CustomPaintingEntity.Materials.CRIMSON));
+    public static final CustomPaintingItem WARPED_PAINTING = registerPainting("warped_custom_painting", new CustomPaintingItem(CustomPaintingEntity.Materials.WARPED));
 
     private static BlockItem registerBlockItem(String name, Block block)
     {
