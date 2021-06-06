@@ -5,8 +5,6 @@
 #### Release tasks:
 
 * \[MED\] Painting name plate and show title and author by right click;
-* \[MED\] Fix frame lighting calculation;
-* \[MED\] Implement script builder for models;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas;
