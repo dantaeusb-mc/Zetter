@@ -6,7 +6,8 @@ import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
+import com.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
+import com.dantaeusb.zetter.network.packet.SEaselCanvasChangePacket;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
@@ -73,6 +74,32 @@ public class ClientHandler {
         }
 
         canvasTracker.registerCanvasData(canvasData);
+    }
+    public static void handleEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
+        ctx.setPacketHandled(true);
+
+        if (sideReceived != LogicalSide.CLIENT) {
+            Zetter.LOG.warn("SEaselCanvasChangePacket received on wrong side:" + ctx.getDirection().getReceptionSide());
+            return;
+        }
+
+        Optional<ClientWorld> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        if (!clientWorld.isPresent()) {
+            Zetter.LOG.warn("SEaselCanvasChangePacket context could not provide a ClientWorld.");
+            return;
+        }
+
+        ctx.enqueueWork(() -> processEaselCanvasUpdate(packetIn, clientWorld.get()));
+    }
+
+    public static void processEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, ClientWorld world) {
+        ClientPlayerEntity player = Minecraft.getInstance().player;
+
+        if (player.openContainer instanceof EaselContainer) {
+            ((EaselContainer) player.openContainer).handleCanvasChange(packetIn.getItem());
+        }
     }
 
     public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {

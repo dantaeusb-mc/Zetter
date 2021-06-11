@@ -1,4 +1,4 @@
-package com.dantaeusb.zetter.network.packet.painting;
+package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.network.PacketBuffer;

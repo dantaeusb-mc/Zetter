@@ -7,6 +7,7 @@ import java.util.*;
 
 /**
  * @todo: extend PacketBuffer
+ * @todo: add entity signature to track where canvas is edited
  */
 public class PaintingFrameBuffer {
     // this will allow to use byte time offset in data frame

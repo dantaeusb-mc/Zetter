@@ -2,20 +2,22 @@ package com.dantaeusb.zetter.client.gui;
 
 import com.dantaeusb.zetter.client.gui.painting.*;
 import com.dantaeusb.zetter.container.EaselContainer;
+import com.dantaeusb.zetter.core.ModItems;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.IContainerListener;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 public class PaintingScreen extends ContainerScreen<EaselContainer> {
-    protected final ITextComponent title = new TranslationTextComponent("container.zetter.easel");
-    protected final ITextComponent toolsTitle = new TranslationTextComponent("container.zetter.tools");
-
     // This is the resource location for the background image
     private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/paintings/gui/painting.png");
 
@@ -70,6 +72,10 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
         this.updateSlidersWithCurrentColor();
+    }
+
+    public void onClose() {
+        super.onClose();
     }
 
     /**

@@ -3,19 +3,24 @@ package com.dantaeusb.zetter.client.gui;
 import com.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.painting.CCreatePaintingPacket;
+import com.dantaeusb.zetter.network.packet.CCreatePaintingPacket;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.IContainerListener;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.awt.*;
 
-public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* implements IContainerListener*/ {
+public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     protected final ITextComponent title = new TranslationTextComponent("container.zetter.artistTable");
     private TextFieldWidget nameField;
 
@@ -41,7 +46,6 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
         final int COMBINED_CANVAS_POSITION_Y = 41;
 
         this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
-
         this.children.add(this.combinedCanvasWidget);
 
         this.initFields();
@@ -99,6 +103,10 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer>/* i
 
         this.tick++;
         this.nameField.tick();
+    }
+
+    public void handleStorageUpdate() {
+
     }
 
     private final int SIGN_BUTTON_XPOS = 111;

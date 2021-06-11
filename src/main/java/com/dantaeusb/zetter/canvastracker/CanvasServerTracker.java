@@ -2,7 +2,7 @@ package com.dantaeusb.zetter.canvastracker;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.painting.SCanvasSyncMessage;
+import com.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;

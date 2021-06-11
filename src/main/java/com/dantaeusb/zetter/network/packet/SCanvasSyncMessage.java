@@ -1,10 +1,8 @@
-package com.dantaeusb.zetter.network.packet.painting;
+package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.network.PacketBuffer;
-
-import java.nio.ByteBuffer;
 
 public class SCanvasSyncMessage {
     private final AbstractCanvasData canvasData;

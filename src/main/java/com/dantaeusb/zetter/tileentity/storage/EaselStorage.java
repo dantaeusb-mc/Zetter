@@ -2,6 +2,7 @@ package com.dantaeusb.zetter.tileentity.storage;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraftforge.items.ItemStackHandler;
@@ -83,11 +84,15 @@ public class EaselStorage implements IInventory {
     }
 
     public ItemStack extractCanvas() {
-        return this.easelContents.extractItem(CANVAS_SLOT, 1, false);
+        final ItemStack itemStack = this.easelContents.extractItem(CANVAS_SLOT, 1, false);
+        this.markDirty();
+
+        return itemStack;
     }
 
     public void setCanvasStack(ItemStack canvasStack) {
         this.easelContents.setStackInSlot(CANVAS_SLOT, canvasStack);
+        this.markDirty();
     }
 
     // ----Methods used to load / save the contents to NBT

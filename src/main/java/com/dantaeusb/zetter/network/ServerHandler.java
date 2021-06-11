@@ -6,7 +6,7 @@ import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.container.EaselContainer;
-import com.dantaeusb.zetter.network.packet.painting.*;
+import com.dantaeusb.zetter.network.packet.*;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;

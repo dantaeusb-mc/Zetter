@@ -3,7 +3,7 @@ package com.dantaeusb.zetter.core;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.network.ClientHandler;
 import com.dantaeusb.zetter.network.ServerHandler;
-import com.dantaeusb.zetter.network.packet.painting.*;
+import com.dantaeusb.zetter.network.packet.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -29,7 +29,7 @@ public class ModNetwork {
     public static final byte PALETTE_UPDATE_CLIENT = 25;
     public static final byte PALETTE_UPDATE_SERVER = 26;
     public static final byte PAINTING_CREATE = 27;
-    public static final byte PAINTING_SPAWN = 28;
+    public static final byte EASEL_CANVAS_CHANGE = 28;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -67,5 +67,10 @@ public class ModNetwork {
                 CCreatePaintingPacket::writePacketData, CCreatePaintingPacket::readPacketData,
                 ServerHandler::handleCreatePainting,
                 Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(EASEL_CANVAS_CHANGE, SEaselCanvasChangePacket.class,
+                SEaselCanvasChangePacket::writePacketData, SEaselCanvasChangePacket::readPacketData,
+                ClientHandler::handleEaselCanvasUpdate,
+                Optional.of(PLAY_TO_CLIENT));
     }
 }

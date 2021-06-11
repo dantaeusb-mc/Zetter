@@ -2,7 +2,7 @@ package com.dantaeusb.zetter.block;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.network.packet.painting.SCanvasNamePacket;
+import com.dantaeusb.zetter.network.packet.SCanvasNamePacket;
 import com.dantaeusb.zetter.tileentity.EaselTileEntity;
 import net.minecraft.block.*;
 import net.minecraft.entity.LivingEntity;

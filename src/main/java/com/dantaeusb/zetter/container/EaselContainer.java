@@ -13,9 +13,8 @@ import com.dantaeusb.zetter.container.painting.PaintingFrame;
 import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.item.PaletteItem;
-import com.dantaeusb.zetter.network.packet.painting.CPaletteUpdatePacket;
-import com.dantaeusb.zetter.network.packet.painting.SCanvasNamePacket;
-import com.dantaeusb.zetter.network.packet.painting.PaintingFrameBufferPacket;
+import com.dantaeusb.zetter.network.packet.*;
+import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
 import com.dantaeusb.zetter.storage.CanvasData;
 import javafx.util.Pair;
@@ -24,13 +23,19 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.play.NetworkPlayerInfo;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.IContainerListener;
+import net.minecraft.inventory.container.LecternContainer;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class EaselContainer extends Container {
     public static int FRAME_TIMEOUT = 5000;  // 5 second limit to keep changes buffer, if packet processed later disregard it
@@ -96,19 +101,44 @@ public class EaselContainer extends Container {
     }
 
     public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
-        return new EaselContainer(windowID, playerInventory, easelStorage);
+        EaselContainer container = new EaselContainer(windowID, playerInventory, easelStorage);
+
+        easelStorage.setMarkDirtyNotificationLambda(container::markDirty);
+
+        return container;
     }
 
     public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         // it seems like we have to utilize extraData to pass the canvas data
         // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
         EaselStorage easelStorage = EaselStorage.createForClientSideContainer();
+
         String canvasName = SCanvasNamePacket.readCanvasName(networkBuffer);
 
         EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
         easelContainer.setCanvas(canvasName);
 
         return easelContainer;
+    }
+
+    /**
+     * Because we don't have a special Slot for the canvas, we're using custom
+     * update functions and network message
+     */
+
+    public void markDirty() {
+        SEaselCanvasChangePacket canvasSyncMessage = new SEaselCanvasChangePacket(this.windowId, this.easelStorage.getCanvasStack());
+        ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.player), canvasSyncMessage);
+    }
+
+    public void handleCanvasChange(ItemStack canvasStack) {
+        if (canvasStack.getItem() == ModItems.CANVAS) {
+            this.canvas = CanvasItem.getCanvasData(canvasStack, this.world);
+            this.canvasReady = true;
+        } else {
+            this.canvas = null;
+            this.canvasReady = false;
+        }
     }
 
     public void setCanvas(String canvasName) {
@@ -503,14 +533,5 @@ public class EaselContainer extends Container {
         /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
             return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
         }, true);*/
-    }
-
-    /**
-     * @todo Use BlockTags {@link net.minecraft.inventory.container.RepairContainer#func_230302_a_}
-     * @param blockState
-     * @return
-     */
-    protected boolean isAnEasel(BlockState blockState) {
-        return true;
     }
 }
