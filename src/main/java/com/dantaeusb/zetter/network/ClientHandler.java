@@ -6,6 +6,7 @@ import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.container.EaselContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
+import com.dantaeusb.zetter.network.packet.SPaintingFrameBufferPacket;
 import com.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import com.dantaeusb.zetter.network.packet.SEaselCanvasChangePacket;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
@@ -50,7 +51,10 @@ public class ClientHandler {
         ClientPlayerEntity player = Minecraft.getInstance().player;
         AbstractCanvasData canvasData = packetIn.getCanvasData();
 
-        if (player.openContainer instanceof EaselContainer) {
+        if (
+                player.openContainer instanceof EaselContainer
+                && ((EaselContainer) player.openContainer).isCanvasAvailable()
+        ) {
             // If it's the same canvas player is editing
             if (canvasData.getName().equals(((EaselContainer) player.openContainer).getCanvasData().getName())) {
                 // Pushing changes that were added after sync packet was created
@@ -61,6 +65,7 @@ public class ClientHandler {
 
         if  (player.openContainer instanceof ArtistTableContainer) {
             // If player's combining canvases
+            // @todo: not sure if needed
 
             ((ArtistTableContainer) player.openContainer).updateCanvasCombination();
         }

@@ -11,6 +11,7 @@ import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
@@ -26,7 +27,7 @@ public class ServerHandler {
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
      * @param message The message
      */
-    public static void handleFrameBuffer(final PaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handleFrameBuffer(final SPaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
@@ -44,11 +45,33 @@ public class ServerHandler {
         ctx.enqueueWork(() -> processFrameBuffer(packetIn, sendingPlayer));
     }
 
-    public static void processFrameBuffer(final PaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
+    /**
+     * Update canvas on server-side and send update to other tracking players
+     * @param packetIn
+     * @param sendingPlayer
+     *
+     * @todo: send changes to TE, not container, as it's created per player
+     */
+    public static void processFrameBuffer(final SPaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
         if (sendingPlayer.openContainer instanceof EaselContainer) {
             EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
 
-            paintingContainer.processFrameBuffer(packetIn.getFrameBuffer(), sendingPlayer.getUniqueID());
+            paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUniqueID());
+
+            /**
+             * Keep it there, but it's not really useful since it's easier to sync whole canvas and keep recent
+             * changes on top
+             */
+
+            /*for (PlayerEntity playerEntity : paintingContainer.getTileEntityReference().getPlayersUsing()) {
+                if (playerEntity.equals(sendingPlayer)) {
+                    // No need to send it back
+                    continue;
+                }
+
+                SPaintingFrameBufferPacket packet = new SPaintingFrameBufferPacket(packetIn.getFrameBuffer());
+                ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) playerEntity), packet);
+            }*/
         }
     }
 

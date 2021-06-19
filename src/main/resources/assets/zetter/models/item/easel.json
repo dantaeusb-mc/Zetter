@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "zetter:paintings/item/easel"
+    "layer0": "zetter:item/easel"
   }
 }

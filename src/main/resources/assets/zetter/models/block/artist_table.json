@@ -1,12 +1,12 @@
 {
     "parent": "block/cube",
     "textures": {
-        "particle": "zetter:paintings/block/artist_table_top",
-        "down": "zetter:paintings/block/artist_table_bottom",
-        "up": "zetter:paintings/block/artist_table_top",
-        "north": "zetter:paintings/block/artist_table_front",
-        "east": "zetter:paintings/block/artist_table_left",
-        "south": "zetter:paintings/block/artist_table_back",
-        "west": "zetter:paintings/block/artist_table_right"
+        "particle": "zetter:block/artist_table_top",
+        "down": "zetter:block/artist_table_bottom",
+        "up": "zetter:block/artist_table_top",
+        "north": "zetter:block/artist_table_front",
+        "east": "zetter:block/artist_table_left",
+        "south": "zetter:block/artist_table_back",
+        "west": "zetter:block/artist_table_right"
     }
 }

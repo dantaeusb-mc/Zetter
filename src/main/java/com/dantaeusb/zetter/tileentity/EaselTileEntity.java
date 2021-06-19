@@ -10,7 +10,11 @@ import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.DoubleSidedInventory;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryHelper;
+import net.minecraft.inventory.container.ChestContainer;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
@@ -18,6 +22,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
 import net.minecraft.tileentity.ITickableTileEntity;
+import net.minecraft.tileentity.LockableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -26,11 +31,16 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 
 public class EaselTileEntity extends TileEntity implements ITickableTileEntity, INamedContainerProvider {
     private final EaselStorage easelStorage; // two items: canvas and palette
 
     private static final String EASEL_STORAGE_TAG = "storage";
+
+    /** The list of players currently using this easel */
+    private ArrayList<PlayerEntity> playersUsing = new ArrayList<>();
+    private int ticksSinceSync;
 
     public EaselTileEntity() {
         super(ModTileEntities.EASEL_TILE_ENTITY);
@@ -39,15 +49,22 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     public boolean canPlayerAccessInventory(PlayerEntity player) {
-        if (this.world.getTileEntity(this.pos) != this) return false;
-        final double X_CENTRE_OFFSET = 0.5;
-        final double Y_CENTRE_OFFSET = 0.5;
-        final double Z_CENTRE_OFFSET = 0.5;
-        final double MAXIMUM_DISTANCE_SQ = 8.0 * 8.0;
-        return player.getDistanceSq(pos.getX() + X_CENTRE_OFFSET, pos.getY() + Y_CENTRE_OFFSET, pos.getZ() + Z_CENTRE_OFFSET) < MAXIMUM_DISTANCE_SQ;
+        if (this.world.getTileEntity(this.pos) != this) {
+            return false;
+        } else {
+            return player.getDistanceSq((double)this.pos.getX() + 0.5D, (double)this.pos.getY() + 0.5D, (double)this.pos.getZ() + 0.5D) <= 64.0D;
+        }
     }
 
     public void tick() {
+        // No need to track on client side
+        if (this.world.isRemote()) {
+            return;
+        }
+
+        if (++this.ticksSinceSync > 200) {
+            this.playersUsing = this.calculatePlayersUsing();
+        }
     }
 
     // specific
@@ -105,6 +122,28 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         }
 
         return  CanvasItem.getCanvasData(canvasStack, this.world);
+    }
+
+    // track using players to send packets
+
+    public ArrayList<PlayerEntity> calculatePlayersUsing() {
+        ArrayList<PlayerEntity> usingPlayers = new ArrayList<>();
+
+        for(PlayerEntity player : this.world.getEntitiesWithinAABB(PlayerEntity.class, new AxisAlignedBB(this.pos.add(-5, -5, -5), this.pos.add(5, 5, 5)))) {
+            if (player.openContainer instanceof EaselContainer) {
+                EaselStorage storage = ((EaselContainer)player.openContainer).getEaselStorage();
+
+                if (storage == this.getEaselStorage()) {
+                    usingPlayers.add(player);
+                }
+            }
+        }
+
+        return usingPlayers;
+    }
+
+    public ArrayList<PlayerEntity> getPlayersUsing() {
+        return this.playersUsing;
     }
 
     // render
@@ -201,6 +240,6 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     @Nullable
     @Override
     public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-        return EaselContainer.createContainerServerSide(windowID, playerInventory, this.easelStorage);
+        return EaselContainer.createContainerServerSide(windowID, playerInventory, this, this.easelStorage);
     }
 }

@@ -1,7 +1,7 @@
 {
     "textures": {
         "particle": "block/oak_planks",
-        "frame": "zetter:paintings/entity/frame/dark_oak/center_vertical"
+        "frame": "zetter:entity/frame/dark_oak/center_vertical"
     },
     "elements": [
         {   "from": [ 0, 0, 1 ],

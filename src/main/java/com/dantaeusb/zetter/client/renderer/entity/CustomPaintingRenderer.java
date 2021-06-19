@@ -66,7 +66,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         }
 
         for (CustomPaintingEntity.Materials material: CustomPaintingEntity.Materials.values()) {
-            CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/paintings/entity/frame/plate/" + material + ".png"));
+            CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
         }
     }
 

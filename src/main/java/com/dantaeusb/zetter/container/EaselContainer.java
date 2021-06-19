@@ -14,28 +14,25 @@ import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.item.PaletteItem;
 import com.dantaeusb.zetter.network.packet.*;
-import com.dantaeusb.zetter.storage.DummyCanvasData;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
+import com.dantaeusb.zetter.tileentity.EaselTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
 import com.dantaeusb.zetter.storage.CanvasData;
 import javafx.util.Pair;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.play.NetworkPlayerInfo;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.IContainerListener;
-import net.minecraft.inventory.container.LecternContainer;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.PacketDistributor;
 
+import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.Consumer;
 
 public class EaselContainer extends Container {
     public static int FRAME_TIMEOUT = 5000;  // 5 second limit to keep changes buffer, if packet processed later disregard it
@@ -49,6 +46,7 @@ public class EaselContainer extends Container {
     private boolean canvasReady = false;
     private CanvasData canvas;
 
+    private EaselTileEntity tileEntity;
     private final EaselStorage easelStorage;
 
     /**
@@ -100,12 +98,13 @@ public class EaselContainer extends Container {
         }
     }
 
-    public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselStorage easelStorage) {
-        EaselContainer container = new EaselContainer(windowID, playerInventory, easelStorage);
+    public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselTileEntity tileEntity, EaselStorage easelStorage) {
+        EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
 
-        easelStorage.setMarkDirtyNotificationLambda(container::markDirty);
+        easelContainer.tileEntity = tileEntity;
+        easelStorage.setMarkDirtyNotificationLambda(easelContainer::markDirty);
 
-        return container;
+        return easelContainer;
     }
 
     public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
@@ -119,6 +118,15 @@ public class EaselContainer extends Container {
         easelContainer.setCanvas(canvasName);
 
         return easelContainer;
+    }
+
+    @Nullable
+    public EaselTileEntity getTileEntityReference() {
+        return this.tileEntity;
+    }
+
+    public EaselStorage getEaselStorage() {
+        return this.easelStorage;
     }
 
     /**
@@ -270,16 +278,22 @@ public class EaselContainer extends Container {
     }
 
     /**
+     * @todo: Move to TE as Container created per-player
+     *
      * @param index
      * @param color
      * @return
      */
     private void writePixelOnCanvasServerSide(int index, int color) {
         this.writePixelOnCanvas(index, color); // do nothing for now
+
+        // @todo: chceck where damage applied in vanilla
+        this.easelStorage.getPaletteStack().damageItem(1, this.player, (player) -> {});
     }
 
     private boolean writePixelOnCanvas(int index, int color) {
         if (!this.canvasReady) {
+            // Most times checking twice, not sure how to avoid
             return false;
         }
 
@@ -293,7 +307,6 @@ public class EaselContainer extends Container {
         }
 
         this.getCanvasData().updateCanvasPixel(index, color);
-        this.easelStorage.getPaletteStack().damageItem(1, this.player, (player) -> {});
 
         return true;
     }
@@ -318,7 +331,7 @@ public class EaselContainer extends Container {
         if (this.canvasChanges.shouldBeSent(System.currentTimeMillis())) {
             if (this.world.isRemote()) {
                 this.canvasChanges.getFrames(this.player.getUniqueID());
-                PaintingFrameBufferPacket paintingFrameBufferPacket = new PaintingFrameBufferPacket(this.canvasChanges);
+                SPaintingFrameBufferPacket paintingFrameBufferPacket = new SPaintingFrameBufferPacket(this.canvasChanges);
                 ModNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
 
                 this.lastFrameBufferSendClock = System.currentTimeMillis();
@@ -343,7 +356,7 @@ public class EaselContainer extends Container {
      * Called from network - process player's work (only on server)
      * @param paintingFrameBuffer
      */
-    public void processFrameBuffer(PaintingFrameBuffer paintingFrameBuffer, UUID ownerId) {
+    public void processFrameBufferServer(PaintingFrameBuffer paintingFrameBuffer, UUID ownerId) {
         long currentTime = this.world.getGameTime();
 
         for (PaintingFrame frame: paintingFrameBuffer.getFrames(ownerId)) {
@@ -352,28 +365,6 @@ public class EaselContainer extends Container {
                 Zetter.LOG.info("Skipping painting frame, too old");
                 continue;
             }
-
-            // @todo: this doesn't work due to the fact that container is created per-player.
-            // Check if the new packed claims to be older than the last processed frame
-            /*if (frame.getFrameTime() <= this.lastFrameTime) {
-                // If two players changed same pixel but new packet claims to be older than processed, let's sync player's canvases
-                for (PaintingFrame oldFrame: this.lastFrames) {
-                    if (oldFrame.getPixelIndex() == frame.getPixelIndex() && oldFrame.getColor() != frame.getColor() && oldFrame.getFrameTime() > frame.getFrameTime()) {
-                        this.invalidCache = true;
-                        break;
-                    }
-                }
-
-                // Will never happen, see above
-                if (this.invalidCache) {
-                    Zetter.LOG.warn("Two clients changed same pixel in unknown order, syncing");
-
-                    CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(this.canvas.getName());
-                    ModLockNetwork.simpleChannel.sendToServer(requestSyncPacket);
-
-                    continue;
-                }
-            }*/
 
             this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
         }
@@ -386,8 +377,8 @@ public class EaselContainer extends Container {
      * @param canvasData
      * @param timestamp
      */
-    public void processSync(CanvasData canvasData, long timestamp) {
-        timestamp = System.currentTimeMillis();
+    public void processSync(CanvasData canvasData, long packetTimestamp) {
+        long timestamp = System.currentTimeMillis();
 
         NetworkPlayerInfo playerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(this.player.getUniqueID());
         int latency = playerInfo.getResponseTime();
@@ -415,10 +406,9 @@ public class EaselContainer extends Container {
 
         Zetter.LOG.info("Latency: " + latency);
 
-        // @todo: reasonable to remove older frames right there
         for (PaintingFrame oldFrame: this.lastFrames) {
             if (oldFrame.getFrameTime() < lowTrustInterval.getKey()) {
-                //this.lastFrames.remove();
+                // @todo: reasonable to remove older frames right there
             } else {
                 if (oldFrame.getFrameTime() < lowTrustInterval.getValue()) {
                     mightDesync = true;
@@ -431,6 +421,8 @@ public class EaselContainer extends Container {
         if (mightDesync) {
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getType(), canvasData.getName());
         }
+
+        this.canvas = canvasData;
 
         this.lastSyncReceivedClock = System.currentTimeMillis();
     }
@@ -467,7 +459,7 @@ public class EaselContainer extends Container {
 
         if (this.world.isRemote() && !this.getCanvasChanges().isEmpty()) {
             this.canvasChanges.getFrames(playerIn.getUniqueID());
-            PaintingFrameBufferPacket modePacket = new PaintingFrameBufferPacket(this.canvasChanges);
+            SPaintingFrameBufferPacket modePacket = new SPaintingFrameBufferPacket(this.canvasChanges);
             ModNetwork.simpleChannel.sendToServer(modePacket);
 
             this.lastFrameBufferSendClock = System.currentTimeMillis();
@@ -528,10 +520,7 @@ public class EaselContainer extends Container {
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return true;
-        /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
-            return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
-        }, true);*/
+    public boolean canInteractWith(PlayerEntity player) {
+        return this.easelStorage.isUsableByPlayer(player);
     }
 }

@@ -1,1 +1,1 @@
-{"parent":"zetter:block/frame/parent/left","textures":{"particle":"block/jungle_planks","frame":"zetter:paintings/entity/frame/jungle/left"}}
+{"parent":"zetter:block/frame/parent/left","textures":{"particle":"block/jungle_planks","frame":"zetter:entity/frame/jungle/left"}}

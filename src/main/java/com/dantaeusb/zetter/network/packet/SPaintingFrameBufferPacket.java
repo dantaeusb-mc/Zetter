@@ -7,14 +7,15 @@ import net.minecraft.network.PacketBuffer;
 
 /**
  * Painting update - get frame buffer from client when they're making changes
+ * @todo: add entity and/or painting UUID
  */
-public class PaintingFrameBufferPacket {
+public class SPaintingFrameBufferPacket {
     private PaintingFrameBuffer paintingFrameBuffer;
 
-    public PaintingFrameBufferPacket() {
+    public SPaintingFrameBufferPacket() {
     }
 
-    public PaintingFrameBufferPacket(PaintingFrameBuffer paintingFrameBuffer) {
+    public SPaintingFrameBufferPacket(PaintingFrameBuffer paintingFrameBuffer) {
         this.paintingFrameBuffer = paintingFrameBuffer;
     }
 
@@ -22,8 +23,8 @@ public class PaintingFrameBufferPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static PaintingFrameBufferPacket readPacketData(PacketBuffer buf) {
-        PaintingFrameBufferPacket packet = new PaintingFrameBufferPacket();
+    public static SPaintingFrameBufferPacket readPacketData(PacketBuffer buf) {
+        SPaintingFrameBufferPacket packet = new SPaintingFrameBufferPacket();
 
         long frameStartTime = buf.readLong();
         ByteBuf bufferData = buf.readBytes(buf.writerIndex() - buf.readerIndex());

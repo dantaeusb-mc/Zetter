@@ -1,1 +1,1 @@
-{"parent":"zetter:block/frame/parent/left","textures":{"particle":"block/crimson_planks","frame":"zetter:paintings/entity/frame/crimson/left"}}
+{"parent":"zetter:block/frame/parent/left","textures":{"particle":"block/crimson_planks","frame":"zetter:entity/frame/crimson/left"}}

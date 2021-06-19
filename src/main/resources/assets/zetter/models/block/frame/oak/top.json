@@ -1,1 +1,1 @@
-{"parent":"zetter:block/frame/parent/top","textures":{"particle":"block/oak_planks","frame":"zetter:paintings/entity/frame/oak/top"}}
+{"parent":"zetter:block/frame/parent/top","textures":{"particle":"block/oak_planks","frame":"zetter:entity/frame/oak/top"}}

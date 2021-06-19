@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "zetter:paintings/item/custom_painting"
+    "layer0": "zetter:item/custom_painting"
   }
 }

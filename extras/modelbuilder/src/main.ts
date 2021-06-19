@@ -301,7 +301,7 @@ interface TexturedFrameModel {
                 parent: `zetter:block/frame/parent/${modelName}`,
                 textures: {
                     particle: `block/${material}_planks`,
-                    frame: `zetter:paintings/entity/frame/${material}/${modelName}`
+                    frame: `zetter:entity/frame/${material}/${modelName}`
                 }
             };
 

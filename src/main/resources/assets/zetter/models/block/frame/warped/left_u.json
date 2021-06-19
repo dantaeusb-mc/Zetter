@@ -1,1 +1,1 @@
-{"parent":"zetter:block/frame/parent/left_u","textures":{"particle":"block/warped_planks","frame":"zetter:paintings/entity/frame/warped/left_u"}}
+{"parent":"zetter:block/frame/parent/left_u","textures":{"particle":"block/warped_planks","frame":"zetter:entity/frame/warped/left_u"}}

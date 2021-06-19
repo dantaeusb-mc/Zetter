@@ -28,6 +28,10 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
     /**
      * We can't replace the object cause it'll keep references to old object
      * in GUI and renderer.
+     *
+     * @todo: I'm not sure what's wrong about that statement above; we might actually need
+     * @todo: it in order to avoid triggering GUIs to update and not bother GC
+     *
      * @param newCanvasData
      */
     @Override

@@ -19,7 +19,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class PaintingScreen extends ContainerScreen<EaselContainer> {
     // This is the resource location for the background image
-    private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/paintings/gui/painting.png");
+    private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
 
     private float sinceLastTick = .0f;
 
@@ -144,6 +144,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
     }
 
     @Override
@@ -175,7 +176,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
      */
     @Override
     protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
-
+        // Do not draw titles to save some extra space
     }
 
     /**

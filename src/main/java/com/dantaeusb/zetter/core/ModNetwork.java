@@ -30,6 +30,7 @@ public class ModNetwork {
     public static final byte PALETTE_UPDATE_SERVER = 26;
     public static final byte PAINTING_CREATE = 27;
     public static final byte EASEL_CANVAS_CHANGE = 28;
+    public static final byte PAINTING_FRAME_SERVER = 29;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -38,8 +39,8 @@ public class ModNetwork {
                 ClientHandler::isThisProtocolAcceptedByClient,
                 ServerHandler::isThisProtocolAcceptedByServer);
 
-        simpleChannel.registerMessage(PAINTING_FRAME_CLIENT, PaintingFrameBufferPacket.class,
-                PaintingFrameBufferPacket::writePacketData, PaintingFrameBufferPacket::readPacketData,
+        simpleChannel.registerMessage(PAINTING_FRAME_CLIENT, SPaintingFrameBufferPacket.class,
+                SPaintingFrameBufferPacket::writePacketData, SPaintingFrameBufferPacket::readPacketData,
                 ServerHandler::handleFrameBuffer,
                 Optional.of(PLAY_TO_SERVER));
 

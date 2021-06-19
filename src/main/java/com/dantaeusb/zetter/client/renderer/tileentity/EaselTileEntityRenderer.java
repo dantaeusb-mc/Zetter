@@ -30,7 +30,7 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
     private final ModelRenderer backLeg;
     private final ModelRenderer frontLegs;
 
-    public static final ResourceLocation TEXTURE = new ResourceLocation("zetter:textures/paintings/entity/easel.png");
+    public static final ResourceLocation TEXTURE = new ResourceLocation("zetter:textures/entity/easel.png");
 
     public EaselTileEntityRenderer(TileEntityRendererDispatcher rendererDispatcherIn) {
         super(rendererDispatcherIn);

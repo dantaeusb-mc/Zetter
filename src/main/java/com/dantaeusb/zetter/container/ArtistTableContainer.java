@@ -270,11 +270,8 @@ public class ArtistTableContainer extends Container {
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean canInteractWith(PlayerEntity playerIn) {
-        return true;
-        /*return this.worldPosCallable.applyOrElse((worldPosConsumer, defaultValue) -> {
-            return !this.isAnEasel(worldPosConsumer.getBlockState(defaultValue)) ? false : playerIn.getDistanceSq((double)defaultValue.getX() + 0.5D, (double)defaultValue.getY() + 0.5D, (double)defaultValue.getZ() + 0.5D) <= 64.0D;
-        }, true);*/
+    public boolean canInteractWith(PlayerEntity player) {
+        return this.canvasStorage.isUsableByPlayer(player);
     }
 
     /**

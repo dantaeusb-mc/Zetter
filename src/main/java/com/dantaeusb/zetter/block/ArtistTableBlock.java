@@ -71,16 +71,14 @@ public class ArtistTableBlock extends Block {
         }
     }
 
-    public void onReplaced(BlockState state, World worldIn, BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.isIn(newState.getBlock())) {
-            TileEntity tileentity = worldIn.getTileEntity(pos);
-            if (tileentity instanceof AbstractFurnaceTileEntity) {
-                InventoryHelper.dropInventoryItems(worldIn, pos, (AbstractFurnaceTileEntity)tileentity);
-                ((AbstractFurnaceTileEntity)tileentity).grantStoredRecipeExperience(worldIn, Vector3d.copyCentered(pos));
-                worldIn.updateComparatorOutputLevel(pos, this);
+            TileEntity tileEntity = world.getTileEntity(pos);
+            if (tileEntity instanceof ArtistTableTileEntity) {
+                ((ArtistTableTileEntity) tileEntity).dropAllContents(world, pos);
             }
 
-            super.onReplaced(state, worldIn, pos, newState, isMoving);
+            super.onReplaced(state, world, pos, newState, isMoving);
         }
     }
 

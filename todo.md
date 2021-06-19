@@ -5,6 +5,7 @@
 #### Release tasks:
 
 * \[HIGH\] Simultaneous edit doesn't work RN; *
+* \[HIGH\] Close window when easel broken; *
 * \[MED\] Prepare CanvasData and renderers for higher-resolution pictures; *
 * \[MED\] Do something more intelligent when placing creative picture;
 * \[MED\] Move data from entity to canvas, at least canvas should have info about the name and author itself;

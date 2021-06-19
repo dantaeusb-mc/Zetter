@@ -1,1 +1,1 @@
-{"parent":"zetter:block/frame/parent/bottom_u","textures":{"particle":"block/acacia_planks","frame":"zetter:paintings/entity/frame/acacia/bottom_u"}}
+{"parent":"zetter:block/frame/parent/bottom_u","textures":{"particle":"block/acacia_planks","frame":"zetter:entity/frame/acacia/bottom_u"}}

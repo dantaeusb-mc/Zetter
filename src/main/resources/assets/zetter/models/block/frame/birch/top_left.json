@@ -1,1 +1,1 @@
-{"parent":"zetter:block/frame/parent/top_left","textures":{"particle":"block/birch_planks","frame":"zetter:paintings/entity/frame/birch/top_left"}}
+{"parent":"zetter:block/frame/parent/top_left","textures":{"particle":"block/birch_planks","frame":"zetter:entity/frame/birch/top_left"}}

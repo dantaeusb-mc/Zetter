@@ -25,7 +25,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     private TextFieldWidget nameField;
 
     // This is the resource location for the background image
-    private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/paintings/gui/artist_table.png");
+    private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/gui/artist_table.png");
 
     private CombinedCanvasWidget combinedCanvasWidget;
 
