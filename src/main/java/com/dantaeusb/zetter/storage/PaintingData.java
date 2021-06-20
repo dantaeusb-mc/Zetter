@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
+import net.minecraft.nbt.CompoundNBT;
 
 /**
  * It's not enough to just init data, we need to register it with
@@ -8,6 +9,12 @@ import com.dantaeusb.zetter.Zetter;
  */
 public class PaintingData extends AbstractCanvasData {
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_painting_";
+
+    protected static final String NBT_TAG_AUTHOR_NAME = "author_name";
+    protected static final String NBT_TAG_TITLE = "title";
+
+    protected String authorName;
+    protected String title;
 
     public PaintingData(String canvasCode) {
         super(canvasCode);
@@ -23,10 +30,24 @@ public class PaintingData extends AbstractCanvasData {
             return;
         }
 
+        this.resolution = templateCanvasData.getResolution();
         this.width = templateCanvasData.getWidth();
         this.height = templateCanvasData.getHeight();
         this.updateColorData(templateCanvasData.color);
         this.markDirty();
+    }
+
+    public void setMetaProperties(String authorName, String title) {
+        this.authorName = authorName;
+        this.title = title;
+    }
+
+    public String getPaintingName() {
+        return this.title;
+    }
+
+    public String getAuthorName() {
+        return this.authorName;
     }
 
     public static String getPaintingCode(int paintingId) {
@@ -39,6 +60,22 @@ public class PaintingData extends AbstractCanvasData {
 
     public Type getType() {
         return Type.PAINTING;
+    }
+
+    public void read(CompoundNBT compound) {
+        super.read(compound);
+
+        this.authorName = compound.getString(NBT_TAG_AUTHOR_NAME);
+        this.title = compound.getString(NBT_TAG_TITLE);
+    }
+
+    public CompoundNBT write(CompoundNBT compound) {
+        super.write(compound);
+
+        compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
+        compound.putString(NBT_TAG_TITLE, this.title);
+
+        return compound;
     }
 }
 

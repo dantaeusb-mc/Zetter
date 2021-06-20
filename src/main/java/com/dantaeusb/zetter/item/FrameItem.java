@@ -2,7 +2,6 @@ package com.dantaeusb.zetter.item;
 
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
-import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
@@ -10,10 +9,7 @@ import net.minecraft.item.*;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.util.text.*;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -25,6 +21,9 @@ public class FrameItem extends Item {
     private CustomPaintingEntity.Materials material;
     private boolean hasPlate;
 
+    public static final String NBT_TAG_CACHED_PAINTING_NAME = "CachedPaintingName";
+    public static final String NBT_TAG_CACHED_AUTHOR_NAME = "CachedAuthorName";
+
     public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
 
@@ -34,10 +33,18 @@ public class FrameItem extends Item {
 
     public ITextComponent getDisplayName(ItemStack stack) {
         if (stack.hasTag()) {
-            String s = getTitle(stack);
+            if (StringUtils.isNullOrEmpty(getCanvasCode(stack))) {
+                return super.getDisplayName(stack);
+            }
 
-            if (!net.minecraft.util.StringUtils.isNullOrEmpty(s)) {
-                return new StringTextComponent(s);
+            String paintingName = getCachedPaintingName(stack);
+
+            if (StringUtils.isNullOrEmpty(paintingName)) {
+                paintingName = new TranslationTextComponent("item.zetter.painting.unnamed").getString();
+            }
+
+            if (!net.minecraft.util.StringUtils.isNullOrEmpty(paintingName)) {
+                return new StringTextComponent(paintingName);
             }
         }
 
@@ -52,26 +59,20 @@ public class FrameItem extends Item {
         return this.hasPlate;
     }
 
+    public static void setPaintingData(ItemStack stack, PaintingData paintingData) {
+        setCanvasCode(stack, paintingData.getName());
+
+        setCachedAuthorName(stack, paintingData.getAuthorName());
+        setCachedPaintingName(stack, paintingData.getPaintingName());
+    }
+
+    @Nullable
+    public static PaintingData getPaintingData(ItemStack stack) {
+        return Helper.getWorldCanvasTracker().getCanvasData(getCanvasCode(stack), PaintingData.class);
+    }
+
     public static void setCanvasCode(ItemStack stack, String canvasCode) {
         stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE, canvasCode);
-    }
-
-    public static void setTitle(ItemStack stack, String title) {
-        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_TITLE, title);
-    }
-
-    public static String getTitle(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
-        return compoundNBT.getString(CustomPaintingEntity.NBT_TAG_TITLE);
-    }
-
-    public static void setAuthor(ItemStack stack, String author) {
-        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_AUTHOR_NAME, author);
-    }
-
-    public static String getAuthor(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
-        return compoundNBT.getString(CustomPaintingEntity.NBT_TAG_AUTHOR_NAME);
     }
 
     public static void setBlockSize(ItemStack stack, int[] blockSize) {
@@ -83,30 +84,48 @@ public class FrameItem extends Item {
         return compoundNBT.getIntArray(CustomPaintingEntity.NBT_TAG_BLOCK_SIZE);
     }
 
-    /**
-     * @param stack
-     * @param worldIn
-     * @return
-     * @see {@link FilledMapItem#createMapData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}
-     */
-    public static PaintingData copyCanvasData(ItemStack stack, AbstractCanvasData originalCanvasData, World worldIn) {
-        PaintingData paintingData = Helper.createNewPainting(worldIn);
-        paintingData.copyFrom(originalCanvasData);
-
-        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE, paintingData.getName());
-        return paintingData;
+    public static void setCachedAuthorName(ItemStack stack, String authorName) {
+        stack.getOrCreateTag().putString(NBT_TAG_CACHED_AUTHOR_NAME, authorName);
     }
+
+    public static String getCachedAuthorName(ItemStack stack) {
+        CompoundNBT compoundNBT = stack.getTag();
+        return compoundNBT.getString(NBT_TAG_CACHED_AUTHOR_NAME);
+    }
+
+    public static void setCachedPaintingName(ItemStack stack, String paintingName) {
+        stack.getOrCreateTag().putString(NBT_TAG_CACHED_PAINTING_NAME, paintingName);
+    }
+
+    public static String getCachedPaintingName(ItemStack stack) {
+        CompoundNBT compoundNBT = stack.getTag();
+        return compoundNBT.getString(NBT_TAG_CACHED_PAINTING_NAME);
+    }
+
+    // @todo: Restore caching of painting name and author name
 
     @OnlyIn(Dist.CLIENT)
     public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         if (stack.hasTag()) {
-            CompoundNBT nbt = stack.getTag();
-            String s = nbt.getString(CustomPaintingEntity.NBT_TAG_AUTHOR_NAME);
-            if (!StringUtils.isNullOrEmpty(s)) {
-                tooltip.add((new TranslationTextComponent("book.byAuthor", s)).mergeStyle(TextFormatting.GRAY));
+            PaintingData paintingData = getPaintingData(stack);
+
+            if (paintingData == null) {
+                return;
             }
 
-            //todo: add canvas size
+            String authorName = getCachedAuthorName(stack);
+
+            if (StringUtils.isNullOrEmpty(authorName)) {
+                authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
+            }
+
+            tooltip.add((new TranslationTextComponent("book.byAuthor", authorName)).mergeStyle(TextFormatting.GRAY));
+
+            String widthBlocks = Integer.toString((paintingData.getWidth() / paintingData.getResolution().getNumeric()));
+            String heightBlocks = Integer.toString((paintingData.getHeight() / paintingData.getResolution().getNumeric()));
+            TranslationTextComponent blockSizeString = (new TranslationTextComponent("item.zetter.painting.size", widthBlocks, heightBlocks));
+
+            tooltip.add(blockSizeString.mergeStyle(TextFormatting.GRAY));
         }
     }
 
@@ -131,7 +150,7 @@ public class FrameItem extends Item {
             World world = context.getWorld();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
-                    world, facePos, direction, this.material, this.hasPlate, getCanvasCode(stack), getTitle(stack), getAuthor(stack), getBlockSize(stack)
+                    world, facePos, direction, this.material, this.hasPlate, getCanvasCode(stack), getBlockSize(stack)
             );
 
             if (paintingEntity.onValidSurface()) {

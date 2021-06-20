@@ -107,7 +107,7 @@ public class CanvasItem extends Item
      */
     private static CanvasData createCanvasData(ItemStack stack, World worldIn) {
         CanvasData canvasData = Helper.createNewCanvas(worldIn);
-        canvasData.initData(Helper.CANVAS_TEXTURE_RESOLUTION, Helper.CANVAS_TEXTURE_RESOLUTION);
+        canvasData.initData(Helper.getResolution().getNumeric(), Helper.getResolution().getNumeric());
 
         CanvasItem.setCanvasCode(stack, canvasData.getName());
 

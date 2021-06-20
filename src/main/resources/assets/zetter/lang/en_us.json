@@ -22,5 +22,8 @@
   "item.zetter.spruce_plated_frame": "Spruce Frame with Plate",
   "item.zetter.warped_frame": "Warped Frame",
   "item.zetter.warped_plated_frame": "Warped Frame with Plate",
+  "item.zetter.painting.size": "%1$dx%2$d",
+  "item.zetter.painting.unnamed": "Unnamed",
+  "item.zetter.painting.unknown": "unknown",
   "item.zetter.customPaintingByAuthor": "\"%1$s\" by %2$s"
 }

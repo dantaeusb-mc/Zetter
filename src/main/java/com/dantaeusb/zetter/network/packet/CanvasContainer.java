@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
@@ -13,14 +14,14 @@ public abstract class CanvasContainer {
     private final static AbstractCanvasData.Type[] typeValues = AbstractCanvasData.Type.values();
 
     public static AbstractCanvasData readPacketCanvasData(PacketBuffer networkBuffer) {
-
         try {
             int type = networkBuffer.readInt();
 
             String canvasName = networkBuffer.readString();
             int width = networkBuffer.readInt();
             int height = networkBuffer.readInt();
-            ByteBuffer colorData = networkBuffer.readBytes(networkBuffer.writerIndex() - networkBuffer.readerIndex()).nioBuffer();
+            int colorDataSize = networkBuffer.readInt();
+            ByteBuffer colorData = networkBuffer.readBytes(colorDataSize).nioBuffer();
             byte[] unwrappedColorData = new byte[width * height * 4];
             colorData.get(unwrappedColorData);
 
@@ -38,7 +39,7 @@ public abstract class CanvasContainer {
                     break;
             }
 
-            readCanvasData.initData(width, height, unwrappedColorData);
+            readCanvasData.initData(Helper.getResolution(), width, height, unwrappedColorData);
 
             return readCanvasData;
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
@@ -55,6 +56,7 @@ public abstract class CanvasContainer {
         networkBuffer.writeString(canvasData.getName());
         networkBuffer.writeInt(canvasData.getWidth());
         networkBuffer.writeInt(canvasData.getHeight());
+        networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());
         networkBuffer.writeBytes(canvasData.getColorDataBuffer());
     }
 }

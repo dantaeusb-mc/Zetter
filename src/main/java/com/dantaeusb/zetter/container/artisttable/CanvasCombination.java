@@ -135,8 +135,8 @@ public class CanvasCombination {
     }
 
     public static DummyCanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, World world) {
-        final int pixelWidth = rectangle.width * Helper.CANVAS_TEXTURE_RESOLUTION;
-        final int pixelHeight = rectangle.height * Helper.CANVAS_TEXTURE_RESOLUTION;
+        final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
+        final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
 
         ByteBuffer color = ByteBuffer.allocate(pixelWidth * pixelHeight * 4);
 
@@ -151,8 +151,8 @@ public class CanvasCombination {
 
                 for (int smallY = 0; smallY < smallCanvasData.getHeight(); smallY++) {
                     for (int smallX = 0; smallX < smallCanvasData.getWidth(); smallX++) {
-                        final int bigX = relativeX * Helper.CANVAS_TEXTURE_RESOLUTION + smallX;
-                        final int bigY = relativeY * Helper.CANVAS_TEXTURE_RESOLUTION + smallY;
+                        final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
+                        final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
 
                         final int colorIndex = (bigY * pixelWidth + bigX) * 4;
 
@@ -165,6 +165,7 @@ public class CanvasCombination {
         DummyCanvasData combinedCanvasData = Helper.getCombinedCanvas();
 
         combinedCanvasData.initData(
+            Helper.getResolution(),
             pixelWidth,
             pixelHeight,
             color.array()

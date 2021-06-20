@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.Helper;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -32,7 +33,7 @@ public class CanvasData extends AbstractCanvasData {
             defaultColorBuffer.putInt(x * 4, 0xFFE0DACE);
         }
 
-        this.initData(width, height, defaultColor);
+        this.initData(Helper.getResolution(), width, height, defaultColor);
     }
 
     public boolean isEditable() {

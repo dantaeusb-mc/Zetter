@@ -2,12 +2,14 @@ package com.dantaeusb.zetter.container;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.container.artisttable.CanvasCombination;
+import com.dantaeusb.zetter.container.painting.PaintingFrame;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModCraftingRecipes;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.FrameItem;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
+import com.dantaeusb.zetter.storage.PaintingData;
 import com.dantaeusb.zetter.tileentity.ArtistTableTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
 import net.minecraft.entity.player.PlayerEntity;
@@ -133,9 +135,9 @@ public class ArtistTableContainer extends Container {
      * Called from network when player presses a button
      * @param authorPlayer
      * @param paintingName
-     * @param originalCanvasData
+     * @param combinedCanvasData
      */
-    public void createPainting(PlayerEntity authorPlayer, String paintingName, AbstractCanvasData originalCanvasData) {
+    public void createPainting(PlayerEntity authorPlayer, String paintingName, AbstractCanvasData combinedCanvasData) {
         IRecipe<?> recipe = this.world.getRecipeManager().getRecipe(ModCraftingRecipes.FRAMING_RECIPE_TYPE, this.frameInventory, this.world).orElse(null);
 
         if (recipe == null) {
@@ -143,15 +145,16 @@ public class ArtistTableContainer extends Container {
             return;
         }
 
+        PaintingData paintingData = Helper.createNewPainting(world, combinedCanvasData, authorPlayer.getName().getString(), paintingName);
+
         ItemStack outStack = recipe.getRecipeOutput().copy();
-        FrameItem.copyCanvasData(outStack, originalCanvasData, this.world);
-        FrameItem.setTitle(outStack, paintingName);
-        FrameItem.setAuthor(outStack, authorPlayer.getName().getString());
+        FrameItem.setPaintingData(outStack, paintingData);
+
         FrameItem.setBlockSize(
                 outStack,
                 new int[]{
-                        originalCanvasData.getWidth() / Helper.CANVAS_TEXTURE_RESOLUTION,
-                        originalCanvasData.getHeight() / Helper.CANVAS_TEXTURE_RESOLUTION
+                        paintingData.getWidth() / paintingData.getResolution().getNumeric(),
+                        paintingData.getHeight() / paintingData.getResolution().getNumeric()
                 });
 
         if (!authorPlayer.isCreative()) {

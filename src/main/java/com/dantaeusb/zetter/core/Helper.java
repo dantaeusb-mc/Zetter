@@ -5,6 +5,7 @@ import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
@@ -16,8 +17,6 @@ import javax.annotation.Nullable;
 
 public class Helper {
     private static Helper instance;
-
-    public static final int CANVAS_TEXTURE_RESOLUTION = 16;
 
     public static final String COMBINED_CANVAS_CODE = Zetter.MOD_ID + "_combined_canvas";
     public static final String FALLBACK_CANVAS_CODE = Zetter.MOD_ID + "_fallback_canvas";
@@ -36,6 +35,13 @@ public class Helper {
         }
 
         return Helper.instance;
+    }
+
+    public static AbstractCanvasData.Resolution getResolution() {
+        return AbstractCanvasData.Resolution.x16;
+    }
+    public static @Nullable ICanvasTracker getWorldCanvasTracker() {
+        return Helper.getWorldCanvasTracker(Minecraft.getInstance().world);
     }
 
     public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {
@@ -64,11 +70,13 @@ public class Helper {
         return Helper.getInstance().fallbackCanvas;
     }
 
-    public static PaintingData createNewPainting(World worldIn) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(worldIn);
+    public static PaintingData createNewPainting(World world, AbstractCanvasData combinedCanvasData, String authorName, String title) {
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
         int newId = canvasTracker.getNextPaintingId();
         PaintingData paintingData = new PaintingData(newId);
+        paintingData.copyFrom(combinedCanvasData);
+        paintingData.setMetaProperties(authorName, title);
         canvasTracker.registerCanvasData(paintingData);
 
         return paintingData;

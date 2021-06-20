@@ -11,7 +11,6 @@ import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
@@ -85,7 +84,7 @@ public class ServerHandler {
      *
      * @param message The message
      */
-    public static void handleRequestSync(final CanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handleRequestSync(final CCanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
@@ -103,7 +102,7 @@ public class ServerHandler {
         ctx.enqueueWork(() -> processRequestSync(packetIn, sendingPlayer));
     }
 
-    public static void processRequestSync(final CanvasRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
+    public static void processRequestSync(final CCanvasRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         // Get overworld world instance
         MinecraftServer server = sendingPlayer.getServerWorld().getServer();
         World world = server.func_241755_D_();
@@ -134,9 +133,15 @@ public class ServerHandler {
             return;
         }
 
-        SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasData, System.currentTimeMillis());
+        if (canvasData instanceof PaintingData) {
+            SPaintingSyncMessage paintingSyncMessage = new SPaintingSyncMessage((PaintingData) canvasData, System.currentTimeMillis());
 
-        ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
+            ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), paintingSyncMessage);
+        } else {
+            SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasData, System.currentTimeMillis());
+
+            ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
+        }
     }
 
     /**

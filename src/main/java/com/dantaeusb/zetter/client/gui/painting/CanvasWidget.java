@@ -11,7 +11,7 @@ import net.minecraft.util.text.TranslationTextComponent;
 
 public class CanvasWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
     private static final int CANVAS_SCALE_FACTOR = 5;
-    private static final int size = Helper.CANVAS_TEXTURE_RESOLUTION * CANVAS_SCALE_FACTOR;
+    private static final int size = Helper.getResolution().getNumeric() * CANVAS_SCALE_FACTOR;
 
     private boolean canvasDragging = false;
 
@@ -72,7 +72,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable,
             return;
         }
 
-        for (int i = 0; i < Helper.CANVAS_TEXTURE_RESOLUTION * Helper.CANVAS_TEXTURE_RESOLUTION; i++) {
+        for (int i = 0; i < Helper.getResolution().getNumeric() * Helper.getResolution().getNumeric(); i++) {
             int localX = i % 16;
             int localY = i / 16;
 

@@ -4,18 +4,15 @@
 
 #### Release tasks:
 
-* \[HIGH\] Simultaneous edit doesn't work RN; *
-* \[HIGH\] Close window when easel broken; *
-* \[MED\] Prepare CanvasData and renderers for higher-resolution pictures; *
-* \[MED\] Do something more intelligent when placing creative picture;
-* \[MED\] Move data from entity to canvas, at least canvas should have info about the name and author itself;
+* \[MED\] Prepare renderers for higher-resolution pictures; *
+* \[MED\] Place frames with no pictures;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
-* \[MED\] Use specific light levels for every partial canvas;
-* \[MED\] Use ObjectHolders;
+* \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
 * \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel;
-* \[LOW\] Fix plank texture on an easel; *
+* \[LOW\] Fix plank texture on an easel;
 * \[LOW\] Implement bucket tool;
+* \[LOW\] Use ObjectHolders;
   
 #### Would-be-nice-to-do:
 

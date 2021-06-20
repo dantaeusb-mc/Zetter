@@ -25,12 +25,12 @@ public class ModNetwork {
     public static final byte PAINTING_FRAME_CLIENT = 21;
     public static final byte PAINTING_REQUEST_CANVAS = 22;
     public static final byte PAINTING_UNLOAD_CANVAS = 23;
-    public static final byte PAINTING_SYNC = 24;
+    public static final byte CANVAS_SYNC = 24;
     public static final byte PALETTE_UPDATE_CLIENT = 25;
     public static final byte PALETTE_UPDATE_SERVER = 26;
     public static final byte PAINTING_CREATE = 27;
     public static final byte EASEL_CANVAS_CHANGE = 28;
-    public static final byte PAINTING_FRAME_SERVER = 29;
+    public static final byte PAINTING_SYNC = 29;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -44,8 +44,8 @@ public class ModNetwork {
                 ServerHandler::handleFrameBuffer,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_REQUEST_CANVAS, CanvasRequestPacket.class,
-                CanvasRequestPacket::writePacketData, CanvasRequestPacket::readPacketData,
+        simpleChannel.registerMessage(PAINTING_REQUEST_CANVAS, CCanvasRequestPacket.class,
+                CCanvasRequestPacket::writePacketData, CCanvasRequestPacket::readPacketData,
                 ServerHandler::handleRequestSync,
                 Optional.of(PLAY_TO_SERVER));
 
@@ -54,9 +54,15 @@ public class ModNetwork {
                 ServerHandler::handleUnloadRequest,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_SYNC, SCanvasSyncMessage.class,
+        simpleChannel.registerMessage(CANVAS_SYNC, SCanvasSyncMessage.class,
                 SCanvasSyncMessage::writePacketData, SCanvasSyncMessage::readPacketData,
-                ClientHandler::handleSync,
+                ClientHandler::handleCanvasSync,
+                Optional.of(PLAY_TO_CLIENT));
+
+        // Transfers extra data
+        simpleChannel.registerMessage(PAINTING_SYNC, SPaintingSyncMessage.class,
+                SPaintingSyncMessage::writePacketData, SPaintingSyncMessage::readPacketData,
+                ClientHandler::handlePaintingSync,
                 Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(PALETTE_UPDATE_CLIENT, CPaletteUpdatePacket.class,

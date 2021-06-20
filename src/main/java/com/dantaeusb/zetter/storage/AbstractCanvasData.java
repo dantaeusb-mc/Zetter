@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.Helper;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.storage.WorldSavedData;
@@ -16,11 +17,13 @@ public abstract class AbstractCanvasData extends WorldSavedData {
     protected static final String NBT_TAG_TYPE = "type";
     protected static final String NBT_TAG_WIDTH = "width";
     protected static final String NBT_TAG_HEIGHT = "height";
+    protected static final String NBT_TAG_RESOLUTION = "resolution";
     protected static final String NBT_TAG_COLOR = "color";
 
     protected byte[] color;
     protected ByteBuffer canvasBuffer;
 
+    protected Resolution resolution;
     protected int width;
     protected int height;
 
@@ -28,7 +31,12 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         super(canvasCode);
     }
 
-    public void initData(int width, int height, byte[] color) {
+    public final void initData(Resolution resolution, int width, int height, byte[] color) {
+        if (width % resolution.getNumeric() != 0 || height % resolution.getNumeric() != 0) {
+            throw new IllegalArgumentException("Canvas size is not proportional to given canvas resolution");
+        }
+
+        this.resolution = resolution;
         this.width = width;
         this.height = height;
         this.updateColorData(color);
@@ -36,6 +44,12 @@ public abstract class AbstractCanvasData extends WorldSavedData {
     }
 
     protected void updateColorData(byte[] color) {
+        if (this.color != null) {
+            if (color.length != this.color.length) {
+                throw new IllegalArgumentException("Color data size mismatch");
+            }
+        }
+
         this.color = color;
         this.canvasBuffer = ByteBuffer.wrap(this.color);
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
@@ -62,6 +76,10 @@ public abstract class AbstractCanvasData extends WorldSavedData {
 
     public int getHeight() {
         return this.height;
+    }
+
+    public Resolution getResolution() {
+        return this.resolution;
     }
 
     abstract public boolean isEditable();
@@ -101,6 +119,14 @@ public abstract class AbstractCanvasData extends WorldSavedData {
     public void read(CompoundNBT compound) {
         this.width = compound.getInt(NBT_TAG_WIDTH);
         this.height = compound.getInt(NBT_TAG_HEIGHT);
+
+        int resolutionOrdinal = compound.getInt(NBT_TAG_RESOLUTION);
+        if (resolutionOrdinal != 0) {
+            this.resolution = Resolution.values()[resolutionOrdinal];
+        } else {
+            this.resolution = Helper.getResolution();
+        }
+
         this.updateColorData(compound.getByteArray(NBT_TAG_COLOR));
     }
 
@@ -108,6 +134,7 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         compound.putInt(NBT_TAG_TYPE, this.getType().ordinal());
         compound.putInt(NBT_TAG_WIDTH, this.width);
         compound.putInt(NBT_TAG_HEIGHT, this.height);
+        compound.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());
         compound.putByteArray(NBT_TAG_COLOR, this.color);
 
         return compound;
@@ -117,6 +144,22 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         DUMMY,
         CANVAS,
         PAINTING
+    }
+
+    public enum Resolution {
+        x16(16),
+        x32(32),
+        x64(64);
+
+        private final int numeric;
+
+        Resolution(int numeric) {
+            this.numeric = numeric;
+        }
+
+        public int getNumeric() {
+            return numeric;
+        }
     }
 }
 

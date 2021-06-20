@@ -7,5 +7,8 @@
   "item.zetter.paints": "Краски",
   "item.zetter.palette": "Палитра",
   "item.zetter.custom_painting": "Картина",
+  "item.zetter.painting.size": "%1$dx%2$d",
+  "item.zetter.painting.unnamed": "Безымянная",
+  "item.zetter.painting.unknown": "незвестен",
   "item.zetter.customPaintingByAuthor": "\"%1$s\", автор %2$s"
 }

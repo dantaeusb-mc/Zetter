@@ -3,14 +3,14 @@ package com.dantaeusb.zetter.network.packet;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.network.PacketBuffer;
 
-public class CanvasRequestPacket {
+public class CCanvasRequestPacket {
     private String canvasName;
     private AbstractCanvasData.Type type;
 
-    public CanvasRequestPacket() {
+    public CCanvasRequestPacket() {
     }
 
-    public CanvasRequestPacket(AbstractCanvasData.Type type, String canvasName) {
+    public CCanvasRequestPacket(AbstractCanvasData.Type type, String canvasName) {
         this.type = type;
         this.canvasName = canvasName;
     }
@@ -19,8 +19,8 @@ public class CanvasRequestPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CanvasRequestPacket readPacketData(PacketBuffer buf) {
-        CanvasRequestPacket packet = new CanvasRequestPacket();
+    public static CCanvasRequestPacket readPacketData(PacketBuffer buf) {
+        CCanvasRequestPacket packet = new CCanvasRequestPacket();
 
         packet.type = AbstractCanvasData.Type.values()[buf.readInt()];
         packet.canvasName = buf.readString(32767);

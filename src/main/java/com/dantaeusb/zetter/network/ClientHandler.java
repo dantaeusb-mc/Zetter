@@ -5,12 +5,14 @@ import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.container.EaselContainer;
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.SPaintingFrameBufferPacket;
 import com.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import com.dantaeusb.zetter.network.packet.SEaselCanvasChangePacket;
+import com.dantaeusb.zetter.network.packet.SPaintingSyncMessage;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
@@ -28,7 +30,7 @@ public class ClientHandler {
      * @param packetIn
      * @param ctxSupplier
      */
-    public static void handleSync(final SCanvasSyncMessage packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handleCanvasSync(final SCanvasSyncMessage packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
@@ -44,10 +46,10 @@ public class ClientHandler {
             return;
         }
 
-        ctx.enqueueWork(() -> processSync(packetIn, clientWorld.get()));
+        ctx.enqueueWork(() -> processCanvasSync(packetIn, clientWorld.get()));
     }
 
-    public static void processSync(final SCanvasSyncMessage packetIn, ClientWorld world) {
+    public static void processCanvasSync(final SCanvasSyncMessage packetIn, ClientWorld world) {
         ClientPlayerEntity player = Minecraft.getInstance().player;
         AbstractCanvasData canvasData = packetIn.getCanvasData();
 
@@ -80,6 +82,39 @@ public class ClientHandler {
 
         canvasTracker.registerCanvasData(canvasData);
     }
+
+    public static void handlePaintingSync(final SPaintingSyncMessage packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
+        ctx.setPacketHandled(true);
+
+        if (sideReceived != LogicalSide.CLIENT) {
+            Zetter.LOG.warn("SCanvasSyncMessage received on wrong side:" + ctx.getDirection().getReceptionSide());
+            return;
+        }
+
+        Optional<ClientWorld> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        if (!clientWorld.isPresent()) {
+            Zetter.LOG.warn("SCanvasSyncMessage context could not provide a ClientWorld.");
+            return;
+        }
+
+        ctx.enqueueWork(() -> processPaintingSync(packetIn, clientWorld.get()));
+    }
+
+    public static void processPaintingSync(final SPaintingSyncMessage packetIn, ClientWorld world) {
+        PaintingData canvasData = packetIn.getPaintingData();
+
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+
+        if (canvasTracker == null) {
+            Zetter.LOG.error("Cannot find world canvas capability");
+            return;
+        }
+
+        canvasTracker.registerCanvasData(canvasData);
+    }
+
     public static void handleEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();

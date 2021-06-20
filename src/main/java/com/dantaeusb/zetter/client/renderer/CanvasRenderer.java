@@ -1,9 +1,8 @@
 package com.dantaeusb.zetter.client.renderer;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.CanvasRequestPacket;
+import com.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
 import com.dantaeusb.zetter.network.packet.CanvasUnloadRequestPacket;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
@@ -174,7 +173,7 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     protected void requestCanvasTexture(TextureRequest request) {
-        CanvasRequestPacket requestSyncPacket = new CanvasRequestPacket(request.getCanvasType(), request.getCanvasCode());
+        CCanvasRequestPacket requestSyncPacket = new CCanvasRequestPacket(request.getCanvasType(), request.getCanvasCode());
         ModNetwork.simpleChannel.sendToServer(requestSyncPacket);
 
         request.update();
@@ -224,10 +223,6 @@ public class CanvasRenderer implements AutoCloseable {
 
         private final int width;
         private final int height;
-
-        private Instance(String canvasCode) {
-            this(canvasCode, Helper.CANVAS_TEXTURE_RESOLUTION, Helper.CANVAS_TEXTURE_RESOLUTION);
-        }
 
         private Instance(String canvasCode, int width, int height) {
             this.code = canvasCode;

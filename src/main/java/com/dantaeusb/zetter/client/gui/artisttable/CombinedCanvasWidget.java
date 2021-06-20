@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 
 public class CombinedCanvasWidget extends AbstractArtistTableWidget implements IRenderable, IGuiEventListener {
     private static final int CANVAS_SCALE_FACTOR = 1;
-    private static final int size = Helper.CANVAS_TEXTURE_RESOLUTION * CANVAS_SCALE_FACTOR;
+    private static final int size = Helper.getResolution().getNumeric() * CANVAS_SCALE_FACTOR;
 
     public CombinedCanvasWidget(ArtistTableScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.painting.canvas"));
