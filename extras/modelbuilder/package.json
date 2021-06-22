@@ -4,13 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
+    "update": "tsc && node dist/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {},
+  "license": "MPL2.0",
   "devDependencies": {
     "@types/node": "^15.12.1",
+    "rimraf": "^3.0.2",
     "typescript": "^4.3.2"
   }
 }

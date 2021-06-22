@@ -148,8 +148,8 @@ public class ArtistTableContainer extends Container {
         PaintingData paintingData = Helper.createNewPainting(world, combinedCanvasData, authorPlayer.getName().getString(), paintingName);
 
         ItemStack outStack = recipe.getRecipeOutput().copy();
-        FrameItem.setPaintingData(outStack, paintingData);
 
+        FrameItem.setPaintingData(outStack, paintingData);
         FrameItem.setBlockSize(
                 outStack,
                 new int[]{

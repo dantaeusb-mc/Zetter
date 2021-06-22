@@ -101,9 +101,6 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         matrixStack.translate((double)facingDirection.getXOffset() * offsetAlignment, (double)facingDirection.getYOffset() * offsetAlignment, (double)facingDirection.getZOffset() * offsetAlignment);
         matrixStack.rotate(Vector3f.YP.rotationDegrees(180.0F - entity.rotationYaw));
 
-        // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-        AbstractCanvasData canvasData = getCanvasData(world, entity.getCanvasCode());
-
         // Copied from ItemFrameRenderer
         final boolean flag = entity.isInvisible();
         final double[] renderOffset = entity.getRenderOffset();
@@ -111,7 +108,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         int blockWidth = entity.getBlockWidth();
         int blockHeight = entity.getBlockHeight();
 
-        if (!flag && canvasData != null) {
+        if (!flag) {
             matrixStack.push();
             matrixStack.translate(renderOffset[0] - 1.0F, renderOffset[1] - 1.0F, 0.5D - (1.0D / 16.0D));
 
@@ -193,6 +190,10 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             matrixStack.pop();
         }
 
+        // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
+        AbstractCanvasData canvasData = getCanvasData(world, entity.getCanvasCode());
+
+        // @todo: Has painting - render fallback, no painting - disable canvas render
         if (canvasData != null) {
             matrixStack.push();
             // We want to move picture one pixel in facing direction

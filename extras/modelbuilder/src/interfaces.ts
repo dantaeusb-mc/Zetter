@@ -45,7 +45,21 @@ export interface MinecraftModelElement {
     from: number[];
     to: number[];
     faces: MinecraftModelFaces;
-    comment?: string;
+    __comment?: string;
+}
+
+export interface MinecraftModelItemOverride {
+    predicate: { [key: string]: number },
+    model: string
+}
+
+export interface MinecraftModelItem {
+    parent: string,
+    textures: {
+        [key: string]: string
+    },
+    overrides?: MinecraftModelItemOverride[],
+    __comment?: string
 }
 
 export interface MinecraftTexture {

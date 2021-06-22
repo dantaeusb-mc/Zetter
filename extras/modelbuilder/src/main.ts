@@ -2,13 +2,14 @@ import {
     Direction,
     MinecraftModelElement,
     MinecraftModelFace,
-    MinecraftModelFaces,
+    MinecraftModelFaces, MinecraftModelItem,
     Side,
     Sides,
     Vector3i
 } from './interfaces';
 import {models} from "./models";
 import {materials} from "./variations";
+import rimraf from "rimraf";
 import * as fs from 'fs';
 
 class Box {
@@ -49,7 +50,7 @@ class Box {
 
     public getFaces(): MinecraftModelFaces {
         let builtFaces: MinecraftModelFaces = {
-            north: {
+            [Direction.NORTH]: {
                 uv: this.calculateUV(Direction.NORTH),
                 texture: this.textureId
             }
@@ -148,7 +149,7 @@ class Box {
             from: [this.from.x, this.from.y, this.from.z],
             to: [this.to.x, this.to.y, this.to.z],
             faces: this.getFaces(),
-            comment: this.edge
+            __comment: this.edge
         };
     }
 
@@ -166,10 +167,46 @@ class Box {
     }
 }
 
+class Plane {
+    from: Vector3i;
+    to: Vector3i;
+    textureId: string;
+
+    constructor(from: Vector3i, to: Vector3i, textureId: string) {
+        this.from = from;
+        this.to = to;
+        this.textureId = textureId;
+    }
+
+    public getFaces(): MinecraftModelFaces {
+        return {
+            [Direction.NORTH]: {
+                uv: [0, 0, 16, 16],
+                texture: this.textureId
+            },
+            // Don't know why it's so weird tbh
+            [Direction.SOUTH]: {
+                uv: [16, 0, 0, 16],
+                texture: this.textureId
+            },
+        };
+    }
+
+    public toJSON(): MinecraftModelElement {
+        return {
+            from: [this.from.x, this.from.y, this.from.z],
+            to: [this.to.x, this.to.y, this.to.z],
+            faces: this.getFaces(),
+            __comment: "Plane"
+        };
+    }
+}
+
 class FrameModel {
     edges: Sides;
     connections: Sides;
     parts: Box[] = [];
+    back: Plane;
     textureId: string = "#frame";
 
     constructor(edges: {[key in Side]: boolean}) {
@@ -179,6 +216,7 @@ class FrameModel {
         Object.keys(this.edges).map((key) => this.connections[key] = !edges[key]);
 
         this.buildBoxes();
+        this.buildBackPlane();
     }
 
     private buildBoxes(): void {
@@ -220,9 +258,13 @@ class FrameModel {
         // @todo: add back face
     }
 
+    private buildBackPlane(): void {
+        this.back = new Plane({x: 0, y: 0, z: 0.75}, {x: 16, y: 16, z: 1}, this.textureId);
+    }
+
     public toJSON() {
         return {
-            elements: this.parts
+            elements: [this.back, ...this.parts]
         };
     }
 
@@ -260,6 +302,10 @@ class FrameModel {
                 return new Box({x: 0,y: 0, z: 0}, {x: 1,y: 16, z: 1}, textureId, Side.RIGHT);
         }
     }
+
+    public static getBackPlane(textureId: string) {
+        return new Box({x: 0,y: 15, z: 0}, {x: 16,y: 16, z: 0}, textureId, Side.TOP);
+    }
 }
 
 interface TexturedFrameModel {
@@ -270,15 +316,43 @@ interface TexturedFrameModel {
     }
 }
 
+// Build item frames
+(function () {
+    rimraf.sync(`result/models/`);
+
+    fs.mkdirSync(`result/models/`);
+    fs.mkdirSync(`result/models/item/`);
+
+    for (let material of materials) {
+        console.log(`Processing ${material} icon variations`);
+
+        // @todo: rename to $material$plated_frame$variant
+        for (let variant of ["_empty", "_painting"]) {
+
+        }
+
+        for (let modelType of ["", "_plated"]) {
+            const itemModel: MinecraftModelItem = {
+                parent: "item/generated",
+                textures: {
+                    layer0: "zetter:item/frame",
+                    layer1: "zetter:item/custom_painting_variant_missing"
+                },
+                overrides: [
+                    { predicate: { has_painting: 0 }, model: "zetter:item/custom_painting_variant_missing" },
+                    { predicate: { has_painting: 1 }, model: "zetter:item/custom_painting_variant_framed" }
+                ]
+            }
+
+            fs.writeFileSync(`result/models/item/${material}${modelType}_frame.json`, JSON.stringify(itemModel));
+        }
+    }
+})();
+
 // Build parent frames
 (function () {
-    if (!fs.existsSync(`result/model/`)) {
-        fs.mkdirSync(`result/model/`);
-    }
-
-    if (!fs.existsSync(`result/model/parent/`)) {
-        fs.mkdirSync(`result/model/parent/`);
-    }
+    fs.mkdirSync(`result/models/block/`);
+    fs.mkdirSync(`result/models/block/parent/`);
 
     for (let modelName in models) {
         const currentModel = models[modelName];
@@ -287,7 +361,7 @@ interface TexturedFrameModel {
 
         const newFrameModel = new FrameModel(currentModel.edges);
 
-        fs.writeFileSync(`result/model/parent/${modelName}.json`, JSON.stringify(newFrameModel));
+        fs.writeFileSync(`result/models/block/parent/${modelName}.json`, JSON.stringify(newFrameModel));
     }
 })();
 
@@ -305,20 +379,19 @@ interface TexturedFrameModel {
                 }
             };
 
-            if (!fs.existsSync(`result/model/${material}/`)) {
-                fs.mkdirSync(`result/model/${material}/`);
+            if (!fs.existsSync(`result/models/block/${material}/`)) {
+                fs.mkdirSync(`result/models/block/${material}/`);
             }
 
-            fs.writeFileSync(`result/model/${material}/${modelName}.json`, JSON.stringify(newFrameModel));
+            fs.writeFileSync(`result/models/block/${material}/${modelName}.json`, JSON.stringify(newFrameModel));
         }
     }
 })();
 
 // Build blockstates
 (function () {
-    if (!fs.existsSync(`result/blockstates/`)) {
-        fs.mkdirSync(`result/blockstates/`);
-    }
+    rimraf.sync(`result/blockstates/`);
+    fs.mkdirSync(`result/blockstates/`);
 
     for (let material of materials) {
         console.log(`Processing ${material} state variation`);

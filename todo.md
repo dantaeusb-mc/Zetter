@@ -10,7 +10,6 @@
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
 * \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel;
-* \[LOW\] Fix plank texture on an easel;
 * \[LOW\] Implement bucket tool;
 * \[LOW\] Use ObjectHolders;
   
@@ -21,6 +20,7 @@
 * \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern;
+* \[LOW\] Make sure NBT tags are in place;
 
 #### Planned features:
 

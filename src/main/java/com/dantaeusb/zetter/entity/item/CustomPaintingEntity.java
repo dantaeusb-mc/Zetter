@@ -319,7 +319,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
             this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
 
-            ItemStack canvasStack = new ItemStack(ModItems.PAINTINGS.get(Helper.getFrameKey(this.material, this.hasPlate)));
+            ItemStack canvasStack = new ItemStack(ModItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)));
 
             PaintingData paintingData = Helper.getWorldCanvasTracker(this.world).getCanvasData(this.canvasCode, PaintingData.class);
 
