@@ -68,7 +68,10 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
 
     private void renameItem(String name) {
         this.container.updatePaintingName(name);
-        this.sendRenamePacket(name);
+
+        if (this.getContainer().isCanvasReady()) {
+            this.sendRenamePacket(name);
+        }
     }
 
     private void sendRenamePacket(String name) {
