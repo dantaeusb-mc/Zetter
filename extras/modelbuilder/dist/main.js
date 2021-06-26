@@ -18,15 +18,14 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 const interfaces_1 = require("./interfaces");
 const models_1 = require("./models");
 const variations_1 = require("./variations");
-const rimraf_1 = __importDefault(require("rimraf"));
 const fs = __importStar(require("fs"));
+const items_1 = require("./items");
+const blockstates_1 = require("./blockstates");
+const recipes_1 = require("./recipes");
 class Box {
     constructor(from, to, textureId, edge) {
         this.from = from;
@@ -210,13 +209,11 @@ class FrameModel {
                 if (this.hasEdge(interfaces_1.Side.TOP)) {
                     box.shrink(interfaces_1.Side.TOP, 1);
                     box.removeFace(interfaces_1.Side.TOP);
-                    console.log(`Shrinking ${edgeSide} on top`);
                 }
                 // Glue with bottom edge
                 if (this.hasEdge(interfaces_1.Side.BOTTOM)) {
                     box.shrink(interfaces_1.Side.BOTTOM, 1);
                     box.removeFace(interfaces_1.Side.BOTTOM);
-                    console.log(`Shrinking ${edgeSide} on bottom`);
                 }
             }
             // For fucks sake, there's still no way to iterate over enum in TS
@@ -272,29 +269,9 @@ class FrameModel {
         return new Box({ x: 0, y: 15, z: 0 }, { x: 16, y: 16, z: 0 }, textureId, interfaces_1.Side.TOP);
     }
 }
-// Build item frames
-(function () {
-    rimraf_1.default.sync(`result/models/`);
-    fs.mkdirSync(`result/models/`);
-    fs.mkdirSync(`result/models/item/`);
-    for (let material of variations_1.materials) {
-        console.log(`Processing ${material} icon variations`);
-        for (let modelType of ["", "_plated"]) {
-            const itemModel = {
-                parent: "item/generated",
-                textures: {
-                    layer0: "zetter:item/frame",
-                    layer1: "zetter:item/custom_painting_variant_missing"
-                },
-                overrides: [
-                    { predicate: { hasPainting: 0 }, model: "zetter:item/custom_painting_variant_missing" },
-                    { predicate: { hasPainting: 1 }, model: "zetter:item/custom_painting_variant_framed" }
-                ]
-            };
-            fs.writeFileSync(`result/models/item/${material}${modelType}_frame.json`, JSON.stringify(itemModel));
-        }
-    }
-})();
+items_1.buildItems();
+blockstates_1.buildBlockStates();
+recipes_1.buildRecipes();
 // Build parent frames
 (function () {
     fs.mkdirSync(`result/models/block/`);
@@ -308,7 +285,7 @@ class FrameModel {
 })();
 // Build styled frames
 (function () {
-    for (let material of variations_1.materials) {
+    for (let material of variations_1.materialVariations) {
         console.log(`Processing ${material} model variation`);
         for (let modelName in models_1.models) {
             const newFrameModel = {
@@ -322,25 +299,6 @@ class FrameModel {
                 fs.mkdirSync(`result/models/block/${material}/`);
             }
             fs.writeFileSync(`result/models/block/${material}/${modelName}.json`, JSON.stringify(newFrameModel));
-        }
-    }
-})();
-// Build blockstates
-(function () {
-    rimraf_1.default.sync(`result/blockstates/`);
-    fs.mkdirSync(`result/blockstates/`);
-    for (let material of variations_1.materials) {
-        console.log(`Processing ${material} state variation`);
-        for (let modelName in models_1.models) {
-            const newFrameBlockState = {
-                "variants": {
-                    "": { "model": `zetter:block/frame/${material}/${modelName}` }
-                }
-            };
-            if (!fs.existsSync(`result/blockstates/${material}/`)) {
-                fs.mkdirSync(`result/blockstates/${material}/`);
-            }
-            fs.writeFileSync(`result/blockstates/${material}/${modelName}.json`, JSON.stringify(newFrameBlockState));
         }
     }
 })();

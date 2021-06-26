@@ -2,15 +2,18 @@ import {
     Direction,
     MinecraftModelElement,
     MinecraftModelFace,
-    MinecraftModelFaces, MinecraftModelItem,
+    MinecraftModelFaces,
     Side,
     Sides,
     Vector3i
 } from './interfaces';
 import {models} from "./models";
-import {materials} from "./variations";
+import {materialVariations} from "./variations";
 import rimraf from "rimraf";
 import * as fs from 'fs';
+import {buildItems} from "./items";
+import {buildBlockStates} from "./blockstates";
+import {buildRecipes} from "./recipes";
 
 class Box {
     from: Vector3i;
@@ -232,16 +235,12 @@ class FrameModel {
                 if (this.hasEdge(Side.TOP)) {
                     box.shrink(Side.TOP, 1);
                     box.removeFace(Side.TOP);
-
-                    console.log(`Shrinking ${edgeSide} on top`);
                 }
 
                 // Glue with bottom edge
                 if (this.hasEdge(Side.BOTTOM)) {
                     box.shrink(Side.BOTTOM, 1);
                     box.removeFace(Side.BOTTOM);
-
-                    console.log(`Shrinking ${edgeSide} on bottom`);
                 }
             }
 
@@ -316,38 +315,9 @@ interface TexturedFrameModel {
     }
 }
 
-// Build item frames
-(function () {
-    rimraf.sync(`result/models/`);
-
-    fs.mkdirSync(`result/models/`);
-    fs.mkdirSync(`result/models/item/`);
-
-    for (let material of materials) {
-        console.log(`Processing ${material} icon variations`);
-
-        // @todo: rename to $material$plated_frame$variant
-        for (let variant of ["_empty", "_painting"]) {
-
-        }
-
-        for (let modelType of ["", "_plated"]) {
-            const itemModel: MinecraftModelItem = {
-                parent: "item/generated",
-                textures: {
-                    layer0: "zetter:item/frame",
-                    layer1: "zetter:item/custom_painting_variant_missing"
-                },
-                overrides: [
-                    { predicate: { has_painting: 0 }, model: "zetter:item/custom_painting_variant_missing" },
-                    { predicate: { has_painting: 1 }, model: "zetter:item/custom_painting_variant_framed" }
-                ]
-            }
-
-            fs.writeFileSync(`result/models/item/${material}${modelType}_frame.json`, JSON.stringify(itemModel));
-        }
-    }
-})();
+buildItems();
+buildBlockStates();
+buildRecipes();
 
 // Build parent frames
 (function () {
@@ -367,7 +337,7 @@ interface TexturedFrameModel {
 
 // Build styled frames
 (function () {
-    for (let material of materials) {
+    for (let material of materialVariations) {
         console.log(`Processing ${material} model variation`);
 
         for (let modelName in models) {
@@ -384,30 +354,6 @@ interface TexturedFrameModel {
             }
 
             fs.writeFileSync(`result/models/block/${material}/${modelName}.json`, JSON.stringify(newFrameModel));
-        }
-    }
-})();
-
-// Build blockstates
-(function () {
-    rimraf.sync(`result/blockstates/`);
-    fs.mkdirSync(`result/blockstates/`);
-
-    for (let material of materials) {
-        console.log(`Processing ${material} state variation`);
-
-        for (let modelName in models) {
-            const newFrameBlockState = {
-                "variants": {
-                    "": { "model": `zetter:block/frame/${material}/${modelName}` }
-                }
-            };
-
-            if (!fs.existsSync(`result/blockstates/${material}/`)) {
-                fs.mkdirSync(`result/blockstates/${material}/`);
-            }
-
-            fs.writeFileSync(`result/blockstates/${material}/${modelName}.json`, JSON.stringify(newFrameBlockState));
         }
     }
 })();

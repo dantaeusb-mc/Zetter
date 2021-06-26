@@ -1,3 +1,1 @@
-{"parent":"item/generated","textures":{"layer0":"zetter:item/frame","layer1":"zetter:item/custom_painting_variant_missing"},"overrides":[{"predicate":{
-  "has_painting":0},"model":"zetter:item/custom_painting_variant_missing"},{"predicate":{
-  "has_painting":1},"model":"zetter:item/custom_painting_variant_framed"}]}
+{"parent":"item/generated","textures":{"layer0":"zetter:item/frame/jungle_plated"},"overrides":[{"predicate":{"painting":0},"model":"zetter:item/frame/jungle_plated_empty"},{"predicate":{"painting":1},"model":"zetter:item/frame/jungle_plated_painting"}]}

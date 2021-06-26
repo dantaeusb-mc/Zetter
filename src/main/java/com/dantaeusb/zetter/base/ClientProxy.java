@@ -40,7 +40,8 @@ public class ClientProxy extends CommonProxy {
         ScreenManager.registerFactory(ModContainers.ARTIST_TABLE, ArtistTableScreen::new);
 
         for (Item frame : ModItems.FRAMES.values()) {
-            ItemModelsProperties.registerProperty(frame, new ResourceLocation("has_painting"), FrameItem::getHasPaintingPropertyOverride);
+            ItemModelsProperties.registerProperty(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
+            ItemModelsProperties.registerProperty(frame, new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
         }
 
         RenderTypeLookup.setRenderLayer(ModBlocks.EASEL, RenderType.getCutout());

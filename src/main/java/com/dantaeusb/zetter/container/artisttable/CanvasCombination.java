@@ -30,7 +30,7 @@ public class CanvasCombination {
             {4, 3}
     };
 
-    public final State valid;
+    public final State state;
     public final Rectangle rectangle;
 
     @Nullable
@@ -62,7 +62,7 @@ public class CanvasCombination {
         }
 
         if (min == null || max == null) {
-            this.valid = State.INVALID_SHAPE;
+            this.state = State.INVALID_SHAPE;
             this.rectangle = CanvasCombination.getZeroRect();
             this.canvasData = null;
             return;
@@ -77,7 +77,7 @@ public class CanvasCombination {
                 if (currentStack == ItemStack.EMPTY) {
                     if (x >= min.getA() && x <= max.getA()) {
                         if (y >= min.getB() && (y <= max.getB())) {
-                            this.valid = State.INVALID_SHAPE;
+                            this.state = State.INVALID_SHAPE;
                             this.rectangle = CanvasCombination.getZeroRect();
                             this.canvasData = null;
                             return;
@@ -85,7 +85,7 @@ public class CanvasCombination {
                     }
                 } else if (currentStack.getItem() == ModItems.CANVAS) {
                     if ((x < min.getA() || x > max.getA()) || (y < min.getB() || y > max.getB())) {
-                        this.valid = State.INVALID_SHAPE;
+                        this.state = State.INVALID_SHAPE;
                         this.rectangle = CanvasCombination.getZeroRect();
                         this.canvasData = null;
                         return;
@@ -107,7 +107,7 @@ public class CanvasCombination {
         }
 
         if (!canvasesReady) {
-            this.valid = State.NOT_LOADED;
+            this.state = State.NOT_LOADED;
             this.rectangle = CanvasCombination.getZeroRect();
             this.canvasData = null;
             return;
@@ -123,13 +123,13 @@ public class CanvasCombination {
         }
 
         if (!shapeAvailable) {
-            this.valid = State.INVALID_SHAPE;
+            this.state = State.INVALID_SHAPE;
             this.rectangle = CanvasCombination.getZeroRect();
             this.canvasData = null;
             return;
         }
 
-        this.valid = State.READY;
+        this.state = State.READY;
         this.rectangle = rectangle;
         this.canvasData = CanvasCombination.createCanvasData(canvasStorage, rectangle, world);
     }

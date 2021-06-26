@@ -1,4 +1,4 @@
-export const materials = [
+export const materialVariations = [
     "acacia",
     "birch",
     "dark_oak",
@@ -8,3 +8,13 @@ export const materials = [
     "crimson",
     "warped",
 ];
+
+export enum plateVariations {
+    BASIC = "basic",
+    PLATED = "plated"
+}
+
+export enum paintingVariations {
+    EMPTY = "empty",
+    PAINTING = "painting"
+}

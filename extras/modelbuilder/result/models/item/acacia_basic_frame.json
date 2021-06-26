@@ -1,0 +1,1 @@
+{"parent":"item/generated","textures":{"layer0":"zetter:item/frame/acacia_basic"},"overrides":[{"predicate":{"painting":0},"model":"zetter:item/frame/acacia_basic_empty"},{"predicate":{"painting":1},"model":"zetter:item/frame/acacia_basic_painting"}]}

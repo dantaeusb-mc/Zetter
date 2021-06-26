@@ -70,8 +70,8 @@ public class ModNetwork {
                 ServerHandler::handlePaletteUpdate,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_CREATE, CCreatePaintingPacket.class,
-                CCreatePaintingPacket::writePacketData, CCreatePaintingPacket::readPacketData,
+        simpleChannel.registerMessage(PAINTING_CREATE, CUpdatePaintingPacket.class,
+                CUpdatePaintingPacket::writePacketData, CUpdatePaintingPacket::readPacketData,
                 ServerHandler::handleCreatePainting,
                 Optional.of(PLAY_TO_SERVER));
 

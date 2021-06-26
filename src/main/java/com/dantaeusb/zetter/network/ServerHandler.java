@@ -228,7 +228,7 @@ public class ServerHandler {
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
      * @param message The message
      */
-    public static void handleCreatePainting(final CCreatePaintingPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handleCreatePainting(final CUpdatePaintingPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
@@ -246,10 +246,10 @@ public class ServerHandler {
         ctx.enqueueWork(() -> processCreatePainting(packetIn, sendingPlayer));
     }
 
-    public static void processCreatePainting(final CCreatePaintingPacket packetIn, ServerPlayerEntity sendingPlayer) {
+    public static void processCreatePainting(final CUpdatePaintingPacket packetIn, ServerPlayerEntity sendingPlayer) {
         if (sendingPlayer.openContainer instanceof ArtistTableContainer) {
             ArtistTableContainer artistTableContainer = (ArtistTableContainer)sendingPlayer.openContainer;
-            artistTableContainer.createPainting(sendingPlayer, packetIn.getPaintingName(), packetIn.getCanvasData());
+            artistTableContainer.updatePaintingName(packetIn.getPaintingName());
         }
     }
 

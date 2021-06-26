@@ -3,17 +3,12 @@ package com.dantaeusb.zetter.client.gui;
 import com.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.network.packet.CCreatePaintingPacket;
+import com.dantaeusb.zetter.network.packet.CUpdatePaintingPacket;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.IHasContainer;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.IContainerListener;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -35,15 +30,18 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         super(artistTableContainer, playerInventory, title);
 
         this.xSize = 176;
-        this.ySize = 209;
+        this.ySize = 202;
     }
+
+    final int INPUT_XPOS = 7;
+    final int INPUT_YPOS = 89;
 
     @Override
     protected void init() {
         super.init();
 
-        final int COMBINED_CANVAS_POSITION_X = 105;
-        final int COMBINED_CANVAS_POSITION_Y = 41;
+        final int COMBINED_CANVAS_POSITION_X = 104;
+        final int COMBINED_CANVAS_POSITION_Y = 26;
 
         this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
         this.children.add(this.combinedCanvasWidget);
@@ -54,7 +52,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     protected void initFields() {
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
-        this.nameField = new TextFieldWidget(this.font, this.guiLeft + 10, this.guiTop + 103, 94, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
+        this.nameField = new TextFieldWidget(this.font, this.guiLeft + this.INPUT_XPOS + 4, this.guiTop + INPUT_YPOS + 4, 94, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
         this.nameField.setCanLoseFocus(false);
         this.nameField.setTextColor(-1);
         this.nameField.setDisabledTextColour(-1);
@@ -68,19 +66,13 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     // Listener interface - to track name field availability
 
     private void renameItem(String name) {
-        // do nothing
-    }
-
-    private void createPainting() {
-        CCreatePaintingPacket modePacket = new CCreatePaintingPacket(
+        CUpdatePaintingPacket modePacket = new CUpdatePaintingPacket(
                 this.container.windowId,
                 this.nameField.getText(),
                 this.container.getCanvasCombination().canvasData
         );
 
         ModNetwork.simpleChannel.sendToServer(modePacket);
-
-        this.nameField.setText("");
     }
 
     @Override
@@ -105,15 +97,6 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         this.nameField.tick();
     }
 
-    public void handleStorageUpdate() {
-
-    }
-
-    private final int SIGN_BUTTON_XPOS = 111;
-    private final int SIGN_BUTTON_YPOS = 99;
-    private final int SIGN_BUTTON_WIDTH = 36;
-    private final int SIGN_BUTTON_HEIGHT = 16;
-
     @Override
     protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
@@ -122,26 +105,15 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         this.blit(matrixStack, this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
 
         // Draw input
+        final int INPUT_UPOS = 0;
+        final int INPUT_VPOS = this.ySize;
+        final int INPUT_WIDTH = 100;
+        final int INPUT_HEIGHT = 16;
 
-        this.blit(matrixStack, this.guiLeft + 7, this.guiTop + 99, 0, this.ySize + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : 16), 100, 16);
+        this.blit(matrixStack, this.guiLeft + INPUT_XPOS, this.guiTop + INPUT_YPOS, INPUT_UPOS, INPUT_VPOS + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : INPUT_HEIGHT), INPUT_WIDTH, INPUT_HEIGHT);
 
-        final int SIGN_BUTTON_UPOS = 176;
-        final int SIGN_BUTTON_VPOS = 0;
-
-        if (this.getContainer().isFrameReady() && this.getContainer().isCanvasReady()) {
-            int buttonVOffset = SIGN_BUTTON_VPOS;
-
-            if (isInRect(this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT, x, y)) {
-                buttonVOffset += SIGN_BUTTON_HEIGHT * 2;
-            }
-
-            this.blit(matrixStack, this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_UPOS, buttonVOffset, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT);
-        } else {
-            this.blit(matrixStack, this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_UPOS, SIGN_BUTTON_VPOS + SIGN_BUTTON_HEIGHT, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT);
-        }
-
-        final int LOADING_XPOS = 129;
-        final int LOADING_YPOS = 60;
+        final int LOADING_XPOS = 128;
+        final int LOADING_YPOS = 45;
         final int LOADING_UPOS = 100;
         final int LOADING_VPOS = this.ySize;
         final int LOADING_WIDTH = 16;
@@ -179,15 +151,6 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         // draw the label for the player inventory slots
         this.font.func_243248_b(matrixStack, this.playerInventory.getDisplayName(),
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
-    }
-
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (isInRect(this.guiLeft + SIGN_BUTTON_XPOS, this.guiTop + SIGN_BUTTON_YPOS, SIGN_BUTTON_WIDTH, SIGN_BUTTON_HEIGHT, (int) mouseX, (int) mouseY)) {
-            this.createPainting();
-        }
-
-        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**

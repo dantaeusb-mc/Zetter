@@ -1,7 +1,0 @@
-{
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "zetter:item/frame",
-    "layer1": "zetter:item/custom_painting_variant_missing"
-  }
-}

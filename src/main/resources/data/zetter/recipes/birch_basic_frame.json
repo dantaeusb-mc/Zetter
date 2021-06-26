@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","pattern":["PNP","pLp","PpP"],"key":{"P":{"item":"minecraft:birch_planks"},"N":{"item":"minecraft:iron_nugget"},"p":{"item":"minecraft:stick"},"L":{"item":"minecraft:leather"}},"result":{"item":"zetter:birch_basic_frame"}}

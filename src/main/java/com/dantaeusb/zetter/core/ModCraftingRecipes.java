@@ -2,7 +2,6 @@ package com.dantaeusb.zetter.core;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.item.crafting.FramingRecipe;
-import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.item.crafting.IRecipeSerializer;

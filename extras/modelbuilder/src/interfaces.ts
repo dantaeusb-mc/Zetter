@@ -48,20 +48,6 @@ export interface MinecraftModelElement {
     __comment?: string;
 }
 
-export interface MinecraftModelItemOverride {
-    predicate: { [key: string]: number },
-    model: string
-}
-
-export interface MinecraftModelItem {
-    parent: string,
-    textures: {
-        [key: string]: string
-    },
-    overrides?: MinecraftModelItemOverride[],
-    __comment?: string
-}
-
 export interface MinecraftTexture {
     code: string;
     location: string;

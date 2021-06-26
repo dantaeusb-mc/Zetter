@@ -7,6 +7,11 @@ import net.minecraft.block.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.item.Items;
+import net.minecraft.tags.ITag;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.Tag;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,19 +28,20 @@ public class ModItems
     public static final BlockItem EASEL = registerBlockItem("easel", ModBlocks.EASEL);
     public static final BlockItem ARTIST = registerBlockItem("artist_table", ModBlocks.ARTIST_TABLE);
     public static final CanvasItem CANVAS = (CanvasItem) register("canvas", new CanvasItem());
+    public static final PaintingItem PAINTING = (PaintingItem) register("painting", new PaintingItem());
     public static final PaintsItem PAINTS = (PaintsItem) register("paints", new PaintsItem());
     public static final PaletteItem PALETTE = (PaletteItem) register("palette", new PaletteItem());
 
     public static final HashMap<String, Item> FRAMES = new HashMap<>();
 
-    public static final FrameItem ACACIA_FRAME = registerFrame("acacia_frame", new FrameItem(CustomPaintingEntity.Materials.ACACIA, false));
-    public static final FrameItem BIRCH_FRAME = registerFrame("birch_frame", new FrameItem(CustomPaintingEntity.Materials.BIRCH, false));
-    public static final FrameItem DARK_OAK_FRAME = registerFrame("dark_oak_frame", new FrameItem(CustomPaintingEntity.Materials.DARK_OAK, false));
-    public static final FrameItem JUNGLE_FRAME = registerFrame("jungle_frame", new FrameItem(CustomPaintingEntity.Materials.JUNGLE, false));
-    public static final FrameItem OAK_FRAME = registerFrame("oak_frame", new FrameItem(CustomPaintingEntity.Materials.OAK, false));
-    public static final FrameItem SPRUCE_FRAME = registerFrame("spruce_frame", new FrameItem(CustomPaintingEntity.Materials.SPRUCE, false));
-    public static final FrameItem CRIMSON_FRAME = registerFrame("crimson_frame", new FrameItem(CustomPaintingEntity.Materials.CRIMSON, false));
-    public static final FrameItem WARPED_FRAME = registerFrame("warped_frame", new FrameItem(CustomPaintingEntity.Materials.WARPED, false));
+    public static final FrameItem ACACIA_FRAME = registerFrame("acacia_basic_frame", new FrameItem(CustomPaintingEntity.Materials.ACACIA, false));
+    public static final FrameItem BIRCH_FRAME = registerFrame("birch_basic_frame", new FrameItem(CustomPaintingEntity.Materials.BIRCH, false));
+    public static final FrameItem DARK_OAK_FRAME = registerFrame("dark_oak_basic_frame", new FrameItem(CustomPaintingEntity.Materials.DARK_OAK, false));
+    public static final FrameItem JUNGLE_FRAME = registerFrame("jungle_basic_frame", new FrameItem(CustomPaintingEntity.Materials.JUNGLE, false));
+    public static final FrameItem OAK_FRAME = registerFrame("oak_basic_frame", new FrameItem(CustomPaintingEntity.Materials.OAK, false));
+    public static final FrameItem SPRUCE_FRAME = registerFrame("spruce_basic_frame", new FrameItem(CustomPaintingEntity.Materials.SPRUCE, false));
+    public static final FrameItem CRIMSON_FRAME = registerFrame("crimson_basic_frame", new FrameItem(CustomPaintingEntity.Materials.CRIMSON, false));
+    public static final FrameItem WARPED_FRAME = registerFrame("warped_basic_frame", new FrameItem(CustomPaintingEntity.Materials.WARPED, false));
 
     public static final FrameItem ACACIA_PLATED_FRAME = registerFrame("acacia_plated_frame", new FrameItem(CustomPaintingEntity.Materials.ACACIA, true));
     public static final FrameItem BIRCH_PLATED_FRAME = registerFrame("birch_plated_frame", new FrameItem(CustomPaintingEntity.Materials.BIRCH, true));
@@ -60,6 +66,7 @@ public class ModItems
         ITEMS.add(item);
 
         FRAMES.put(Helper.getFrameKey(item.getMaterial(), item.hasPlate()), item);
+        ItemTags.bind
 
         return item;
     }

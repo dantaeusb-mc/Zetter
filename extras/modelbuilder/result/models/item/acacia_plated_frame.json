@@ -1,1 +1,1 @@
-{"parent":"item/generated","textures":{"layer0":"zetter:item/frame","layer1":"zetter:item/custom_painting_variant_missing"},"overrides":[{"predicate":{"hasPainting":0},"model":"zetter:item/custom_painting_variant_missing"},{"predicate":{"hasPainting":1},"model":"zetter:item/custom_painting_variant_framed"}]}
+{"parent":"item/generated","textures":{"layer0":"zetter:item/frame/acacia_plated"},"overrides":[{"predicate":{"painting":0},"model":"zetter:item/frame/acacia_plated_empty"},{"predicate":{"painting":1},"model":"zetter:item/frame/acacia_plated_painting"}]}
