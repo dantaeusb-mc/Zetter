@@ -137,6 +137,10 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
             case EYEDROPPER:
                 this.getContainer().eyedropper(this.paletteWidget.getCurrentPaletteSlot(), canvasX, canvasY);
                 this.updateSlidersWithCurrentColor();
+                break;
+            case BUCKET:
+                this.getContainer().bucket(canvasX, canvasY, this.getCurrentColor());
+                break;
         }
     }
 

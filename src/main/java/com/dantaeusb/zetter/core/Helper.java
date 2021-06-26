@@ -37,9 +37,18 @@ public class Helper {
         return Helper.instance;
     }
 
+    /**
+     * Resolution for GUIs
+     * @return
+     */
+    public static AbstractCanvasData.Resolution getBasicResolution() {
+        return AbstractCanvasData.Resolution.x16;
+    }
+
     public static AbstractCanvasData.Resolution getResolution() {
         return AbstractCanvasData.Resolution.x16;
     }
+
     public static @Nullable ICanvasTracker getWorldCanvasTracker() {
         return Helper.getWorldCanvasTracker(Minecraft.getInstance().world);
     }

@@ -1,9 +1,10 @@
 package com.dantaeusb.zetter.client.renderer;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
-import com.dantaeusb.zetter.network.packet.CanvasUnloadRequestPacket;
+import com.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Maps;
@@ -141,7 +142,7 @@ public class CanvasRenderer implements AutoCloseable {
 
         // Notifying server that we're no longer tracking it
         // @todo [LOW] better just check tile entity who's around
-        CanvasUnloadRequestPacket unloadPacket = new CanvasUnloadRequestPacket(canvasCode);
+        CCanvasUnloadRequestPacket unloadPacket = new CCanvasUnloadRequestPacket(canvasCode);
         ModNetwork.simpleChannel.sendToServer(unloadPacket);
     }
 
@@ -194,7 +195,8 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     private void createCanvasRendererInstance(AbstractCanvasData canvas) {
-        CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(canvas.getName(), canvas.getWidth(), canvas.getHeight());
+        CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(
+                canvas.getName(), canvas.getWidth(), canvas.getHeight(), canvas.getResolution());
         canvasRendererInstance.updateCanvasTexture(canvas);
         this.canvasRendererInstances.put(canvas.getName(), canvasRendererInstance);
     }
@@ -224,7 +226,10 @@ public class CanvasRenderer implements AutoCloseable {
         private final int width;
         private final int height;
 
-        private Instance(String canvasCode, int width, int height) {
+        private final int blockPixelWidth;
+        private final int blockPixelHeight;
+
+        private Instance(String canvasCode, int width, int height, AbstractCanvasData.Resolution resolution) {
             this.code = canvasCode;
             this.canvasTexture = new DynamicTexture(width, height, true);
             ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.getDynamicTextureLocation("canvas/" + canvasCode, this.canvasTexture);
@@ -232,6 +237,11 @@ public class CanvasRenderer implements AutoCloseable {
 
             this.width = width;
             this.height = height;
+
+            final int downScale = resolution.getNumeric() / Helper.getBasicResolution().getNumeric();
+
+            this.blockPixelWidth = width / downScale;
+            this.blockPixelHeight = height / downScale;
         }
 
         /*
@@ -262,9 +272,9 @@ public class CanvasRenderer implements AutoCloseable {
             Matrix4f matrix4f = matrixStack.getLast().getMatrix();
             IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 
-            ivertexbuilder.pos(matrix4f, 0.0F, (float) this.height, 0F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, (float) this.width, (float) this.height, 0F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, (float) this.width, 0.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.pos(matrix4f, (float) this.blockPixelWidth, 0.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
             ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, 0F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(combinedLight).endVertex();
         }
 

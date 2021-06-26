@@ -17,10 +17,15 @@ public abstract class CanvasContainer {
         try {
             int type = networkBuffer.readInt();
 
-            String canvasName = networkBuffer.readString();
-            int width = networkBuffer.readInt();
-            int height = networkBuffer.readInt();
-            int colorDataSize = networkBuffer.readInt();
+            final String canvasName = networkBuffer.readString();
+
+            final int resolutionOrdinal = networkBuffer.readInt();
+            AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
+
+            final int width = networkBuffer.readInt();
+            final int height = networkBuffer.readInt();
+
+            final int colorDataSize = networkBuffer.readInt();
             ByteBuffer colorData = networkBuffer.readBytes(colorDataSize).nioBuffer();
             byte[] unwrappedColorData = new byte[width * height * 4];
             colorData.get(unwrappedColorData);
@@ -39,7 +44,7 @@ public abstract class CanvasContainer {
                     break;
             }
 
-            readCanvasData.initData(Helper.getResolution(), width, height, unwrappedColorData);
+            readCanvasData.initData(resolution, width, height, unwrappedColorData);
 
             return readCanvasData;
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
@@ -54,6 +59,7 @@ public abstract class CanvasContainer {
     public static void writePacketCanvasData(PacketBuffer networkBuffer, AbstractCanvasData canvasData) {
         networkBuffer.writeInt(canvasData.getType().ordinal());
         networkBuffer.writeString(canvasData.getName());
+        networkBuffer.writeInt(canvasData.getResolution().ordinal());
         networkBuffer.writeInt(canvasData.getWidth());
         networkBuffer.writeInt(canvasData.getHeight());
         networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());

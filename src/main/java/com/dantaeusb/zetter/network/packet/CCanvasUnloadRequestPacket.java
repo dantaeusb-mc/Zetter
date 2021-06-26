@@ -7,13 +7,13 @@ import net.minecraft.network.PacketBuffer;
  * there's no way to determine which purpose packet is used for
  * unless they're different classes for some reason
  */
-public class CanvasUnloadRequestPacket {
+public class CCanvasUnloadRequestPacket {
     private String canvasName;
 
-    public CanvasUnloadRequestPacket() {
+    public CCanvasUnloadRequestPacket() {
     }
 
-    public CanvasUnloadRequestPacket(String canvasName) {
+    public CCanvasUnloadRequestPacket(String canvasName) {
         this.canvasName = canvasName;
     }
 
@@ -21,8 +21,8 @@ public class CanvasUnloadRequestPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CanvasUnloadRequestPacket readPacketData(PacketBuffer buf) {
-        CanvasUnloadRequestPacket packet = new CanvasUnloadRequestPacket();
+    public static CCanvasUnloadRequestPacket readPacketData(PacketBuffer buf) {
+        CCanvasUnloadRequestPacket packet = new CCanvasUnloadRequestPacket();
 
         packet.canvasName = buf.readString(32767);
 

@@ -50,11 +50,11 @@ public class PaintingFrameBuffer {
 
     public void writeChange(long frameTime, int position, int color) {
         short timeOffset = (short) (frameTime - this.frameStartTime);
-        short sPosition = (short) position;
 
         buffer.put((byte) 0x1);
         buffer.putShort(timeOffset);
-        buffer.putShort(sPosition);
+        //  Can't use short -- it will cause potential overflow with x64 resolution and >= 3x3 images!
+        buffer.putInt(position);
         buffer.putInt(color);
     }
 
@@ -79,7 +79,7 @@ public class PaintingFrameBuffer {
         while (this.buffer.hasRemaining()) {
             byte flag = buffer.get();
             short timeOffset = buffer.getShort();
-            short position = buffer.getShort();
+            int position = buffer.getInt();
             int color = buffer.getInt();
 
             if (flag != 0x1) {

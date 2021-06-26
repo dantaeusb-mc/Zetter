@@ -31,6 +31,13 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         super(canvasCode);
     }
 
+    /**
+     *
+     * @param resolution
+     * @param width
+     * @param height
+     * @param color
+     */
     public final void initData(Resolution resolution, int width, int height, byte[] color) {
         if (width % resolution.getNumeric() != 0 || height % resolution.getNumeric() != 0) {
             throw new IllegalArgumentException("Canvas size is not proportional to given canvas resolution");
@@ -120,8 +127,8 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         this.width = compound.getInt(NBT_TAG_WIDTH);
         this.height = compound.getInt(NBT_TAG_HEIGHT);
 
-        int resolutionOrdinal = compound.getInt(NBT_TAG_RESOLUTION);
-        if (resolutionOrdinal != 0) {
+        if (compound.contains(NBT_TAG_RESOLUTION)) {
+            int resolutionOrdinal = compound.getInt(NBT_TAG_RESOLUTION);
             this.resolution = Resolution.values()[resolutionOrdinal];
         } else {
             this.resolution = Helper.getResolution();

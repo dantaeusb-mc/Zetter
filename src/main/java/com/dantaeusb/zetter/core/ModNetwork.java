@@ -22,15 +22,15 @@ public class ModNetwork {
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
     public static final String MESSAGE_PROTOCOL_VERSION = "0.1";
 
-    public static final byte PAINTING_FRAME_CLIENT = 21;
+    public static final byte PAINTING_FRAME = 21;
     public static final byte PAINTING_REQUEST_CANVAS = 22;
     public static final byte PAINTING_UNLOAD_CANVAS = 23;
     public static final byte CANVAS_SYNC = 24;
-    public static final byte PALETTE_UPDATE_CLIENT = 25;
-    public static final byte PALETTE_UPDATE_SERVER = 26;
+    public static final byte PALETTE_UPDATE = 25;
     public static final byte PAINTING_CREATE = 27;
     public static final byte EASEL_CANVAS_CHANGE = 28;
     public static final byte PAINTING_SYNC = 29;
+    public static final byte PAINTING_BUCKET = 30;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -39,8 +39,8 @@ public class ModNetwork {
                 ClientHandler::isThisProtocolAcceptedByClient,
                 ServerHandler::isThisProtocolAcceptedByServer);
 
-        simpleChannel.registerMessage(PAINTING_FRAME_CLIENT, SPaintingFrameBufferPacket.class,
-                SPaintingFrameBufferPacket::writePacketData, SPaintingFrameBufferPacket::readPacketData,
+        simpleChannel.registerMessage(PAINTING_FRAME, CPaintingFrameBufferPacket.class,
+                CPaintingFrameBufferPacket::writePacketData, CPaintingFrameBufferPacket::readPacketData,
                 ServerHandler::handleFrameBuffer,
                 Optional.of(PLAY_TO_SERVER));
 
@@ -49,8 +49,8 @@ public class ModNetwork {
                 ServerHandler::handleRequestSync,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_UNLOAD_CANVAS, CanvasUnloadRequestPacket.class,
-                CanvasUnloadRequestPacket::writePacketData, CanvasUnloadRequestPacket::readPacketData,
+        simpleChannel.registerMessage(PAINTING_UNLOAD_CANVAS, CCanvasUnloadRequestPacket.class,
+                CCanvasUnloadRequestPacket::writePacketData, CCanvasUnloadRequestPacket::readPacketData,
                 ServerHandler::handleUnloadRequest,
                 Optional.of(PLAY_TO_SERVER));
 
@@ -65,7 +65,7 @@ public class ModNetwork {
                 ClientHandler::handlePaintingSync,
                 Optional.of(PLAY_TO_CLIENT));
 
-        simpleChannel.registerMessage(PALETTE_UPDATE_CLIENT, CPaletteUpdatePacket.class,
+        simpleChannel.registerMessage(PALETTE_UPDATE, CPaletteUpdatePacket.class,
                 CPaletteUpdatePacket::writePacketData, CPaletteUpdatePacket::readPacketData,
                 ServerHandler::handlePaletteUpdate,
                 Optional.of(PLAY_TO_SERVER));
@@ -79,5 +79,10 @@ public class ModNetwork {
                 SEaselCanvasChangePacket::writePacketData, SEaselCanvasChangePacket::readPacketData,
                 ClientHandler::handleEaselCanvasUpdate,
                 Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(PAINTING_BUCKET, CCanvasBucketToolPacket.class,
+                CCanvasBucketToolPacket::writePacketData, CCanvasBucketToolPacket::readPacketData,
+                ServerHandler::handleBucketTool,
+                Optional.of(PLAY_TO_SERVER));
     }
 }

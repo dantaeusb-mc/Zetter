@@ -1,36 +1,24 @@
-# This is an example mods.toml file. It contains the data relating to the loading mods.
-# There are several mandatory fields (#mandatory), and many more that are optional (#optional).
-# The overall format is standard TOML format, v0.5.0.
-# Note that there are a couple of TOML lists in this file.
-# Find more information on toml format here:  https://github.com/toml-lang/toml
-# The name of the mod loader type to load - for regular FML @Mod mods it should be javafml
-modLoader="javafml" #mandatory
-# A version range to match for said mod loader - for regular FML @Mod it will be the forge version
-loaderVersion="[35,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
-# The license for you mod. This is mandatory metadata and allows for easier comprehension of your redistributive properties.
-# Review your options at https://choosealicense.com/. All rights reserved is the default copyright stance, and is thus the default here.
+modLoader="javafml"
+
+loaderVersion="[35,)"
+
 license="Mozilla Public License 2.0"
-# A URL to refer people to when problems occur with this mod
-issueTrackerURL="https://github.com/dantaeusb-mc/Zetter/issues" #optional
-# A list of mods - how many allowed here is determined by the individual mod loader
-[[mods]] #mandatory
-# The modid of the mod
-modId="zetter" #mandatory
-# The version number of the mod - there's a few well known ${} variables useable here or just hardcode it
-# ${file.jarVersion} will substitute the value of the Implementation-Version as read from the mod's JAR file metadata
-# see the associated build.gradle script for how to populate this completely automatically during a build
-version="${file.jarVersion}" #mandatory
- # A display name for the mod
-displayName="Zetter" #mandatory
-# A URL to query for updates for this mod. See the JSON update specification <here>
-# updateJSONURL="http://myurl.me/" #optional
-# A URL for the "homepage" for this mod, displayed in the mod UI
-displayURL="https://github.com/dantaeusb-mc/Zetter" #optional
-# A file name (in the root of the mod JAR) containing a logo for display
-logoFile="examplemod.png" #optional
-# A text field displayed in the mod UI
+
+issueTrackerURL="https://github.com/dantaeusb-mc/Zetter/issues"
+
+[[mods]]
+
+modId="zetter"
+
+version="${file.jarVersion}"
+
+displayName="Zetter"
+
+displayURL="https://www.curseforge.com/minecraft/mc-mods/zetter"
+
+logoFile="examplemod.png"
+
 credits='''
-Thanks to
 
 StuarteLitro/@ppblitto for fancy icons and Portuguese translation
 diesieben07#0714 from Forge Discord for absolutely insane amount of help
@@ -47,10 +35,10 @@ ChampionAsh5357#5519
 Examples and references:
 greyminecraftcoder and all MinecraftByExample contributors
 Vazkii and Quark team for opening their source code as I often used it as a reference
-''' #optional
-# A text field displayed in the mod UI
-authors="Dmitry Burlakov <dantaeusb@live.com>" #optional
-# The description text for the mod (multi line!) (#mandatory)
+'''
+
+authors="Dmitry Burlakov <dantaeusb@live.com>"
+
 description='''
 Zetter is a Minecraft mod with a simple goal of adding custom drawing interface to
 create and use custom pictures in Minecraft.
@@ -62,21 +50,17 @@ Core values of this mod:
 4. Let power users to be power users as much as it doesn't overcomplicate UI;
 5. Server administrators should be able to easily moderate player artworks and decide what is appropriate on their server.
 '''
-[[dependencies.zetter]] #optional
-    # the modid of the dependency
-    modId="forge" #mandatory
-    # Does this dependency have to exist - if not, ordering below must be specified
-    mandatory=true #mandatory
-    # The version range of the dependency
-    versionRange="[35,)" #mandatory
-    # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
+
+[[dependencies.zetter]]
+    modId="forge"
+    mandatory=true
+    versionRange="[35,)"
     ordering="NONE"
-    # Side this dependency is applied on - BOTH, CLIENT or SERVER
     side="BOTH"
 
 [[dependencies.zetter]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.4,1.17)"
+    versionRange="[1.16.3,1.17)"
     ordering="NONE"
     side="BOTH"

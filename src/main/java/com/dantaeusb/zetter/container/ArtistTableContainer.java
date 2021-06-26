@@ -26,8 +26,8 @@ public class ArtistTableContainer extends Container {
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
     private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
 
-    private static final int CANVAS_ROW_COUNT = 3;
-    private static final int CANVAS_COLUMN_COUNT = 4;
+    public static final int CANVAS_ROW_COUNT = 3;
+    public static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
     private final IWorldPosCallable worldPosCallable;

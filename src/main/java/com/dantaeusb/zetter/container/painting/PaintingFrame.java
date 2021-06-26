@@ -12,9 +12,9 @@ public class PaintingFrame {
 
     }
 
-    public PaintingFrame(long frameTime, short pixelIndex, int color, UUID ownerId) {
+    public PaintingFrame(long frameTime, int pixelIndex, int color, UUID ownerId) {
         this.frameTime = frameTime;
-        this.pixelIndex = (int) pixelIndex;
+        this.pixelIndex = pixelIndex;
         this.color = color;
         this.ownerId = ownerId;
     }

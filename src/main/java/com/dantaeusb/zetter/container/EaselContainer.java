@@ -14,7 +14,6 @@ import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.item.PaletteItem;
 import com.dantaeusb.zetter.network.packet.*;
-import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.tileentity.EaselTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
 import com.dantaeusb.zetter.storage.CanvasData;
@@ -32,7 +31,9 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class EaselContainer extends Container {
     public static int FRAME_TIMEOUT = 5000;  // 5 second limit to keep changes buffer, if packet processed later disregard it
@@ -270,6 +271,14 @@ public class EaselContainer extends Container {
         this.sendPaletteUpdatePacket(slotIndex, newColor);
     }
 
+    public void bucket(int pixelX, int pixelY, int color) {
+        int position = this.canvas.getPixelIndex(pixelX, pixelY);
+
+        CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);
+        Zetter.LOG.info("Sending Bucket Tool Packet: " + bucketToolPacket);
+        ModNetwork.simpleChannel.sendToServer(bucketToolPacket);
+    }
+
     /**
      * Immediately update texture for client - not needed for server cause no renderer used here
      */
@@ -331,7 +340,7 @@ public class EaselContainer extends Container {
         if (this.canvasChanges.shouldBeSent(System.currentTimeMillis())) {
             if (this.world.isRemote()) {
                 this.canvasChanges.getFrames(this.player.getUniqueID());
-                SPaintingFrameBufferPacket paintingFrameBufferPacket = new SPaintingFrameBufferPacket(this.canvasChanges);
+                CPaintingFrameBufferPacket paintingFrameBufferPacket = new CPaintingFrameBufferPacket(this.canvasChanges);
                 ModNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
 
                 this.lastFrameBufferSendClock = System.currentTimeMillis();
@@ -370,6 +379,68 @@ public class EaselContainer extends Container {
         }
 
         ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.getName());
+    }
+
+    public void processBucketToolServer(int position, int bucketColor) {
+        final int width = this.canvas.getWidth();
+        final int height = this.canvas.getHeight();
+        final int length = width * height;
+        final int replacedColor = this.canvas.getColorAt(position);
+
+        LinkedList<Integer> positionsQueue = new LinkedList<>();
+        Vector<Integer> checkedQueue = new Vector<>();
+        Vector<Integer> paintQueue = new Vector<>();
+
+        positionsQueue.add(position);
+        paintQueue.add(position);
+
+        do {
+            getNeighborPositions(positionsQueue.pop(), width, length)
+                    // Ignore checked positions if overlap
+                    .filter(currentPosition -> !checkedQueue.contains(currentPosition))
+                    .forEach(currentPosition -> {
+                        if (this.canvas.getColorAt(currentPosition) == replacedColor) {
+                            positionsQueue.add(currentPosition);
+                            paintQueue.add(currentPosition);
+                        }
+
+                        checkedQueue.add(currentPosition);
+                    });
+        } while (!positionsQueue.isEmpty());
+
+        for (int updatePosition: paintQueue) {
+            this.writePixelOnCanvasServerSide(updatePosition, bucketColor);
+        }
+
+        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.getName());
+    }
+
+    public static Stream<Integer> getNeighborPositions(int currentCenter, int width, int length) {
+        List<Integer> neighborPositions = new ArrayList<>(4);
+
+        final int topPosition = currentCenter - width;
+        if (topPosition >= 0) {
+            neighborPositions.add(topPosition);
+        }
+
+        final int leftPosition = currentCenter - 1;
+        // on a single row
+        if (leftPosition >= 0 && leftPosition / width == currentCenter / width) {
+            neighborPositions.add(leftPosition);
+        }
+
+        final int rightPosition = currentCenter + 1;
+        // on a single row
+        if (rightPosition < length && rightPosition / width == currentCenter / width) {
+            neighborPositions.add(rightPosition);
+        }
+
+        final int bottomPosition = currentCenter + width;
+        if (bottomPosition < length) {
+            neighborPositions.add(bottomPosition);
+        }
+
+        return neighborPositions.stream();
     }
 
     /**
@@ -459,7 +530,7 @@ public class EaselContainer extends Container {
 
         if (this.world.isRemote() && !this.getCanvasChanges().isEmpty()) {
             this.canvasChanges.getFrames(playerIn.getUniqueID());
-            SPaintingFrameBufferPacket modePacket = new SPaintingFrameBufferPacket(this.canvasChanges);
+            CPaintingFrameBufferPacket modePacket = new CPaintingFrameBufferPacket(this.canvasChanges);
             ModNetwork.simpleChannel.sendToServer(modePacket);
 
             this.lastFrameBufferSendClock = System.currentTimeMillis();

@@ -26,7 +26,7 @@ public class ServerHandler {
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
      * @param message The message
      */
-    public static void handleFrameBuffer(final SPaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handleFrameBuffer(final CPaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
@@ -51,7 +51,7 @@ public class ServerHandler {
      *
      * @todo: send changes to TE, not container, as it's created per player
      */
-    public static void processFrameBuffer(final SPaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
+    public static void processFrameBuffer(final CPaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
         if (sendingPlayer.openContainer instanceof EaselContainer) {
             EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
 
@@ -149,7 +149,7 @@ public class ServerHandler {
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
      * @param message The message
      */
-    public static void handleUnloadRequest(final CanvasUnloadRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handleUnloadRequest(final CCanvasUnloadRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
@@ -176,7 +176,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processUnloadRequest(final CanvasUnloadRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
+    public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         // Get overworld world instance
         MinecraftServer server = sendingPlayer.getServerWorld().getServer();
         World world = server.func_241755_D_();
@@ -222,7 +222,6 @@ public class ServerHandler {
         }
     }
 
-
     /**
      * Called when a message is received of the appropriate type.
      * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
@@ -250,6 +249,37 @@ public class ServerHandler {
         if (sendingPlayer.openContainer instanceof ArtistTableContainer) {
             ArtistTableContainer artistTableContainer = (ArtistTableContainer)sendingPlayer.openContainer;
             artistTableContainer.updatePaintingName(packetIn.getPaintingName());
+        }
+    }
+
+
+    /**
+     * Called when a message is received of the appropriate type.
+     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
+     * @param message The message
+     */
+    public static void handleBucketTool(final CCanvasBucketToolPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
+        ctx.setPacketHandled(true);
+
+        if (sideReceived != LogicalSide.SERVER) {
+            Zetter.LOG.warn("CCanvasBucketToolPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
+            return;
+        }
+
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
+        if (sendingPlayer == null) {
+            Zetter.LOG.warn("EntityPlayerMP was null when CCanvasBucketToolPacket was received");
+        }
+
+        ctx.enqueueWork(() -> processBucketTool(packetIn, sendingPlayer));
+    }
+
+    public static void processBucketTool(final CCanvasBucketToolPacket packetIn, ServerPlayerEntity sendingPlayer) {
+        if (sendingPlayer.openContainer instanceof EaselContainer) {
+            EaselContainer easelContainer = (EaselContainer)sendingPlayer.openContainer;
+            easelContainer.processBucketToolServer(packetIn.position, packetIn.color);
         }
     }
 
