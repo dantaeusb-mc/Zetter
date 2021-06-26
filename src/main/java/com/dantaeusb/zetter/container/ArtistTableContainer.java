@@ -266,17 +266,6 @@ public class ArtistTableContainer extends Container {
         return this.canvasStorage.isUsableByPlayer(player);
     }
 
-    /**
-     * Called when the container is closed.
-     */
-    public void onContainerClosed(PlayerEntity playerIn) {
-        super.onContainerClosed(playerIn);
-
-        this.worldPosCallable.consume((world, blockPos) -> {
-            this.clearContainer(playerIn, playerIn.world, this.inventoryOut);
-        });
-    }
-
     public class SlotCanvas extends Slot {
         public SlotCanvas(IInventory inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
