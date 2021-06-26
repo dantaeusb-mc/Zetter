@@ -142,10 +142,12 @@ public class ArtistTableContainer extends Container {
         }
 
         if (!outStack.isEmpty()) {
-            if (!StringUtils.isBlank(this.paintingName)) {
+            if (StringUtils.isBlank(this.paintingName)) {
                 if (existingStack.hasDisplayName()) {
                     existingStack.clearCustomName();
                 }
+
+                FrameItem.setCachedPaintingName(outStack, this.paintingName);
             } else if (!this.paintingName.equals(FrameItem.getCachedAuthorName(outStack))) {
                 FrameItem.setCachedPaintingName(outStack, this.paintingName);
             }

@@ -15,7 +15,7 @@ public class PaintingFrameBuffer {
     public static int FRAME_TIME_LIMIT = 500; // send packet every 0.5 seconds
 
     private static final int MAX_FRAMES = 10;
-    private static final int FRAME_SIZE = 1 + 2 + 2 + 4; // flag, time offset, position, color
+    private static final int FRAME_SIZE = 1 + 2 + 4 + 4; // flag, time offset, position, color
     public static final int BUFFER_SIZE = FRAME_SIZE * MAX_FRAMES;
 
     private final ByteBuffer buffer;
@@ -53,7 +53,8 @@ public class PaintingFrameBuffer {
 
         buffer.put((byte) 0x1);
         buffer.putShort(timeOffset);
-        //  Can't use short -- it will cause potential overflow with x64 resolution and >= 3x3 images!
+
+        // Can't use short: it will cause potential overflow with x64 resolution and >= 3x3 images!
         buffer.putInt(position);
         buffer.putInt(color);
     }

@@ -9,6 +9,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -66,6 +67,11 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     // Listener interface - to track name field availability
 
     private void renameItem(String name) {
+        this.container.updatePaintingName(name);
+        this.sendRenamePacket(name);
+    }
+
+    private void sendRenamePacket(String name) {
         CUpdatePaintingPacket modePacket = new CUpdatePaintingPacket(
                 this.container.windowId,
                 this.nameField.getText(),

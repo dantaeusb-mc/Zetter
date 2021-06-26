@@ -1,12 +1,12 @@
 #### Pre-release tasks:
 
-* \[MED\] Show name in artist table when entering;
+* \[HIGH\] Null Pointer in writePacketCanvasData when creating artist table;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
-* \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel.
 
 #### Release tasks:
 
+* \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel.
 * \[MED\] Make sure bucket tool has decent performance;
 * \[MED\] Add data format validation;
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
