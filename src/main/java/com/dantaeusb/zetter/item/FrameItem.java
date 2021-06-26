@@ -18,7 +18,7 @@ public class FrameItem extends PaintingItem {
     private boolean hasPlate;
 
     public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS).containerItem(ModItems.PAINTING));
+        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
 
         this.material = material;
         this.hasPlate = plated;
