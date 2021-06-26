@@ -66,7 +66,6 @@ public class ModItems
         ITEMS.add(item);
 
         FRAMES.put(Helper.getFrameKey(item.getMaterial(), item.hasPlate()), item);
-        ItemTags.bind
 
         return item;
     }

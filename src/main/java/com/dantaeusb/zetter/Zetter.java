@@ -33,8 +33,6 @@ public class Zetter
     public static Zetter instance;
     public static CommonProxy proxy;
 
-    public static ITag<Item> FRAMES_TAG = ItemTags.makeWrapperTag((new ResourceLocation(Zetter.MOD_ID, "frames")).toString());
-
     public static boolean quarkEnabled;
 
     public Zetter() {

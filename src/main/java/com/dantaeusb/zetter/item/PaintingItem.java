@@ -33,6 +33,10 @@ public class PaintingItem extends Item
         super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
     }
 
+    public PaintingItem(Item.Properties properties) {
+        super(properties);
+    }
+
     public static void setPaintingData(ItemStack stack, PaintingData paintingData) {
         setPaintingCode(stack, paintingData.getName());
 

@@ -1,10 +1,19 @@
 Zetter: Credits/Thank You
 
-Forge
-Discord diesieben07#0714
+@ppblitto for icons and Portuguese translations
+diesieben07#0714 from Forge Discord for absolutely insane amount of help
+
+Forge Discord
+
+diesieben07#0714
+Cyborgmas#0379
+Amethyst#6998
+Kovak#5505
+Woodland Creature#3144
+gigaherz#9173
+ChampionAsh5357#5519
+
+Projects / tutorial references
+
 MinecraftByExample
 Quark
-Discord Kovak#5505
-Discord Woodland Creature#3144
-Discord gigaherz#9173
-

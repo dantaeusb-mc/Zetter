@@ -1,16 +1,18 @@
 package com.dantaeusb.zetter.item.crafting;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.base.CommonProxy;
-import com.dantaeusb.zetter.core.ModCraftingRecipes;
 import com.dantaeusb.zetter.core.ModItems;
-import com.google.gson.JsonArray;
+import com.dantaeusb.zetter.item.FrameItem;
+import com.dantaeusb.zetter.item.PaintingItem;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.*;
+import net.minecraft.item.WrittenBookItem;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.SpecialRecipe;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.JSONUtils;
@@ -22,25 +24,23 @@ import net.minecraftforge.registries.ForgeRegistryEntry;
 /**
  * Only for frames, toggle
  */
-public class FramingRecipe extends SpecialRecipe {
+public class UnframingRecipe extends SpecialRecipe {
     public static final Serializer SERIALIZER = new Serializer();
-    public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "framing");
+    public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "unframing");
 
     private final Ingredient inputFrame;
-    private final Ingredient inputPainting;
 
-    public FramingRecipe(ResourceLocation id, Ingredient inputFrame, Ingredient inputPainting) {
+    public UnframingRecipe(ResourceLocation id, Ingredient inputFrame) {
         super(id);
 
         this.inputFrame = inputFrame;
-        this.inputPainting = inputPainting;
 
         Zetter.LOG.info("Added Recipe " + this.toString());
     }
 
     @Override
     public String toString () {
-        return "FramingRecipe [inputFrame=" + this.inputFrame + ", inputPainting=" + this.inputPainting + "]";
+        return "UnframingRecipe [inputFrame=" + this.inputFrame + "]";
     }
 
     /**
@@ -49,7 +49,6 @@ public class FramingRecipe extends SpecialRecipe {
      */
     public boolean matches(CraftingInventory craftingInventory, World world) {
         ItemStack frameStack = ItemStack.EMPTY;
-        ItemStack paintingStack = ItemStack.EMPTY;
 
         for(int i = 0; i < craftingInventory.getSizeInventory(); ++i) {
             if (craftingInventory.getStackInSlot(i).isEmpty()) {
@@ -62,16 +61,32 @@ public class FramingRecipe extends SpecialRecipe {
                 }
 
                 frameStack = craftingInventory.getStackInSlot(i);
-            } else if (this.inputPainting.test(craftingInventory.getStackInSlot(i))) {
-                if (!paintingStack.isEmpty()) {
-                    return false;
-                }
-
-                paintingStack = craftingInventory.getStackInSlot(i);
             }
         }
 
-        return !frameStack.isEmpty() && (!paintingStack.isEmpty() && paintingStack.hasTag());
+        return !frameStack.isEmpty() && PaintingItem.getPaintingCode(frameStack) != null;
+    }
+
+    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
+        NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
+
+        for(int i = 0; i < remainingItems.size(); ++i) {
+            ItemStack stackInSlot = inv.getStackInSlot(i);
+
+            // @todo: do we need containerItem?
+            /*if (stackInSlot.hasContainerItem()) {
+                remainingItems.set(i, stackInSlot.getContainerItem());
+            } else*/
+            if (stackInSlot.getItem() instanceof FrameItem) {
+                Item keepItem = stackInSlot.getItem();
+                ItemStack keepStack = new ItemStack(keepItem);
+                keepStack.setCount(1);
+                remainingItems.set(i, keepStack);
+                break;
+            }
+        }
+
+        return remainingItems;
     }
 
     /**
@@ -79,7 +94,6 @@ public class FramingRecipe extends SpecialRecipe {
      */
     public ItemStack getCraftingResult(CraftingInventory craftingInventory) {
         ItemStack frameStack = ItemStack.EMPTY;
-        ItemStack paintingStack = ItemStack.EMPTY;
 
         for(int i = 0; i < craftingInventory.getSizeInventory(); ++i) {
             if (this.inputFrame.test(craftingInventory.getStackInSlot(i))) {
@@ -88,18 +102,12 @@ public class FramingRecipe extends SpecialRecipe {
                 }
 
                 frameStack = craftingInventory.getStackInSlot(i);
-            } else if (this.inputPainting.test(craftingInventory.getStackInSlot(i))) {
-                if (!paintingStack.isEmpty()) {
-                    return ItemStack.EMPTY;
-                }
-
-                paintingStack = craftingInventory.getStackInSlot(i);
             }
         }
 
-        if (!paintingStack.isEmpty() && paintingStack.hasTag()) {
-            ItemStack outStack = frameStack.copy();
-            CompoundNBT compoundnbt = paintingStack.getTag().copy();
+        if (!frameStack.isEmpty() && frameStack.hasTag()) {
+            ItemStack outStack = new ItemStack(ModItems.PAINTING);
+            CompoundNBT compoundnbt = frameStack.getTag().copy();
             outStack.setTag(compoundnbt);
             return outStack;
         } else {
@@ -122,34 +130,29 @@ public class FramingRecipe extends SpecialRecipe {
         return width >= 2 && height >= 2;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<FramingRecipe> {
+    private static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<UnframingRecipe> {
 
         Serializer() {
-            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "framing"));
+            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "unframing"));
         }
 
         @Override
-        public FramingRecipe read(ResourceLocation recipeId, JsonObject json) {
+        public UnframingRecipe read(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = JSONUtils.getJsonObject(json, "frame");
             final Ingredient inputFrame = Ingredient.deserialize(inputFrameJson);
 
-            final JsonElement inputPaintingJson = JSONUtils.getJsonObject(json, "painting");
-            final Ingredient inputPainting = Ingredient.deserialize(inputPaintingJson);
-
-            return new FramingRecipe(recipeId, inputFrame, inputPainting);
+            return new UnframingRecipe(recipeId, inputFrame);
         }
 
         @Override
-        public FramingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
+        public UnframingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
             Ingredient frameIngredient = Ingredient.read(buffer);
-            Ingredient paintingIngredient = Ingredient.read(buffer);
-            return new FramingRecipe(recipeId, frameIngredient, paintingIngredient);
+            return new UnframingRecipe(recipeId, frameIngredient);
         }
 
         @Override
-        public void write(PacketBuffer buffer, FramingRecipe recipe) {
+        public void write(PacketBuffer buffer, UnframingRecipe recipe) {
             recipe.inputFrame.write(buffer);
-            recipe.inputPainting.write(buffer);
         }
     }
 }

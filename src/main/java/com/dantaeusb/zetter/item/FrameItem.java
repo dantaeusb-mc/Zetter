@@ -1,5 +1,6 @@
 package com.dantaeusb.zetter.item;
 
+import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -17,7 +18,7 @@ public class FrameItem extends PaintingItem {
     private boolean hasPlate;
 
     public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super();
+        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS).containerItem(ModItems.PAINTING));
 
         this.material = material;
         this.hasPlate = plated;

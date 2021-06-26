@@ -1,0 +1,5 @@
+{
+  "type": "zetter:framing",
+  "frame": {"tag": "zetter:frames"},
+  "painting": {"item": "zetter:painting"}
+}

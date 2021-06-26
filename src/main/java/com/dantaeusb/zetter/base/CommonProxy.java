@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 
 public class CommonProxy {
     public void start() {
-        ForgeRegistries.RECIPE_SERIALIZERS.register(FramingRecipe.SERIALIZER);
-
         IEventBus modEventBus = Zetter.MOD_EVENT_BUS;
         registerListeners(modEventBus);
     }
