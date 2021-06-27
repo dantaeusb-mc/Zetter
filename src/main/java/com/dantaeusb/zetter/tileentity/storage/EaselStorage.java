@@ -166,11 +166,6 @@ public class EaselStorage implements IInventory {
     //  you can make direct calls to the parent if you like, I've used lambdas because I think it shows the separation
     //   of responsibilities more clearly.
 
-    @FunctionalInterface
-    public interface Notify {   // Some folks use Runnable, but I prefer not to use it for non-thread-related tasks
-        void invoke();
-    }
-
     @Override
     public void markDirty() {
         markDirtyNotificationLambda.invoke();
@@ -253,4 +248,9 @@ public class EaselStorage implements IInventory {
     // container has been closed by a player
     // default is "do nothing"
     private Notify closeInventoryNotificationLambda = ()->{};
+
+    @FunctionalInterface
+    public interface Notify {   // Some folks use Runnable, but I prefer not to use it for non-thread-related tasks
+        void invoke();
+    }
 }

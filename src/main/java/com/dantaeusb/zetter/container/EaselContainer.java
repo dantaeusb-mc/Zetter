@@ -28,10 +28,11 @@ import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -61,6 +62,8 @@ public class EaselContainer extends Container {
     private long lastFrameBufferSendClock = 0L;
     private long lastSyncReceivedClock = 0L;
     private long lastPushedFrameClock = 0L;
+
+    private Notify firstLoadNotification = ()->{};
 
     public EaselContainer(int windowID, PlayerInventory invPlayer, EaselStorage easelStorage) {
         super(ModContainers.PAINTING, windowID);
@@ -135,9 +138,23 @@ public class EaselContainer extends Container {
      * update functions and network message
      */
 
+    public void setFirstLoadNotification(Notify firstLoadNotification) {
+        this.firstLoadNotification = firstLoadNotification;
+    }
+
     public void markDirty() {
         SEaselCanvasChangePacket canvasSyncMessage = new SEaselCanvasChangePacket(this.windowId, this.easelStorage.getCanvasStack());
         ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.player), canvasSyncMessage);
+    }
+
+    @Override
+    @OnlyIn(Dist.CLIENT)
+    public void setAll(List<ItemStack> itemStacks) {
+        super.setAll(itemStacks);
+
+        if (this.firstLoadNotification != null) {
+            this.firstLoadNotification.invoke();
+        }
     }
 
     public void handleCanvasChange(ItemStack canvasStack) {
@@ -147,6 +164,10 @@ public class EaselContainer extends Container {
         } else {
             this.canvas = null;
             this.canvasReady = false;
+        }
+
+        if (this.firstLoadNotification != null) {
+            this.firstLoadNotification.invoke();
         }
     }
 
@@ -593,5 +614,10 @@ public class EaselContainer extends Container {
      */
     public boolean canInteractWith(PlayerEntity player) {
         return this.easelStorage.isUsableByPlayer(player);
+    }
+
+    @FunctionalInterface
+    public interface Notify {   // Some folks use Runnable, but I prefer not to use it for non-thread-related tasks
+        void invoke();
     }
 }

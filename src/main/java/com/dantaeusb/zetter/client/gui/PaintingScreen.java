@@ -2,7 +2,6 @@ package com.dantaeusb.zetter.client.gui;
 
 import com.dantaeusb.zetter.client.gui.painting.*;
 import com.dantaeusb.zetter.container.EaselContainer;
-import com.dantaeusb.zetter.core.ModItems;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.FontRenderer;
@@ -15,9 +14,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 
-public class PaintingScreen extends ContainerScreen<EaselContainer> {
+public class PaintingScreen extends ContainerScreen<EaselContainer> implements IContainerListener {
     // This is the resource location for the background image
     private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
 
@@ -69,9 +67,11 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
         this.children.add(this.slidersWidget);
         this.children.add(this.colorCodeWidget);
 
+        this.getContainer().setFirstLoadNotification(this::firstLoadUpdate);
+
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
-        this.updateSlidersWithCurrentColor();
+        this.container.addListener(this);
     }
 
     public void onClose() {
@@ -112,6 +112,10 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
 
     public int getPaletteColor(int slot) {
         return this.container.getPaletteColor(slot);
+    }
+
+    public void firstLoadUpdate() {
+        this.updateSlidersWithCurrentColor();
     }
 
     public void updateCurrentPaletteColor(int color) {
@@ -241,5 +245,26 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> {
     // Returns true if the given x,y coordinates are within the given rectangle
     public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY){
         return ((mouseX >= x && mouseX <= x+xSize) && (mouseY >= y && mouseY <= y+ySize));
+    }
+
+    /**
+     * update the crafting window inventory with the items in the list
+     */
+    public void sendAllContents(Container containerToSend, NonNullList<ItemStack> itemsList) {
+    }
+
+    /**
+     * Sends two ints to the client-side Container. Used for furnace burning time, smelting progress, brewing progress,
+     * and enchanting level. Normally the first int identifies which variable to update, and the second contains the new
+     * value. Both are truncated to shorts in non-local SMP.
+     */
+    public void sendWindowProperty(Container containerIn, int varToUpdate, int newValue) {
+    }
+
+    /**
+     * Sends the contents of an inventory slot to the client-side Container. This doesn't have to match the actual
+     * contents of that slot.
+     */
+    public void sendSlotContents(Container containerToSend, int slotInd, ItemStack stack) {
     }
 }

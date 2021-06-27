@@ -1,5 +1,6 @@
 #### Pre-release tasks:
 
+* \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
 * \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
