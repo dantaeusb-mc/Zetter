@@ -1,5 +1,6 @@
 #### Pre-release tasks:
 
+* \[MED\] If you put non-initialized canvas on artist table, it will be loading forever;
 * \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
 * \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
 * \[MED\] If painting has some problems, just remove it instead of crashing;

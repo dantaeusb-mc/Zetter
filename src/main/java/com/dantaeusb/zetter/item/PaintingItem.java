@@ -4,7 +4,6 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
-import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
@@ -87,17 +86,6 @@ public class PaintingItem extends Item
         }
 
         return super.getDisplayName(stack);
-    }
-
-    /**
-     * It's there but we probably should avoid this
-     * @param stack
-     * @return
-     */
-    @Deprecated
-    @Nullable
-    public static PaintingData getPaintingData(ItemStack stack) {
-        return Helper.getWorldCanvasTracker().getCanvasData(getPaintingCode(stack), PaintingData.class);
     }
 
     public static void setPaintingCode(ItemStack stack, String canvasCode) {

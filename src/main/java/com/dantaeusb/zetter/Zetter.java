@@ -2,7 +2,6 @@ package com.dantaeusb.zetter;
 
 import com.dantaeusb.zetter.base.ClientProxy;
 import com.dantaeusb.zetter.base.CommonProxy;
-import com.dantaeusb.zetter.usefultools.debugging.ForgeLoggerTweaker;
 import net.minecraft.item.Item;
 import net.minecraft.tags.ITag;
 import net.minecraft.tags.ItemTags;
@@ -37,12 +36,6 @@ public class Zetter
 
     public Zetter() {
         instance = this;
-
-        // Get rid of maybe, doesn't seem to work
-        if (DEBUG_MODE) {
-            ForgeLoggerTweaker.setMinimumLevel(Level.WARN);
-            ForgeLoggerTweaker.applyLoggerFilter();
-        }
 
         quarkEnabled = ModList.get().isLoaded("quark");
         MOD_EVENT_BUS = FMLJavaModLoadingContext.get().getModEventBus();

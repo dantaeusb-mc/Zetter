@@ -23,6 +23,7 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+
 public class ClientHandler {
     /**
      * Handle sync packet on client

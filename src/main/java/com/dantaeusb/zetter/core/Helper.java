@@ -49,10 +49,6 @@ public class Helper {
         return AbstractCanvasData.Resolution.x16;
     }
 
-    public static @Nullable ICanvasTracker getWorldCanvasTracker() {
-        return Helper.getWorldCanvasTracker(Minecraft.getInstance().world);
-    }
-
     public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {
         ICanvasTracker canvasTracker;
 
