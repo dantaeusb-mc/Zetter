@@ -188,8 +188,6 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         CompoundNBT nbtTagCompound = new CompoundNBT();
         write(nbtTagCompound);
 
-        Zetter.LOG.info("Going to send update packet");
-
         int tileEntityType = 42;
         return new SUpdateTileEntityPacket(this.pos, tileEntityType, nbtTagCompound);
     }

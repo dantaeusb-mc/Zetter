@@ -34,8 +34,6 @@ public class FramingRecipe extends SpecialRecipe {
 
         this.inputFrame = inputFrame;
         this.inputPainting = inputPainting;
-
-        Zetter.LOG.info("Added Recipe " + this.toString());
     }
 
     @Override

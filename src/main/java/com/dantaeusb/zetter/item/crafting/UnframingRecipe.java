@@ -34,8 +34,6 @@ public class UnframingRecipe extends SpecialRecipe {
         super(id);
 
         this.inputFrame = inputFrame;
-
-        Zetter.LOG.info("Added Recipe " + this.toString());
     }
 
     @Override

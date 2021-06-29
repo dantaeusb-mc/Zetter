@@ -57,7 +57,7 @@ public class ServerHandler {
         World world = server.func_241755_D_();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
 
-        Zetter.LOG.info("Got request to sync canvas " + packetIn.getCanvasName());
+        Zetter.LOG.debug("Got request to sync canvas " + packetIn.getCanvasName());
 
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
@@ -108,7 +108,7 @@ public class ServerHandler {
         World world = server.func_241755_D_();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
 
-        Zetter.LOG.info("Got request to unload canvas " + packetIn.getCanvasName());
+        Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName());
 
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");

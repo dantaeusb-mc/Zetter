@@ -16,7 +16,6 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
 
     public CanvasClientTracker(World world) {
         this.world = world;
-        Zetter.LOG.info("CanvasClientTracker");
     }
 
     @Override

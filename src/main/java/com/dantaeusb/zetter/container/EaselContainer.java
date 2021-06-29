@@ -238,7 +238,7 @@ public class EaselContainer extends Container {
         }
 
         CPaletteUpdatePacket paletteUpdatePacket = new CPaletteUpdatePacket(paletteSlot, color);
-        Zetter.LOG.info("Sending Palette Update: " + paletteUpdatePacket);
+        Zetter.LOG.debug("Sending Palette Update: " + paletteUpdatePacket);
         ModNetwork.simpleChannel.sendToServer(paletteUpdatePacket);
     }
 
@@ -296,7 +296,7 @@ public class EaselContainer extends Container {
         int position = this.canvas.getPixelIndex(pixelX, pixelY);
 
         CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);
-        Zetter.LOG.info("Sending Bucket Tool Packet: " + bucketToolPacket);
+        Zetter.LOG.debug("Sending Bucket Tool Packet: " + bucketToolPacket);
         ModNetwork.simpleChannel.sendToServer(bucketToolPacket);
     }
 
@@ -392,7 +392,7 @@ public class EaselContainer extends Container {
         for (PaintingFrame frame: paintingFrameBuffer.getFrames(ownerId)) {
             if (currentTime - frame.getFrameTime() > FRAME_TIMEOUT) {
                 // Update will be sent to player anyway, and they'll request new sync if they're confused
-                Zetter.LOG.info("Skipping painting frame, too old");
+                Zetter.LOG.debug("Skipping painting frame, too old");
                 continue;
             }
 
@@ -496,7 +496,7 @@ public class EaselContainer extends Container {
         // they're sync, just add pixels for newer changes, they'll be pushed anyway
         Pair<Long, Long> lowTrustInterval = new Pair<>(adjustedTimestamp, timestamp - this.lastFrameBufferSendClock);
 
-        Zetter.LOG.info("Latency: " + latency);
+        Zetter.LOG.debug("Latency: " + latency);
 
         for (PaintingFrame oldFrame: this.lastFrames) {
             if (oldFrame.getFrameTime() < lowTrustInterval.getKey()) {

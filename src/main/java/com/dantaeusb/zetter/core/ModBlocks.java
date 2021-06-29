@@ -20,7 +20,6 @@ public class ModBlocks
     private static final List<Block> BLOCKS = new ArrayList<>();
 
     public static final Block ARTIST_TABLE = registerBlockItem("artist_table", new ArtistTableBlock(AbstractBlock.Properties.create(Material.WOOD).hardnessAndResistance(2.5F).sound(SoundType.WOOD)));
-
     public static final Block EASEL = registerBlockItem("easel", new EaselBlock(AbstractBlock.Properties.create(Material.WOOD).hardnessAndResistance(1.5F).sound(SoundType.WOOD).notSolid()));
 
     private static Block registerBlockItem(String name, Block block)

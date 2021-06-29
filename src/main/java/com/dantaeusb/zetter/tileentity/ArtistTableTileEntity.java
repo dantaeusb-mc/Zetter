@@ -88,8 +88,6 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
         CompoundNBT nbtTagCompound = new CompoundNBT();
         write(nbtTagCompound);
 
-        Zetter.LOG.info("Going to send update packet");
-
         int tileEntityType = 43;
         return new SUpdateTileEntityPacket(this.pos, tileEntityType, nbtTagCompound);
     }
