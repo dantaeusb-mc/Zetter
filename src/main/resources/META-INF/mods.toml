@@ -16,7 +16,7 @@ displayName="Zetter"
 
 displayURL="https://www.curseforge.com/minecraft/mc-mods/zetter"
 
-logoFile="examplemod.png"
+logoFile="zetter.png"
 
 credits='''
 
@@ -31,6 +31,7 @@ Kovak#5505
 Woodland Creature#3144
 gigaherz#9173
 ChampionAsh5357#5519
+Lemongradle (sciwhiz12#1286)
 
 Examples and references:
 greyminecraftcoder and all MinecraftByExample contributors

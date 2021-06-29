@@ -1,9 +1,17 @@
 package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.network.ClientHandler;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * @link {SSetSlotPacket}
@@ -46,6 +54,20 @@ public class SEaselCanvasChangePacket {
 
     public ItemStack getItem() {
         return this.item;
+    }
+
+    public static void handle(final SEaselCanvasChangePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
+        ctx.setPacketHandled(true);
+
+        Optional<ClientWorld> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        if (!clientWorld.isPresent()) {
+            Zetter.LOG.warn("SEaselCanvasChangePacket context could not provide a ClientWorld.");
+            return;
+        }
+
+        ctx.enqueueWork(() -> ClientHandler.processEaselCanvasUpdate(packetIn, clientWorld.get()));
     }
 
     @Override

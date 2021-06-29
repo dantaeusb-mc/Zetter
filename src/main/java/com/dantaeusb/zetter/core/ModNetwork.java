@@ -19,6 +19,7 @@ import static net.minecraftforge.fml.network.NetworkDirection.PLAY_TO_SERVER;
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModNetwork {
     public static SimpleChannel simpleChannel;
+    // @todo: rename this on release, it's zetter:zetter_channel 0.1
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
     public static final String MESSAGE_PROTOCOL_VERSION = "0.1";
 
@@ -35,54 +36,65 @@ public class ModNetwork {
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onCommonSetupEvent(FMLCommonSetupEvent event) {
-        simpleChannel = NetworkRegistry.newSimpleChannel(simpleChannelRL, () -> MESSAGE_PROTOCOL_VERSION,
-                ClientHandler::isThisProtocolAcceptedByClient,
-                ServerHandler::isThisProtocolAcceptedByServer);
+        simpleChannel = NetworkRegistry.newSimpleChannel(
+                simpleChannelRL,
+                () -> MESSAGE_PROTOCOL_VERSION,
+                ModNetwork::isThisProtocolAcceptedByClient,
+                ModNetwork::isThisProtocolAcceptedByServer
+        );
 
         simpleChannel.registerMessage(PAINTING_FRAME, CPaintingFrameBufferPacket.class,
                 CPaintingFrameBufferPacket::writePacketData, CPaintingFrameBufferPacket::readPacketData,
-                ServerHandler::handleFrameBuffer,
+                CPaintingFrameBufferPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_REQUEST_CANVAS, CCanvasRequestPacket.class,
                 CCanvasRequestPacket::writePacketData, CCanvasRequestPacket::readPacketData,
-                ServerHandler::handleRequestSync,
+                CCanvasRequestPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_UNLOAD_CANVAS, CCanvasUnloadRequestPacket.class,
                 CCanvasUnloadRequestPacket::writePacketData, CCanvasUnloadRequestPacket::readPacketData,
-                ServerHandler::handleUnloadRequest,
+                CCanvasUnloadRequestPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(CANVAS_SYNC, SCanvasSyncMessage.class,
                 SCanvasSyncMessage::writePacketData, SCanvasSyncMessage::readPacketData,
-                ClientHandler::handleCanvasSync,
+                SCanvasSyncMessage::handle,
                 Optional.of(PLAY_TO_CLIENT));
 
         // Transfers extra data
         simpleChannel.registerMessage(PAINTING_SYNC, SPaintingSyncMessage.class,
                 SPaintingSyncMessage::writePacketData, SPaintingSyncMessage::readPacketData,
-                ClientHandler::handlePaintingSync,
+                SPaintingSyncMessage::handle,
                 Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(PALETTE_UPDATE, CPaletteUpdatePacket.class,
                 CPaletteUpdatePacket::writePacketData, CPaletteUpdatePacket::readPacketData,
-                ServerHandler::handlePaletteUpdate,
+                CPaletteUpdatePacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_CREATE, CUpdatePaintingPacket.class,
                 CUpdatePaintingPacket::writePacketData, CUpdatePaintingPacket::readPacketData,
-                ServerHandler::handleCreatePainting,
+                CUpdatePaintingPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(EASEL_CANVAS_CHANGE, SEaselCanvasChangePacket.class,
                 SEaselCanvasChangePacket::writePacketData, SEaselCanvasChangePacket::readPacketData,
-                ClientHandler::handleEaselCanvasUpdate,
+                SEaselCanvasChangePacket::handle,
                 Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(PAINTING_BUCKET, CCanvasBucketToolPacket.class,
                 CCanvasBucketToolPacket::writePacketData, CCanvasBucketToolPacket::readPacketData,
-                ServerHandler::handleBucketTool,
+                CCanvasBucketToolPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
+    }
+
+    public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {
+        return ModNetwork.MESSAGE_PROTOCOL_VERSION.equals(protocolVersion);
+    }
+
+    public static boolean isThisProtocolAcceptedByServer(String protocolVersion) {
+        return ModNetwork.MESSAGE_PROTOCOL_VERSION.equals(protocolVersion);
     }
 }

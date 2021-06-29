@@ -22,29 +22,6 @@ import java.util.function.Supplier;
 
 public class ServerHandler {
     /**
-     * Called when a message is received of the appropriate type.
-     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
-     * @param message The message
-     */
-    public static void handleFrameBuffer(final CPaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("CPaintingUpdatePacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
-        }
-
-        ctx.enqueueWork(() -> processFrameBuffer(packetIn, sendingPlayer));
-    }
-
-    /**
      * Update canvas on server-side and send update to other tracking players
      * @param packetIn
      * @param sendingPlayer
@@ -72,34 +49,6 @@ public class ServerHandler {
                 ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) playerEntity), packet);
             }*/
         }
-    }
-
-    /**
-     * Called when a message is received of the appropriate type.
-     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
-     *
-     * Apparently we can't create just Dummy Canvas Data instances -- world would not recognize the
-     * save data when it's another class! So we need to provide expected type in message as well.
-     * Though it seems unnecessary, this actually adds some level of type-safety about it.
-     *
-     * @param message The message
-     */
-    public static void handleRequestSync(final CCanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("CRequestSyncPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CRequestSyncPacket was received");
-        }
-
-        ctx.enqueueWork(() -> processRequestSync(packetIn, sendingPlayer));
     }
 
     public static void processRequestSync(final CCanvasRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
@@ -145,29 +94,6 @@ public class ServerHandler {
     }
 
     /**
-     * Called when a message is received of the appropriate type.
-     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
-     * @param message The message
-     */
-    public static void handleUnloadRequest(final CCanvasUnloadRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("CRequestSyncPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CRequestSyncPacket was received");
-        }
-
-        ctx.enqueueWork(() -> processUnloadRequest(packetIn, sendingPlayer));
-    }
-
-    /**
      * @todo: Think about removing this
      * Not sure if it's needed, this can cause condition when canvas is unloaded while
      * other players would like to track it. Unloading on back-end should happen
@@ -192,57 +118,11 @@ public class ServerHandler {
         canvasTracker.stopTrackingCanvas(sendingPlayer.getUniqueID(), packetIn.getCanvasName());
     }
 
-    /**
-     * Called when a message is received of the appropriate type.
-     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
-     * @param message The message
-     */
-    public static void handlePaletteUpdate(final CPaletteUpdatePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("PaletteUpdatePacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when PaletteUpdatePacket was received");
-        }
-
-        ctx.enqueueWork(() -> processPaletteUpdate(packetIn, sendingPlayer));
-    }
-
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayerEntity sendingPlayer) {
         if (sendingPlayer.openContainer instanceof EaselContainer) {
             EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
             paintingContainer.setPaletteColor(packetIn.getSlotIndex(), packetIn.getColor());
         }
-    }
-
-    /**
-     * Called when a message is received of the appropriate type.
-     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
-     * @param message The message
-     */
-    public static void handleCreatePainting(final CUpdatePaintingPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("CCreatePaintingPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CCreatePaintingPacket was received");
-        }
-
-        ctx.enqueueWork(() -> processCreatePainting(packetIn, sendingPlayer));
     }
 
     public static void processCreatePainting(final CUpdatePaintingPacket packetIn, ServerPlayerEntity sendingPlayer) {
@@ -252,38 +132,10 @@ public class ServerHandler {
         }
     }
 
-
-    /**
-     * Called when a message is received of the appropriate type.
-     * CALLED BY THE NETWORK THREAD, NOT THE SERVER THREAD
-     * @param message The message
-     */
-    public static void handleBucketTool(final CCanvasBucketToolPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("CCanvasBucketToolPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
-        if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CCanvasBucketToolPacket was received");
-        }
-
-        ctx.enqueueWork(() -> processBucketTool(packetIn, sendingPlayer));
-    }
-
     public static void processBucketTool(final CCanvasBucketToolPacket packetIn, ServerPlayerEntity sendingPlayer) {
         if (sendingPlayer.openContainer instanceof EaselContainer) {
             EaselContainer easelContainer = (EaselContainer)sendingPlayer.openContainer;
             easelContainer.processBucketToolServer(packetIn.position, packetIn.color);
         }
-    }
-
-    public static boolean isThisProtocolAcceptedByServer(String protocolVersion) {
-        return ModNetwork.MESSAGE_PROTOCOL_VERSION.equals(protocolVersion);
     }
 }

@@ -1,9 +1,17 @@
 package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.network.ClientHandler;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public class SPaintingSyncMessage {
     private final PaintingData paintingData;
@@ -52,6 +60,20 @@ public class SPaintingSyncMessage {
         // @todo: proper length based on game limitations
         networkBuffer.writeString(this.paintingData.getPaintingName(), 64);
         networkBuffer.writeString(this.paintingData.getAuthorName(), 64);
+    }
+
+    public static void handle(final SPaintingSyncMessage packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
+        ctx.setPacketHandled(true);
+
+        Optional<ClientWorld> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        if (!clientWorld.isPresent()) {
+            Zetter.LOG.warn("SCanvasSyncMessage context could not provide a ClientWorld.");
+            return;
+        }
+
+        ctx.enqueueWork(() -> ClientHandler.processPaintingSync(packetIn, clientWorld.get()));
     }
 
     @Override

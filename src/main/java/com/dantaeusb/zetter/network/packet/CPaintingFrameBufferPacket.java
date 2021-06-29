@@ -2,8 +2,15 @@ package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
+import com.dantaeusb.zetter.network.ClientHandler;
+import com.dantaeusb.zetter.network.ServerHandler;
 import io.netty.buffer.ByteBuf;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 /**
  * Painting update - get frame buffer from client when they're making changes
@@ -45,5 +52,17 @@ public class CPaintingFrameBufferPacket {
 
     public PaintingFrameBuffer getFrameBuffer() {
         return this.paintingFrameBuffer;
+    }
+
+    public static void handle(final CPaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+        NetworkEvent.Context ctx = ctxSupplier.get();
+        ctx.setPacketHandled(true);
+
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
+        if (sendingPlayer == null) {
+            Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
+        }
+
+        ctx.enqueueWork(() -> ServerHandler.processFrameBuffer(packetIn, sendingPlayer));
     }
 }
