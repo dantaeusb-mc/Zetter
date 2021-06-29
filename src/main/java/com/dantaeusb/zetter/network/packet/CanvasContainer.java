@@ -17,7 +17,7 @@ public abstract class CanvasContainer {
         try {
             int type = networkBuffer.readInt();
 
-            final String canvasName = networkBuffer.readString();
+            final String canvasName = networkBuffer.readString(32767);
 
             final int resolutionOrdinal = networkBuffer.readInt();
             AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
