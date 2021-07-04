@@ -1,5 +1,7 @@
 {
     "variants": {
-        "": {  }
+        "": {
+            "model": "zetter:block/easel"
+        }
     }
 }
