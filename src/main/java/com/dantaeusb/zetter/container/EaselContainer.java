@@ -17,7 +17,6 @@ import com.dantaeusb.zetter.network.packet.*;
 import com.dantaeusb.zetter.tileentity.EaselTileEntity;
 import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
 import com.dantaeusb.zetter.storage.CanvasData;
-import javafx.util.Pair;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.play.NetworkPlayerInfo;
 import net.minecraft.entity.player.PlayerEntity;
@@ -26,6 +25,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.Util;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -494,15 +494,15 @@ public class EaselContainer extends Container {
 
         // Throw out pixels drawn before start of the interval, ask for resync for interval, cause not sure if
         // they're sync, just add pixels for newer changes, they'll be pushed anyway
-        Pair<Long, Long> lowTrustInterval = new Pair<>(adjustedTimestamp, timestamp - this.lastFrameBufferSendClock);
+        Tuple<Long, Long> lowTrustInterval = new Tuple<>(adjustedTimestamp, timestamp - this.lastFrameBufferSendClock);
 
         Zetter.LOG.debug("Latency: " + latency);
 
         for (PaintingFrame oldFrame: this.lastFrames) {
-            if (oldFrame.getFrameTime() < lowTrustInterval.getKey()) {
+            if (oldFrame.getFrameTime() < lowTrustInterval.getA()) {
                 // @todo: reasonable to remove older frames right there
             } else {
-                if (oldFrame.getFrameTime() < lowTrustInterval.getValue()) {
+                if (oldFrame.getFrameTime() < lowTrustInterval.getB()) {
                     mightDesync = true;
                 }
 
