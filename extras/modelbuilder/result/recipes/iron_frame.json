@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","pattern":["NPN","PLP","NPN"],"key":{"N":{"item":"minecraft:iron_nugget"},"P":{"item":"minecraft:glass_pane"},"L":{"item":"minecraft:leather"}},"result":{"item":"zetter:iron_frame"}}

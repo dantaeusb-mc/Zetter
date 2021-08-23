@@ -1,0 +1,1 @@
+{"parent":"item/generated","textures":{"layer0":"zetter:item/frame/iron"},"overrides":[{"predicate":{"painting":0},"model":"zetter:item/frame/iron_empty"},{"predicate":{"painting":1},"model":"zetter:item/frame/iron_painting"}]}

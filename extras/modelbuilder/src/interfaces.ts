@@ -2,7 +2,9 @@ export enum Side {
     TOP = "top",
     BOTTOM = "bottom",
     LEFT = "left",
-    RIGHT = "right"
+    RIGHT = "right",
+    FRONT = "front",
+    BACK = "back"
 }
 
 export interface Sides {
@@ -10,6 +12,8 @@ export interface Sides {
     [Side.BOTTOM]: boolean,
     [Side.LEFT]: boolean,
     [Side.RIGHT]: boolean,
+    [Side.FRONT]: boolean,
+    [Side.BACK]: boolean,
 }
 
 export enum Direction {
@@ -47,6 +51,24 @@ export interface MinecraftModelElement {
     faces: MinecraftModelFaces;
     __comment?: string;
 }
+
+export interface MinecraftChildModel {
+    parent: string,
+    textures?: {
+        particle: string,
+        frame: string
+    }
+}
+
+interface MinecraftElementsModel {
+    elements: MinecraftModelElement[],
+    textures?: {
+        particle: string,
+        frame: string
+    }
+}
+
+export type MinecraftModel = (MinecraftElementsModel | MinecraftChildModel);
 
 export interface MinecraftTexture {
     code: string;

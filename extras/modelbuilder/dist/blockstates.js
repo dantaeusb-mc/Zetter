@@ -11,9 +11,10 @@ const rimraf_1 = __importDefault(require("rimraf"));
 const buildBlockStates = function () {
     console.log(`==========================`);
     console.log(`Processing block states`);
+    console.log(`==========================`);
     rimraf_1.default.sync(`result/blockstates/`);
     fs_1.default.mkdirSync(`result/blockstates/`);
-    for (let material of variations_1.materialVariations) {
+    for (let material in variations_1.materialVariations) {
         console.log(`Processing ${material} state`);
         for (let modelName in models_1.models) {
             const newFrameBlockState = {

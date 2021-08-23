@@ -1,6 +1,5 @@
 package com.dantaeusb.zetter.item;
 
-import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;

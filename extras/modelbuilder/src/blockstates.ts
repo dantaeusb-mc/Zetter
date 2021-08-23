@@ -6,11 +6,12 @@ import rimraf from "rimraf";
 export const buildBlockStates = function () {
     console.log(`==========================`);
     console.log(`Processing block states`);
+    console.log(`==========================`);
 
     rimraf.sync(`result/blockstates/`);
     fs.mkdirSync(`result/blockstates/`);
 
-    for (let material of materialVariations) {
+    for (let material in materialVariations) {
         console.log(`Processing ${material} state`);
 
         for (let modelName in models) {

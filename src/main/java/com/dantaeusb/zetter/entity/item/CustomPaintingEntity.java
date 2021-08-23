@@ -360,14 +360,16 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     public enum Materials {
-        ACACIA("acacia"),
-        BIRCH("birch"),
-        DARK_OAK("dark_oak"),
-        JUNGLE("jungle"),
-        OAK("oak"),
-        SPRUCE("spruce"),
-        CRIMSON("crimson"),
-        WARPED("warped");
+        ACACIA("acacia", true, true),
+        BIRCH("birch", true, true),
+        DARK_OAK("dark_oak", true, true),
+        JUNGLE("jungle", true, true),
+        OAK("oak", true, true),
+        SPRUCE("spruce", true, true),
+        CRIMSON("crimson", true, true),
+        WARPED("warped", true, true),
+        IRON("iron", false, false),
+        GOLD("gold", true, true);
 
         private static final Map<String, Materials> LOOKUP = Maps.uniqueIndex(
                 Arrays.asList(Materials.values()),
@@ -375,14 +377,26 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         );
 
         private final String text;
+        private final boolean canvasOffset;
+        private final boolean canHavePlate;
 
-        Materials(final String text) {
+        Materials(final String text, final boolean canvasOffset, boolean canHavePlate) {
             this.text = text;
+            this.canvasOffset = canvasOffset;
+            this.canHavePlate = canHavePlate;
         }
 
         @Override
         public String toString() {
             return text;
+        }
+
+        public boolean hasOffset() {
+            return this.canvasOffset;
+        }
+
+        public boolean canHavePlate() {
+            return this.canHavePlate;
         }
 
         @Nullable

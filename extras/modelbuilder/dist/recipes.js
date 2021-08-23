@@ -10,11 +10,16 @@ const rimraf_1 = __importDefault(require("rimraf"));
 const buildRecipes = function () {
     console.log(`==========================`);
     console.log(`Processing recipes`);
+    console.log(`==========================`);
     rimraf_1.default.sync(`result/recipes/`);
     fs_1.default.mkdirSync(`result/recipes/`);
-    for (let material of variations_1.materialVariations) {
+    // Wooden frames
+    for (let material in variations_1.materialVariations) {
+        if (!variations_1.materialVariations[material].isWood) {
+            continue;
+        }
         for (let platedVariant of Object.values(variations_1.plateVariations)) {
-            console.log(`Added ${material} ${platedVariant} recipe variations`);
+            console.log(`Added ${material} ${platedVariant} frame recipe variation`);
             const recipe = {
                 type: "minecraft:crafting_shaped",
                 pattern: [
@@ -43,6 +48,54 @@ const buildRecipes = function () {
             fs_1.default.writeFileSync(`result/recipes/${material}_${platedVariant}_frame.json`, JSON.stringify(recipe));
         }
     }
+    console.log(`Added iron frame recipe variations`);
+    const ironFrameRecipe = {
+        type: "minecraft:crafting_shaped",
+        pattern: [
+            "NPN",
+            "PLP",
+            "NPN"
+        ],
+        key: {
+            "N": {
+                item: `minecraft:iron_nugget`
+            },
+            "P": {
+                item: "minecraft:glass_pane"
+            },
+            "L": {
+                item: "minecraft:leather"
+            }
+        },
+        result: {
+            item: `zetter:iron_frame`
+        }
+    };
+    fs_1.default.writeFileSync(`result/recipes/iron_frame.json`, JSON.stringify(ironFrameRecipe));
+    console.log(`Added golden frame recipe variations`);
+    const goldenFrameRecipe = {
+        type: "minecraft:crafting_shaped",
+        pattern: [
+            "EGE",
+            "GLG",
+            "EGE"
+        ],
+        key: {
+            "G": {
+                item: `minecraft:gold_ingot`
+            },
+            "E": {
+                item: `minecraft:emerald`
+            },
+            "L": {
+                item: "minecraft:leather"
+            }
+        },
+        result: {
+            item: `zetter:gold_frame`
+        }
+    };
+    fs_1.default.writeFileSync(`result/recipes/gold_frame.json`, JSON.stringify(goldenFrameRecipe));
 };
 exports.buildRecipes = buildRecipes;
 //# sourceMappingURL=recipes.js.map

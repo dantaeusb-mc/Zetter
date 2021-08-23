@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.container.artisttable;
 
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
@@ -23,11 +24,14 @@ public class CanvasCombination {
             {2, 1},
             {2, 2},
             {2, 3},
+            {2, 4},
             {3, 1},
             {3, 2},
             {3, 3},
+            {3, 4},
             {4, 2},
-            {4, 3}
+            {4, 3},
+            {4, 4}
     };
 
     public final State state;
@@ -40,8 +44,8 @@ public class CanvasCombination {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < ArtistTableContainer.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableContainer.CANVAS_COLUMN_COUNT; x++) {
                 if (canvasStorage.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
                     if (min == null) {
                         min = new Tuple<>(x ,y);
@@ -70,8 +74,8 @@ public class CanvasCombination {
 
         boolean canvasesReady = true;
 
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < ArtistTableContainer.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableContainer.CANVAS_COLUMN_COUNT; x++) {
                 ItemStack currentStack = canvasStorage.getStackInSlot(y * 4 + x);
 
                 if (currentStack == ItemStack.EMPTY) {
@@ -149,14 +153,30 @@ public class CanvasCombination {
                 int relativeX = slotX - rectangle.x;
                 int relativeY = slotY - rectangle.y;
 
-                for (int smallY = 0; smallY < smallCanvasData.getHeight(); smallY++) {
-                    for (int smallX = 0; smallX < smallCanvasData.getWidth(); smallX++) {
-                        final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
-                        final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
 
-                        final int colorIndex = (bigY * pixelWidth + bigX) * 4;
+                if (smallCanvasData != null) {
+                    for (int smallY = 0; smallY < smallCanvasData.getHeight(); smallY++) {
+                        for (int smallX = 0; smallX < smallCanvasData.getWidth(); smallX++) {
+                            final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
+                            final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
 
-                        color.putInt(colorIndex, smallCanvasData.getColorAt(smallX, smallY));
+                            final int colorIndex = (bigY * pixelWidth + bigX) * 4;
+
+                            color.putInt(colorIndex, smallCanvasData.getColorAt(smallX, smallY));
+                        }
+                    }
+                } else {
+                    // Use canvas color as background if canvas data is not initialized
+                    // @todo: maybe there's a better way to do that
+                    for (int smallY = 0; smallY < Helper.getResolution().getNumeric(); smallY++) {
+                        for (int smallX = 0; smallX < Helper.getResolution().getNumeric(); smallX++) {
+                            final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
+                            final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
+
+                            final int colorIndex = (bigY * pixelWidth + bigX) * 4;
+
+                            color.putInt(colorIndex, Helper.CANVAS_COLOR);
+                        }
                     }
                 }
             }

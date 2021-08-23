@@ -66,7 +66,9 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         }
 
         for (CustomPaintingEntity.Materials material: CustomPaintingEntity.Materials.values()) {
-            CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
+            if (material.canHavePlate()) {
+                CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
+            }
         }
     }
 
@@ -196,9 +198,11 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         // @todo: Has painting - render fallback, no painting - disable canvas render
         if (canvasData != null) {
             matrixStack.push();
+            double canvasOffsetZ = entity.getMaterial().hasOffset() ? 0.5D - (1.0D / 32.0D) : 0.5D - (1.0D / 16);
+
             // We want to move picture one pixel in facing direction
             // And half a block towards top left
-            matrixStack.translate(renderOffset[0] - 1.0D, renderOffset[1] - 1.0D, 0.5D - (1.0D / 32.0D));
+            matrixStack.translate(renderOffset[0] - 1.0D, renderOffset[1] - 1.0D, canvasOffsetZ);
 
             final float scaleFactor = 1.0F / 16.0F;
 

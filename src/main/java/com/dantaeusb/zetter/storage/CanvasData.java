@@ -30,7 +30,7 @@ public class CanvasData extends AbstractCanvasData {
         ByteBuffer defaultColorBuffer = ByteBuffer.wrap(defaultColor);
 
         for (int x = 0; x < width * height; x++) {
-            defaultColorBuffer.putInt(x * 4, 0xFFE0DACE);
+            defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
         }
 
         this.initData(Helper.getResolution(), width, height, defaultColor);

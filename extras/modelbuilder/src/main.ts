@@ -1,12 +1,3 @@
-import {
-    Direction,
-    MinecraftModelElement,
-    MinecraftModelFace,
-    MinecraftModelFaces,
-    Side,
-    Sides,
-    Vector3i
-} from './interfaces';
 import {models} from "./models";
 import {materialVariations} from "./variations";
 import rimraf from "rimraf";
@@ -14,310 +5,18 @@ import * as fs from 'fs';
 import {buildItems} from "./items";
 import {buildBlockStates} from "./blockstates";
 import {buildRecipes} from "./recipes";
-
-class Box {
-    from: Vector3i;
-    to: Vector3i;
-    textureId: string;
-    faces: Sides;
-    edge: Side;
-
-    constructor(from: Vector3i, to: Vector3i, textureId: string, edge: Side) {
-        this.from = from;
-        this.to = to;
-        this.textureId = textureId;
-        this.faces = {top: true, bottom: true, left: true, right: true};
-        this.edge = edge;
-    }
-
-    public shrink(side: Side, amount: number): void {
-        switch (side) {
-            case Side.TOP:
-                this.to.y = this.to.y - amount;
-                return;
-            case Side.BOTTOM:
-                this.from.y = this.from.y + amount;
-                return;
-            case Side.LEFT:
-                this.to.x = this.to.x - amount;
-                return;
-            case Side.RIGHT:
-                this.to.x = this.to.x + amount;
-                return;
-        }
-    }
-
-    public removeFace(side: Side) {
-        this.faces[side] = false;
-    }
-
-    public getFaces(): MinecraftModelFaces {
-        let builtFaces: MinecraftModelFaces = {
-            [Direction.NORTH]: {
-                uv: this.calculateUV(Direction.NORTH),
-                texture: this.textureId
-            }
-        };
-
-        for (let side in this.faces) {
-            if (this.faces[side]) {
-                const direction: Direction = Box.getDirectionFromSide(side);
-                builtFaces[direction] = this.buildFace(direction);
-            }
-        }
-
-        return builtFaces;
-    }
-
-    private buildFace(direction: Direction): MinecraftModelFace {
-        return {
-            uv:  this.calculateUV(direction),
-            texture: this.textureId
-        }
-    }
-
-    private calculateUV(direction: Direction): number[] {
-        let fromX: number = 0;
-        let fromY: number = 0;
-        let width: number = 0;
-        let height: number = 0;
-
-        if (direction == Direction.NORTH) {
-            switch (this.edge) {
-                case Side.TOP:
-                    fromY = 1;
-                    break;
-                case Side.BOTTOM:
-                    fromY = 14;
-                    break;
-                case Side.LEFT:
-                    fromX = 1;
-                    break;
-                case Side.RIGHT:
-                    fromX = 14;
-                    break;
-            }
-        } else {
-            switch (this.edge) {
-                case Side.TOP:
-                    fromY = 0;
-                    break;
-                case Side.BOTTOM:
-                    fromY = 15;
-                    break;
-                case Side.LEFT:
-                    fromX = 0;
-                    break;
-                case Side.RIGHT:
-                    fromX = 15;
-                    break;
-            }
-        }
-
-
-        switch (direction) {
-            // Y axis
-            case Direction.UP:
-            case Direction.DOWN:
-                width = this.to.x - this.from.x;
-                height = this.to.z - this.from.z;
-                break;
-            // Z axis
-            case Direction.NORTH:
-            case Direction.SOUTH:
-                width = this.to.x - this.from.x;
-                height = this.to.y - this.from.y;
-                break;
-            // X axis
-            case Direction.EAST:
-            case Direction.WEST:
-                width = this.to.z - this.from.z;
-                height = this.to.y - this.from.y;
-                break;
-        }
-
-        const toX = fromX + width;
-        const toY = fromY + height;
-
-        if (toX > 16 || toY > 16) {
-            console.warn(`One of the UV maps are calculated incorrectly: ${fromX}, ${fromY}, ${toX}, ${toY}`);
-            console.debug(`Direction: ${direction}, from: ${JSON.stringify(this.from)}, to: ${JSON.stringify(this.to)}`);
-        }
-
-        return [fromX, fromY, toX, toY];
-    }
-
-    public toJSON(): MinecraftModelElement {
-        return {
-            from: [this.from.x, this.from.y, this.from.z],
-            to: [this.to.x, this.to.y, this.to.z],
-            faces: this.getFaces(),
-            __comment: this.edge
-        };
-    }
-
-    public static getDirectionFromSide(side: string): Direction {
-        switch (side) {
-            case Side.TOP:
-                return Direction.UP;
-            case Side.BOTTOM:
-                return Direction.DOWN;
-            case Side.LEFT:
-                return Direction.EAST;
-            case Side.RIGHT:
-                return Direction.WEST;
-        }
-    }
-}
-
-class Plane {
-    from: Vector3i;
-    to: Vector3i;
-    textureId: string;
-
-    constructor(from: Vector3i, to: Vector3i, textureId: string) {
-        this.from = from;
-        this.to = to;
-        this.textureId = textureId;
-    }
-
-    public getFaces(): MinecraftModelFaces {
-        return {
-            [Direction.NORTH]: {
-                uv: [0, 0, 16, 16],
-                texture: this.textureId
-            },
-            // Don't know why it's so weird tbh
-            [Direction.SOUTH]: {
-                uv: [16, 0, 0, 16],
-                texture: this.textureId
-            },
-        };
-    }
-
-    public toJSON(): MinecraftModelElement {
-        return {
-            from: [this.from.x, this.from.y, this.from.z],
-            to: [this.to.x, this.to.y, this.to.z],
-            faces: this.getFaces(),
-            __comment: "Plane"
-        };
-    }
-}
-
-class FrameModel {
-    edges: Sides;
-    connections: Sides;
-    parts: Box[] = [];
-    back: Plane;
-    textureId: string = "#frame";
-
-    constructor(edges: {[key in Side]: boolean}) {
-        this.edges = edges;
-        this.connections = { ...edges };
-
-        Object.keys(this.edges).map((key) => this.connections[key] = !edges[key]);
-
-        this.buildBoxes();
-        this.buildBackPlane();
-    }
-
-    private buildBoxes(): void {
-        for (let edgeSide of Object.keys(this.edges)) {
-            if (!this.edges[edgeSide]) {
-                continue;
-            }
-
-            const box: Box = FrameModel.getBox(edgeSide, this.textureId);
-
-            if (edgeSide === Side.LEFT || edgeSide === Side.RIGHT) {
-                // Glue with top edge
-                if (this.hasEdge(Side.TOP)) {
-                    box.shrink(Side.TOP, 1);
-                    box.removeFace(Side.TOP);
-                }
-
-                // Glue with bottom edge
-                if (this.hasEdge(Side.BOTTOM)) {
-                    box.shrink(Side.BOTTOM, 1);
-                    box.removeFace(Side.BOTTOM);
-                }
-            }
-
-            // For fucks sake, there's still no way to iterate over enum in TS
-            for (let faceSide of Object.keys(Side).map(key => Side[key])) {
-                if(this.edgeConnected(Side[edgeSide], faceSide)) {
-                    box.removeFace(faceSide);
-                }
-            }
-
-            this.parts.push(box);
-        }
-
-        // @todo: add back face
-    }
-
-    private buildBackPlane(): void {
-        this.back = new Plane({x: 0, y: 0, z: 0.75}, {x: 16, y: 16, z: 1}, this.textureId);
-    }
-
-    public toJSON() {
-        return {
-            elements: [this.back, ...this.parts]
-        };
-    }
-
-    public hasEdge(side: Side): boolean {
-        return this.edges[side];
-    }
-
-    public edgeConnected(edgeSide: Side, faceSide: Side): boolean {
-        switch (edgeSide) {
-            case Side.TOP:
-            case Side.BOTTOM:
-                // Example: our right side connected for top edge if we have connection on right
-                return (faceSide == Side.RIGHT && this.hasConnection(Side.RIGHT))
-                    || (faceSide == Side.LEFT && this.hasConnection(Side.LEFT));
-            case Side.LEFT:
-            case Side.RIGHT:
-                return (faceSide == Side.TOP && this.hasConnection(Side.TOP))
-                    || (faceSide == Side.BOTTOM && this.hasConnection(Side.BOTTOM));
-        }
-    }
-
-    public hasConnection(side: Side): boolean {
-        return this.connections[side];
-    }
-
-    public static getBox(side: string, textureId: string): Box {
-        switch (side) {
-            case Side.TOP:
-                return new Box({x: 0,y: 15, z: 0}, {x: 16,y: 16, z: 1}, textureId, Side.TOP);
-            case Side.BOTTOM:
-                return new Box({x: 0,y: 0, z: 0}, {x: 16,y: 1, z: 1}, textureId, Side.BOTTOM);
-            case Side.LEFT:
-                return new Box({x: 15,y: 0, z: 0}, {x: 16,y: 16, z: 1}, textureId, Side.LEFT);
-            case Side.RIGHT:
-                return new Box({x: 0,y: 0, z: 0}, {x: 1,y: 16, z: 1}, textureId, Side.RIGHT);
-        }
-    }
-
-    public static getBackPlane(textureId: string) {
-        return new Box({x: 0,y: 15, z: 0}, {x: 16,y: 16, z: 0}, textureId, Side.TOP);
-    }
-}
-
-interface TexturedFrameModel {
-    parent: string,
-    textures: {
-        particle: string,
-        frame: string
-    }
-}
+import {FrameModel} from "./model/frame";
+import {FramelessModel} from "./model/frameless";
+import {MinecraftModel} from "./interfaces";
+import {ThickFrameModel} from "./model/thickframe";
 
 buildItems();
 buildBlockStates();
 buildRecipes();
+
+console.log(`==========================`);
+console.log(`Processing models`);
+console.log(`==========================`);
 
 // Build parent frames
 (function () {
@@ -327,21 +26,56 @@ buildRecipes();
     for (let modelName in models) {
         const currentModel = models[modelName];
 
-        console.log(`Processing ${modelName}`);
+        console.log(`Processing parent ${modelName}`);
 
-        const newFrameModel = new FrameModel(currentModel.edges);
+        const newFrameModel = new FrameModel(modelName, currentModel.edges);
 
         fs.writeFileSync(`result/models/block/parent/${modelName}.json`, JSON.stringify(newFrameModel));
     }
 })();
 
-// Build styled frames
+// Build iron frame
 (function () {
-    for (let material of materialVariations) {
+    fs.mkdirSync(`result/models/block/iron/`);
+
+    for (let modelName in models) {
+        const currentModel = models[modelName];
+
+        console.log(`Processing frameless ${modelName}`);
+
+        const newFrameModel = new FramelessModel(modelName, currentModel.edges);
+
+        fs.writeFileSync(`result/models/block/iron/${modelName}.json`, JSON.stringify(newFrameModel));
+    }
+})();
+
+// Build golden frame
+(function () {
+    fs.mkdirSync(`result/models/block/gold/`);
+
+    for (let modelName in models) {
+        const currentModel = models[modelName];
+
+        console.log(`Processing golden ${modelName}`);
+
+        const newFrameModel = new ThickFrameModel(modelName, currentModel.edges);
+
+        fs.writeFileSync(`result/models/block/gold/${modelName}.json`, JSON.stringify(newFrameModel));
+    }
+})();
+
+// Build wood frames
+(function () {
+    for (let material in materialVariations) {
+        if (!materialVariations[material].isWood) {
+            continue;
+        }
+
         console.log(`Processing ${material} model variation`);
+        fs.mkdirSync(`result/models/block/${material}/`);
 
         for (let modelName in models) {
-            const newFrameModel: TexturedFrameModel = {
+            const newFrameModel: MinecraftModel = {
                 parent: `zetter:block/frame/parent/${modelName}`,
                 textures: {
                     particle: `block/${material}_planks`,
@@ -349,11 +83,11 @@ buildRecipes();
                 }
             };
 
-            if (!fs.existsSync(`result/models/block/${material}/`)) {
-                fs.mkdirSync(`result/models/block/${material}/`);
-            }
-
             fs.writeFileSync(`result/models/block/${material}/${modelName}.json`, JSON.stringify(newFrameModel));
         }
     }
 })();
+
+console.log(`==========================`);
+console.log(`Done`);
+console.log(`==========================`);

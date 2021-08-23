@@ -31,11 +31,11 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         super(artistTableContainer, playerInventory, title);
 
         this.xSize = 176;
-        this.ySize = 202;
+        this.ySize = 220;
     }
 
     final int INPUT_XPOS = 7;
-    final int INPUT_YPOS = 89;
+    final int INPUT_YPOS = 107;
 
     @Override
     protected void init() {
@@ -122,7 +122,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         this.blit(matrixStack, this.guiLeft + INPUT_XPOS, this.guiTop + INPUT_YPOS, INPUT_UPOS, INPUT_VPOS + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : INPUT_HEIGHT), INPUT_WIDTH, INPUT_HEIGHT);
 
         final int LOADING_XPOS = 128;
-        final int LOADING_YPOS = 45;
+        final int LOADING_YPOS = 54;
         final int LOADING_UPOS = 100;
         final int LOADING_VPOS = this.ySize;
         final int LOADING_WIDTH = 16;

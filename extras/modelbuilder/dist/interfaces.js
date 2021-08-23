@@ -7,6 +7,8 @@ var Side;
     Side["BOTTOM"] = "bottom";
     Side["LEFT"] = "left";
     Side["RIGHT"] = "right";
+    Side["FRONT"] = "front";
+    Side["BACK"] = "back";
 })(Side = exports.Side || (exports.Side = {}));
 var Direction;
 (function (Direction) {

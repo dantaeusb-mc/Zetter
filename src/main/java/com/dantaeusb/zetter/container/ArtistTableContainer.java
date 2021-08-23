@@ -26,7 +26,7 @@ public class ArtistTableContainer extends Container {
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
     private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
 
-    public static final int CANVAS_ROW_COUNT = 3;
+    public static final int CANVAS_ROW_COUNT = 4;
     public static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
@@ -45,7 +45,7 @@ public class ArtistTableContainer extends Container {
 
     // gui position of the player inventory grid
     public static final int PLAYER_INVENTORY_XPOS = 8;
-    public static final int PLAYER_INVENTORY_YPOS = 120;
+    public static final int PLAYER_INVENTORY_YPOS = 138;
 
     public ArtistTableContainer(int windowID, PlayerInventory invPlayer,
                                 ArtistTableCanvasStorage canvasStorage,
@@ -63,7 +63,7 @@ public class ArtistTableContainer extends Container {
         final int SLOT_X_SPACING = 18;
         final int SLOT_Y_SPACING = 18;
         final int HOTBAR_XPOS = 8;
-        final int HOTBAR_YPOS = 178;
+        final int HOTBAR_YPOS = 196;
 
         // Add the players hotbar to the gui - the [xpos, ypos] location of each item
         for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
@@ -96,7 +96,7 @@ public class ArtistTableContainer extends Container {
 
         // gui position of the player material slots
         final int OUTPUT_XPOS = 152;
-        final int OUTPUT_YPOS = 89;
+        final int OUTPUT_YPOS = 107;
 
         this.addSlot(new SlotOutput(this.inventoryOut, 0, OUTPUT_XPOS, OUTPUT_YPOS));
 

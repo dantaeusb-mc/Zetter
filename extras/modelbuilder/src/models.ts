@@ -1,9 +1,4 @@
-import {Side, Sides} from './interfaces';
-
-interface Model {
-    edges: Sides,
-    connections: Sides
-}
+import {Side} from './interfaces';
 
 export const models = {
     "1x1": {

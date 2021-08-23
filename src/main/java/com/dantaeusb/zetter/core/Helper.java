@@ -16,6 +16,8 @@ import net.minecraftforge.registries.ObjectHolder;
 import javax.annotation.Nullable;
 
 public class Helper {
+    public static int CANVAS_COLOR = 0xFFE0DACE;
+
     private static Helper instance;
 
     public static final String COMBINED_CANVAS_CODE = Zetter.MOD_ID + "_combined_canvas";
