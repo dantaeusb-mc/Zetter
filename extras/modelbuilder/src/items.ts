@@ -41,6 +41,10 @@ export const buildItems = function () {
                         },
                     }
 
+                    if (paintingVariation == paintingVariations.PAINTING) {
+                        itemModel.textures.layer1 = "zetter:item/frame/painting";
+                    }
+
                     fs.writeFileSync(`result/models/item/frame/${material}_${plateVariation}_${paintingVariation}.json`, JSON.stringify(itemModel));
                 }
             } else {
@@ -49,6 +53,10 @@ export const buildItems = function () {
                     textures: {
                         layer0: `zetter:item/frame/${material}`,
                     },
+                }
+
+                if (paintingVariation == paintingVariations.PAINTING) {
+                    itemModel.textures.layer1 = "zetter:item/frame/painting";
                 }
 
                 fs.writeFileSync(`result/models/item/frame/${material}_${paintingVariation}.json`, JSON.stringify(itemModel));

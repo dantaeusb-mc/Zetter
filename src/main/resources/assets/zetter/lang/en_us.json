@@ -25,6 +25,8 @@
   "item.zetter.warped_basic_frame": "Warped Frame",
   "item.zetter.warped_plated_frame": "Warped Frame with Nameplate",
   "item.zetter.iron_frame": "Iron Bezel-less Frame",
+  "item.zetter.gold_basic_frame": "Golden Frame",
+  "item.zetter.gold_plated_frame": "Golden Frame with Nameplate",
   "item.zetter.painting.size": "%1$dx%2$d",
   "item.zetter.painting.unnamed": "Unnamed",
   "item.zetter.painting.unknown": "unknown",

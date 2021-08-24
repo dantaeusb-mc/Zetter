@@ -2,9 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FrameModel = void 0;
 const interfaces_1 = require("../interfaces");
-const box_1 = require("./box");
 const abstract_1 = require("./abstract");
 const edge_1 = require("./edge");
+const plane_1 = require("./plane");
 class FrameModel extends abstract_1.AbstractModel {
     build() {
         for (let edgeSide of Object.keys(this.edges)) {
@@ -34,7 +34,7 @@ class FrameModel extends abstract_1.AbstractModel {
             this.parts.push(edge);
         }
         // Only back face
-        const back = new box_1.Box({ x: 0, y: 0, z: 1 }, { x: 16, y: 16, z: 1 }, this.textureId);
+        const back = new plane_1.Plane({ x: 0, y: 0, z: 1 }, { x: 16, y: 16, z: 1 }, this.textureId);
         back.removeFace(interfaces_1.Side.TOP);
         back.removeFace(interfaces_1.Side.LEFT);
         back.removeFace(interfaces_1.Side.RIGHT);

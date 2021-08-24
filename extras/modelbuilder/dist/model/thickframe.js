@@ -5,6 +5,7 @@ const interfaces_1 = require("../interfaces");
 const box_1 = require("./box");
 const abstract_1 = require("./abstract");
 const edge_1 = require("./edge");
+const plane_1 = require("./plane");
 class ThickFrameModel extends abstract_1.AbstractModel {
     build() {
         for (let edgeSide of Object.keys(this.edges)) {
@@ -41,24 +42,24 @@ class ThickFrameModel extends abstract_1.AbstractModel {
             }
             this.parts.push(edge);
         }
-        if (this.edges[interfaces_1.Side.TOP] && this.edges[interfaces_1.Side.LEFT]) {
+        if (this.edges[interfaces_1.Side.TOP] && this.edges[interfaces_1.Side.RIGHT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.TOP, this.textureId);
             this.parts.push(corner);
         }
-        if (this.edges[interfaces_1.Side.TOP] && this.edges[interfaces_1.Side.RIGHT]) {
+        if (this.edges[interfaces_1.Side.TOP] && this.edges[interfaces_1.Side.LEFT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.RIGHT, this.textureId);
             this.parts.push(corner);
         }
-        if (this.edges[interfaces_1.Side.BOTTOM] && this.edges[interfaces_1.Side.RIGHT]) {
+        if (this.edges[interfaces_1.Side.BOTTOM] && this.edges[interfaces_1.Side.LEFT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.BOTTOM, this.textureId);
             this.parts.push(corner);
         }
-        if (this.edges[interfaces_1.Side.BOTTOM] && this.edges[interfaces_1.Side.LEFT]) {
+        if (this.edges[interfaces_1.Side.BOTTOM] && this.edges[interfaces_1.Side.RIGHT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.LEFT, this.textureId);
             this.parts.push(corner);
         }
         // Only back face
-        const back = new box_1.Box({ x: 0, y: 0, z: 1 }, { x: 16, y: 16, z: 1 }, this.textureId);
+        const back = new plane_1.Plane({ x: 0, y: 0, z: 1 }, { x: 16, y: 16, z: 1 }, this.textureId);
         back.removeFace(interfaces_1.Side.TOP);
         back.removeFace(interfaces_1.Side.LEFT);
         back.removeFace(interfaces_1.Side.RIGHT);
@@ -71,7 +72,8 @@ class ThickFrameModel extends abstract_1.AbstractModel {
             elements: this.parts.map(part => part.toJSON()),
             textures: {
                 particle: `block/gold_block`,
-                frame: `zetter:entity/frame/gold/${this.name}`
+                frame: `zetter:entity/frame/gold/${this.name}`,
+                corner: `zetter:entity/frame/gold/corner`
             }
         };
     }
@@ -104,16 +106,16 @@ class ThickFrameModel extends abstract_1.AbstractModel {
         switch (side) {
             // top left
             case interfaces_1.Side.TOP:
-                return new edge_1.Edge({ x: -2, y: 15, z: -1 }, { x: 1, y: 18, z: 1 }, textureId, interfaces_1.Side.LEFT);
+                return new box_1.Box({ x: -2, y: 15, z: -1 }, { x: 1, y: 18, z: 1 }, "#corner");
             // top right
             case interfaces_1.Side.RIGHT:
-                return new edge_1.Edge({ x: 15, y: 15, z: -1 }, { x: 18, y: 18, z: 1 }, textureId, interfaces_1.Side.BOTTOM);
+                return new box_1.Box({ x: 15, y: 15, z: -1 }, { x: 18, y: 18, z: 1 }, "#corner");
             // bottom right
             case interfaces_1.Side.BOTTOM:
-                return new edge_1.Edge({ x: 15, y: -2, z: -1 }, { x: 18, y: 1, z: 1 }, textureId, interfaces_1.Side.RIGHT);
+                return new box_1.Box({ x: 15, y: -2, z: -1 }, { x: 18, y: 1, z: 1 }, "#corner");
             // bottom left
             case interfaces_1.Side.LEFT:
-                return new edge_1.Edge({ x: -2, y: -2, z: -1 }, { x: 1, y: 1, z: 1 }, textureId, interfaces_1.Side.TOP);
+                return new box_1.Box({ x: -2, y: -2, z: -1 }, { x: 1, y: 1, z: 1 }, "#corner");
         }
     }
 }

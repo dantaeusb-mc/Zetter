@@ -64,7 +64,7 @@ interface MinecraftElementsModel {
     elements: MinecraftModelElement[],
     textures?: {
         particle: string,
-        frame: string
+        [key: string]: string
     }
 }
 

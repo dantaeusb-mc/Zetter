@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {"item": "zetter:gold_basic_frame"},
+    {"item": "minecraft:gold_ingot"}
+  ],
+  "result": {
+    "item": "zetter:gold_plated_frame",
+    "count": 1
+  }
+}

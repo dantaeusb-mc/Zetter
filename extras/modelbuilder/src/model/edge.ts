@@ -28,7 +28,7 @@ export class Edge extends Box {
                 this.to.x = this.to.x - amount;
                 return;
             case Side.RIGHT:
-                this.to.x = this.to.x + amount;
+                this.from.x = this.from.x + amount;
                 return;
         }
     }
@@ -38,38 +38,6 @@ export class Edge extends Box {
         let fromY: number = 0;
         let width: number = 0;
         let height: number = 0;
-
-        if (direction == Direction.NORTH) {
-            switch (this.edge) {
-                case Side.TOP:
-                    fromY = 1;
-                    break;
-                case Side.BOTTOM:
-                    fromY = 14;
-                    break;
-                case Side.LEFT:
-                    fromX = 1;
-                    break;
-                case Side.RIGHT:
-                    fromX = 14;
-                    break;
-            }
-        } else {
-            switch (this.edge) {
-                case Side.TOP:
-                    fromY = 0;
-                    break;
-                case Side.BOTTOM:
-                    fromY = 14;
-                    break;
-                case Side.LEFT:
-                    fromX = 0;
-                    break;
-                case Side.RIGHT:
-                    fromX = 14;
-                    break;
-            }
-        }
 
         switch (direction) {
             // Y axis
@@ -90,6 +58,38 @@ export class Edge extends Box {
                 width = this.to.z - this.from.z;
                 height = this.to.y - this.from.y;
                 break;
+        }
+
+        if (direction == Direction.NORTH) {
+            switch (this.edge) {
+                case Side.TOP:
+                    fromY = 1;
+                    break;
+                case Side.BOTTOM:
+                    fromY = 16 - height - 1;
+                    break;
+                case Side.LEFT:
+                    fromX = 1;
+                    break;
+                case Side.RIGHT:
+                    fromX = 16 - width - 1;
+                    break;
+            }
+        } else {
+            switch (this.edge) {
+                case Side.TOP:
+                    fromY = 0;
+                    break;
+                case Side.BOTTOM:
+                    fromY = 16 - height;
+                    break;
+                case Side.LEFT:
+                    fromX = 0;
+                    break;
+                case Side.RIGHT:
+                    fromX = 16 - width;
+                    break;
+            }
         }
 
         const toX = fromX + width;

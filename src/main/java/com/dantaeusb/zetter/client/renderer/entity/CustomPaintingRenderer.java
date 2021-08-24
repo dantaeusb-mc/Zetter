@@ -217,6 +217,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getCanvasCode());
         }
 
+        // Render plate
         if (canvasData != null && entity.hasPlate()) {
             matrixStack.push();
 

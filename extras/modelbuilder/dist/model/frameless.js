@@ -2,11 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FramelessModel = void 0;
 const interfaces_1 = require("../interfaces");
-const box_1 = require("./box");
 const abstract_1 = require("./abstract");
+const plane_1 = require("./plane");
 class FramelessModel extends abstract_1.AbstractModel {
     build() {
-        const box = new box_1.Box({ x: 0, y: 0, z: 0 }, { x: 16, y: 16, z: 1 }, this.textureId);
+        const box = new plane_1.Plane({ x: 0, y: 0, z: 0 }, { x: 16, y: 16, z: 1 }, this.textureId);
         for (let faceSide of Object.keys(interfaces_1.Side).map(key => interfaces_1.Side[key])) {
             if (this.hasConnection(faceSide)) {
                 box.removeFace(faceSide);

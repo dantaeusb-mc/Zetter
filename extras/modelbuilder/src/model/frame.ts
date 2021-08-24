@@ -2,6 +2,7 @@ import {Side} from "../interfaces";
 import {Box} from "./box";
 import {AbstractModel} from "./abstract";
 import {Edge} from "./edge";
+import {Plane} from "./plane";
 
 export class FrameModel extends AbstractModel {
     protected build(): void {
@@ -38,7 +39,7 @@ export class FrameModel extends AbstractModel {
         }
 
         // Only back face
-        const back = new Box({x: 0, y: 0, z: 1}, {x: 16, y: 16, z: 1}, this.textureId);
+        const back = new Plane({x: 0, y: 0, z: 1}, {x: 16, y: 16, z: 1}, this.textureId);
         back.removeFace(Side.TOP);
         back.removeFace(Side.LEFT);
         back.removeFace(Side.RIGHT);

@@ -53,7 +53,9 @@ public class ModItems
     public static final FrameItem WARPED_PLATED_FRAME = registerFrame("warped_plated_frame", new FrameItem(CustomPaintingEntity.Materials.WARPED, true));
 
     public static final FrameItem IRON_FRAME = registerFrame("iron_frame", new FrameItem(CustomPaintingEntity.Materials.IRON, false));
-    public static final FrameItem GOLD_FRAME = registerFrame("gold_frame", new FrameItem(CustomPaintingEntity.Materials.GOLD, false));
+
+    public static final FrameItem GOLD_FRAME = registerFrame("gold_basic_frame", new FrameItem(CustomPaintingEntity.Materials.GOLD, false));
+    public static final FrameItem GOLD_PLATE_FRAME = registerFrame("gold_plated_frame", new FrameItem(CustomPaintingEntity.Materials.GOLD, true));
 
     private static BlockItem registerBlockItem(String name, Block block)
     {

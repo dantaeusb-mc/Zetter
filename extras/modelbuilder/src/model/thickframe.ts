@@ -2,6 +2,7 @@ import {MinecraftModel, Side} from "../interfaces";
 import {Box} from "./box";
 import {AbstractModel} from "./abstract";
 import {Edge} from "./edge";
+import {Plane} from "./plane";
 
 export class ThickFrameModel extends AbstractModel {
     protected build(): void {
@@ -49,28 +50,28 @@ export class ThickFrameModel extends AbstractModel {
             this.parts.push(edge);
         }
 
-        if (this.edges[Side.TOP] && this.edges[Side.LEFT]) {
-            const corner: Edge = ThickFrameModel.getCorner(Side.TOP, this.textureId);
-            this.parts.push(corner);
-        }
-
         if (this.edges[Side.TOP] && this.edges[Side.RIGHT]) {
-            const corner: Edge = ThickFrameModel.getCorner(Side.RIGHT, this.textureId);
+            const corner: Box = ThickFrameModel.getCorner(Side.TOP, this.textureId);
             this.parts.push(corner);
         }
 
-        if (this.edges[Side.BOTTOM] && this.edges[Side.RIGHT]) {
-            const corner: Edge = ThickFrameModel.getCorner(Side.BOTTOM, this.textureId);
+        if (this.edges[Side.TOP] && this.edges[Side.LEFT]) {
+            const corner: Box = ThickFrameModel.getCorner(Side.RIGHT, this.textureId);
             this.parts.push(corner);
         }
 
         if (this.edges[Side.BOTTOM] && this.edges[Side.LEFT]) {
-            const corner: Edge = ThickFrameModel.getCorner(Side.LEFT, this.textureId);
+            const corner: Box = ThickFrameModel.getCorner(Side.BOTTOM, this.textureId);
+            this.parts.push(corner);
+        }
+
+        if (this.edges[Side.BOTTOM] && this.edges[Side.RIGHT]) {
+            const corner: Box = ThickFrameModel.getCorner(Side.LEFT, this.textureId);
             this.parts.push(corner);
         }
 
         // Only back face
-        const back = new Box({x: 0, y: 0, z: 1}, {x: 16, y: 16, z: 1}, this.textureId);
+        const back = new Plane({x: 0, y: 0, z: 1}, {x: 16, y: 16, z: 1}, this.textureId);
         back.removeFace(Side.TOP);
         back.removeFace(Side.LEFT);
         back.removeFace(Side.RIGHT);
@@ -85,7 +86,8 @@ export class ThickFrameModel extends AbstractModel {
             elements: this.parts.map(part => part.toJSON()),
             textures: {
                 particle: `block/gold_block`,
-                frame: `zetter:entity/frame/gold/${this.name}`
+                frame: `zetter:entity/frame/gold/${this.name}`,
+                corner: `zetter:entity/frame/gold/corner`
             }
         };
     }
@@ -117,20 +119,20 @@ export class ThickFrameModel extends AbstractModel {
         }
     }
 
-    public static getCorner(side: string, textureId: string): Edge {
+    public static getCorner(side: string, textureId: string): Box {
         switch (side) {
             // top left
             case Side.TOP:
-                return new Edge({x: -2, y: 15, z: -1}, {x: 1, y: 18, z: 1}, textureId, Side.LEFT);
+                return new Box({x: -2, y: 15, z: -1}, {x: 1, y: 18, z: 1}, "#corner");
             // top right
             case Side.RIGHT:
-                return new Edge({x: 15, y: 15, z: -1}, {x: 18, y: 18, z: 1}, textureId, Side.BOTTOM);
+                return new Box({x: 15, y: 15, z: -1}, {x: 18, y: 18, z: 1}, "#corner");
             // bottom right
             case Side.BOTTOM:
-                return new Edge({x: 15, y: -2, z: -1}, {x: 18, y: 1, z: 1}, textureId, Side.RIGHT);
+                return new Box({x: 15, y: -2, z: -1}, {x: 18, y: 1, z: 1}, "#corner");
             // bottom left
             case Side.LEFT:
-                return new Edge({x: -2, y: -2, z: -1}, {x: 1, y: 1, z: 1}, textureId, Side.TOP);
+                return new Box({x: -2, y: -2, z: -1}, {x: 1, y: 1, z: 1}, "#corner");
         }
     }
 }

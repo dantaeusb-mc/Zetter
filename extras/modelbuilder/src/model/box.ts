@@ -45,43 +45,78 @@ export class Box {
         }
     }
 
+    /**
+     * Basic UV wrap
+     * +-+-+-+-+
+     * |#|T|B|#|
+     * |L|F|B|R|
+     * +-+-+-+-+
+     * T = top, B = bottom, L = left, etc.
+     * +-+-+-+-+
+     * |#|U|D|#|
+     * |E|N|S|W|
+     * +-+-+-+-+
+     * U = up, D = down, E = east, etc.
+     *
+     * @param direction
+     * @protected
+     */
     protected calculateUV(direction: Direction): number[] {
         let fromX: number = 0;
         let fromY: number = 0;
-        let width: number = 0;
-        let height: number = 0;
+
+        const length = this.to.x - this.from.x;
+        const height = this.to.y - this.from.y;
+        const width = this.to.z - this.from.z;
+
+        if ([Direction.UP, Direction.DOWN].includes(direction)) {
+            fromX += width;
+
+
+            if (direction == Direction.DOWN) {
+                fromX += length;
+            }
+        }
+
+        if ([Direction.EAST, Direction.NORTH, Direction.SOUTH, Direction.WEST].includes(direction)) {
+            fromY += width;
+
+            if ([Direction.NORTH, Direction.SOUTH, Direction.WEST].includes(direction)) {
+                fromX += width;
+            }
+
+            if ([Direction.SOUTH, Direction.WEST].includes(direction)) {
+                fromX += length;
+            }
+
+            if (direction == Direction.WEST) {
+                fromX += length;
+            }
+        }
+
+        let toX = 0;
+        let toY = 0;
 
         switch (direction) {
             // Y axis
             case Direction.UP:
             case Direction.DOWN:
-                width = this.to.x - this.from.x;
-                height = this.to.z - this.from.z;
+                toX = fromX + length;
+                toY = fromY + width;
                 break;
             // Z axis
             case Direction.NORTH:
             case Direction.SOUTH:
-                width = this.to.x - this.from.x;
-                height = this.to.y - this.from.y;
+                toX = fromX + length;
+                toY = fromY + height;
                 break;
             // X axis
             case Direction.EAST:
             case Direction.WEST:
-                width = this.to.z - this.from.z;
-                height = this.to.y - this.from.y;
+                toX = fromX + width;
+                toY = fromY + height;
                 break;
         }
-
-        if (direction == Direction.DOWN) {
-            fromY = 16 - height;
-        }
-
-        if (direction === Direction.WEST) {
-            fromX = 16 - width;
-        }
-
-        const toX = fromX + width;
-        const toY = fromY + height;
 
         if (toX > 16 || toY > 16) {
             console.warn(`One of the UV maps are calculated incorrectly: ${fromX}, ${fromY}, ${toX}, ${toY}`);

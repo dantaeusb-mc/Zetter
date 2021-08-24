@@ -18,6 +18,7 @@
     "zetter:warped_basic_frame",
     "zetter:warped_plated_frame",
     "zetter:iron_frame",
-    "zetter:gold_frame"
+    "zetter:gold_basic_frame",
+    "zetter:gold_plated_frame"
   ]
 }
