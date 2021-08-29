@@ -4,6 +4,7 @@ StuarteLitro/@ppblitto for fancy icons and Portuguese translation
 ItamarDenkberg for Hebrew translation
 iSrNinja for Spanish translation
 DrHesperus for help with Russian translation
+Vakarian89 for Polish translation
 diesieben07#0714 from Forge Discord for absolutely insane amount of help
 
 Forge Discord:
