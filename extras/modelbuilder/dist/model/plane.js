@@ -35,6 +35,18 @@ class Plane extends box_1.Box {
                 toY = this.to.y;
                 break;
         }
+        if (direction == interfaces_1.Direction.WEST) {
+            const width = toX - fromX;
+            fromX = 16 - width;
+            toX = 16;
+        }
+        if (direction == interfaces_1.Direction.DOWN) {
+            const height = toY - fromY;
+            fromY = 16 - height;
+            toY = 16;
+        }
+        // Flip X as it's flipped on backside by default
+        [toX, fromX] = [fromX, toX];
         if (toX > 16 || toY > 16) {
             console.warn(`One of the UV maps are calculated incorrectly: ${fromX}, ${fromY}, ${toX}, ${toY}`);
             console.debug(`Direction: ${direction}, from: ${JSON.stringify(this.from)}, to: ${JSON.stringify(this.to)}`);

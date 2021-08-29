@@ -1,12 +1,4 @@
-import {
-    Direction,
-    MinecraftModelElement,
-    MinecraftModelFace,
-    MinecraftModelFaces,
-    Side,
-    Sides,
-    Vector3i
-} from "../interfaces";
+import {Direction, MinecraftModelElement} from "../interfaces";
 import {Box} from "./box";
 
 export class Plane extends Box {
@@ -43,6 +35,21 @@ export class Plane extends Box {
                 toY = this.to.y;
                 break;
         }
+
+        if (direction == Direction.WEST) {
+            const width = toX - fromX;
+            fromX = 16 - width;
+            toX = 16;
+        }
+
+        if (direction == Direction.DOWN) {
+            const height = toY - fromY;
+            fromY = 16 - height;
+            toY = 16;
+        }
+
+        // Flip X as it's flipped on backside by default
+        [toX, fromX] = [fromX, toX];
 
         if (toX > 16 || toY > 16) {
             console.warn(`One of the UV maps are calculated incorrectly: ${fromX}, ${fromY}, ${toX}, ${toY}`);

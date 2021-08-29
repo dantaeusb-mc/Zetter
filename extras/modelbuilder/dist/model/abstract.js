@@ -1,16 +1,17 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AbstractModel = void 0;
+const interfaces_1 = require("../interfaces");
 class AbstractModel {
-    constructor(name, edges, textureId = "#frame") {
+    constructor(name, model, textureId = "#frame") {
         this.parts = [];
         this.name = name;
-        this.edges = edges;
+        this.model = model;
         this.textureId = textureId;
         this.build();
     }
     hasEdge(side) {
-        return this.edges[side];
+        return this.model.edges[side];
     }
     toJSON() {
         return {
@@ -18,7 +19,13 @@ class AbstractModel {
         };
     }
     hasConnection(side) {
-        return !this.edges[side];
+        if (side == interfaces_1.Side.BACK) {
+            return !this.model.edgesHaveBack;
+        }
+        else if (side == interfaces_1.Side.FRONT) {
+            return true;
+        }
+        return !this.model.edges[side];
     }
 }
 exports.AbstractModel = AbstractModel;

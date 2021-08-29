@@ -45,6 +45,23 @@ export class Box {
         }
     }
 
+    public shrink(side: Side, amount: number): void {
+        switch (side) {
+            case Side.TOP:
+                this.to.y = this.to.y - amount;
+                return;
+            case Side.BOTTOM:
+                this.from.y = this.from.y + amount;
+                return;
+            case Side.LEFT:
+                this.to.x = this.to.x - amount;
+                return;
+            case Side.RIGHT:
+                this.from.x = this.from.x + amount;
+                return;
+        }
+    }
+
     /**
      * Basic UV wrap
      * +-+-+-+-+
@@ -71,7 +88,6 @@ export class Box {
 
         if ([Direction.UP, Direction.DOWN].includes(direction)) {
             fromX += width;
-
 
             if (direction == Direction.DOWN) {
                 fromX += length;

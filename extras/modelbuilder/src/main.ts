@@ -1,4 +1,4 @@
-import {models} from "./models";
+import {getModel, ModelKey} from "./models";
 import {materialVariations} from "./variations";
 import rimraf from "rimraf";
 import * as fs from 'fs';
@@ -7,7 +7,7 @@ import {buildBlockStates} from "./blockstates";
 import {buildRecipes} from "./recipes";
 import {FrameModel} from "./model/frame";
 import {FramelessModel} from "./model/frameless";
-import {MinecraftModel} from "./interfaces";
+import {MinecraftModel, Side} from "./interfaces";
 import {ThickFrameModel} from "./model/thickframe";
 
 buildItems();
@@ -23,12 +23,13 @@ console.log(`==========================`);
     fs.mkdirSync(`result/models/block/`);
     fs.mkdirSync(`result/models/block/parent/`);
 
-    for (let modelName in models) {
-        const currentModel = models[modelName];
+    // TS enums are sooooo gooooood
+    for (let modelName of Object.keys(ModelKey).map(key => ModelKey[key])) {
+        const currentModel = getModel(modelName);
 
         console.log(`Processing parent ${modelName}`);
 
-        const newFrameModel = new FrameModel(modelName, currentModel.edges);
+        const newFrameModel = new FrameModel(modelName, currentModel);
 
         fs.writeFileSync(`result/models/block/parent/${modelName}.json`, JSON.stringify(newFrameModel));
     }
@@ -38,12 +39,12 @@ console.log(`==========================`);
 (function () {
     fs.mkdirSync(`result/models/block/iron/`);
 
-    for (let modelName in models) {
-        const currentModel = models[modelName];
+    for (let modelName of Object.keys(ModelKey).map(key => ModelKey[key])) {
+        const currentModel = getModel(modelName, true);
 
         console.log(`Processing frameless ${modelName}`);
 
-        const newFrameModel = new FramelessModel(modelName, currentModel.edges);
+        const newFrameModel = new FramelessModel(modelName, currentModel);
 
         fs.writeFileSync(`result/models/block/iron/${modelName}.json`, JSON.stringify(newFrameModel));
     }
@@ -53,12 +54,12 @@ console.log(`==========================`);
 (function () {
     fs.mkdirSync(`result/models/block/gold/`);
 
-    for (let modelName in models) {
-        const currentModel = models[modelName];
+    for (let modelName of Object.keys(ModelKey).map(key => ModelKey[key])) {
+        const currentModel = getModel(modelName, true);
 
         console.log(`Processing golden ${modelName}`);
 
-        const newFrameModel = new ThickFrameModel(modelName, currentModel.edges);
+        const newFrameModel = new ThickFrameModel(modelName, currentModel);
 
         fs.writeFileSync(`result/models/block/gold/${modelName}.json`, JSON.stringify(newFrameModel));
     }
@@ -74,7 +75,7 @@ console.log(`==========================`);
         console.log(`Processing ${material} model variation`);
         fs.mkdirSync(`result/models/block/${material}/`);
 
-        for (let modelName in models) {
+        for (let modelName of Object.keys(ModelKey).map(key => ModelKey[key])) {
             const newFrameModel: MinecraftModel = {
                 parent: `zetter:block/frame/parent/${modelName}`,
                 textures: {

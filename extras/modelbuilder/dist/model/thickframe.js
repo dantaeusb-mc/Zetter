@@ -8,29 +8,36 @@ const edge_1 = require("./edge");
 const plane_1 = require("./plane");
 class ThickFrameModel extends abstract_1.AbstractModel {
     build() {
-        for (let edgeSide of Object.keys(this.edges)) {
-            if (!this.edges[edgeSide]) {
+        // Only back face
+        const back = new plane_1.Plane({ x: 0, y: 0, z: 0 }, { x: 16, y: 16, z: 1 }, this.textureId);
+        back.removeFace(interfaces_1.Side.TOP);
+        back.removeFace(interfaces_1.Side.LEFT);
+        back.removeFace(interfaces_1.Side.RIGHT);
+        back.removeFace(interfaces_1.Side.BOTTOM);
+        back.removeFace(interfaces_1.Side.FRONT);
+        for (let edgeSide of Object.keys(this.model.edges)) {
+            if (!this.model.edges[edgeSide]) {
                 continue;
             }
+            back.shrink(edgeSide, 1);
             const edge = ThickFrameModel.getEdge(edgeSide, this.textureId);
-            edge.removeFace(interfaces_1.Side.BACK);
             if (edgeSide === interfaces_1.Side.LEFT || edgeSide === interfaces_1.Side.RIGHT) {
                 edge.removeFace(interfaces_1.Side.TOP);
                 edge.removeFace(interfaces_1.Side.BOTTOM);
-                if (this.edges[interfaces_1.Side.TOP]) {
+                if (this.model.edges[interfaces_1.Side.TOP]) {
                     edge.shrink(interfaces_1.Side.TOP, 1);
                 }
-                if (this.edges[interfaces_1.Side.BOTTOM]) {
+                if (this.model.edges[interfaces_1.Side.BOTTOM]) {
                     edge.shrink(interfaces_1.Side.BOTTOM, 1);
                 }
             }
             if (edgeSide === interfaces_1.Side.TOP || edgeSide === interfaces_1.Side.BOTTOM) {
                 edge.removeFace(interfaces_1.Side.LEFT);
                 edge.removeFace(interfaces_1.Side.RIGHT);
-                if (this.edges[interfaces_1.Side.LEFT]) {
+                if (this.model.edges[interfaces_1.Side.LEFT]) {
                     edge.shrink(interfaces_1.Side.LEFT, 1);
                 }
-                if (this.edges[interfaces_1.Side.RIGHT]) {
+                if (this.model.edges[interfaces_1.Side.RIGHT]) {
                     edge.shrink(interfaces_1.Side.RIGHT, 1);
                 }
             }
@@ -42,29 +49,22 @@ class ThickFrameModel extends abstract_1.AbstractModel {
             }
             this.parts.push(edge);
         }
-        if (this.edges[interfaces_1.Side.TOP] && this.edges[interfaces_1.Side.RIGHT]) {
+        if (this.model.edges[interfaces_1.Side.TOP] && this.model.edges[interfaces_1.Side.RIGHT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.TOP, this.textureId);
             this.parts.push(corner);
         }
-        if (this.edges[interfaces_1.Side.TOP] && this.edges[interfaces_1.Side.LEFT]) {
+        if (this.model.edges[interfaces_1.Side.TOP] && this.model.edges[interfaces_1.Side.LEFT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.RIGHT, this.textureId);
             this.parts.push(corner);
         }
-        if (this.edges[interfaces_1.Side.BOTTOM] && this.edges[interfaces_1.Side.LEFT]) {
+        if (this.model.edges[interfaces_1.Side.BOTTOM] && this.model.edges[interfaces_1.Side.LEFT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.BOTTOM, this.textureId);
             this.parts.push(corner);
         }
-        if (this.edges[interfaces_1.Side.BOTTOM] && this.edges[interfaces_1.Side.RIGHT]) {
+        if (this.model.edges[interfaces_1.Side.BOTTOM] && this.model.edges[interfaces_1.Side.RIGHT]) {
             const corner = ThickFrameModel.getCorner(interfaces_1.Side.LEFT, this.textureId);
             this.parts.push(corner);
         }
-        // Only back face
-        const back = new plane_1.Plane({ x: 0, y: 0, z: 1 }, { x: 16, y: 16, z: 1 }, this.textureId);
-        back.removeFace(interfaces_1.Side.TOP);
-        back.removeFace(interfaces_1.Side.LEFT);
-        back.removeFace(interfaces_1.Side.RIGHT);
-        back.removeFace(interfaces_1.Side.BOTTOM);
-        back.removeFace(interfaces_1.Side.FRONT);
         this.parts.push(back);
     }
     toJSON() {

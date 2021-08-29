@@ -16,23 +16,6 @@ export class Edge extends Box {
         this.edge = edge;
     }
 
-    public shrink(side: Side, amount: number): void {
-        switch (side) {
-            case Side.TOP:
-                this.to.y = this.to.y - amount;
-                return;
-            case Side.BOTTOM:
-                this.from.y = this.from.y + amount;
-                return;
-            case Side.LEFT:
-                this.to.x = this.to.x - amount;
-                return;
-            case Side.RIGHT:
-                this.from.x = this.from.x + amount;
-                return;
-        }
-    }
-
     protected calculateUV(direction: Direction): number[] {
         let fromX: number = 0;
         let fromY: number = 0;

@@ -7,8 +7,8 @@ const edge_1 = require("./edge");
 const plane_1 = require("./plane");
 class FrameModel extends abstract_1.AbstractModel {
     build() {
-        for (let edgeSide of Object.keys(this.edges)) {
-            if (!this.edges[edgeSide]) {
+        for (let edgeSide of Object.keys(this.model.edges)) {
+            if (!this.model.edges[edgeSide]) {
                 continue;
             }
             const edge = FrameModel.getEdge(edgeSide, this.textureId);

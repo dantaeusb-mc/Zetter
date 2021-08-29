@@ -1,23 +1,24 @@
 import {Box} from "./box";
-import {MinecraftModel, Side, Sides} from "../interfaces";
+import {MinecraftModel, Side} from "../interfaces";
+import {ModelDefinition} from "../models";
 
 export abstract class AbstractModel {
     protected name: string;
-    protected edges: Sides;
+    protected model: ModelDefinition;
     protected textureId: string;
 
     protected parts: Box[] = [];
 
-    constructor(name: string, edges: {[key in Side]: boolean}, textureId: string = "#frame") {
+    constructor(name: string, model: ModelDefinition, textureId: string = "#frame") {
         this.name = name;
-        this.edges = edges;
+        this.model = model;
         this.textureId = textureId;
 
         this.build();
     }
 
     public hasEdge(side: Side): boolean {
-        return this.edges[side];
+        return this.model.edges[side];
     }
 
     protected abstract build(): void;
@@ -29,6 +30,12 @@ export abstract class AbstractModel {
     }
 
     public hasConnection(side: Side): boolean {
-        return !this.edges[side];
+        if (side == Side.BACK) {
+            return !this.model.edgesHaveBack;
+        } else if (side == Side.FRONT) {
+            return true;
+        }
+
+        return !this.model.edges[side];
     }
 }

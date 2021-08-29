@@ -1,7 +1,7 @@
 import fs from "fs";
 import {materialVariations} from "./variations";
-import {models} from "./models";
 import rimraf from "rimraf";
+import {ModelKey} from "./models";
 
 export const buildBlockStates = function () {
     console.log(`==========================`);
@@ -14,7 +14,7 @@ export const buildBlockStates = function () {
     for (let material in materialVariations) {
         console.log(`Processing ${material} state`);
 
-        for (let modelName in models) {
+        for (let modelName of Object.keys(ModelKey).map(key => ModelKey[key])) {
             const newFrameBlockState = {
                 "variants": {
                     "": { "model": `zetter:block/frame/${material}/${modelName}` }

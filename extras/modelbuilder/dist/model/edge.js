@@ -8,22 +8,6 @@ class Edge extends box_1.Box {
         super(from, to, textureId);
         this.edge = edge;
     }
-    shrink(side, amount) {
-        switch (side) {
-            case interfaces_1.Side.TOP:
-                this.to.y = this.to.y - amount;
-                return;
-            case interfaces_1.Side.BOTTOM:
-                this.from.y = this.from.y + amount;
-                return;
-            case interfaces_1.Side.LEFT:
-                this.to.x = this.to.x - amount;
-                return;
-            case interfaces_1.Side.RIGHT:
-                this.from.x = this.from.x + amount;
-                return;
-        }
-    }
     calculateUV(direction) {
         let fromX = 0;
         let fromY = 0;

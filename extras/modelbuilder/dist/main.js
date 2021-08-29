@@ -38,30 +38,31 @@ console.log(`==========================`);
 (function () {
     fs.mkdirSync(`result/models/block/`);
     fs.mkdirSync(`result/models/block/parent/`);
-    for (let modelName in models_1.models) {
-        const currentModel = models_1.models[modelName];
+    // TS enums are sooooo gooooood
+    for (let modelName of Object.keys(models_1.ModelKey).map(key => models_1.ModelKey[key])) {
+        const currentModel = models_1.getModel(modelName);
         console.log(`Processing parent ${modelName}`);
-        const newFrameModel = new frame_1.FrameModel(modelName, currentModel.edges);
+        const newFrameModel = new frame_1.FrameModel(modelName, currentModel);
         fs.writeFileSync(`result/models/block/parent/${modelName}.json`, JSON.stringify(newFrameModel));
     }
 })();
 // Build iron frame
 (function () {
     fs.mkdirSync(`result/models/block/iron/`);
-    for (let modelName in models_1.models) {
-        const currentModel = models_1.models[modelName];
+    for (let modelName of Object.keys(models_1.ModelKey).map(key => models_1.ModelKey[key])) {
+        const currentModel = models_1.getModel(modelName, true);
         console.log(`Processing frameless ${modelName}`);
-        const newFrameModel = new frameless_1.FramelessModel(modelName, currentModel.edges);
+        const newFrameModel = new frameless_1.FramelessModel(modelName, currentModel);
         fs.writeFileSync(`result/models/block/iron/${modelName}.json`, JSON.stringify(newFrameModel));
     }
 })();
 // Build golden frame
 (function () {
     fs.mkdirSync(`result/models/block/gold/`);
-    for (let modelName in models_1.models) {
-        const currentModel = models_1.models[modelName];
+    for (let modelName of Object.keys(models_1.ModelKey).map(key => models_1.ModelKey[key])) {
+        const currentModel = models_1.getModel(modelName, true);
         console.log(`Processing golden ${modelName}`);
-        const newFrameModel = new thickframe_1.ThickFrameModel(modelName, currentModel.edges);
+        const newFrameModel = new thickframe_1.ThickFrameModel(modelName, currentModel);
         fs.writeFileSync(`result/models/block/gold/${modelName}.json`, JSON.stringify(newFrameModel));
     }
 })();
@@ -73,7 +74,7 @@ console.log(`==========================`);
         }
         console.log(`Processing ${material} model variation`);
         fs.mkdirSync(`result/models/block/${material}/`);
-        for (let modelName in models_1.models) {
+        for (let modelName of Object.keys(models_1.ModelKey).map(key => models_1.ModelKey[key])) {
             const newFrameModel = {
                 parent: `zetter:block/frame/parent/${modelName}`,
                 textures: {

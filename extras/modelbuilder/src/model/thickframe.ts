@@ -6,23 +6,32 @@ import {Plane} from "./plane";
 
 export class ThickFrameModel extends AbstractModel {
     protected build(): void {
-        for (let edgeSide of Object.keys(this.edges)) {
-            if (!this.edges[edgeSide]) {
+        // Only back face
+        const back = new Plane({x: 0, y: 0, z: 0}, {x: 16, y: 16, z: 1}, this.textureId);
+        back.removeFace(Side.TOP);
+        back.removeFace(Side.LEFT);
+        back.removeFace(Side.RIGHT);
+        back.removeFace(Side.BOTTOM);
+        back.removeFace(Side.FRONT);
+
+        for (let edgeSide of Object.keys(this.model.edges)) {
+            if (!this.model.edges[edgeSide]) {
                 continue;
             }
 
+            back.shrink(edgeSide as Side, 1);
+
             const edge: Edge = ThickFrameModel.getEdge(edgeSide, this.textureId);
-            edge.removeFace(Side.BACK);
 
             if (edgeSide === Side.LEFT || edgeSide === Side.RIGHT) {
                 edge.removeFace(Side.TOP);
                 edge.removeFace(Side.BOTTOM);
 
-                if (this.edges[Side.TOP]) {
+                if (this.model.edges[Side.TOP]) {
                     edge.shrink(Side.TOP, 1);
                 }
 
-                if (this.edges[Side.BOTTOM]) {
+                if (this.model.edges[Side.BOTTOM]) {
                     edge.shrink(Side.BOTTOM, 1);
                 }
             }
@@ -31,11 +40,11 @@ export class ThickFrameModel extends AbstractModel {
                 edge.removeFace(Side.LEFT);
                 edge.removeFace(Side.RIGHT);
 
-                if (this.edges[Side.LEFT]) {
+                if (this.model.edges[Side.LEFT]) {
                     edge.shrink(Side.LEFT, 1);
                 }
 
-                if (this.edges[Side.RIGHT]) {
+                if (this.model.edges[Side.RIGHT]) {
                     edge.shrink(Side.RIGHT, 1);
                 }
             }
@@ -50,33 +59,25 @@ export class ThickFrameModel extends AbstractModel {
             this.parts.push(edge);
         }
 
-        if (this.edges[Side.TOP] && this.edges[Side.RIGHT]) {
+        if (this.model.edges[Side.TOP] && this.model.edges[Side.RIGHT]) {
             const corner: Box = ThickFrameModel.getCorner(Side.TOP, this.textureId);
             this.parts.push(corner);
         }
 
-        if (this.edges[Side.TOP] && this.edges[Side.LEFT]) {
+        if (this.model.edges[Side.TOP] && this.model.edges[Side.LEFT]) {
             const corner: Box = ThickFrameModel.getCorner(Side.RIGHT, this.textureId);
             this.parts.push(corner);
         }
 
-        if (this.edges[Side.BOTTOM] && this.edges[Side.LEFT]) {
+        if (this.model.edges[Side.BOTTOM] && this.model.edges[Side.LEFT]) {
             const corner: Box = ThickFrameModel.getCorner(Side.BOTTOM, this.textureId);
             this.parts.push(corner);
         }
 
-        if (this.edges[Side.BOTTOM] && this.edges[Side.RIGHT]) {
+        if (this.model.edges[Side.BOTTOM] && this.model.edges[Side.RIGHT]) {
             const corner: Box = ThickFrameModel.getCorner(Side.LEFT, this.textureId);
             this.parts.push(corner);
         }
-
-        // Only back face
-        const back = new Plane({x: 0, y: 0, z: 1}, {x: 16, y: 16, z: 1}, this.textureId);
-        back.removeFace(Side.TOP);
-        back.removeFace(Side.LEFT);
-        back.removeFace(Side.RIGHT);
-        back.removeFace(Side.BOTTOM);
-        back.removeFace(Side.FRONT);
 
         this.parts.push(back);
     }

@@ -6,8 +6,8 @@ import {Plane} from "./plane";
 
 export class FrameModel extends AbstractModel {
     protected build(): void {
-        for (let edgeSide of Object.keys(this.edges)) {
-            if (!this.edges[edgeSide]) {
+        for (let edgeSide of Object.keys(this.model.edges)) {
+            if (!this.model.edges[edgeSide]) {
                 continue;
             }
 
