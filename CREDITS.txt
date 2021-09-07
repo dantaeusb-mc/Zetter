@@ -1,23 +1,23 @@
 Zetter: Credits/Thank You
 
 StuarteLitro/@ppblitto for fancy icons and Portuguese translation
+diesieben07#0714 from Forge Discord for absolutely insane amount of help
+gigaherz#9173 from Forge Discord for consultations about Forge and GUI
+
 ItamarDenkberg for Hebrew translation
 iSrNinja for Spanish translation
-DrHesperus for help with Russian translation
+DrHesperus for Russian translation
 Vakarian89 for Polish translation
-diesieben07#0714 from Forge Discord for absolutely insane amount of help
+cream280 for Chinese translation
 
 Forge Discord:
-diesieben07#0714
 Cyborgmas#0379
 Amethyst#6998
 Kovak#5505
 Woodland Creature#3144
-gigaherz#9173
 ChampionAsh5357#5519
 Lemongradle (sciwhiz12#1286)
 
-Projects / tutorial references
-
-MinecraftByExample
-Quark
+Examples and references:
+greyminecraftcoder and all MinecraftByExample contributors
+Vazkii and Quark team for opening their source code as I often used it as a reference
