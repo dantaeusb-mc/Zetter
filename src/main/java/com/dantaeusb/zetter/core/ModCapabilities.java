@@ -17,7 +17,9 @@ public class ModCapabilities
     public static void attachCapabilityToWorldHandler(AttachCapabilitiesEvent<World> event) {
         World world = event.getObject();
 
-        if (world.getDimensionKey() == World.OVERWORLD) {
+        // For client, it doesn't matter which world we're attaching to.
+        // For server, it's always saved with overworld.
+        if (world.isRemote() || world.getDimensionKey() == World.OVERWORLD) {
             event.addCapability(CANVAS_TRACKER_CAPABILITY_LOCATION, new CanvasTrackerProvider(world));
         }
     }

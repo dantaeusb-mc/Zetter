@@ -6,6 +6,7 @@
 * \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
 * \[MED\] If painting has some problems, just remove it instead of crashing;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
+* \[MED\] It is said that capability (getCapability) should be cached by modders, we may need to do that here: Helper#getWorldCanvasTracker()
 
 #### Release tasks:
 
