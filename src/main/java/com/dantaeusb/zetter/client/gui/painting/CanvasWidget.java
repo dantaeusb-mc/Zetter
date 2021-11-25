@@ -9,7 +9,9 @@ import net.minecraft.client.gui.IRenderable;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class CanvasWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
+import javax.annotation.Nullable;
+
+public class CanvasWidget extends AbstractPaintingWidget implements IRenderable {
     private static final int CANVAS_SCALE_FACTOR = 5;
     private static final int size = Helper.getResolution().getNumeric() * CANVAS_SCALE_FACTOR;
 
@@ -17,6 +19,12 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable,
 
     public CanvasWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.painting.canvas"));
+    }
+
+    @Override
+    public @Nullable
+    ITextComponent getTooltip(int mouseX, int mouseY) {
+        return null;
     }
 
     /**

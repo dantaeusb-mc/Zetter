@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.function.BiFunction;
 
-public class SlidersWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
+public class SlidersWidget extends AbstractPaintingWidget implements IRenderable {
     final static int SLIDER_WIDTH = 150;
     final static int SLIDER_HEIGHT = 9;
 
@@ -30,6 +30,11 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
 
     public SlidersWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslationTextComponent("container.zetter.painting.sliders"));
+    }
+
+    @Override
+    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
+        return null;
     }
 
     @Override

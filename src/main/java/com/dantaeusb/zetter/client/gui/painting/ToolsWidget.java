@@ -11,7 +11,9 @@ import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class ToolsWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
+import javax.annotation.Nullable;
+
+public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
     private Tool currentTool = Tool.PENCIL;
 
     final static int TOOLS_SIZE = 16;
@@ -19,6 +21,23 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable, 
 
     public ToolsWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, TOOLS_SIZE, TOOLS_SIZE + TOOLS_OFFSET * 2, new TranslationTextComponent("container.zetter.painting.tools"));
+    }
+
+    @Override
+    public @Nullable
+    ITextComponent getTooltip(int mouseX, int mouseY) {
+        int i = 0;
+        for (Tool tool: Tool.values()) {
+            int fromY = this.y + i * TOOLS_OFFSET;
+
+            if (PaintingScreen.isInRect(this.x, fromY, TOOLS_SIZE, TOOLS_SIZE, mouseX, mouseY)) {
+                return tool.title;
+            }
+
+            i++;
+        }
+
+        return null;
     }
 
     public Tool getCurrentTool() {
@@ -70,17 +89,19 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable, 
     }
 
     public enum Tool implements IStringSerializable {
-        PENCIL("Pencil", 176, 0),
-        EYEDROPPER("Eyedropper", 192, 0),
-        BUCKET("Bucket", 208, 0);
+        PENCIL("Pencil", new TranslationTextComponent("container.zetter.painting.tools.pencil"), 176, 0),
+        EYEDROPPER("Eyedropper", new TranslationTextComponent("container.zetter.painting.tools.eyedropper"), 192, 0),
+        BUCKET("Bucket", new TranslationTextComponent("container.zetter.painting.tools.bucket"), 208, 0);
 
         private final String name;
+        private final TranslationTextComponent title;
 
         public final int uPosition;
         public final int vPosition;
 
-        Tool(String name, int uPosition, int vPosition) {
+        Tool(String name, TranslationTextComponent title, int uPosition, int vPosition) {
             this.name = name;
+            this.title = title;
             this.uPosition = uPosition;
             this.vPosition = vPosition;
         }

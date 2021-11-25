@@ -7,19 +7,19 @@ import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.util.StringUtils;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import javax.annotation.Nullable;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
+public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderable {
     final static int TEXTBOX_WIDTH = 82;
     final static int TEXTBOX_HEIGHT = 16;
 
     final static int TEXTBOX_TEXT_OFFSET = 8;
-
-    final static int MODE_BUTTON_HEIGHT = 16;
 
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("\\p{XDigit}{1,6}");
     private static final Pattern HEX_COLOR_STRICT_PATTERN = Pattern.compile("(\\p{XDigit}{3}|\\p{XDigit}{6})");
@@ -36,7 +36,13 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     };
 
     public ColorCodeWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslationTextComponent("container.zetter.painting.tools"));
+        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslationTextComponent("container.zetter.painting.color_code"));
+    }
+
+    @Override
+    public @Nullable
+    ITextComponent getTooltip(int mouseX, int mouseY) {
+        return null;
     }
 
     public void initFields() {

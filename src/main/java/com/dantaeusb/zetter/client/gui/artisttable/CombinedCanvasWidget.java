@@ -28,6 +28,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
 
@@ -37,7 +38,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
     private static final int size = Helper.getBasicResolution().getNumeric();
 
     public CombinedCanvasWidget(ArtistTableScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.painting.canvas"));
+        super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.artist_table.combined_canvas"));
     }
 
     public void render(MatrixStack matrixStack) {

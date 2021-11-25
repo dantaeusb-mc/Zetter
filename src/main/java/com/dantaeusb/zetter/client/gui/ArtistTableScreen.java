@@ -1,9 +1,13 @@
 package com.dantaeusb.zetter.client.gui;
 
+import com.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import com.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
+import com.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
+import com.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
 import com.dantaeusb.zetter.container.ArtistTableContainer;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.CUpdatePaintingPacket;
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
@@ -15,6 +19,7 @@ import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
 import java.awt.*;
+import java.util.List;
 
 public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     protected final ITextComponent title = new TranslationTextComponent("container.zetter.artistTable");
@@ -23,7 +28,10 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     // This is the resource location for the background image
     private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/gui/artist_table.png");
 
+    protected final List<AbstractArtistTableWidget> widgets = Lists.newArrayList();
+
     private CombinedCanvasWidget combinedCanvasWidget;
+    private HelpWidget helpWidget;
 
     private int tick = 0;
 
@@ -36,6 +44,8 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
 
     final int INPUT_XPOS = 7;
     final int INPUT_YPOS = 107;
+    final int INPUT_WIDTH = 95;
+    final int INPUT_HEIGHT = 12;
 
     @Override
     protected void init() {
@@ -44,16 +54,27 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         final int COMBINED_CANVAS_POSITION_X = 104;
         final int COMBINED_CANVAS_POSITION_Y = 26;
 
+        final int HELP_POSITION_X = 151;
+        final int HELP_POSITION_Y = 7;
+
         this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
-        this.children.add(this.combinedCanvasWidget);
+        this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
+
+        this.addWidget(this.combinedCanvasWidget);
+        this.addWidget(this.helpWidget);
 
         this.initFields();
+    }
+
+    public void addWidget(AbstractArtistTableWidget widget) {
+        this.widgets.add(widget);
+        this.children.add(widget);
     }
 
     protected void initFields() {
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
-        this.nameField = new TextFieldWidget(this.font, this.guiLeft + this.INPUT_XPOS + 4, this.guiTop + INPUT_YPOS + 4, 94, 12, new TranslationTextComponent("container.immersivemp.lock_table"));
+        this.nameField = new TextFieldWidget(this.font, this.guiLeft + this.INPUT_XPOS + 4, this.guiTop + INPUT_YPOS + 4, INPUT_WIDTH, INPUT_HEIGHT, new TranslationTextComponent("container.immersivemp.lock_table"));
         this.nameField.setCanLoseFocus(false);
         this.nameField.setTextColor(-1);
         this.nameField.setDisabledTextColour(-1);
@@ -137,8 +158,25 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
             this.blit(matrixStack, this.guiLeft + LOADING_XPOS, this.guiTop + LOADING_YPOS, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT);
         }
 
+        this.helpWidget.render(matrixStack, x, y, partialTicks);
+
         if (this.getContainer().isCanvasReady()) {
             this.combinedCanvasWidget.render(matrixStack);
+        }
+    }
+
+    @Override
+    protected void renderHoveredTooltip(MatrixStack matrixStack, int x, int y) {
+        super.renderHoveredTooltip(matrixStack, x, y);
+
+        for (AbstractArtistTableWidget widget : this.widgets) {
+            if (widget.isMouseOver(x, y)) {
+                ITextComponent tooltip = widget.getTooltip(x, y);
+
+                if (tooltip != null) {
+                    this.renderTooltip(matrixStack, tooltip, x, y);
+                }
+            }
         }
     }
 

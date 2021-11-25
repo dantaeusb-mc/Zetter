@@ -2,6 +2,7 @@ package com.dantaeusb.zetter.client.gui;
 
 import com.dantaeusb.zetter.client.gui.painting.*;
 import com.dantaeusb.zetter.container.EaselContainer;
+import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.FontRenderer;
@@ -15,17 +16,20 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 
+import java.util.List;
+
 public class PaintingScreen extends ContainerScreen<EaselContainer> implements IContainerListener {
     // This is the resource location for the background image
     private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
 
-    private float sinceLastTick = .0f;
+    protected final List<AbstractPaintingWidget> widgets = Lists.newArrayList();
 
     private ToolsWidget toolsWidget;
     private CanvasWidget canvasWidget;
     private PaletteWidget paletteWidget;
     private ColorCodeWidget colorCodeWidget;
     private SlidersWidget slidersWidget;
+    private HelpWidget helpWidget;
 
     public PaintingScreen(EaselContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
         super(paintingContainer, playerInventory, title);
@@ -53,25 +57,35 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         final int TEXTBOX_POSITION_X = 47;
         final int TEXTBOX_POSITION_Y = 95;
 
+        final int HELP_POSITION_X = 7;
+        final int HELP_POSITION_Y = 93;
+
         this.canvasWidget = new CanvasWidget(this, this.getGuiLeft() + CANVAS_POSITION_X, this.getGuiTop() + CANVAS_POSITION_Y);
         this.paletteWidget = new PaletteWidget(this, this.getGuiLeft() + PALETTE_POSITION_X, this.getGuiTop() + PALETTE_POSITION_Y);
         this.toolsWidget = new ToolsWidget(this, this.getGuiLeft() + TOOLS_POSITION_X, this.getGuiTop() + TOOLS_POSITION_Y);
         this.slidersWidget = new SlidersWidget(this, this.getGuiLeft() + SLIDER_POSITION_X, this.getGuiTop() + SLIDER_OFFSET_Y);
         this.colorCodeWidget = new ColorCodeWidget(this, this.getGuiLeft() + TEXTBOX_POSITION_X, this.getGuiTop() + TEXTBOX_POSITION_Y);
+        this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
         this.colorCodeWidget.initFields();
 
-        this.children.add(this.canvasWidget);
-        this.children.add(this.paletteWidget);
-        this.children.add(this.toolsWidget);
-        this.children.add(this.slidersWidget);
-        this.children.add(this.colorCodeWidget);
+        this.addWidget(this.canvasWidget);
+        this.addWidget(this.paletteWidget);
+        this.addWidget(this.toolsWidget);
+        this.addWidget(this.slidersWidget);
+        this.addWidget(this.colorCodeWidget);
+        this.addWidget(this.helpWidget);
 
         this.getContainer().setFirstLoadNotification(this::firstLoadUpdate);
 
         this.minecraft.keyboardListener.enableRepeatEvents(true);
 
         this.container.addListener(this);
+    }
+
+    public void addWidget(AbstractPaintingWidget widget) {
+        this.widgets.add(widget);
+        this.addChildren(widget);
     }
 
     public void onClose() {
@@ -175,6 +189,22 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         this.paletteWidget.render(matrixStack);
         this.slidersWidget.render(matrixStack);
         this.colorCodeWidget.render(matrixStack, x, y, partialTicks);
+        this.helpWidget.render(matrixStack, x, y, partialTicks);
+    }
+
+    @Override
+    protected void renderHoveredTooltip(MatrixStack matrixStack, int x, int y) {
+        super.renderHoveredTooltip(matrixStack, x, y);
+
+        for (AbstractPaintingWidget widget : this.widgets) {
+            if (widget.isMouseOver(x, y)) {
+                ITextComponent tooltip = widget.getTooltip(x, y);
+
+                if (tooltip != null) {
+                    this.renderTooltip(matrixStack, tooltip, x, y);
+                }
+            }
+        }
     }
 
     /**
@@ -242,6 +272,17 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
      * Helpers
      */
 
+    /**
+     * @todo: use this.isPointInRegion
+     *
+     * @param x
+     * @param y
+     * @param xSize
+     * @param ySize
+     * @param mouseX
+     * @param mouseY
+     * @return
+     */
     // Returns true if the given x,y coordinates are within the given rectangle
     public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY){
         return ((mouseX >= x && mouseX <= x+xSize) && (mouseY >= y && mouseY <= y+ySize));

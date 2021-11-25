@@ -11,7 +11,9 @@ import net.minecraft.client.gui.IRenderable;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class PaletteWidget extends AbstractPaintingWidget implements IRenderable, IGuiEventListener {
+import javax.annotation.Nullable;
+
+public class PaletteWidget extends AbstractPaintingWidget implements IRenderable {
     final static int PALETTE_SCALE_FACTOR = 10;
     final static int PALETTE_OFFSET = PALETTE_SCALE_FACTOR + 1; // 1px border between slots
 
@@ -25,6 +27,13 @@ public class PaletteWidget extends AbstractPaintingWidget implements IRenderable
     public PaletteWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslationTextComponent("container.zetter.painting.palette"));
     }
+
+    @Override
+    public @Nullable
+    ITextComponent getTooltip(int mouseX, int mouseY) {
+        return null;
+    }
+
 
     public int getCurrentPaletteSlot() {
         return this.currentPaletteSlot;
