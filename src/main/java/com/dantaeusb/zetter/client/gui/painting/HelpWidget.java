@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.client.gui.painting;
 
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
+import com.dantaeusb.zetter.core.Helper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.IRenderable;
 import net.minecraft.util.Util;
@@ -12,16 +13,21 @@ import javax.annotation.Nullable;
 public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#painting";
 
-    final static int BUTTON_WIDTH = 18;
-    final static int BUTTON_HEIGHT = 18;
+    final static int BUTTON_WIDTH = 11;
+    final static int BUTTON_HEIGHT = 11;
 
     final static int BUTTON_POSITION_U = 176;
-    final static int BUTTON_POSITION_V = 167;
+    final static int BUTTON_POSITION_V = 174;
 
     boolean clicked = false;
 
     public HelpWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslationTextComponent("container.zetter.painting.help"));
+
+        if (!Helper.openUriAllowed()) {
+            this.active = false;
+            this.visible = false;
+        }
     }
 
     @Override
@@ -37,7 +43,7 @@ public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
 
             if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
-                Util.getOSType().openURI(MANUAL_PAGE);
+                Helper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
                 return super.mouseClicked(mouseX, mouseY, button);
             }
@@ -48,6 +54,10 @@ public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
     }
 
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        if (!this.visible) {
+            return;
+        }
+
         drawButton(matrixStack, mouseX, mouseY);
     }
 

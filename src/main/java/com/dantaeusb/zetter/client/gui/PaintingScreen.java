@@ -49,7 +49,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         final int TOOLS_POSITION_Y = 8;
 
         final int PALETTE_POSITION_X = 147;
-        final int PALETTE_POSITION_Y = 9;
+        final int PALETTE_POSITION_Y = 13;
 
         final int SLIDER_POSITION_X = 13;
         final int SLIDER_OFFSET_Y = 117;
@@ -57,8 +57,8 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         final int TEXTBOX_POSITION_X = 47;
         final int TEXTBOX_POSITION_Y = 95;
 
-        final int HELP_POSITION_X = 7;
-        final int HELP_POSITION_Y = 93;
+        final int HELP_POSITION_X = 165;
+        final int HELP_POSITION_Y = 0;
 
         this.canvasWidget = new CanvasWidget(this, this.getGuiLeft() + CANVAS_POSITION_X, this.getGuiTop() + CANVAS_POSITION_Y);
         this.paletteWidget = new PaletteWidget(this, this.getGuiLeft() + PALETTE_POSITION_X, this.getGuiTop() + PALETTE_POSITION_Y);

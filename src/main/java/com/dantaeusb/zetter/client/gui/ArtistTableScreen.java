@@ -54,8 +54,8 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         final int COMBINED_CANVAS_POSITION_X = 104;
         final int COMBINED_CANVAS_POSITION_Y = 26;
 
-        final int HELP_POSITION_X = 151;
-        final int HELP_POSITION_Y = 7;
+        final int HELP_POSITION_X = 165;
+        final int HELP_POSITION_Y = 0;
 
         this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
