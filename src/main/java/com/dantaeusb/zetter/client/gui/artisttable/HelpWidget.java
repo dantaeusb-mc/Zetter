@@ -2,8 +2,7 @@ package com.dantaeusb.zetter.client.gui.artisttable;
 
 import com.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
-import com.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
-import com.dantaeusb.zetter.core.Helper;
+import com.dantaeusb.zetter.core.ClientHelper;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.IRenderable;
 import net.minecraft.util.Util;
@@ -29,7 +28,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements IRenderable
     public HelpWidget(ArtistTableScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslationTextComponent("container.zetter.artist_table.help"));
 
-        if (!Helper.openUriAllowed()) {
+        if (!ClientHelper.openUriAllowed()) {
             this.active = false;
             this.visible = false;
         }
@@ -43,7 +42,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements IRenderable
 
             if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
-                Helper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
+                ClientHelper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
                 return super.mouseClicked(mouseX, mouseY, button);
             }

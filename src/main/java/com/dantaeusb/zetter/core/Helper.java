@@ -10,10 +10,6 @@ import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import com.google.common.collect.Sets;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.ScreenManager;
-import net.minecraft.client.gui.screen.ConfirmOpenLinkScreen;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Util;
 import net.minecraft.util.text.Style;
 import net.minecraft.world.World;
@@ -29,8 +25,6 @@ public class Helper {
     public static int CANVAS_COLOR = 0xFFE0DACE;
 
     private static Helper instance;
-
-    private static final Set<String> ALLOWED_PROTOCOLS = Sets.newHashSet("http", "https");
 
     public static final String COMBINED_CANVAS_CODE = Zetter.MOD_ID + "_combined_canvas";
     public static final String FALLBACK_CANVAS_CODE = Zetter.MOD_ID + "_fallback_canvas";
@@ -119,60 +113,5 @@ public class Helper {
         }
 
         return key;
-    }
-
-    public static boolean openUriAllowed() {
-        return Minecraft.getInstance().gameSettings.chatLinks;
-    }
-
-    /**
-     * Thanks to gigaherz
-     * @link {https://github.com/gigaherz/Guidebook/blob/master/src/main/java/dev/gigaherz/guidebook/guidebook/util/LinkHelper.java#L128-L193}
-     * @link {Screen#handleComponentClicked(Style style)}}
-     *
-     * @param parentScreen
-     * @param textTarget
-     */
-    public static void openUriPrompt(Screen parentScreen, String href)
-    {
-        Minecraft mc = Minecraft.getInstance();
-
-        if (!Helper.openUriAllowed()) {
-            return;
-        }
-
-        try
-        {
-            URI uri = new URI(href);
-            String s = uri.getScheme();
-            if (s == null) {
-                throw new URISyntaxException(href, "Missing protocol");
-            }
-
-            if (!ALLOWED_PROTOCOLS.contains(s.toLowerCase(Locale.ROOT))) {
-                throw new URISyntaxException(href, "Unsupported protocol: " + s.toLowerCase(Locale.ROOT));
-            }
-
-            if (mc.gameSettings.chatLinksPrompt) {
-                mc.displayGuiScreen(new ConfirmOpenLinkScreen((result) -> {
-                    if (result) {
-                        Helper.openUri(uri);
-                    }
-
-                    mc.displayGuiScreen(parentScreen);
-                }, href, true));
-            } else {
-                Helper.openUri(uri);
-            }
-        }
-        catch (URISyntaxException e)
-        {
-            Zetter.LOG.error("Can't open url {}", href, e);
-        }
-    }
-
-    private static void openUri(URI uri)
-    {
-        Util.getOSType().openURI(uri);
     }
 }
