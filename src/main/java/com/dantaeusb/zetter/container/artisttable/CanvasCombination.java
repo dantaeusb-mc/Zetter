@@ -46,7 +46,7 @@ public class CanvasCombination {
 
         for (int y = 0; y < ArtistTableContainer.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableContainer.CANVAS_COLUMN_COUNT; x++) {
-                if (canvasStorage.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
+                if (canvasStorage.getItem(y * 4 + x) != ItemStack.EMPTY) {
                     if (min == null) {
                         min = new Tuple<>(x ,y);
                     }
@@ -76,7 +76,7 @@ public class CanvasCombination {
 
         for (int y = 0; y < ArtistTableContainer.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableContainer.CANVAS_COLUMN_COUNT; x++) {
-                ItemStack currentStack = canvasStorage.getStackInSlot(y * 4 + x);
+                ItemStack currentStack = canvasStorage.getItem(y * 4 + x);
 
                 if (currentStack == ItemStack.EMPTY) {
                     if (x >= min.getA() && x <= max.getA()) {
@@ -146,7 +146,7 @@ public class CanvasCombination {
 
         for (int slotY = rectangle.y; slotY < rectangle.y + rectangle.height; slotY++) {
             for (int slotX = rectangle.x; slotX < rectangle.x + rectangle.width; slotX++) {
-                ItemStack canvasStack = canvasStorage.getStackInSlot(slotY * 4 + slotX);
+                ItemStack canvasStack = canvasStorage.getItem(slotY * 4 + slotX);
 
                 CanvasData smallCanvasData = CanvasItem.getCanvasData(canvasStack, world);
 
@@ -191,7 +191,7 @@ public class CanvasCombination {
             color.array()
         );
 
-        if (world.isRemote()) {
+        if (world.isClientSide()) {
             Helper.getWorldCanvasTracker(world).registerCanvasData(combinedCanvasData);
         }
 

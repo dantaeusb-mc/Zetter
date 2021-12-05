@@ -42,14 +42,14 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
     }
 
     public void render(MatrixStack matrixStack) {
-        matrixStack.push();
+        matrixStack.pushPose();
         matrixStack.translate(this.x, this.y, 1.0F);
 
-        DummyCanvasData canvasData = this.parentScreen.getContainer().getCanvasCombination().canvasData;
+        DummyCanvasData canvasData = this.parentScreen.getMenu().getCanvasCombination().canvasData;
 
         this.drawCanvas(matrixStack, canvasData);
 
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
     private void drawCanvas(MatrixStack matrixStack, @Nullable DummyCanvasData canvasData) {
@@ -57,15 +57,15 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements I
             int scale = getScale(canvasData);
             Tuple<Integer, Integer> displacement = getDisplacement(canvasData, scale);
 
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(displacement.getA(), displacement.getB(), 1.0F);
             matrixStack.scale(scale, scale, 1.0F);
 
-            IRenderTypeBuffer.Impl renderTypeBufferImpl = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
+            IRenderTypeBuffer.Impl renderTypeBufferImpl = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, canvasData, 15728880);
-            renderTypeBufferImpl.finish();
+            renderTypeBufferImpl.endBatch();
 
-            matrixStack.pop();
+            matrixStack.popPose();
         }
     }
 

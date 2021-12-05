@@ -70,7 +70,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.blockWidth = blockSize[0];
         this.blockHeight = blockSize[1];
 
-        this.updateFacingWithBoundingBox(facing);
+        this.setDirection(facing);
     }
 
     public String getCanvasCode() {
@@ -104,53 +104,53 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     /**
      * Updates facing and bounding box based on it
      */
-    protected void updateFacingWithBoundingBox(Direction facingDirectionIn) {
+    protected void setDirection(Direction facingDirectionIn) {
         Validate.notNull(facingDirectionIn);
-        this.facingDirection = facingDirectionIn;
+        this.direction = facingDirectionIn;
         if (facingDirectionIn.getAxis().isHorizontal()) {
-            this.rotationPitch = 0.0F;
-            this.rotationYaw = (float)(this.facingDirection.getHorizontalIndex() * 90);
+            this.xRot = 0.0F;
+            this.yRot = (float)(this.direction.get2DDataValue() * 90);
         } else {
-            this.rotationPitch = (float)(-90 * facingDirectionIn.getAxisDirection().getOffset());
-            this.rotationYaw = 0.0F;
+            this.xRot = (float)(-90 * facingDirectionIn.getAxisDirection().getStep());
+            this.yRot = 0.0F;
         }
 
-        this.prevRotationPitch = this.rotationPitch;
-        this.prevRotationYaw = this.rotationYaw;
-        this.updateBoundingBox();
+        this.xRotO = this.xRot;
+        this.yRotO = this.yRot;
+        this.recalculateBoundingBox();
     }
 
     /**
      * Updates the entity bounding box based on current facing
      */
-    protected void updateBoundingBox() {
-        if (this.facingDirection != null) {
-            double xCenter = (double)this.hangingPosition.getX() + 0.5D;
-            double yCenter = (double)this.hangingPosition.getY() + 0.5D;
-            double zCenter = (double)this.hangingPosition.getZ() + 0.5D;
+    protected void recalculateBoundingBox() {
+        if (this.direction != null) {
+            double xCenter = (double)this.pos.getX() + 0.5D;
+            double yCenter = (double)this.pos.getY() + 0.5D;
+            double zCenter = (double)this.pos.getZ() + 0.5D;
 
             double thicknessOffset = 0.5D - (1.0D / 32.0D);
 
-            double hCenterOffset = this.offs(this.getWidthPixels());
-            double vCenterOffset = this.offs(this.getHeightPixels());
+            double hCenterOffset = this.offs(this.getWidth());
+            double vCenterOffset = this.offs(this.getHeight());
 
-            xCenter = xCenter - (double)this.facingDirection.getXOffset() * thicknessOffset;
-            zCenter = zCenter - (double)this.facingDirection.getZOffset() * thicknessOffset;
+            xCenter = xCenter - (double)this.direction.getStepX() * thicknessOffset;
+            zCenter = zCenter - (double)this.direction.getStepZ() * thicknessOffset;
 
             yCenter = yCenter + vCenterOffset;
 
-            Direction direction = this.facingDirection.rotateYCCW();
+            Direction direction = this.direction.getCounterClockWise();
 
-            xCenter = xCenter + hCenterOffset * (double)direction.getXOffset();
-            zCenter = zCenter + hCenterOffset * (double)direction.getZOffset();
+            xCenter = xCenter + hCenterOffset * (double)direction.getStepX();
+            zCenter = zCenter + hCenterOffset * (double)direction.getStepZ();
 
-            this.setRawPosition(xCenter, yCenter, zCenter);
+            this.setPosRaw(xCenter, yCenter, zCenter);
 
-            double xWidth = this.getWidthPixels();
-            double yHeight = this.getHeightPixels();
-            double zWidth = this.getWidthPixels();
+            double xWidth = this.getWidth();
+            double yHeight = this.getHeight();
+            double zWidth = this.getWidth();
 
-            if (this.facingDirection.getAxis() == Direction.Axis.Z) {
+            if (this.direction.getAxis() == Direction.Axis.Z) {
                 zWidth = 1.0D;
             } else {
                 xWidth = 1.0D;
@@ -189,16 +189,16 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     @Override
-    public ActionResultType processInitialInteract(PlayerEntity player, Hand hand) {
+    public ActionResultType interact(PlayerEntity player, Hand hand) {
         if (!this.hasPlate()) {
             return ActionResultType.PASS;
         }
 
-        if (!player.getEntityWorld().isRemote()) {
+        if (!player.getCommandSenderWorld().isClientSide()) {
             return ActionResultType.CONSUME;
         }
 
-        PaintingData paintingData = Helper.getWorldCanvasTracker(this.world).getCanvasData(this.canvasCode, PaintingData.class);
+        PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
         String paintingName = paintingData.getPaintingName();
         String authorName = paintingData.getAuthorName();
@@ -211,7 +211,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
         }
 
-        player.sendStatusMessage(
+        player.displayClientMessage(
             new TranslationTextComponent("item.zetter.customPaintingByAuthor", paintingName, authorName),
             true
         );
@@ -219,21 +219,21 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         return ActionResultType.CONSUME;
     }
 
-    public void writeAdditional(CompoundNBT compound) {
-        compound.putByte(NBT_TAG_FACING, (byte)this.facingDirection.getHorizontalIndex());
+    public void addAdditionalSaveData(CompoundNBT compound) {
+        compound.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
         compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
         compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
         compound.putString(NBT_TAG_MATERIAL, this.material.toString());
         compound.putBoolean(NBT_TAG_HAS_PLATE, this.hasPlate);
 
-        super.writeAdditional(compound);
+        super.addAdditionalSaveData(compound);
     }
 
     /**
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
-    public void readAdditional(CompoundNBT compound) {
-        this.facingDirection = Direction.byHorizontalIndex(compound.getByte(NBT_TAG_FACING));
+    public void readAdditionalSaveData(CompoundNBT compound) {
+        this.direction = Direction.from2DDataValue(compound.getByte(NBT_TAG_FACING));
         this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
 
         if (compound.contains(NBT_TAG_BLOCK_SIZE)) {
@@ -256,36 +256,36 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             this.hasPlate = false;
         }
 
-        super.readAdditional(compound);
-        this.updateFacingWithBoundingBox(this.facingDirection);
+        super.readAdditionalSaveData(compound);
+        this.setDirection(this.direction);
     }
 
     public void writeSpawnData(PacketBuffer buffer) {
-        buffer.writeBlockPos(this.hangingPosition);
-        buffer.writeByte((byte)this.facingDirection.getHorizontalIndex());
+        buffer.writeBlockPos(this.pos);
+        buffer.writeByte((byte)this.direction.get2DDataValue());
 
-        buffer.writeString(this.canvasCode, 64);
+        buffer.writeUtf(this.canvasCode, 64);
 
         buffer.writeInt(this.blockWidth);
         buffer.writeInt(this.blockHeight);
 
-        buffer.writeString(this.material.toString(), 64);
+        buffer.writeUtf(this.material.toString(), 64);
         buffer.writeBoolean(this.hasPlate);
     }
 
     public void readSpawnData(PacketBuffer buffer) {
-        this.hangingPosition = buffer.readBlockPos();
-        this.facingDirection = Direction.byHorizontalIndex(buffer.readByte());
+        this.pos = buffer.readBlockPos();
+        this.direction = Direction.from2DDataValue(buffer.readByte());
 
-        this.canvasCode = buffer.readString(64);
+        this.canvasCode = buffer.readUtf(64);
 
         this.blockWidth = buffer.readInt();
         this.blockHeight = buffer.readInt();
 
-        this.material = Materials.fromString(buffer.readString(64));
+        this.material = Materials.fromString(buffer.readUtf(64));
         this.hasPlate = buffer.readBoolean();
 
-        this.updateFacingWithBoundingBox(this.facingDirection);
+        this.setDirection(this.direction);
     }
 
     /**
@@ -293,11 +293,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Multiple image resolutions
      * @return
      */
-    public int getWidthPixels() {
+    public int getWidth() {
         return this.blockWidth * Helper.getResolution().getNumeric();
     }
 
-    public int getHeightPixels() {
+    public int getHeight() {
         return this.blockHeight * Helper.getResolution().getNumeric();
     }
 
@@ -305,28 +305,28 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Checks if the entity is in range to render.
      */
     @OnlyIn(Dist.CLIENT)
-    public boolean isInRangeToRenderDist(double distance) {
+    public boolean shouldRenderAtSqrDistance(double distance) {
         double d0 = 16.0D;
-        d0 = d0 * 64.0D * getRenderDistanceWeight();
+        d0 = d0 * 64.0D * getViewScale();
         return distance < d0 * d0;
     }
 
     /**
      * Called when this entity is broken. Entity parameter may be null.
      */
-    public void onBroken(@Nullable Entity brokenEntity) {
+    public void dropItem(@Nullable Entity brokenEntity) {
         // @todo: remove item if canvas code is set to fallback code
-        if (this.world.getGameRules().getBoolean(GameRules.DO_ENTITY_DROPS)) {
-            this.playSound(SoundEvents.ENTITY_PAINTING_BREAK, 1.0F, 1.0F);
+        if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+            this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
 
             ItemStack canvasStack = new ItemStack(ModItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)));
 
-            PaintingData paintingData = Helper.getWorldCanvasTracker(this.world).getCanvasData(this.canvasCode, PaintingData.class);
+            PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
             FrameItem.setPaintingData(canvasStack, paintingData);
             FrameItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
-            this.entityDropItem(canvasStack);
+            this.spawnAtLocation(canvasStack);
         }
     }
 
@@ -335,8 +335,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Do not re-center bounding box
      * Copied from PaintingEntity
      */
-    public void setLocationAndAngles(double x, double y, double z, float yaw, float pitch) {
-        this.setPosition(x, y, z);
+    public void moveTo(double x, double y, double z, float yaw, float pitch) {
+        this.setPos(x, y, z);
     }
 
     /**
@@ -344,18 +344,18 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Copied from PaintingEntity
      */
     @OnlyIn(Dist.CLIENT)
-    public void setPositionAndRotationDirect(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
-        BlockPos blockpos = this.hangingPosition.add(x - this.getPosX(), y - this.getPosY(), z - this.getPosZ());
-        this.setPosition(blockpos.getX(), blockpos.getY(), blockpos.getZ());
+    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
+        BlockPos blockpos = this.pos.offset(x - this.getX(), y - this.getY(), z - this.getZ());
+        this.setPos(blockpos.getX(), blockpos.getY(), blockpos.getZ());
     }
 
-    public void playPlaceSound() {
-        this.playSound(SoundEvents.ENTITY_PAINTING_PLACE, 1.0F, 1.0F);
+    public void playPlacementSound() {
+        this.playSound(SoundEvents.PAINTING_PLACE, 1.0F, 1.0F);
     }
 
     @Nonnull
     @Override
-    public IPacket<?> createSpawnPacket() {
+    public IPacket<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

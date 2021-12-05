@@ -36,15 +36,15 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void clientSetup(FMLClientSetupEvent event) {
-        ScreenManager.registerFactory(ModContainers.PAINTING, PaintingScreen::new);
-        ScreenManager.registerFactory(ModContainers.ARTIST_TABLE, ArtistTableScreen::new);
+        ScreenManager.register(ModContainers.PAINTING, PaintingScreen::new);
+        ScreenManager.register(ModContainers.ARTIST_TABLE, ArtistTableScreen::new);
 
         for (Item frame : ModItems.FRAMES.values()) {
-            ItemModelsProperties.registerProperty(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
-            ItemModelsProperties.registerProperty(frame, new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
+            ItemModelsProperties.register(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
+            ItemModelsProperties.register(frame, new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
         }
 
-        RenderTypeLookup.setRenderLayer(ModBlocks.EASEL, RenderType.getCutout());
+        RenderTypeLookup.setRenderLayer(ModBlocks.EASEL, RenderType.cutout());
         ClientRegistry.bindTileEntityRenderer(ModTileEntities.EASEL_TILE_ENTITY, EaselTileEntityRenderer::new);
 
         RenderingRegistry.registerEntityRenderingHandler(ModEntities.CUSTOM_PAINTING_ENTITY, CustomPaintingRenderer::new);

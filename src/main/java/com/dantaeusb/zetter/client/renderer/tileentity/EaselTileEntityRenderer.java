@@ -36,26 +36,26 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
         super(rendererDispatcherIn);
 
         this.rack = new ModelRenderer(64, 64, 0, 0);
-        this.rack.setRotationPoint(0.0F, 0, 0.0F);
+        this.rack.setPos(0.0F, 0, 0.0F);
         this.rack.addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F, 0.0F, false);
 
         this.canvas = new ModelRenderer(64, 64, 6, 5);
-        this.canvas.setRotationPoint(0.0F, 0.0F, 0.0F);
+        this.canvas.setPos(0.0F, 0.0F, 0.0F);
         setRotationAngle(this.canvas, 0.1745F, 0.0F, 0.0F);
         this.canvas.addBox(0.0F, 12.0F, 3.0F, 16.0F, 18.0F, 1.0F, 0.0F, false);
 
         this.topPlank = new ModelRenderer(64, 64, 0, 0);
-        this.topPlank.setRotationPoint(0.0F, 0.0F, 0.0F);
+        this.topPlank.setPos(0.0F, 0.0F, 0.0F);
         setRotationAngle(topPlank, 0.1745F, 0.0F, 0.0F);
         this.topPlank.addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F, 0.0F, false);
 
         this.backLeg = new ModelRenderer(64, 64, 0, 6);
-        this.backLeg.setRotationPoint(0.0F, 0.0F, 15.0F);
+        this.backLeg.setPos(0.0F, 0.0F, 15.0F);
         setRotationAngle(backLeg, -0.2182F, 0.0F, 0.0F);
         this.backLeg.addBox(7.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
 
         this.frontLegs = new ModelRenderer(64, 64, 0, 6);
-        this.frontLegs.setRotationPoint(0.0F, 0.0F, -3.0F);
+        this.frontLegs.setPos(0.0F, 0.0F, -3.0F);
         setRotationAngle(frontLegs, 0.1745F, 0.0F, 0.0F);
         this.frontLegs.addBox(12.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
         this.frontLegs.addBox(2.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F, 0.0F, false);
@@ -67,17 +67,17 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
     private boolean stoopidUpdate = false;
 
     public void render(EaselTileEntity tileEntity, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight, int combinedOverlay) {
-        World world = tileEntity.getWorld();
+        World world = tileEntity.getLevel();
         boolean flag = world != null;
-        BlockState blockState = flag ? tileEntity.getBlockState() : ModBlocks.EASEL.getDefaultState().with(EaselBlock.FACING, Direction.SOUTH);
+        BlockState blockState = flag ? tileEntity.getBlockState() : ModBlocks.EASEL.defaultBlockState().setValue(EaselBlock.FACING, Direction.SOUTH);
 
-        IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.getEntityCutout(TEXTURE));
+        IVertexBuilder vertexBuilder = renderTypeBuffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
-        matrixStack.push();
+        matrixStack.pushPose();
 
-        float facingAngle = blockState.get(ChestBlock.FACING).getHorizontalAngle();
+        float facingAngle = blockState.getValue(ChestBlock.FACING).toYRot();
         matrixStack.translate(0.5D, 0.5D, 0.5D);
-        matrixStack.rotate(Vector3f.YP.rotationDegrees(-facingAngle));
+        matrixStack.mulPose(Vector3f.YP.rotationDegrees(-facingAngle));
         matrixStack.translate(-0.5D, -0.5D, -0.5D);
 
         rack.render(matrixStack, vertexBuilder, combinedLight, combinedOverlay);
@@ -100,9 +100,9 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
                 // Scale and prepare
                 matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
                 matrixStack.translate(0.0D, 12.5D, 5.0D);
-                matrixStack.rotate(Vector3f.XP.rotation(0.1745F));
+                matrixStack.mulPose(Vector3f.XP.rotation(0.1745F));
 
-                matrixStack.rotate(Vector3f.ZP.rotationDegrees(180.0F));
+                matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
                 matrixStack.translate(-16.0D, -16.0D, 0.1D);
 
                 CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBuffer, canvasData, combinedLight);
@@ -111,13 +111,13 @@ public class EaselTileEntityRenderer extends TileEntityRenderer<EaselTileEntity>
             }
         }
 
-        matrixStack.pop();
+        matrixStack.popPose();
     }
 
     public static void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {
-        modelRenderer.rotateAngleX = x;
-        modelRenderer.rotateAngleY = y;
-        modelRenderer.rotateAngleZ = z;
+        modelRenderer.xRot = x;
+        modelRenderer.yRot = y;
+        modelRenderer.zRot = z;
     }
 
     @Nullable

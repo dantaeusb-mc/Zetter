@@ -22,6 +22,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nullable;
 import java.util.List;
 
+import net.minecraft.item.Item.Properties;
+
 public class PaintingItem extends Item
 {
     public static final String NBT_TAG_CACHED_PAINTING_NAME = "CachedPaintingName";
@@ -29,7 +31,7 @@ public class PaintingItem extends Item
     public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
 
     public PaintingItem() {
-        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
+        super(new Properties().stacksTo(1).tab(ItemGroup.TAB_TOOLS));
     }
 
     public PaintingItem(Item.Properties properties) {
@@ -37,7 +39,7 @@ public class PaintingItem extends Item
     }
 
     public static void setPaintingData(ItemStack stack, PaintingData paintingData) {
-        setPaintingCode(stack, paintingData.getName());
+        setPaintingCode(stack, paintingData.getId());
 
         setCachedAuthorName(stack, paintingData.getAuthorName());
         setCachedPaintingName(stack, paintingData.getPaintingName());
@@ -50,7 +52,7 @@ public class PaintingItem extends Item
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void addInformation(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         if (stack.hasTag()) {
             String authorName = getCachedAuthorName(stack);
 
@@ -58,23 +60,23 @@ public class PaintingItem extends Item
                 authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
             }
 
-            tooltip.add((new TranslationTextComponent("book.byAuthor", authorName)).mergeStyle(TextFormatting.GRAY));
+            tooltip.add((new TranslationTextComponent("book.byAuthor", authorName)).withStyle(TextFormatting.GRAY));
 
             String stringSize = getCachedStringSize(stack);
 
             if (!StringUtils.isNullOrEmpty(stringSize)) {
-                tooltip.add((new StringTextComponent(stringSize)).mergeStyle(TextFormatting.GRAY));
+                tooltip.add((new StringTextComponent(stringSize)).withStyle(TextFormatting.GRAY));
             }
         }
     }
 
-    public ITextComponent getDisplayName(ItemStack stack) {
+    public ITextComponent getName(ItemStack stack) {
         if (stack.hasTag()) {
             String paintingName = getCachedPaintingName(stack);
 
             if (StringUtils.isNullOrEmpty(paintingName)) {
                 if (StringUtils.isNullOrEmpty(getPaintingCode(stack))) {
-                    return super.getDisplayName(stack);
+                    return super.getName(stack);
                 }
 
                 paintingName = new TranslationTextComponent("item.zetter.painting.unnamed").getString();
@@ -85,7 +87,7 @@ public class PaintingItem extends Item
             }
         }
 
-        return super.getDisplayName(stack);
+        return super.getName(stack);
     }
 
     public static void setPaintingCode(ItemStack stack, String canvasCode) {

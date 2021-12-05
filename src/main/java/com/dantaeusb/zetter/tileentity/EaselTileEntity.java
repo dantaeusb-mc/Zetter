@@ -45,20 +45,20 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public EaselTileEntity() {
         super(ModTileEntities.EASEL_TILE_ENTITY);
 
-        this.easelStorage = EaselStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
+        this.easelStorage = EaselStorage.createForTileEntity(this::canPlayerAccessInventory, this::setChanged);
     }
 
     public boolean canPlayerAccessInventory(PlayerEntity player) {
-        if (this.world.getTileEntity(this.pos) != this) {
+        if (this.level.getBlockEntity(this.worldPosition) != this) {
             return false;
         } else {
-            return player.getDistanceSq((double)this.pos.getX() + 0.5D, (double)this.pos.getY() + 0.5D, (double)this.pos.getZ() + 0.5D) <= 64.0D;
+            return player.distanceToSqr((double)this.worldPosition.getX() + 0.5D, (double)this.worldPosition.getY() + 0.5D, (double)this.worldPosition.getZ() + 0.5D) <= 64.0D;
         }
     }
 
     public void tick() {
         // No need to track on client side
-        if (this.world.isRemote()) {
+        if (this.level.isClientSide()) {
             return;
         }
 
@@ -80,7 +80,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     public @Nullable ItemStack getCanvasStack() {
-        return this.easelStorage.getStackInSlot(EaselStorage.CANVAS_SLOT);
+        return this.easelStorage.getItem(EaselStorage.CANVAS_SLOT);
     }
 
     public boolean putCanvasStack(ItemStack itemStack) {
@@ -93,7 +93,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
         }
 
         // Initialize data if it's not yet
-        CanvasItem.getCanvasData(itemStack, this.world);
+        CanvasItem.getCanvasData(itemStack, this.level);
         this.easelStorage.setCanvasStack(itemStack);
 
         return true;
@@ -121,7 +121,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
             return null;
         }
 
-        return  CanvasItem.getCanvasData(canvasStack, this.world);
+        return  CanvasItem.getCanvasData(canvasStack, this.level);
     }
 
     // track using players to send packets
@@ -129,9 +129,9 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public ArrayList<PlayerEntity> calculatePlayersUsing() {
         ArrayList<PlayerEntity> usingPlayers = new ArrayList<>();
 
-        for(PlayerEntity player : this.world.getEntitiesWithinAABB(PlayerEntity.class, new AxisAlignedBB(this.pos.add(-5, -5, -5), this.pos.add(5, 5, 5)))) {
-            if (player.openContainer instanceof EaselContainer) {
-                EaselStorage storage = ((EaselContainer)player.openContainer).getEaselStorage();
+        for(PlayerEntity player : this.level.getEntitiesOfClass(PlayerEntity.class, new AxisAlignedBB(this.worldPosition.offset(-5, -5, -5), this.worldPosition.offset(5, 5, 5)))) {
+            if (player.containerMenu instanceof EaselContainer) {
+                EaselStorage storage = ((EaselContainer)player.containerMenu).getEaselStorage();
 
                 if (storage == this.getEaselStorage()) {
                     usingPlayers.add(player);
@@ -151,15 +151,15 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     @Override
     public AxisAlignedBB getRenderBoundingBox()
     {
-        return new AxisAlignedBB(this.getPos(), this.getPos().add(1, 2, 1));
+        return new AxisAlignedBB(this.getBlockPos(), this.getBlockPos().offset(1, 2, 1));
     }
 
     // NBT stack
 
     @Override
-    public CompoundNBT write(CompoundNBT parentNBTTagCompound)
+    public CompoundNBT save(CompoundNBT parentNBTTagCompound)
     {
-        super.write(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
+        super.save(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
 
         CompoundNBT inventoryNBT = this.easelStorage.serializeNBT();
         parentNBTTagCompound.put(EASEL_STORAGE_TAG, inventoryNBT);
@@ -168,14 +168,14 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     }
 
     @Override
-    public void read(BlockState blockState, CompoundNBT parentNBTTagCompound)
+    public void load(BlockState blockState, CompoundNBT parentNBTTagCompound)
     {
-        super.read(blockState, parentNBTTagCompound);
+        super.load(blockState, parentNBTTagCompound);
 
         CompoundNBT inventoryNBT = parentNBTTagCompound.getCompound(EASEL_STORAGE_TAG);
         this.easelStorage.deserializeNBT(inventoryNBT);
 
-        if (this.easelStorage.getSizeInventory() != EaselStorage.STORAGE_SIZE)
+        if (this.easelStorage.getContainerSize() != EaselStorage.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
 
@@ -186,30 +186,30 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
     public SUpdateTileEntityPacket getUpdatePacket()
     {
         CompoundNBT nbtTagCompound = new CompoundNBT();
-        write(nbtTagCompound);
+        save(nbtTagCompound);
 
         int tileEntityType = 42;
-        return new SUpdateTileEntityPacket(this.pos, tileEntityType, nbtTagCompound);
+        return new SUpdateTileEntityPacket(this.worldPosition, tileEntityType, nbtTagCompound);
     }
 
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet) {
-        BlockState blockState = world.getBlockState(pos);
-        read(blockState, packet.getNbtCompound());
+        BlockState blockState = level.getBlockState(worldPosition);
+        load(blockState, packet.getTag());
     }
 
     @Override
     public CompoundNBT getUpdateTag()
     {
         CompoundNBT nbtTagCompound = new CompoundNBT();
-        write(nbtTagCompound);
+        save(nbtTagCompound);
         return nbtTagCompound;
     }
 
     @Override
     public void handleUpdateTag(BlockState blockState, CompoundNBT tag)
     {
-        this.read(blockState, tag);
+        this.load(blockState, tag);
     }
 
     /**
@@ -218,7 +218,7 @@ public class EaselTileEntity extends TileEntity implements ITickableTileEntity, 
      * @param blockPos
      */
     public void dropAllContents(World world, BlockPos blockPos) {
-        InventoryHelper.dropInventoryItems(world, blockPos, this.easelStorage);
+        InventoryHelper.dropContents(world, blockPos, this.easelStorage);
     }
 
     //

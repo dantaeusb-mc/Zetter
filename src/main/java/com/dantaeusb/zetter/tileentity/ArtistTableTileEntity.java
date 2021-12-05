@@ -34,14 +34,14 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     public ArtistTableTileEntity() {
         super(ModTileEntities.ARTIST_TABLE_TILE_ENTITY);
 
-        this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::markDirty);
+        this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::setChanged);
     }
 
     public boolean canPlayerAccessInventory(PlayerEntity player) {
-        if (this.world.getTileEntity(this.pos) != this) {
+        if (this.level.getBlockEntity(this.worldPosition) != this) {
             return false;
         } else {
-            return player.getDistanceSq((double)this.pos.getX() + 0.5D, (double)this.pos.getY() + 0.5D, (double)this.pos.getZ() + 0.5D) <= 64.0D;
+            return player.distanceToSqr((double)this.worldPosition.getX() + 0.5D, (double)this.worldPosition.getY() + 0.5D, (double)this.worldPosition.getZ() + 0.5D) <= 64.0D;
         }
     }
 
@@ -51,15 +51,15 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     @Override
     public AxisAlignedBB getRenderBoundingBox()
     {
-        return new AxisAlignedBB(this.getPos(), this.getPos().add(1, 1, 1));
+        return new AxisAlignedBB(this.getBlockPos(), this.getBlockPos().offset(1, 1, 1));
     }
 
     // NBT stack
 
     @Override
-    public CompoundNBT write(CompoundNBT parentNBTTagCompound)
+    public CompoundNBT save(CompoundNBT parentNBTTagCompound)
     {
-        super.write(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
+        super.save(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
 
         CompoundNBT canvasNbt = this.canvasStorage.serializeNBT();
         parentNBTTagCompound.put(ARTIST_TABLE_CANVAS_STORAGE_TAG, canvasNbt);
@@ -68,14 +68,14 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     }
 
     @Override
-    public void read(BlockState blockState, CompoundNBT parentNBTTagCompound)
+    public void load(BlockState blockState, CompoundNBT parentNBTTagCompound)
     {
-        super.read(blockState, parentNBTTagCompound);
+        super.load(blockState, parentNBTTagCompound);
 
         CompoundNBT canvasNbt = parentNBTTagCompound.getCompound(ARTIST_TABLE_CANVAS_STORAGE_TAG);
         this.canvasStorage.deserializeNBT(canvasNbt);
 
-        if (this.canvasStorage.getSizeInventory() != ArtistTableCanvasStorage.STORAGE_SIZE)
+        if (this.canvasStorage.getContainerSize() != ArtistTableCanvasStorage.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
 
@@ -86,30 +86,30 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     public SUpdateTileEntityPacket getUpdatePacket()
     {
         CompoundNBT nbtTagCompound = new CompoundNBT();
-        write(nbtTagCompound);
+        save(nbtTagCompound);
 
         int tileEntityType = 43;
-        return new SUpdateTileEntityPacket(this.pos, tileEntityType, nbtTagCompound);
+        return new SUpdateTileEntityPacket(this.worldPosition, tileEntityType, nbtTagCompound);
     }
 
     @Override
     public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet) {
-        BlockState blockState = world.getBlockState(pos);
-        read(blockState, packet.getNbtCompound());
+        BlockState blockState = level.getBlockState(worldPosition);
+        load(blockState, packet.getTag());
     }
 
     @Override
     public CompoundNBT getUpdateTag()
     {
         CompoundNBT nbtTagCompound = new CompoundNBT();
-        write(nbtTagCompound);
+        save(nbtTagCompound);
         return nbtTagCompound;
     }
 
     @Override
     public void handleUpdateTag(BlockState blockState, CompoundNBT tag)
     {
-        this.read(blockState, tag);
+        this.load(blockState, tag);
     }
 
     /**
@@ -118,7 +118,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
      * @param blockPos
      */
     public void dropAllContents(World world, BlockPos blockPos) {
-        InventoryHelper.dropInventoryItems(world, blockPos, this.canvasStorage);
+        InventoryHelper.dropContents(world, blockPos, this.canvasStorage);
     }
 
     //
@@ -138,7 +138,7 @@ public class ArtistTableTileEntity extends TileEntity implements ITickableTileEn
     @Nullable
     @Override
     public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
-        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage, IWorldPosCallable.of(this.world, this.pos));
+        return ArtistTableContainer.createContainerServerSide(windowID, playerInventory, this.canvasStorage, IWorldPosCallable.create(this.level, this.worldPosition));
     }
 
     static public boolean isItemValidForCanvasArea(ItemStack itemStack)

@@ -48,17 +48,17 @@ public class UnframingRecipe extends SpecialRecipe {
     public boolean matches(CraftingInventory craftingInventory, World world) {
         ItemStack frameStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getSizeInventory(); ++i) {
-            if (craftingInventory.getStackInSlot(i).isEmpty()) {
+        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
+            if (craftingInventory.getItem(i).isEmpty()) {
                 continue;
             }
 
-            if (this.inputFrame.test(craftingInventory.getStackInSlot(i))) {
+            if (this.inputFrame.test(craftingInventory.getItem(i))) {
                 if (!frameStack.isEmpty()) {
                     return false;
                 }
 
-                frameStack = craftingInventory.getStackInSlot(i);
+                frameStack = craftingInventory.getItem(i);
             }
         }
 
@@ -66,10 +66,10 @@ public class UnframingRecipe extends SpecialRecipe {
     }
 
     public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
-        NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getSizeInventory(), ItemStack.EMPTY);
+        NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
 
         for(int i = 0; i < remainingItems.size(); ++i) {
-            ItemStack stackInSlot = inv.getStackInSlot(i);
+            ItemStack stackInSlot = inv.getItem(i);
 
             // @todo: do we need containerItem?
             /*if (stackInSlot.hasContainerItem()) {
@@ -90,16 +90,16 @@ public class UnframingRecipe extends SpecialRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory craftingInventory) {
+    public ItemStack assemble(CraftingInventory craftingInventory) {
         ItemStack frameStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getSizeInventory(); ++i) {
-            if (this.inputFrame.test(craftingInventory.getStackInSlot(i))) {
+        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
+            if (this.inputFrame.test(craftingInventory.getItem(i))) {
                 if (!frameStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                frameStack = craftingInventory.getStackInSlot(i);
+                frameStack = craftingInventory.getItem(i);
             }
         }
 
@@ -124,7 +124,7 @@ public class UnframingRecipe extends SpecialRecipe {
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean canFit(int width, int height) {
+    public boolean canCraftInDimensions(int width, int height) {
         return width >= 2 && height >= 2;
     }
 
@@ -135,22 +135,22 @@ public class UnframingRecipe extends SpecialRecipe {
         }
 
         @Override
-        public UnframingRecipe read(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = JSONUtils.getJsonObject(json, "frame");
-            final Ingredient inputFrame = Ingredient.deserialize(inputFrameJson);
+        public UnframingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
+            final JsonElement inputFrameJson = JSONUtils.getAsJsonObject(json, "frame");
+            final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
 
             return new UnframingRecipe(recipeId, inputFrame);
         }
 
         @Override
-        public UnframingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient frameIngredient = Ingredient.read(buffer);
+        public UnframingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
             return new UnframingRecipe(recipeId, frameIngredient);
         }
 
         @Override
-        public void write(PacketBuffer buffer, UnframingRecipe recipe) {
-            recipe.inputFrame.write(buffer);
+        public void toNetwork(PacketBuffer buffer, UnframingRecipe recipe) {
+            recipe.inputFrame.toNetwork(buffer);
         }
     }
 }

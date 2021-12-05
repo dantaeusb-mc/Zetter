@@ -15,12 +15,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.item.Item.Properties;
+
 public class CanvasItem extends Item
 {
     public static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
     public CanvasItem() {
-        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
+        super(new Properties().stacksTo(1).tab(ItemGroup.TAB_TOOLS));
     }
 
     /**
@@ -56,7 +58,7 @@ public class CanvasItem extends Item
         }
 
         // @todo: Maybe throw an exception if it's happening on client-side?
-        if ((canvasData == null || canvasData.getName().equals(Helper.FALLBACK_CANVAS_CODE)) && world instanceof ServerWorld) {
+        if ((canvasData == null || canvasData.getId().equals(Helper.FALLBACK_CANVAS_CODE)) && world instanceof ServerWorld) {
             canvasData = createCanvasData(stack, world);
         }
 
@@ -92,8 +94,8 @@ public class CanvasItem extends Item
     /**
      * Called when item is crafted/smelted. Used only by maps so far.
      */
-    public void onCreated(ItemStack stack, World worldIn, PlayerEntity playerIn) {
-        if (worldIn.isRemote) return;
+    public void onCraftedBy(ItemStack stack, World worldIn, PlayerEntity playerIn) {
+        if (worldIn.isClientSide) return;
 
         createCanvasData(stack, worldIn);
     }
@@ -109,7 +111,7 @@ public class CanvasItem extends Item
         CanvasData canvasData = Helper.createNewCanvas(worldIn);
         canvasData.initData(Helper.getResolution().getNumeric(), Helper.getResolution().getNumeric());
 
-        CanvasItem.setCanvasCode(stack, canvasData.getName());
+        CanvasItem.setCanvasCode(stack, canvasData.getId());
 
         return canvasData;
     }

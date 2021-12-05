@@ -60,9 +60,9 @@ public class Helper {
     public static @Nullable ICanvasTracker getWorldCanvasTracker(World world) {
         ICanvasTracker canvasTracker;
 
-        if (!world.isRemote()) {
+        if (!world.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = world.getServer().func_241755_D_().getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+            canvasTracker = world.getServer().overworld().getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
         } else {
             canvasTracker = world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
         }

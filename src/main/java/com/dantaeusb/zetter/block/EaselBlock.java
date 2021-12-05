@@ -35,14 +35,16 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class EaselBlock extends ContainerBlock {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
-    public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = HorizontalBlock.FACING;
 
     public EaselBlock(Properties properties) {
         super(properties);
 
-        this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH).with(HALF, DoubleBlockHalf.LOWER));
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(HALF, DoubleBlockHalf.LOWER));
     }
 
     /**
@@ -52,18 +54,18 @@ public class EaselBlock extends ContainerBlock {
      */
     @Override
     public TileEntity createTileEntity(BlockState state, IBlockReader world) {
-        return createNewTileEntity(world);
+        return newBlockEntity(world);
     }
 
     @Nullable
-    public TileEntity createNewTileEntity(IBlockReader world) {
+    public TileEntity newBlockEntity(IBlockReader world) {
         return new EaselTileEntity();
     }
 
     @Override
     public boolean hasTileEntity(BlockState state)
     {
-        if (state.get(HALF) == DoubleBlockHalf.UPPER) {
+        if (state.getValue(HALF) == DoubleBlockHalf.UPPER) {
             return false;
         }
 
@@ -71,21 +73,21 @@ public class EaselBlock extends ContainerBlock {
     }
 
     @Override
-    public BlockRenderType getRenderType(BlockState iBlockState) {
+    public BlockRenderType getRenderShape(BlockState iBlockState) {
         return BlockRenderType.INVISIBLE;
     }
 
-    public ActionResultType onBlockActivated(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (world.isRemote) return ActionResultType.SUCCESS;
+    public ActionResultType use(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (world.isClientSide) return ActionResultType.SUCCESS;
 
-        ItemStack heldItem = player.getHeldItem(Hand.MAIN_HAND);
+        ItemStack heldItem = player.getItemInHand(Hand.MAIN_HAND);
 
         BlockPos tileEntityPos = pos;
-        if (state.get(DoorBlock.HALF) == DoubleBlockHalf.UPPER) {
-            tileEntityPos = tileEntityPos.down();
+        if (state.getValue(DoorBlock.HALF) == DoubleBlockHalf.UPPER) {
+            tileEntityPos = tileEntityPos.below();
         }
 
-        EaselTileEntity easelTileEntity = (EaselTileEntity) world.getTileEntity(tileEntityPos);
+        EaselTileEntity easelTileEntity = (EaselTileEntity) world.getBlockEntity(tileEntityPos);
 
         if (easelTileEntity == null) return ActionResultType.FAIL;
 
@@ -94,14 +96,14 @@ public class EaselBlock extends ContainerBlock {
 
             if (easelCanvasStack.isEmpty()) {
                 if (heldItem.getItem() == ModItems.CANVAS && easelTileEntity.putCanvasStack(heldItem)) {
-                    player.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
-                    world.notifyBlockUpdate(tileEntityPos, state, state, 2);
+                    player.setItemInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+                    world.sendBlockUpdated(tileEntityPos, state, state, 2);
 
                     return ActionResultType.SUCCESS;
                 }
             }
 
-            INamedContainerProvider namedContainerProvider = this.getContainer(state, world, tileEntityPos);
+            INamedContainerProvider namedContainerProvider = this.getMenuProvider(state, world, tileEntityPos);
 
             if (namedContainerProvider != null) {
                 if (!(player instanceof ServerPlayerEntity)) return ActionResultType.FAIL;
@@ -116,14 +118,14 @@ public class EaselBlock extends ContainerBlock {
         } else {
             if (heldItem.isEmpty()) {
                 ItemStack canvasStack = easelTileEntity.getEaselStorage().extractCanvas();
-                world.notifyBlockUpdate(tileEntityPos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
+                world.sendBlockUpdated(tileEntityPos, state, state, Constants.BlockFlags.BLOCK_UPDATE);
 
                 // No canvas to grab
                 if (canvasStack.isEmpty()) {
                     return ActionResultType.FAIL;
                 }
 
-                player.setHeldItem(Hand.MAIN_HAND, canvasStack);
+                player.setItemInHand(Hand.MAIN_HAND, canvasStack);
 
                 return ActionResultType.SUCCESS;
             }
@@ -132,23 +134,23 @@ public class EaselBlock extends ContainerBlock {
         }
     }
 
-    public boolean allowsMovement(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
+    public boolean isPathfindable(BlockState state, IBlockReader worldIn, BlockPos pos, PathType type) {
         return true;
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(HALF, FACING);
     }
 
-    public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.isIn(newState.getBlock())) {
-            TileEntity tileEntity = world.getTileEntity(pos);
+    public void onRemove(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            TileEntity tileEntity = world.getBlockEntity(pos);
             if (tileEntity instanceof EaselTileEntity) {
-                InventoryHelper.dropInventoryItems(world, pos, ((EaselTileEntity) tileEntity).getEaselStorage());
-                world.updateComparatorOutputLevel(pos, this);
+                InventoryHelper.dropContents(world, pos, ((EaselTileEntity) tileEntity).getEaselStorage());
+                world.updateNeighbourForOutputSignal(pos, this);
             }
 
-            super.onReplaced(state, world, pos, newState, isMoving);
+            super.onRemove(state, world, pos, newState, isMoving);
         }
     }
 
@@ -159,9 +161,9 @@ public class EaselBlock extends ContainerBlock {
 
     @Nullable
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        BlockPos blockpos = context.getPos();
-        if (blockpos.getY() < 255 && context.getWorld().getBlockState(blockpos.up()).isReplaceable(context)) {
-            return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing()).with(HALF, DoubleBlockHalf.LOWER).with(FACING, context.getPlacementHorizontalFacing());
+        BlockPos blockpos = context.getClickedPos();
+        if (blockpos.getY() < 255 && context.getLevel().getBlockState(blockpos.above()).canBeReplaced(context)) {
+            return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection()).setValue(HALF, DoubleBlockHalf.LOWER).setValue(FACING, context.getHorizontalDirection());
         } else {
             return null;
         }
@@ -177,29 +179,29 @@ public class EaselBlock extends ContainerBlock {
      * @param facingPos
      * @return
      */
-    public BlockState updatePostPlacement(BlockState state, Direction facing, BlockState facingState, IWorld world, BlockPos currentPos, BlockPos facingPos) {
-        DoubleBlockHalf doubleBlockHalf = state.get(HALF);
+    public BlockState updateShape(BlockState state, Direction facing, BlockState facingState, IWorld world, BlockPos currentPos, BlockPos facingPos) {
+        DoubleBlockHalf doubleBlockHalf = state.getValue(HALF);
 
         // Sanity check copied from door block: same direction axis and both block connected to each other
         if (facing.getAxis() == Direction.Axis.Y && doubleBlockHalf == DoubleBlockHalf.LOWER == (facing == Direction.UP)) {
             // If second part broken
-            if (!facingState.isIn(this)) {
-                return Blocks.AIR.getDefaultState();
+            if (!facingState.is(this)) {
+                return Blocks.AIR.defaultBlockState();
             }
         }
 
         // If lower part has nothing to stand on
-        return doubleBlockHalf == DoubleBlockHalf.LOWER && !state.isValidPosition(world, currentPos) ? Blocks.AIR.getDefaultState() : super.updatePostPlacement(state, facing, facingState, world, currentPos, facingPos);
+        return doubleBlockHalf == DoubleBlockHalf.LOWER && !state.canSurvive(world, currentPos) ? Blocks.AIR.defaultBlockState() : super.updateShape(state, facing, facingState, world, currentPos, facingPos);
     }
 
-    public boolean isValidPosition(BlockState state, IWorldReader worldIn, BlockPos pos) {
-        BlockPos blockpos = pos.down();
+    public boolean canSurvive(BlockState state, IWorldReader worldIn, BlockPos pos) {
+        BlockPos blockpos = pos.below();
         BlockState blockstate = worldIn.getBlockState(blockpos);
-        return state.get(HALF) == DoubleBlockHalf.LOWER ? blockstate.isSolidSide(worldIn, blockpos, Direction.UP) : blockstate.isIn(this);
+        return state.getValue(HALF) == DoubleBlockHalf.LOWER ? blockstate.isFaceSturdy(worldIn, blockpos, Direction.UP) : blockstate.is(this);
     }
 
     protected void writeCanvasIdToNetwork(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, PacketBuffer networkBuffer) {
-        TileEntity easelTileEntity = worldIn.getTileEntity(pos);
+        TileEntity easelTileEntity = worldIn.getBlockEntity(pos);
 
         if (!(easelTileEntity instanceof EaselTileEntity)) {
             Zetter.LOG.error("Cannot find EaselTileEntity to send canvas data to client");
@@ -210,8 +212,8 @@ public class EaselBlock extends ContainerBlock {
         SCanvasNamePacket.writeCanvasName(networkBuffer, ((EaselTileEntity) easelTileEntity).getCanvasName());
     }
 
-    public void onBlockPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
-        worldIn.setBlockState(pos.up(), state.with(HALF, DoubleBlockHalf.UPPER), 3);
+    public void setPlacedBy(World worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {
+        worldIn.setBlock(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER), 3);
     }
 
     /*
@@ -229,26 +231,26 @@ public class EaselBlock extends ContainerBlock {
      */
 
     public BlockState rotate(BlockState state, Rotation rot) {
-        return state.with(FACING, rot.rotate(state.get(FACING)));
+        return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
     }
 
-    private static final VoxelShape UPPER_SHAPE = Block.makeCuboidShape(2.0D, 0.0D, 5.0D, 14.0D, 11.0D, 10.0D);
-    private static final VoxelShape LOWER_SHAPE = Block.makeCuboidShape(2.0D, 0.0D, 3.0D, 14.0D, 15.0D, 12.0D);
+    private static final VoxelShape UPPER_SHAPE = Block.box(2.0D, 0.0D, 5.0D, 14.0D, 11.0D, 10.0D);
+    private static final VoxelShape LOWER_SHAPE = Block.box(2.0D, 0.0D, 3.0D, 14.0D, 15.0D, 12.0D);
 
     public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context) {
-        if (state.get(HALF) == DoubleBlockHalf.UPPER) {
-            return rotateShape(Direction.NORTH, state.get(FACING), UPPER_SHAPE);
+        if (state.getValue(HALF) == DoubleBlockHalf.UPPER) {
+            return rotateShape(Direction.NORTH, state.getValue(FACING), UPPER_SHAPE);
         } else {
-            return rotateShape(Direction.NORTH, state.get(FACING), LOWER_SHAPE);
+            return rotateShape(Direction.NORTH, state.getValue(FACING), LOWER_SHAPE);
         }
     }
 
     public static VoxelShape rotateShape(Direction from, Direction to, VoxelShape shape) {
         VoxelShape[] buffer = new VoxelShape[]{ shape, VoxelShapes.empty() };
 
-        int times = (to.getHorizontalIndex() - from.getHorizontalIndex() + 4) % 4;
+        int times = (to.get2DDataValue() - from.get2DDataValue() + 4) % 4;
         for (int i = 0; i < times; i++) {
-            buffer[0].forEachBox((minX, minY, minZ, maxX, maxY, maxZ) -> buffer[1] = VoxelShapes.or(buffer[1], VoxelShapes.create(1-maxZ, minY, minX, 1-minZ, maxY, maxX)));
+            buffer[0].forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> buffer[1] = VoxelShapes.or(buffer[1], VoxelShapes.box(1-maxZ, minY, minX, 1-minZ, maxY, maxX)));
             buffer[0] = buffer[1];
             buffer[1] = VoxelShapes.empty();
         }

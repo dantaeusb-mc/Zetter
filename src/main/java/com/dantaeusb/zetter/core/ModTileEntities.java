@@ -18,12 +18,12 @@ public class ModTileEntities
     @SuppressWarnings("unused")
     public static void onTileEntityTypeRegistration(final RegistryEvent.Register<TileEntityType<?>> event) {
         EASEL_TILE_ENTITY =
-                TileEntityType.Builder.create(EaselTileEntity::new, ModBlocks.EASEL).build(null);
+                TileEntityType.Builder.of(EaselTileEntity::new, ModBlocks.EASEL).build(null);
         EASEL_TILE_ENTITY.setRegistryName(Zetter.MOD_ID, "easel_tile_entity");
         event.getRegistry().register(EASEL_TILE_ENTITY);
 
         ARTIST_TABLE_TILE_ENTITY =
-                TileEntityType.Builder.create(ArtistTableTileEntity::new, ModBlocks.ARTIST_TABLE).build(null);
+                TileEntityType.Builder.of(ArtistTableTileEntity::new, ModBlocks.ARTIST_TABLE).build(null);
         ARTIST_TABLE_TILE_ENTITY.setRegistryName(Zetter.MOD_ID, "artist_table_tile_entity");
         event.getRegistry().register(ARTIST_TABLE_TILE_ENTITY);
     }

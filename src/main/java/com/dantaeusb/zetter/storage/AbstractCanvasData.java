@@ -47,7 +47,7 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         this.width = width;
         this.height = height;
         this.updateColorData(color);
-        this.markDirty();
+        this.setDirty();
     }
 
     protected void updateColorData(byte[] color) {
@@ -69,7 +69,7 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         }
 
         this.canvasBuffer.putInt(index * 4, color);
-        this.markDirty();
+        this.setDirty();
         return true;
     }
 
@@ -123,7 +123,7 @@ public abstract class AbstractCanvasData extends WorldSavedData {
     /**
      * reads in data from the NBTTagCompound into this MapDataBase
      */
-    public void read(CompoundNBT compound) {
+    public void load(CompoundNBT compound) {
         this.width = compound.getInt(NBT_TAG_WIDTH);
         this.height = compound.getInt(NBT_TAG_HEIGHT);
 
@@ -137,7 +137,7 @@ public abstract class AbstractCanvasData extends WorldSavedData {
         this.updateColorData(compound.getByteArray(NBT_TAG_COLOR));
     }
 
-    public CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT save(CompoundNBT compound) {
         compound.putInt(NBT_TAG_TYPE, this.getType().ordinal());
         compound.putInt(NBT_TAG_WIDTH, this.width);
         compound.putInt(NBT_TAG_HEIGHT, this.height);

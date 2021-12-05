@@ -55,7 +55,7 @@ public class ArtistTableContainer extends Container {
         this.worldPosCallable = worldPosCallable;
 
         this.player = invPlayer.player;
-        this.world = invPlayer.player.world;
+        this.world = invPlayer.player.level;
 
         this.canvasStorage = canvasStorage;
         this.canvasStorage.setMarkDirtyNotificationLambda(this::updateCanvasCombination);
@@ -112,7 +112,7 @@ public class ArtistTableContainer extends Container {
     public static ArtistTableContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         ArtistTableCanvasStorage canvasStorage = ArtistTableCanvasStorage.createForClientSideContainer();
 
-        return new ArtistTableContainer(windowID, playerInventory, canvasStorage, IWorldPosCallable.DUMMY);
+        return new ArtistTableContainer(windowID, playerInventory, canvasStorage, IWorldPosCallable.NULL);
     }
 
     public void updatePaintingName(String newPaintingName) {
@@ -128,7 +128,7 @@ public class ArtistTableContainer extends Container {
      * @param clientCombinedCanvasData Canvas data used to check correctness of data
      */
     public void updatePaintingOutput() {
-        ItemStack existingStack = this.inventoryOut.getStackInSlot(0);
+        ItemStack existingStack = this.inventoryOut.getItem(0);
         ItemStack outStack;
 
         if (this.isCanvasReady()) {
@@ -143,8 +143,8 @@ public class ArtistTableContainer extends Container {
 
         if (!outStack.isEmpty()) {
             if (StringUtils.isBlank(this.paintingName)) {
-                if (existingStack.hasDisplayName()) {
-                    existingStack.clearCustomName();
+                if (existingStack.hasCustomHoverName()) {
+                    existingStack.resetHoverName();
                 }
 
                 FrameItem.setCachedPaintingName(outStack, this.paintingName);
@@ -158,7 +158,7 @@ public class ArtistTableContainer extends Container {
             }
         }
 
-        this.inventoryOut.setInventorySlotContents(0, outStack);
+        this.inventoryOut.setItem(0, outStack);
     }
 
     protected ItemStack takePainting(PlayerEntity player, ItemStack outStack) {
@@ -175,7 +175,7 @@ public class ArtistTableContainer extends Container {
         );
 
         if (!player.isCreative()) {
-            this.canvasStorage.clear();
+            this.canvasStorage.clearContent();
         }
 
         return outStack;
@@ -206,8 +206,8 @@ public class ArtistTableContainer extends Container {
      * Called to determine if the current slot is valid for the stack merging (double-click) code. The stack passed in is
      * null for the initial slot that was double-clicked.
      */
-    public boolean canMergeSlot(ItemStack stack, Slot slotIn) {
-        return slotIn.inventory != this.inventoryOut && super.canMergeSlot(stack, slotIn);
+    public boolean canTakeItemForPickAll(ItemStack stack, Slot slotIn) {
+        return slotIn.container != this.inventoryOut && super.canTakeItemForPickAll(stack, slotIn);
     }
 
     /**
@@ -217,27 +217,27 @@ public class ArtistTableContainer extends Container {
      * @return
      */
     @Override
-    public ItemStack transferStackInSlot(PlayerEntity playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(PlayerEntity playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
-        Slot sourceSlot = this.inventorySlots.get(sourceSlotIndex);
+        Slot sourceSlot = this.slots.get(sourceSlotIndex);
 
-        if (sourceSlot != null && sourceSlot.getHasStack()) {
-            ItemStack sourceStack = sourceSlot.getStack();
+        if (sourceSlot != null && sourceSlot.hasItem()) {
+            ItemStack sourceStack = sourceSlot.getItem();
             outStack = sourceStack.copy();
 
             // Palette
             if (sourceSlotIndex == 0) {
-                if (!this.mergeItemStack(sourceStack, 2, 10, true)) {
+                if (!this.moveItemStackTo(sourceStack, 2, 10, true)) {
                     return ItemStack.EMPTY;
                 }
 
-                sourceSlot.onSlotChange(sourceStack, outStack);
+                sourceSlot.onQuickCraft(sourceStack, outStack);
 
             // Inventory
             } else {
                 if (sourceStack.getItem() == ModItems.PALETTE) {
-                    if (!this.mergeItemStack(sourceStack, 0, 1, false)) {
+                    if (!this.moveItemStackTo(sourceStack, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }
                 } else {
@@ -246,9 +246,9 @@ public class ArtistTableContainer extends Container {
             }
 
             if (sourceStack.isEmpty()) {
-                sourceSlot.putStack(ItemStack.EMPTY);
+                sourceSlot.set(ItemStack.EMPTY);
             } else {
-                sourceSlot.onSlotChanged();
+                sourceSlot.setChanged();
             }
 
             if (sourceStack.getCount() == outStack.getCount()) {
@@ -264,8 +264,8 @@ public class ArtistTableContainer extends Container {
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean canInteractWith(PlayerEntity player) {
-        return this.canvasStorage.isUsableByPlayer(player);
+    public boolean stillValid(PlayerEntity player) {
+        return this.canvasStorage.stillValid(player);
     }
 
     public class SlotCanvas extends Slot {
@@ -275,7 +275,7 @@ public class ArtistTableContainer extends Container {
 
         // if this function returns false, the player won't be able to insert the given item into this slot
         @Override
-        public boolean isItemValid(ItemStack stack) {
+        public boolean mayPlace(ItemStack stack) {
             return ArtistTableTileEntity.isItemValidForCanvasArea(stack);
         }
     }
@@ -287,7 +287,7 @@ public class ArtistTableContainer extends Container {
 
         // if this function returns false, the player won't be able to insert the given item into this slot
         @Override
-        public boolean isItemValid(ItemStack stack) {
+        public boolean mayPlace(ItemStack stack) {
             return ArtistTableTileEntity.isItemValidForCanvasArea(stack);
         }
     }
@@ -298,7 +298,7 @@ public class ArtistTableContainer extends Container {
         }
 
         @Override
-        public boolean isItemValid(ItemStack stack) {
+        public boolean mayPlace(ItemStack stack) {
             return false;
         }
 

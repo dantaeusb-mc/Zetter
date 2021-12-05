@@ -60,7 +60,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
 
             if (PaintingScreen.isInRect(this.x, fromY, TOOLS_SIZE, TOOLS_SIZE, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 this.setCurrentTool(tool);
-                this.playDownSound(Minecraft.getInstance().getSoundHandler());
+                this.playDownSound(Minecraft.getInstance().getSoundManager());
                 return true;
             }
 
@@ -110,7 +110,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
             return this.name;
         }
 
-        public String getString() {
+        public String getSerializedName() {
             return this.name;
         }
     }

@@ -71,7 +71,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     @Override
     @Nullable
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
-        return (T) this.world.getServer().func_241755_D_().getSavedData().get(
+        return (T) this.world.getServer().overworld().getDataStorage().get(
             () -> {
                 if (type.equals(CanvasData.class)) {
                     return new CanvasData(canvasCode);
@@ -90,7 +90,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
      * that the object is GC'd
      * We can't do that on client cause renderers are using object reference,
      * and changing object would disconnect it from reference
-     * func_241755_D_ = getOverworld
+     * overworld = getOverworld
      */
     @Override
     public void registerCanvasData(AbstractCanvasData canvasData) {
@@ -99,7 +99,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
             return;
         }
 
-        this.world.getServer().func_241755_D_().getSavedData().set(canvasData);
+        this.world.getServer().overworld().getDataStorage().set(canvasData);
     }
 
     /**
@@ -120,7 +120,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
 
         for (String canvasCode : this.desyncCanvases) {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
-                ServerPlayerEntity playerEntity = server.getPlayerList().getPlayerByUUID(playerTrackingCanvas.playerId);
+                ServerPlayerEntity playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
                 SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(this.getCanvasData(canvasCode, DummyCanvasData.class), System.currentTimeMillis());
                 ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);

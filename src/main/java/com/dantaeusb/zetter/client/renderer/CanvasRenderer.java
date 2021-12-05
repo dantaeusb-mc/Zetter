@@ -56,21 +56,21 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     public void addCanvas(AbstractCanvasData canvas) {
-        this.canvasRendererInstances.remove(canvas.getName());
+        this.canvasRendererInstances.remove(canvas.getId());
 
         this.createCanvasRendererInstance(canvas);
     }
 
     public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, AbstractCanvasData canvas, int combinedLight) {
         // We won't ever render or request 0 canvas, as 0 is a fallback value
-        if (canvas.getName().equals(CanvasData.getCanvasCode(0))) return;
+        if (canvas.getId().equals(CanvasData.getCanvasCode(0))) return;
 
-        this.ticksSinceRenderRequested.put(canvas.getName(), 0);
+        this.ticksSinceRenderRequested.put(canvas.getId(), 0);
 
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvas, false);
 
         if (rendererInstance == null) {
-            this.queueCanvasTextureUpdate(canvas.getType(), canvas.getName());
+            this.queueCanvasTextureUpdate(canvas.getType(), canvas.getId());
             return;
         }
 
@@ -87,7 +87,7 @@ public class CanvasRenderer implements AutoCloseable {
      */
     public void update(long gameTime) {
         // @todo: [LOW] Not sure if this timer needed on ClientTick event
-        int partialTicks = this.timer.getPartialTicks(gameTime);
+        int partialTicks = this.timer.advanceTime(gameTime);
 
         if (partialTicks > 0) {
             this.updateTicksSinceRender(partialTicks);
@@ -185,7 +185,7 @@ public class CanvasRenderer implements AutoCloseable {
      */
 
     private @Nullable CanvasRenderer.Instance getCanvasRendererInstance(AbstractCanvasData canvas, boolean create) {
-        CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvas.getName());
+        CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvas.getId());
 
         if (create && canvasRendererInstance == null) {
             this.createCanvasRendererInstance(canvas);
@@ -196,9 +196,9 @@ public class CanvasRenderer implements AutoCloseable {
 
     private void createCanvasRendererInstance(AbstractCanvasData canvas) {
         CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(
-                canvas.getName(), canvas.getWidth(), canvas.getHeight(), canvas.getResolution());
+                canvas.getId(), canvas.getWidth(), canvas.getHeight(), canvas.getResolution());
         canvasRendererInstance.updateCanvasTexture(canvas);
-        this.canvasRendererInstances.put(canvas.getName(), canvasRendererInstance);
+        this.canvasRendererInstances.put(canvas.getId(), canvasRendererInstance);
     }
 
     /*
@@ -232,8 +232,8 @@ public class CanvasRenderer implements AutoCloseable {
         private Instance(String canvasCode, int width, int height, AbstractCanvasData.Resolution resolution) {
             this.code = canvasCode;
             this.canvasTexture = new DynamicTexture(width, height, true);
-            ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.getDynamicTextureLocation("canvas/" + canvasCode, this.canvasTexture);
-            this.renderType = RenderType.getText(dynamicTextureLocation);
+            ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.register("canvas/" + canvasCode, this.canvasTexture);
+            this.renderType = RenderType.text(dynamicTextureLocation);
 
             this.width = width;
             this.height = height;
@@ -252,11 +252,11 @@ public class CanvasRenderer implements AutoCloseable {
             for(int pixelY = 0; pixelY < canvas.getHeight(); pixelY++) {
                 for(int pixelX = 0; pixelX < canvas.getWidth(); pixelX++) {
                     int color = canvas.getColorAt(pixelX, pixelY);
-                    this.canvasTexture.getTextureData().setPixelRGBA(pixelX, pixelY, this.ARGBtoABGR(color));
+                    this.canvasTexture.getPixels().setPixelRGBA(pixelX, pixelY, this.ARGBtoABGR(color));
                 }
             }
 
-            this.canvasTexture.updateDynamicTexture();
+            this.canvasTexture.upload();
         }
 
         private int ARGBtoABGR(int x)
@@ -269,13 +269,13 @@ public class CanvasRenderer implements AutoCloseable {
         }
 
         private void render(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight) {
-            Matrix4f matrix4f = matrixStack.getLast().getMatrix();
+            Matrix4f matrix4f = matrixStack.last().pose();
             IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 
-            ivertexbuilder.pos(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).tex(0.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).tex(1.0F, 1.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, (float) this.blockPixelWidth, 0.0F, 0F).color(255, 255, 255, 255).tex(1.0F, 0.0F).lightmap(combinedLight).endVertex();
-            ivertexbuilder.pos(matrix4f, 0.0F, 0.0F, 0F).color(255, 255, 255, 255).tex(0.0F, 0.0F).lightmap(combinedLight).endVertex();
+            ivertexbuilder.vertex(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(0.0F, 1.0F).uv2(combinedLight).endVertex();
+            ivertexbuilder.vertex(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(1.0F, 1.0F).uv2(combinedLight).endVertex();
+            ivertexbuilder.vertex(matrix4f, (float) this.blockPixelWidth, 0.0F, 0F).color(255, 255, 255, 255).uv(1.0F, 0.0F).uv2(combinedLight).endVertex();
+            ivertexbuilder.vertex(matrix4f, 0.0F, 0.0F, 0F).color(255, 255, 255, 255).uv(0.0F, 0.0F).uv2(combinedLight).endVertex();
         }
 
         public void close() {

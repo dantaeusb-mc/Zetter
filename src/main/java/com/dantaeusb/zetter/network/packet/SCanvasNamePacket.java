@@ -11,13 +11,13 @@ public class SCanvasNamePacket {
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
     public static String readCanvasName(PacketBuffer buf) {
-        return buf.readString();
+        return buf.readUtf();
     }
 
     /**
      * Writes the raw packet data to the data stream.
      */
     public static void writeCanvasName(PacketBuffer buf, String canvasName) {
-        buf.writeString(canvasName);
+        buf.writeUtf(canvasName);
     }
 }

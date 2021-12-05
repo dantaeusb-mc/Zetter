@@ -35,11 +35,11 @@ public class DummyCanvasData extends AbstractCanvasData {
         return Type.DUMMY;
     }
 
-    public void read(CompoundNBT compound) {
+    public void load(CompoundNBT compound) {
         Zetter.LOG.error("Trying to read into dummy canvas!");
     }
 
-    public CompoundNBT write(CompoundNBT compound) {
+    public CompoundNBT save(CompoundNBT compound) {
         Zetter.LOG.error("Trying to save dummy canvas!");
 
         return compound;

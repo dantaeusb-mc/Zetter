@@ -18,7 +18,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
     private final String NBT_TAG_NAME_CANVAS_TRACKER = "canvasTracker";
 
     public CanvasTrackerProvider(World world) {
-        if (world.isRemote()) {
+        if (world.isClientSide()) {
             this.canvasTracker = new CanvasClientTracker(world);
         } else {
             this.canvasTracker = new CanvasServerTracker(world);
@@ -51,7 +51,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
     public CompoundNBT serializeNBT() {
         CompoundNBT nbt = new CompoundNBT();
 
-        if (this.canvasTracker.getWorld() == null || this.canvasTracker.getWorld().isRemote()) {
+        if (this.canvasTracker.getWorld() == null || this.canvasTracker.getWorld().isClientSide()) {
             return nbt;
         }
 
@@ -67,7 +67,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
      * We need to get the data only for Server Implementation of the capability
      */
     public void deserializeNBT(CompoundNBT nbt) {
-        if (this.canvasTracker.getWorld() == null || this.canvasTracker.getWorld().isRemote()) {
+        if (this.canvasTracker.getWorld() == null || this.canvasTracker.getWorld().isClientSide()) {
             return;
         }
 

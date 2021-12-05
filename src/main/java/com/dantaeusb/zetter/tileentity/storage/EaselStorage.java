@@ -76,23 +76,23 @@ public class EaselStorage implements IInventory {
      * @return
      */
     public ItemStack getCanvasStack() {
-        return this.getStackInSlot(CANVAS_SLOT);
+        return this.getItem(CANVAS_SLOT);
     }
 
     public ItemStack getPaletteStack() {
-        return this.getStackInSlot(PALETTE_SLOT);
+        return this.getItem(PALETTE_SLOT);
     }
 
     public ItemStack extractCanvas() {
         final ItemStack itemStack = this.easelContents.extractItem(CANVAS_SLOT, 1, false);
-        this.markDirty();
+        this.setChanged();
 
         return itemStack;
     }
 
     public void setCanvasStack(ItemStack canvasStack) {
         this.easelContents.setStackInSlot(CANVAS_SLOT, canvasStack);
-        this.markDirty();
+        this.setChanged();
     }
 
     // ----Methods used to load / save the contents to NBT
@@ -153,12 +153,12 @@ public class EaselStorage implements IInventory {
     //    or ask the parent TileEntity.
 
     @Override
-    public boolean isUsableByPlayer(PlayerEntity player) {
+    public boolean stillValid(PlayerEntity player) {
         return canPlayerAccessInventoryLambda.test(player);  // on the client, this does nothing. on the server, ask our parent TileEntity.
     }
 
     @Override
-    public boolean isItemValidForSlot(int index, ItemStack stack) {
+    public boolean canPlaceItem(int index, ItemStack stack) {
         return easelContents.isItemValid(index, stack);
     }
 
@@ -167,24 +167,24 @@ public class EaselStorage implements IInventory {
     //   of responsibilities more clearly.
 
     @Override
-    public void markDirty() {
+    public void setChanged() {
         markDirtyNotificationLambda.invoke();
     }
 
     @Override
-    public void openInventory(PlayerEntity player) {
+    public void startOpen(PlayerEntity player) {
         openInventoryNotificationLambda.invoke();
     }
 
     @Override
-    public void closeInventory(PlayerEntity player) {
+    public void stopOpen(PlayerEntity player) {
         closeInventoryNotificationLambda.invoke();
     }
 
     //---------These following methods are called by Vanilla container methods to manipulate the inventory contents ---
 
     @Override
-    public int getSizeInventory() {
+    public int getContainerSize() {
         return easelContents.getSlots();
     }
 
@@ -200,28 +200,28 @@ public class EaselStorage implements IInventory {
     }
 
     @Override
-    public ItemStack getStackInSlot(int index) {
+    public ItemStack getItem(int index) {
         return easelContents.getStackInSlot(index);
     }
 
     @Override
-    public ItemStack decrStackSize(int index, int count) {
+    public ItemStack removeItem(int index, int count) {
         return easelContents.extractItem(index, count, false);
     }
 
     @Override
-    public ItemStack removeStackFromSlot(int index) {
+    public ItemStack removeItemNoUpdate(int index) {
         int maxPossibleItemStackSize = easelContents.getSlotLimit(index);
         return easelContents.extractItem(index, maxPossibleItemStackSize, false);
     }
 
     @Override
-    public void setInventorySlotContents(int index, ItemStack stack) {
+    public void setItem(int index, ItemStack stack) {
         easelContents.setStackInSlot(index, stack);
     }
 
     @Override
-    public void clear() {
+    public void clearContent() {
         for (int i = 0; i < easelContents.getSlots(); ++i) {
             easelContents.setStackInSlot(i, ItemStack.EMPTY);
         }

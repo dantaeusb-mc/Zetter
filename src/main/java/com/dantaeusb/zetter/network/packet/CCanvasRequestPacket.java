@@ -31,7 +31,7 @@ public class CCanvasRequestPacket {
         CCanvasRequestPacket packet = new CCanvasRequestPacket();
 
         packet.type = AbstractCanvasData.Type.values()[buf.readInt()];
-        packet.canvasName = buf.readString(32767);
+        packet.canvasName = buf.readUtf(32767);
 
         return packet;
     }
@@ -41,7 +41,7 @@ public class CCanvasRequestPacket {
      */
     public void writePacketData(PacketBuffer buf) {
         buf.writeInt(this.type.ordinal());
-        buf.writeString(this.canvasName);
+        buf.writeUtf(this.canvasName);
     }
 
     public String getCanvasName() {

@@ -34,8 +34,8 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     public PaintingScreen(EaselContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
         super(paintingContainer, playerInventory, title);
 
-        this.xSize = 176;
-        this.ySize = 185;
+        this.imageWidth = 176;
+        this.imageHeight = 185;
     }
 
     @Override
@@ -76,11 +76,11 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         this.addWidget(this.colorCodeWidget);
         this.addWidget(this.helpWidget);
 
-        this.getContainer().setFirstLoadNotification(this::firstLoadUpdate);
+        this.getMenu().setFirstLoadNotification(this::firstLoadUpdate);
 
-        this.minecraft.keyboardListener.enableRepeatEvents(true);
+        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
-        this.container.addListener(this);
+        this.menu.addSlotListener(this);
     }
 
     public void addWidget(AbstractPaintingWidget widget) {
@@ -88,8 +88,8 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         this.addChildren(widget);
     }
 
-    public void onClose() {
-        super.onClose();
+    public void removed() {
+        super.removed();
     }
 
     /**
@@ -105,19 +105,19 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     }
 
     public boolean isCanvasAvailable() {
-        return this.container.isCanvasAvailable();
+        return this.menu.isCanvasAvailable();
     }
 
     public boolean isPaletteAvailable() {
-        return this.container.isPaletteAvailable();
+        return this.menu.isPaletteAvailable();
     }
 
     public int getColorAt(int pixelIndex) {
-        return this.container.getCanvasData().getColorAt(pixelIndex);
+        return this.menu.getCanvasData().getColorAt(pixelIndex);
     }
 
     public int getColorAt(int pixelX, int pixelY) {
-        return this.container.getCanvasData().getColorAt(pixelX, pixelY);
+        return this.menu.getCanvasData().getColorAt(pixelX, pixelY);
     }
 
     public int getCurrentColor() {
@@ -125,7 +125,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     }
 
     public int getPaletteColor(int slot) {
-        return this.container.getPaletteColor(slot);
+        return this.menu.getPaletteColor(slot);
     }
 
     public void firstLoadUpdate() {
@@ -133,14 +133,14 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     }
 
     public void updateCurrentPaletteColor(int color) {
-        this.container.setPaletteColor(this.paletteWidget.getCurrentPaletteSlot(), color);
+        this.menu.setPaletteColor(this.paletteWidget.getCurrentPaletteSlot(), color);
         this.slidersWidget.updateSlidersWithCurrentColor();
         // Triggers eternal loop
         //this.colorCodeWidget.updateColorValue(color);
     }
 
     public void pushPaletteUpdateColor() {
-        this.container.sendPaletteUpdatePacket(this.paletteWidget.getCurrentPaletteSlot(), this.getCurrentColor());
+        this.menu.sendPaletteUpdatePacket(this.paletteWidget.getCurrentPaletteSlot(), this.getCurrentColor());
     }
 
     public void updateSlidersWithCurrentColor() {
@@ -150,14 +150,14 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     public void useTool(int canvasX, int canvasY) {
         switch (this.toolsWidget.getCurrentTool()) {
             case PENCIL:
-                this.getContainer().writePixelOnCanvasClientSide(canvasX, canvasY, this.getCurrentColor(), this.playerInventory.player.getUniqueID());
+                this.getMenu().writePixelOnCanvasClientSide(canvasX, canvasY, this.getCurrentColor(), this.inventory.player.getUUID());
                 break;
             case EYEDROPPER:
-                this.getContainer().eyedropper(this.paletteWidget.getCurrentPaletteSlot(), canvasX, canvasY);
+                this.getMenu().eyedropper(this.paletteWidget.getCurrentPaletteSlot(), canvasX, canvasY);
                 this.updateSlidersWithCurrentColor();
                 break;
             case BUCKET:
-                this.getContainer().bucket(canvasX, canvasY, this.getCurrentColor());
+                this.getMenu().bucket(canvasX, canvasY, this.getCurrentColor());
                 break;
         }
     }
@@ -166,23 +166,23 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+        this.renderTooltip(matrixStack, mouseX, mouseY);
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        this.getContainer().tick();
+        this.getMenu().tick();
         this.colorCodeWidget.tick();
     }
 
     @Override
-    protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bindTexture(PAINTING_RESOURCE);
+        this.minecraft.getTextureManager().bind(PAINTING_RESOURCE);
 
-        this.blit(matrixStack, this.guiLeft, this.guiTop, 0, 0, this.xSize, this.ySize);
+        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
         this.toolsWidget.render(matrixStack);
         this.canvasWidget.render(matrixStack);
@@ -193,8 +193,8 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     }
 
     @Override
-    protected void renderHoveredTooltip(MatrixStack matrixStack, int x, int y) {
-        super.renderHoveredTooltip(matrixStack, x, y);
+    protected void renderTooltip(MatrixStack matrixStack, int x, int y) {
+        super.renderTooltip(matrixStack, x, y);
 
         for (AbstractPaintingWidget widget : this.widgets) {
             if (widget.isMouseOver(x, y)) {
@@ -213,7 +213,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
      * @param mouseY
      */
     @Override
-    protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
         // Do not draw titles to save some extra space
     }
 
@@ -227,7 +227,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == 256) {
-            this.minecraft.player.closeScreen();
+            this.minecraft.player.closeContainer();
             return true;
         }
 
@@ -291,7 +291,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     /**
      * update the crafting window inventory with the items in the list
      */
-    public void sendAllContents(Container containerToSend, NonNullList<ItemStack> itemsList) {
+    public void refreshContainer(Container containerToSend, NonNullList<ItemStack> itemsList) {
     }
 
     /**
@@ -299,13 +299,13 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
      * and enchanting level. Normally the first int identifies which variable to update, and the second contains the new
      * value. Both are truncated to shorts in non-local SMP.
      */
-    public void sendWindowProperty(Container containerIn, int varToUpdate, int newValue) {
+    public void setContainerData(Container containerIn, int varToUpdate, int newValue) {
     }
 
     /**
      * Sends the contents of an inventory slot to the client-side Container. This doesn't have to match the actual
      * contents of that slot.
      */
-    public void sendSlotContents(Container containerToSend, int slotInd, ItemStack stack) {
+    public void slotChanged(Container containerToSend, int slotInd, ItemStack stack) {
     }
 }

@@ -29,22 +29,22 @@ public class ClientHandler {
         AbstractCanvasData canvasData = packetIn.getCanvasData();
 
         if (
-                player.openContainer instanceof EaselContainer
-                && ((EaselContainer) player.openContainer).isCanvasAvailable()
+                player.containerMenu instanceof EaselContainer
+                && ((EaselContainer) player.containerMenu).isCanvasAvailable()
         ) {
             // If it's the same canvas player is editing
-            if (canvasData.getName().equals(((EaselContainer) player.openContainer).getCanvasData().getName())) {
+            if (canvasData.getId().equals(((EaselContainer) player.containerMenu).getCanvasData().getId())) {
                 // Pushing changes that were added after sync packet was created
                 // @todo: remove cast
-                ((EaselContainer) player.openContainer).processSync((CanvasData) canvasData, packetIn.getTimestamp());
+                ((EaselContainer) player.containerMenu).processSync((CanvasData) canvasData, packetIn.getTimestamp());
             }
         }
 
-        if  (player.openContainer instanceof ArtistTableContainer) {
+        if  (player.containerMenu instanceof ArtistTableContainer) {
             // If player's combining canvases
             // @todo: not sure if needed
 
-            ((ArtistTableContainer) player.openContainer).updateCanvasCombination();
+            ((ArtistTableContainer) player.containerMenu).updateCanvasCombination();
         }
 
         // Get overworld world instance
@@ -74,8 +74,8 @@ public class ClientHandler {
     public static void processEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, ClientWorld world) {
         ClientPlayerEntity player = Minecraft.getInstance().player;
 
-        if (player.openContainer instanceof EaselContainer) {
-            ((EaselContainer) player.openContainer).handleCanvasChange(packetIn.getItem());
+        if (player.containerMenu instanceof EaselContainer) {
+            ((EaselContainer) player.containerMenu).handleCanvasChange(packetIn.getItem());
         }
     }
 }

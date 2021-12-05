@@ -38,8 +38,8 @@ public class SPaintingSyncMessage {
             long timestamp = networkBuffer.readLong();
             PaintingData readCanvasData = (PaintingData) CanvasContainer.readPacketCanvasData(networkBuffer);
 
-            String paintingName = networkBuffer.readString();
-            String authorName = networkBuffer.readString();
+            String paintingName = networkBuffer.readUtf();
+            String authorName = networkBuffer.readUtf();
 
             readCanvasData.setMetaProperties(authorName, paintingName);
 
@@ -58,8 +58,8 @@ public class SPaintingSyncMessage {
         CanvasContainer.writePacketCanvasData(networkBuffer, this.paintingData);
 
         // @todo: proper length based on game limitations
-        networkBuffer.writeString(this.paintingData.getPaintingName(), 64);
-        networkBuffer.writeString(this.paintingData.getAuthorName(), 64);
+        networkBuffer.writeUtf(this.paintingData.getPaintingName(), 64);
+        networkBuffer.writeUtf(this.paintingData.getAuthorName(), 64);
     }
 
     public static void handle(final SPaintingSyncMessage packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

@@ -33,7 +33,7 @@ public class CUpdatePaintingPacket {
 
         try {
             packet.windowId = buf.readByte();
-            packet.paintingName = buf.readString(32767);
+            packet.paintingName = buf.readUtf(32767);
             packet.canvasData = CanvasContainer.readPacketCanvasData(buf);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading CCreatePaintingPacket: " + e);
@@ -48,7 +48,7 @@ public class CUpdatePaintingPacket {
      */
     public void writePacketData(PacketBuffer buf) {
         buf.writeByte(this.windowId);
-        buf.writeString(this.paintingName);
+        buf.writeUtf(this.paintingName);
         CanvasContainer.writePacketCanvasData(buf, this.canvasData);
     }
 

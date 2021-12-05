@@ -23,8 +23,8 @@ public class ModEntities
     @SuppressWarnings("unused")
     public static void onEntityTypeRegistration(final RegistryEvent.Register<EntityType<?>> event) {
         CUSTOM_PAINTING_ENTITY =
-                EntityType.Builder.<CustomPaintingEntity>create(CustomPaintingEntity::new, EntityClassification.MISC)
-                        .size(1.0F, 1.0F)
+                EntityType.Builder.<CustomPaintingEntity>of(CustomPaintingEntity::new, EntityClassification.MISC)
+                        .sized(1.0F, 1.0F)
                         .build(Zetter.MOD_ID + "_custom_painting_entity");
         CUSTOM_PAINTING_ENTITY.setRegistryName(Zetter.MOD_ID, "custom_painting_entity");
         event.getRegistry().register(CUSTOM_PAINTING_ENTITY);

@@ -49,23 +49,23 @@ public class FramingRecipe extends SpecialRecipe {
         ItemStack frameStack = ItemStack.EMPTY;
         ItemStack paintingStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getSizeInventory(); ++i) {
-            if (craftingInventory.getStackInSlot(i).isEmpty()) {
+        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
+            if (craftingInventory.getItem(i).isEmpty()) {
                 continue;
             }
 
-            if (this.inputFrame.test(craftingInventory.getStackInSlot(i))) {
+            if (this.inputFrame.test(craftingInventory.getItem(i))) {
                 if (!frameStack.isEmpty()) {
                     return false;
                 }
 
-                frameStack = craftingInventory.getStackInSlot(i);
-            } else if (this.inputPainting.test(craftingInventory.getStackInSlot(i))) {
+                frameStack = craftingInventory.getItem(i);
+            } else if (this.inputPainting.test(craftingInventory.getItem(i))) {
                 if (!paintingStack.isEmpty()) {
                     return false;
                 }
 
-                paintingStack = craftingInventory.getStackInSlot(i);
+                paintingStack = craftingInventory.getItem(i);
             }
         }
 
@@ -75,23 +75,23 @@ public class FramingRecipe extends SpecialRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack getCraftingResult(CraftingInventory craftingInventory) {
+    public ItemStack assemble(CraftingInventory craftingInventory) {
         ItemStack frameStack = ItemStack.EMPTY;
         ItemStack paintingStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getSizeInventory(); ++i) {
-            if (this.inputFrame.test(craftingInventory.getStackInSlot(i))) {
+        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
+            if (this.inputFrame.test(craftingInventory.getItem(i))) {
                 if (!frameStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                frameStack = craftingInventory.getStackInSlot(i);
-            } else if (this.inputPainting.test(craftingInventory.getStackInSlot(i))) {
+                frameStack = craftingInventory.getItem(i);
+            } else if (this.inputPainting.test(craftingInventory.getItem(i))) {
                 if (!paintingStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                paintingStack = craftingInventory.getStackInSlot(i);
+                paintingStack = craftingInventory.getItem(i);
             }
         }
 
@@ -116,7 +116,7 @@ public class FramingRecipe extends SpecialRecipe {
     /**
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
-    public boolean canFit(int width, int height) {
+    public boolean canCraftInDimensions(int width, int height) {
         return width >= 2 && height >= 2;
     }
 
@@ -127,27 +127,27 @@ public class FramingRecipe extends SpecialRecipe {
         }
 
         @Override
-        public FramingRecipe read(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = JSONUtils.getJsonObject(json, "frame");
-            final Ingredient inputFrame = Ingredient.deserialize(inputFrameJson);
+        public FramingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
+            final JsonElement inputFrameJson = JSONUtils.getAsJsonObject(json, "frame");
+            final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
 
-            final JsonElement inputPaintingJson = JSONUtils.getJsonObject(json, "painting");
-            final Ingredient inputPainting = Ingredient.deserialize(inputPaintingJson);
+            final JsonElement inputPaintingJson = JSONUtils.getAsJsonObject(json, "painting");
+            final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
 
             return new FramingRecipe(recipeId, inputFrame, inputPainting);
         }
 
         @Override
-        public FramingRecipe read(ResourceLocation recipeId, PacketBuffer buffer) {
-            Ingredient frameIngredient = Ingredient.read(buffer);
-            Ingredient paintingIngredient = Ingredient.read(buffer);
+        public FramingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+            Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
+            Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
             return new FramingRecipe(recipeId, frameIngredient, paintingIngredient);
         }
 
         @Override
-        public void write(PacketBuffer buffer, FramingRecipe recipe) {
-            recipe.inputFrame.write(buffer);
-            recipe.inputPainting.write(buffer);
+        public void toNetwork(PacketBuffer buffer, FramingRecipe recipe) {
+            recipe.inputFrame.toNetwork(buffer);
+            recipe.inputPainting.toNetwork(buffer);
         }
     }
 }

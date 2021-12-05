@@ -12,12 +12,14 @@ import net.minecraft.world.World;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
+import net.minecraft.item.Item.Properties;
+
 public class FrameItem extends PaintingItem {
     private CustomPaintingEntity.Materials material;
     private boolean hasPlate;
 
     public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super(new Properties().maxStackSize(1).group(ItemGroup.TOOLS));
+        super(new Properties().stacksTo(1).tab(ItemGroup.TAB_TOOLS));
 
         this.material = material;
         this.hasPlate = plated;
@@ -71,12 +73,12 @@ public class FrameItem extends PaintingItem {
      * Hanging painting
      */
 
-    public ActionResultType onItemUse(ItemUseContext context) {
-        BlockPos blockPos = context.getPos();
-        Direction direction = context.getFace();
-        BlockPos facePos = blockPos.offset(direction);
+    public ActionResultType useOn(ItemUseContext context) {
+        BlockPos blockPos = context.getClickedPos();
+        Direction direction = context.getClickedFace();
+        BlockPos facePos = blockPos.relative(direction);
         PlayerEntity player = context.getPlayer();
-        ItemStack stack = context.getItem();
+        ItemStack stack = context.getItemInHand();
 
         if (player != null && !this.canPlace(player, direction, stack, facePos)) {
             return ActionResultType.FAIL;
@@ -85,20 +87,20 @@ public class FrameItem extends PaintingItem {
                 return ActionResultType.FAIL;
             }
 
-            World world = context.getWorld();
+            World world = context.getLevel();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
                     world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack)
             );
 
-            if (paintingEntity.onValidSurface()) {
-                if (!world.isRemote) {
-                    paintingEntity.playPlaceSound();
-                    world.addEntity(paintingEntity);
+            if (paintingEntity.survives()) {
+                if (!world.isClientSide) {
+                    paintingEntity.playPlacementSound();
+                    world.addFreshEntity(paintingEntity);
                 }
 
-                player.setHeldItem(Hand.MAIN_HAND, ItemStack.EMPTY);
-                return ActionResultType.func_233537_a_(world.isRemote);
+                player.setItemInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
+                return ActionResultType.sidedSuccess(world.isClientSide);
             } else {
                 return ActionResultType.CONSUME;
             }
@@ -106,7 +108,7 @@ public class FrameItem extends PaintingItem {
     }
 
     protected boolean canPlace(PlayerEntity playerIn, Direction directionIn, ItemStack itemStackIn, BlockPos posIn) {
-        return !directionIn.getAxis().isVertical() && playerIn.canPlayerEdit(posIn, directionIn, itemStackIn);
+        return !directionIn.getAxis().isVertical() && playerIn.mayUseItemAt(posIn, directionIn, itemStackIn);
     }
 
     public enum EnumFrameStyle implements IStringSerializable
@@ -132,7 +134,7 @@ public class FrameItem extends PaintingItem {
         }
 
         @Override
-        public String getString()
+        public String getSerializedName()
         {
             return this.name;
         }

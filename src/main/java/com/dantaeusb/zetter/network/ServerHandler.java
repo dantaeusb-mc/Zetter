@@ -29,10 +29,10 @@ public class ServerHandler {
      * @todo: send changes to TE, not container, as it's created per player
      */
     public static void processFrameBuffer(final CPaintingFrameBufferPacket packetIn, ServerPlayerEntity sendingPlayer) {
-        if (sendingPlayer.openContainer instanceof EaselContainer) {
-            EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
+        if (sendingPlayer.containerMenu instanceof EaselContainer) {
+            EaselContainer paintingContainer = (EaselContainer)sendingPlayer.containerMenu;
 
-            paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUniqueID());
+            paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUUID());
 
             /**
              * Keep it there, but it's not really useful since it's easier to sync whole canvas and keep recent
@@ -53,8 +53,8 @@ public class ServerHandler {
 
     public static void processRequestSync(final CCanvasRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         // Get overworld world instance
-        MinecraftServer server = sendingPlayer.getServerWorld().getServer();
-        World world = server.func_241755_D_();
+        MinecraftServer server = sendingPlayer.getLevel().getServer();
+        World world = server.overworld();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
 
         Zetter.LOG.debug("Got request to sync canvas " + packetIn.getCanvasName());
@@ -65,7 +65,7 @@ public class ServerHandler {
         }
 
         // Notify canvas manager that player is tracking canvas from no ow
-        canvasTracker.trackCanvas(sendingPlayer.getUniqueID(), packetIn.getCanvasName());
+        canvasTracker.trackCanvas(sendingPlayer.getUUID(), packetIn.getCanvasName());
 
         AbstractCanvasData canvasData;
 
@@ -104,8 +104,8 @@ public class ServerHandler {
      */
     public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         // Get overworld world instance
-        MinecraftServer server = sendingPlayer.getServerWorld().getServer();
-        World world = server.func_241755_D_();
+        MinecraftServer server = sendingPlayer.getLevel().getServer();
+        World world = server.overworld();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
 
         Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName());
@@ -115,26 +115,26 @@ public class ServerHandler {
             return;
         }
 
-        canvasTracker.stopTrackingCanvas(sendingPlayer.getUniqueID(), packetIn.getCanvasName());
+        canvasTracker.stopTrackingCanvas(sendingPlayer.getUUID(), packetIn.getCanvasName());
     }
 
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayerEntity sendingPlayer) {
-        if (sendingPlayer.openContainer instanceof EaselContainer) {
-            EaselContainer paintingContainer = (EaselContainer)sendingPlayer.openContainer;
+        if (sendingPlayer.containerMenu instanceof EaselContainer) {
+            EaselContainer paintingContainer = (EaselContainer)sendingPlayer.containerMenu;
             paintingContainer.setPaletteColor(packetIn.getSlotIndex(), packetIn.getColor());
         }
     }
 
     public static void processCreatePainting(final CUpdatePaintingPacket packetIn, ServerPlayerEntity sendingPlayer) {
-        if (sendingPlayer.openContainer instanceof ArtistTableContainer) {
-            ArtistTableContainer artistTableContainer = (ArtistTableContainer)sendingPlayer.openContainer;
+        if (sendingPlayer.containerMenu instanceof ArtistTableContainer) {
+            ArtistTableContainer artistTableContainer = (ArtistTableContainer)sendingPlayer.containerMenu;
             artistTableContainer.updatePaintingName(packetIn.getPaintingName());
         }
     }
 
     public static void processBucketTool(final CCanvasBucketToolPacket packetIn, ServerPlayerEntity sendingPlayer) {
-        if (sendingPlayer.openContainer instanceof EaselContainer) {
-            EaselContainer easelContainer = (EaselContainer)sendingPlayer.openContainer;
+        if (sendingPlayer.containerMenu instanceof EaselContainer) {
+            EaselContainer easelContainer = (EaselContainer)sendingPlayer.containerMenu;
             easelContainer.processBucketToolServer(packetIn.position, packetIn.color);
         }
     }

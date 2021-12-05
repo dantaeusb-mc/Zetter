@@ -59,7 +59,7 @@ public class ModItems
 
     private static BlockItem registerBlockItem(String name, Block block)
     {
-        Item.Properties itemProps = new Item.Properties().group(ItemGroup.TOOLS);
+        Item.Properties itemProps = new Item.Properties().tab(ItemGroup.TAB_TOOLS);
         BlockItem blockItem = new BlockItem(block, itemProps);
 
         return (BlockItem) register(name, blockItem);

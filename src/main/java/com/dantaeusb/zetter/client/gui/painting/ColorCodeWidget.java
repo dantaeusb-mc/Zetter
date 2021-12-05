@@ -57,12 +57,12 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
 
         this.textField.setCanLoseFocus(false);
         this.textField.setTextColor(-1);
-        this.textField.setDisabledTextColour(-1);
-        this.textField.setEnableBackgroundDrawing(false);
-        this.textField.setMaxStringLength(32);
+        this.textField.setTextColorUneditable(-1);
+        this.textField.setBordered(false);
+        this.textField.setMaxLength(32);
         this.textField.setResponder(this::applyColor);
 
-        this.textField.setValidator(this.hexColorValidator);
+        this.textField.setFilter(this.hexColorValidator);
 
         //this.textField.setResponder(this::renameItem);
         this.parentScreen.addChildren(this.textField);
@@ -75,7 +75,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     public void updateColorValue(int color) {
         // Drop alpha channel
         color = color & 0x00FFFFFF;
-        this.textField.setText(Integer.toHexString(color));
+        this.textField.setValue(Integer.toHexString(color));
     }
 
     private void applyColor(String text) {
@@ -116,7 +116,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.textField.isFocused()) {
-            return this.textField.keyPressed(keyCode, scanCode, modifiers) || this.textField.canWrite();
+            return this.textField.keyPressed(keyCode, scanCode, modifiers) || this.textField.canConsumeInput();
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -129,11 +129,11 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
 
         // Quick check
         if (PaintingScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, iMouseX, iMouseY)) {
-            this.textField.setFocused2(true);
+            this.textField.setFocus(true);
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
-        this.textField.setFocused2(false);
+        this.textField.setFocus(false);
         return super.mouseClicked(mouseX, mouseY, button);
     }
 

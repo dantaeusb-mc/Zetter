@@ -5,13 +5,15 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 
+import net.minecraft.item.Item.Properties;
+
 public class PaletteItem extends Item
 {
     public static final String NBT_TAG_NAME_PALETTE_COLORS = "paletteColors";
     public static int PALETTE_SIZE = 14;
 
     public PaletteItem() {
-        super(new Properties().maxDamage(512).group(ItemGroup.TOOLS));
+        super(new Properties().durability(512).tab(ItemGroup.TAB_TOOLS));
     }
 
     public static int[] getPaletteColors(ItemStack stack)

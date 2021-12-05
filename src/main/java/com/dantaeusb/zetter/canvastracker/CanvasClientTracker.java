@@ -36,8 +36,8 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
     @Override
     public void registerCanvasData(AbstractCanvasData newCanvasData) {
         // Remove existing entry if we have one to replace with a new one
-        this.canvases.remove(newCanvasData.getName());
-        this.canvases.put(newCanvasData.getName(), newCanvasData);
+        this.canvases.remove(newCanvasData.getId());
+        this.canvases.put(newCanvasData.getId(), newCanvasData);
 
         CanvasRenderer.getInstance().addCanvas(newCanvasData);
     }

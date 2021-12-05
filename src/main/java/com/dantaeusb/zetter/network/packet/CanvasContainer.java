@@ -17,7 +17,7 @@ public abstract class CanvasContainer {
         try {
             int type = networkBuffer.readInt();
 
-            final String canvasName = networkBuffer.readString(32767);
+            final String canvasName = networkBuffer.readUtf(32767);
 
             final int resolutionOrdinal = networkBuffer.readInt();
             AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
@@ -58,7 +58,7 @@ public abstract class CanvasContainer {
      */
     public static void writePacketCanvasData(PacketBuffer networkBuffer, AbstractCanvasData canvasData) {
         networkBuffer.writeInt(canvasData.getType().ordinal());
-        networkBuffer.writeString(canvasData.getName());
+        networkBuffer.writeUtf(canvasData.getId());
         networkBuffer.writeInt(canvasData.getResolution().ordinal());
         networkBuffer.writeInt(canvasData.getWidth());
         networkBuffer.writeInt(canvasData.getHeight());

@@ -78,30 +78,30 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         super(renderManager);
 
         this.plate = new ModelRenderer(16, 16, 0, 0);
-        this.plate.setRotationPoint(0.0F, 0, 0.0F);
+        this.plate.setPos(0.0F, 0, 0.0F);
         this.plate.addBox(-3.0F, -1.0F, -2.0F, 6.0F, 2.0F, 2.0F, 0.0F, false);
     }
 
     public void render(CustomPaintingEntity entity, float entityYaw, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer renderBuffers, int combinedLight) {
-        World world = entity.getEntityWorld();
+        World world = entity.getCommandSenderWorld();
 
-        matrixStack.push();
+        matrixStack.pushPose();
 
         /**
          * @todo: use this offset
          */
         Vector3d vector3d = this.getRenderOffset(entity, partialTicks);
-        matrixStack.translate(-vector3d.getX(), -vector3d.getY(), -vector3d.getZ());
+        matrixStack.translate(-vector3d.x(), -vector3d.y(), -vector3d.z());
 
-        Direction facingDirection = entity.getHorizontalFacing();
+        Direction facingDirection = entity.getDirection();
 
         // Position is bind to the bounding box center, paintings are 1/16 thick, therefore we
         // need to divide that by to to get correct offset
         final double offsetAlignment = 0.5D - (1.0D / 32.0D);
 
         // On directions perpendicular to the facing it would be just 0
-        matrixStack.translate((double)facingDirection.getXOffset() * offsetAlignment, (double)facingDirection.getYOffset() * offsetAlignment, (double)facingDirection.getZOffset() * offsetAlignment);
-        matrixStack.rotate(Vector3f.YP.rotationDegrees(180.0F - entity.rotationYaw));
+        matrixStack.translate((double)facingDirection.getStepX() * offsetAlignment, (double)facingDirection.getStepY() * offsetAlignment, (double)facingDirection.getStepZ() * offsetAlignment);
+        matrixStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entity.yRot));
 
         // Copied from ItemFrameRenderer
         final boolean flag = entity.isInvisible();
@@ -111,7 +111,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         int blockHeight = entity.getBlockHeight();
 
         if (!flag) {
-            matrixStack.push();
+            matrixStack.pushPose();
             matrixStack.translate(renderOffset[0] - 1.0F, renderOffset[1] - 1.0F, 0.5D - (1.0D / 16.0D));
 
             if (blockWidth == 1 && blockHeight == 1) {
@@ -120,7 +120,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                 for (int v = 0; v < blockHeight; v++) {
                     matrixStack.translate(0, -v, 0D);
 
-                    int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, CustomPaintingRenderer.getOffsetBlockPos(entity, 0, v));
+                    int offsetCombinedLight = WorldRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, 0, v));
 
                     if (v == 0) {
                         this.renderModel(entity, "top_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -136,7 +136,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                 for (int h = 0; h < blockWidth; h++) {
                     matrixStack.translate(-h, 0, 0D);
 
-                    int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, CustomPaintingRenderer.getOffsetBlockPos(entity, h, 0));
+                    int offsetCombinedLight = WorldRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, 0));
 
                     if (h == 0) {
                         this.renderModel(entity, "left_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -156,7 +156,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                     for (int h = 0; h < blockWidth; h++) {
                         matrixStack.translate(-h, -v, 0D);
 
-                        int offsetCombinedLight = WorldRenderer.getCombinedLight(entity.world, CustomPaintingRenderer.getOffsetBlockPos(entity, h, v));
+                        int offsetCombinedLight = WorldRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, v));
 
                         if (v == 0) {
                             if (h == 0) {
@@ -189,7 +189,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                 }
             }
 
-            matrixStack.pop();
+            matrixStack.popPose();
         }
 
         // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
@@ -197,7 +197,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
         // @todo: Has painting - render fallback, no painting - disable canvas render
         if (canvasData != null) {
-            matrixStack.push();
+            matrixStack.pushPose();
             double canvasOffsetZ = entity.getMaterial().hasOffset() ? 0.5D - (1.0D / 32.0D) : 0.5D - (1.0D / 16);
 
             // We want to move picture one pixel in facing direction
@@ -208,29 +208,29 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
             // Scale and prepare
             matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
-            matrixStack.rotate(Vector3f.ZP.rotationDegrees(180.0F));
+            matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
             matrixStack.translate(-16.0D, -16.0D, 0D);
 
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, canvasData, combinedLight);
-            matrixStack.pop();
+            matrixStack.popPose();
         } else {
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getCanvasCode());
         }
 
         // Render plate
         if (canvasData != null && entity.hasPlate()) {
-            matrixStack.push();
+            matrixStack.pushPose();
 
             matrixStack.translate(0.0D, blockHeight / -2.0D, 0.5D);
 
             final String material = entity.getMaterial().toString();
-            IVertexBuilder vertexBuilder = renderBuffers.getBuffer(RenderType.getEntityCutout(PLATE_TEXTURES.get(material)));
+            IVertexBuilder vertexBuilder = renderBuffers.getBuffer(RenderType.entityCutout(PLATE_TEXTURES.get(material)));
             this.plate.render(matrixStack, vertexBuilder, combinedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
 
-            matrixStack.pop();
+            matrixStack.popPose();
         }
 
-        matrixStack.pop();
+        matrixStack.popPose();
 
         super.render(entity, entityYaw, partialTicks, matrixStack, renderBuffers, combinedLight);
     }
@@ -238,27 +238,27 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
     private void renderModel(CustomPaintingEntity entity, String key, MatrixStack matrixStack, IRenderTypeBuffer renderBuffers, int combinedLight) {
         ModelResourceLocation modelResourceLocation = FRAME_MODELS.get(entity.getMaterial() + "/" + key);
 
-        MatrixStack.Entry currentMatrix = matrixStack.getLast();
-        IVertexBuilder vertexBuffer = renderBuffers.getBuffer(RenderType.getSolid());
+        MatrixStack.Entry currentMatrix = matrixStack.last();
+        IVertexBuilder vertexBuffer = renderBuffers.getBuffer(RenderType.solid());
 
         IBakedModel frameModel = Minecraft.getInstance().getModelManager().getModel(modelResourceLocation);
 
-        BlockRendererDispatcher rendererDispatcher = Minecraft.getInstance().getBlockRendererDispatcher();
-        rendererDispatcher.getBlockModelRenderer().renderModel(currentMatrix, vertexBuffer, null, frameModel,
+        BlockRendererDispatcher rendererDispatcher = Minecraft.getInstance().getBlockRenderer();
+        rendererDispatcher.getModelRenderer().renderModel(currentMatrix, vertexBuffer, null, frameModel,
                 1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
     }
 
     public static BlockPos getOffsetBlockPos(CustomPaintingEntity entity, int h, int v) {
-        Direction facingDirection = entity.getHorizontalFacing();
-        facingDirection = facingDirection.rotateYCCW();
+        Direction facingDirection = entity.getDirection();
+        facingDirection = facingDirection.getCounterClockWise();
 
         int xOffset = ((entity.getBlockWidth() + 1) / 2) - 1;
         int yOffset = ((entity.getBlockHeight() + 1) / 2) - 1;
 
-        return entity.getHangingPosition().add(
-                (xOffset + h) * facingDirection.getXOffset(),
+        return entity.getPos().offset(
+                (xOffset + h) * facingDirection.getStepX(),
                 yOffset + v,
-                (xOffset + h) * facingDirection.getZOffset()
+                (xOffset + h) * facingDirection.getStepZ()
         );
     }
 
@@ -277,7 +277,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
      * Returns the location of an entity's texture.
      * @todo: do something with this
      */
-    public ResourceLocation getEntityTexture(CustomPaintingEntity entity) {
+    public ResourceLocation getTextureLocation(CustomPaintingEntity entity) {
         return PLATE_TEXTURES.get("oak");
     }
 }

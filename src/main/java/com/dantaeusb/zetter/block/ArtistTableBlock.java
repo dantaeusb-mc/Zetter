@@ -26,13 +26,15 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class ArtistTableBlock extends Block {
-    public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = HorizontalBlock.FACING;
 
     public ArtistTableBlock(Properties properties) {
         super(properties);
 
-        this.setDefaultState(this.stateContainer.getBaseState().with(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
     @Override
@@ -51,8 +53,8 @@ public class ArtistTableBlock extends Block {
         return new ArtistTableTileEntity();
     }
 
-    public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-        if (worldIn.isRemote) {
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+        if (worldIn.isClientSide) {
             return ActionResultType.SUCCESS;
         } else {
             this.interactWith(worldIn, pos, player);
@@ -65,32 +67,32 @@ public class ArtistTableBlock extends Block {
      * inside AbstractFurnaceBlock.
      */
     protected void interactWith(World worldIn, BlockPos pos, PlayerEntity player) {
-        TileEntity currentTileEntity = worldIn.getTileEntity(pos);
+        TileEntity currentTileEntity = worldIn.getBlockEntity(pos);
         if (currentTileEntity instanceof ArtistTableTileEntity) {
-            player.openContainer((INamedContainerProvider)currentTileEntity);
+            player.openMenu((INamedContainerProvider)currentTileEntity);
         }
     }
 
-    public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.isIn(newState.getBlock())) {
-            TileEntity tileEntity = world.getTileEntity(pos);
+    public void onRemove(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            TileEntity tileEntity = world.getBlockEntity(pos);
             if (tileEntity instanceof ArtistTableTileEntity) {
                 ((ArtistTableTileEntity) tileEntity).dropAllContents(world, pos);
             }
 
-            super.onReplaced(state, world, pos, newState, isMoving);
+            super.onRemove(state, world, pos, newState, isMoving);
         }
     }
 
     public BlockState getStateForPlacement(BlockItemUseContext context) {
-        return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing());
+        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection());
     }
 
     public BlockState rotate(BlockState state, Rotation rot) {
-        return state.with(FACING, rot.rotate(state.get(FACING)));
+        return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
     }
 
-    protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(FACING);
     }
 }

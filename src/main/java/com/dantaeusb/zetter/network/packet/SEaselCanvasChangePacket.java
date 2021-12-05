@@ -31,7 +31,7 @@ public class SEaselCanvasChangePacket {
     public static SEaselCanvasChangePacket readPacketData(PacketBuffer networkBuffer) {
         try {
             final int windowId = networkBuffer.readByte();
-            final ItemStack item = networkBuffer.readItemStack();
+            final ItemStack item = networkBuffer.readItem();
 
             return new SEaselCanvasChangePacket(windowId, item);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
@@ -45,7 +45,7 @@ public class SEaselCanvasChangePacket {
      */
     public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeByte(this.windowId);
-        networkBuffer.writeItemStack(this.item);
+        networkBuffer.writeItem(this.item);
     }
 
     public int getWindowId() {

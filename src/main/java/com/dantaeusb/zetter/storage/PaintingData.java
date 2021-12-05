@@ -34,7 +34,7 @@ public class PaintingData extends AbstractCanvasData {
         this.width = templateCanvasData.getWidth();
         this.height = templateCanvasData.getHeight();
         this.updateColorData(templateCanvasData.color);
-        this.markDirty();
+        this.setDirty();
     }
 
     public void setMetaProperties(String authorName, String title) {
@@ -62,15 +62,15 @@ public class PaintingData extends AbstractCanvasData {
         return Type.PAINTING;
     }
 
-    public void read(CompoundNBT compound) {
-        super.read(compound);
+    public void load(CompoundNBT compound) {
+        super.load(compound);
 
         this.authorName = compound.getString(NBT_TAG_AUTHOR_NAME);
         this.title = compound.getString(NBT_TAG_TITLE);
     }
 
-    public CompoundNBT write(CompoundNBT compound) {
-        super.write(compound);
+    public CompoundNBT save(CompoundNBT compound) {
+        super.save(compound);
 
         compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
         compound.putString(NBT_TAG_TITLE, this.title);

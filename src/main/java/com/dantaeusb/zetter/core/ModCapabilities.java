@@ -19,7 +19,7 @@ public class ModCapabilities
 
         // For client, it doesn't matter which world we're attaching to.
         // For server, it's always saved with overworld.
-        if (world.isRemote() || world.getDimensionKey() == World.OVERWORLD) {
+        if (world.isClientSide() || world.dimension() == World.OVERWORLD) {
             event.addCapability(CANVAS_TRACKER_CAPABILITY_LOCATION, new CanvasTrackerProvider(world));
         }
     }

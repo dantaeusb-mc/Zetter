@@ -25,22 +25,22 @@ public class ModGameEvents {
     @SubscribeEvent
     public static void onPlayerDisconnected(PlayerEvent.PlayerLoggedOutEvent event) {
         PlayerEntity player = event.getPlayer();
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.world);
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.level);
 
-        canvasTracker.stopTrackingAllCanvases(player.getUniqueID());
+        canvasTracker.stopTrackingAllCanvases(player.getUUID());
     }
 
     @SubscribeEvent
     public static void tickCanvasTracker(TickEvent.ServerTickEvent event) {
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(ServerLifecycleHooks.getCurrentServer().func_241755_D_());
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(ServerLifecycleHooks.getCurrentServer().overworld());
         canvasTracker.tick();
     }
 
     @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onRenderTickStart(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && Minecraft.getInstance().world != null) {
-            CanvasRenderer.getInstance().update(Util.milliTime());
+        if (event.phase == TickEvent.Phase.END && Minecraft.getInstance().level != null) {
+            CanvasRenderer.getInstance().update(Util.getMillis());
         }
     }
 
@@ -49,7 +49,7 @@ public class ModGameEvents {
     public static void onPlayerInteract(PlayerInteractEvent.RightClickBlock event) {
         PlayerEntity player = event.getPlayer();
 
-        if(!event.getWorld().isRemote || event.getPlayer().isDiscrete() || event.isCanceled() || event.getResult() == Event.Result.DENY || event.getUseBlock() == Event.Result.DENY) {
+        if(!event.getWorld().isClientSide || event.getPlayer().isDiscrete() || event.isCanceled() || event.getResult() == Event.Result.DENY || event.getUseBlock() == Event.Result.DENY) {
             return;
         }
 
