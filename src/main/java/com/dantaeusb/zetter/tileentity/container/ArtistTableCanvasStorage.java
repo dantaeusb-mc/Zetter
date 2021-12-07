@@ -1,10 +1,11 @@
-package com.dantaeusb.zetter.tileentity.storage;
+package com.dantaeusb.zetter.tileentity.container;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
+import com.dantaeusb.zetter.menu.ArtistTableMenu;
+import com.dantaeusb.zetter.core.ModItems;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.function.Predicate;
@@ -27,13 +28,10 @@ import java.util.function.Predicate;
  *
  */
 
-public class EaselStorage implements IInventory {
-    public static final int STORAGE_SIZE = 2;
+public class ArtistTableCanvasStorage implements Container {
+    public static final int STORAGE_SIZE = ArtistTableMenu.CANVAS_SLOT_COUNT;
 
-    public static final int CANVAS_SLOT = 0;
-    public static final int PALETTE_SLOT = 1;
-
-    private final ItemStackHandler easelContents;
+    private final ItemStackHandler stackHandler;
 
     /**
      * Use this constructor to create a ChestContents which is linked to its parent TileEntity.
@@ -50,59 +48,33 @@ public class EaselStorage implements IInventory {
      *                                     this is TileEntity::markDirty
      * @return the new ChestContents.
      */
-    public static EaselStorage createForTileEntity(Predicate<PlayerEntity> canPlayerAccessInventoryLambda,
-                                                   Notify markDirtyNotificationLambda) {
-        return new EaselStorage(canPlayerAccessInventoryLambda, markDirtyNotificationLambda);
+    public static ArtistTableCanvasStorage createForTileEntity(Predicate<Player> canPlayerAccessInventoryLambda,
+                                                               Notify markDirtyNotificationLambda) {
+        return new ArtistTableCanvasStorage(canPlayerAccessInventoryLambda, markDirtyNotificationLambda);
     }
 
-    public static EaselStorage createForClientSideContainer() {
-        return new EaselStorage();
+    public static ArtistTableCanvasStorage createForClientSideContainer() {
+        return new ArtistTableCanvasStorage();
     }
 
-    private EaselStorage() {
-        this.easelContents = new ItemStackHandler(STORAGE_SIZE) {
+    private ArtistTableCanvasStorage() {
+        this.stackHandler = new ItemStackHandler(STORAGE_SIZE) {
 
         };
     }
 
-    private EaselStorage(Predicate<PlayerEntity> canPlayerAccessInventoryLambda, Notify markDirtyNotificationLambda) {
+    private ArtistTableCanvasStorage(Predicate<Player> canPlayerAccessInventoryLambda, Notify markDirtyNotificationLambda) {
         this();
         this.canPlayerAccessInventoryLambda = canPlayerAccessInventoryLambda;
         this.markDirtyNotificationLambda = markDirtyNotificationLambda;
     }
 
-    /**
-     * @todo: move all interactions to TE
-     * @return
-     */
-    public ItemStack getCanvasStack() {
-        return this.getItem(CANVAS_SLOT);
+    public CompoundTag serializeNBT()  {
+        return stackHandler.serializeNBT();
     }
 
-    public ItemStack getPaletteStack() {
-        return this.getItem(PALETTE_SLOT);
-    }
-
-    public ItemStack extractCanvas() {
-        final ItemStack itemStack = this.easelContents.extractItem(CANVAS_SLOT, 1, false);
-        this.setChanged();
-
-        return itemStack;
-    }
-
-    public void setCanvasStack(ItemStack canvasStack) {
-        this.easelContents.setStackInSlot(CANVAS_SLOT, canvasStack);
-        this.setChanged();
-    }
-
-    // ----Methods used to load / save the contents to NBT
-
-    public CompoundNBT serializeNBT()  {
-        return easelContents.serializeNBT();
-    }
-
-    public void deserializeNBT(CompoundNBT nbt)   {
-        easelContents.deserializeNBT(nbt);
+    public void deserializeNBT(CompoundTag nbt)   {
+        stackHandler.deserializeNBT(nbt);
     }
 
     //  ------------- linking methods  -------------
@@ -123,7 +95,7 @@ public class EaselStorage implements IInventory {
      * sets the function that the container should call in order to decide if the given player can access the container's
      *   contents not.  The lambda function is only used on the server side
      */
-    public void setCanPlayerAccessInventoryLambda(Predicate<PlayerEntity> canPlayerAccessInventoryLambda) {
+    public void setCanPlayerAccessInventoryLambda(Predicate<Player> canPlayerAccessInventoryLambda) {
         this.canPlayerAccessInventoryLambda = canPlayerAccessInventoryLambda;
     }
 
@@ -153,18 +125,27 @@ public class EaselStorage implements IInventory {
     //    or ask the parent TileEntity.
 
     @Override
-    public boolean stillValid(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return canPlayerAccessInventoryLambda.test(player);  // on the client, this does nothing. on the server, ask our parent TileEntity.
     }
 
     @Override
     public boolean canPlaceItem(int index, ItemStack stack) {
-        return easelContents.isItemValid(index, stack);
+        if (stack.getItem() == ModItems.CANVAS) {
+            return stackHandler.isItemValid(index, stack);
+        }
+
+        return false;
     }
 
     // ----- Methods used to inform the parent tile entity that something has happened to the contents
     //  you can make direct calls to the parent if you like, I've used lambdas because I think it shows the separation
     //   of responsibilities more clearly.
+
+    @FunctionalInterface
+    public interface Notify {   // Some folks use Runnable, but I prefer not to use it for non-thread-related tasks
+        void invoke();
+    }
 
     @Override
     public void setChanged() {
@@ -172,12 +153,12 @@ public class EaselStorage implements IInventory {
     }
 
     @Override
-    public void startOpen(PlayerEntity player) {
+    public void startOpen(Player player) {
         openInventoryNotificationLambda.invoke();
     }
 
     @Override
-    public void stopOpen(PlayerEntity player) {
+    public void stopOpen(Player player) {
         closeInventoryNotificationLambda.invoke();
     }
 
@@ -185,13 +166,13 @@ public class EaselStorage implements IInventory {
 
     @Override
     public int getContainerSize() {
-        return easelContents.getSlots();
+        return stackHandler.getSlots();
     }
 
     @Override
     public boolean isEmpty() {
-        for (int i = 0; i < easelContents.getSlots(); ++i) {
-            if (!easelContents.getStackInSlot(i).isEmpty()) {
+        for (int i = 0; i < stackHandler.getSlots(); ++i) {
+            if (!stackHandler.getStackInSlot(i).isEmpty()) {
                 return false;
             }
         }
@@ -201,29 +182,29 @@ public class EaselStorage implements IInventory {
 
     @Override
     public ItemStack getItem(int index) {
-        return easelContents.getStackInSlot(index);
+        return stackHandler.getStackInSlot(index);
     }
 
     @Override
     public ItemStack removeItem(int index, int count) {
-        return easelContents.extractItem(index, count, false);
+        return stackHandler.extractItem(index, count, false);
     }
 
     @Override
     public ItemStack removeItemNoUpdate(int index) {
-        int maxPossibleItemStackSize = easelContents.getSlotLimit(index);
-        return easelContents.extractItem(index, maxPossibleItemStackSize, false);
+        int maxPossibleItemStackSize = stackHandler.getSlotLimit(index);
+        return stackHandler.extractItem(index, maxPossibleItemStackSize, false);
     }
 
     @Override
     public void setItem(int index, ItemStack stack) {
-        easelContents.setStackInSlot(index, stack);
+        stackHandler.setStackInSlot(index, stack);
     }
 
     @Override
     public void clearContent() {
-        for (int i = 0; i < easelContents.getSlots(); ++i) {
-            easelContents.setStackInSlot(i, ItemStack.EMPTY);
+        for (int i = 0; i < stackHandler.getSlots(); ++i) {
+            stackHandler.setStackInSlot(i, ItemStack.EMPTY);
         }
     }
 
@@ -232,7 +213,7 @@ public class EaselStorage implements IInventory {
     // the function that the container should call in order to decide if the
     // given player can access the container's Inventory or not.  Only valid server side
     //  default is "true".
-    private Predicate<PlayerEntity> canPlayerAccessInventoryLambda = x-> true;
+    private Predicate<Player> canPlayerAccessInventoryLambda = x-> true;
 
     // the function that the container should call in order to tell the parent TileEntity that the
     // contents of its inventory have been changed.
@@ -248,9 +229,4 @@ public class EaselStorage implements IInventory {
     // container has been closed by a player
     // default is "do nothing"
     private Notify closeInventoryNotificationLambda = ()->{};
-
-    @FunctionalInterface
-    public interface Notify {   // Some folks use Runnable, but I prefer not to use it for non-thread-related tasks
-        void invoke();
-    }
 }

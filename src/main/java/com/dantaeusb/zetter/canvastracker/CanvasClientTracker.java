@@ -5,16 +5,16 @@ import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Maps;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
 public class CanvasClientTracker extends CanvasDefaultTracker  {
-    private final World world;
+    private final Level world;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
 
-    public CanvasClientTracker(World world) {
+    public CanvasClientTracker(Level world) {
         this.world = world;
     }
 
@@ -34,16 +34,16 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
      * @param newCanvasData
      */
     @Override
-    public void registerCanvasData(AbstractCanvasData newCanvasData) {
+    public void registerCanvasData(String newCanvasCode, AbstractCanvasData newCanvasData) {
         // Remove existing entry if we have one to replace with a new one
-        this.canvases.remove(newCanvasData.getId());
-        this.canvases.put(newCanvasData.getId(), newCanvasData);
+        this.canvases.remove(newCanvasCode);
+        this.canvases.put(newCanvasCode, newCanvasData);
 
-        CanvasRenderer.getInstance().addCanvas(newCanvasData);
+        CanvasRenderer.getInstance().addCanvas(newCanvasCode, newCanvasData);
     }
 
     @Override
-    public World getWorld() {
+    public Level getWorld() {
         return this.world;
     }
 }

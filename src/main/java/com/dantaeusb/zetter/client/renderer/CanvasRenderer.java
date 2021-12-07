@@ -8,15 +8,15 @@ import com.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.Timer;
-import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.Timer;
+import com.mojang.math.Matrix4f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -51,26 +51,26 @@ public class CanvasRenderer implements AutoCloseable {
      * Only updates texture
      * @param canvas
      */
-    public void updateCanvasTexture(CanvasData canvas) {
-        this.getCanvasRendererInstance(canvas, true).updateCanvasTexture(canvas);
+    public void updateCanvasTexture(String canvasCode, CanvasData canvas) {
+        this.getCanvasRendererInstance(canvasCode, canvas, true).updateCanvasTexture(canvas);
     }
 
-    public void addCanvas(AbstractCanvasData canvas) {
-        this.canvasRendererInstances.remove(canvas.getId());
+    public void addCanvas(String canvasCode, AbstractCanvasData canvasData) {
+        this.canvasRendererInstances.remove(canvasCode);
 
-        this.createCanvasRendererInstance(canvas);
+        this.createCanvasRendererInstance(canvasCode, canvasData);
     }
 
-    public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, AbstractCanvasData canvas, int combinedLight) {
+    public void renderCanvas(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
         // We won't ever render or request 0 canvas, as 0 is a fallback value
-        if (canvas.getId().equals(CanvasData.getCanvasCode(0))) return;
+        if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
 
-        this.ticksSinceRenderRequested.put(canvas.getId(), 0);
+        this.ticksSinceRenderRequested.put(canvasCode, 0);
 
-        CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvas, false);
+        CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvasCode, canvas, false);
 
         if (rendererInstance == null) {
-            this.queueCanvasTextureUpdate(canvas.getType(), canvas.getId());
+            this.queueCanvasTextureUpdate(canvas.getType(), canvasCode);
             return;
         }
 
@@ -184,21 +184,22 @@ public class CanvasRenderer implements AutoCloseable {
      * Renderer instances
      */
 
-    private @Nullable CanvasRenderer.Instance getCanvasRendererInstance(AbstractCanvasData canvas, boolean create) {
-        CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvas.getId());
+    private @Nullable CanvasRenderer.Instance getCanvasRendererInstance(String canvasCode, AbstractCanvasData canvasData, boolean create) {
+        CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvasCode);
 
         if (create && canvasRendererInstance == null) {
-            this.createCanvasRendererInstance(canvas);
+            this.createCanvasRendererInstance(canvasCode, canvasData);
         }
 
         return canvasRendererInstance;
     }
 
-    private void createCanvasRendererInstance(AbstractCanvasData canvas) {
+    private void createCanvasRendererInstance(String canvasCode, AbstractCanvasData canvas) {
         CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(
-                canvas.getId(), canvas.getWidth(), canvas.getHeight(), canvas.getResolution());
+                canvasCode, canvas.getWidth(), canvas.getHeight(), canvas.getResolution()
+        );
         canvasRendererInstance.updateCanvasTexture(canvas);
-        this.canvasRendererInstances.put(canvas.getId(), canvasRendererInstance);
+        this.canvasRendererInstances.put(canvasCode, canvasRendererInstance);
     }
 
     /*
@@ -268,9 +269,9 @@ public class CanvasRenderer implements AutoCloseable {
             // Return value is in format:  0xAABBGGRR
         }
 
-        private void render(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight) {
+        private void render(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, int combinedLight) {
             Matrix4f matrix4f = matrixStack.last().pose();
-            IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
+            VertexConsumer ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 
             ivertexbuilder.vertex(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(0.0F, 1.0F).uv2(combinedLight).endVertex();
             ivertexbuilder.vertex(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(1.0F, 1.0F).uv2(combinedLight).endVertex();

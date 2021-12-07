@@ -1,15 +1,12 @@
 package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
-import com.dantaeusb.zetter.network.ClientHandler;
+import com.dantaeusb.zetter.menu.painting.PaintingFrameBuffer;
 import com.dantaeusb.zetter.network.ServerHandler;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.network.NetworkEvent;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 import java.util.function.Supplier;
 
 /**
@@ -30,7 +27,7 @@ public class CPaintingFrameBufferPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CPaintingFrameBufferPacket readPacketData(PacketBuffer buf) {
+    public static CPaintingFrameBufferPacket readPacketData(FriendlyByteBuf buf) {
         CPaintingFrameBufferPacket packet = new CPaintingFrameBufferPacket();
 
         long frameStartTime = buf.readLong();
@@ -45,7 +42,7 @@ public class CPaintingFrameBufferPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(PacketBuffer buf) {
+    public void writePacketData(FriendlyByteBuf buf) {
         buf.writeLong(this.paintingFrameBuffer.getFrameStartTime());
         buf.writeBytes(this.paintingFrameBuffer.getBufferData());
     }
@@ -58,7 +55,7 @@ public class CPaintingFrameBufferPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
+        final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
         }

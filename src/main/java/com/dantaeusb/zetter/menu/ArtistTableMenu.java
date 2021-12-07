@@ -1,26 +1,28 @@
-package com.dantaeusb.zetter.container;
+package com.dantaeusb.zetter.menu;
 
-import com.dantaeusb.zetter.container.artisttable.CanvasCombination;
+import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import com.dantaeusb.zetter.menu.artisttable.CanvasCombination;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.FrameItem;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
-import com.dantaeusb.zetter.tileentity.ArtistTableTileEntity;
-import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.IInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.IWorldPosCallable;
-import net.minecraft.world.World;
+import com.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
+import com.dantaeusb.zetter.tileentity.container.ArtistTableCanvasStorage;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.level.Level;
 import org.apache.commons.lang3.StringUtils;
 
-public class ArtistTableContainer extends Container {
+public class ArtistTableMenu extends AbstractContainerMenu {
     private static final int HOTBAR_SLOT_COUNT = 9;
 
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
@@ -30,10 +32,10 @@ public class ArtistTableContainer extends Container {
     public static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
-    private final IWorldPosCallable worldPosCallable;
+    private final ContainerLevelAccess worldPosCallable;
 
-    private final PlayerEntity player;
-    private final World world;
+    private final Player player;
+    private final Level world;
 
     private ArtistTableCanvasStorage canvasStorage;
 
@@ -41,15 +43,15 @@ public class ArtistTableContainer extends Container {
 
     private String paintingName = "";
 
-    protected final Inventory inventoryOut = new Inventory(1);
+    protected final SimpleContainer inventoryOut = new SimpleContainer(1);
 
     // gui position of the player inventory grid
     public static final int PLAYER_INVENTORY_XPOS = 8;
     public static final int PLAYER_INVENTORY_YPOS = 138;
 
-    public ArtistTableContainer(int windowID, PlayerInventory invPlayer,
-                                ArtistTableCanvasStorage canvasStorage,
-                                final IWorldPosCallable worldPosCallable) {
+    public ArtistTableMenu(int windowID, Inventory invPlayer,
+                           ArtistTableCanvasStorage canvasStorage,
+                           final ContainerLevelAccess worldPosCallable) {
         super(ModContainers.ARTIST_TABLE, windowID);
 
         this.worldPosCallable = worldPosCallable;
@@ -103,16 +105,16 @@ public class ArtistTableContainer extends Container {
         this.updateCanvasCombination();
     }
 
-    public static ArtistTableContainer createContainerServerSide(int windowID, PlayerInventory playerInventory,
-                                                                 ArtistTableCanvasStorage canvasStorage,
-                                                                 final IWorldPosCallable worldPosCallable) {
-        return new ArtistTableContainer(windowID, playerInventory, canvasStorage, worldPosCallable);
+    public static ArtistTableMenu createContainerServerSide(int windowID, Inventory playerInventory,
+                                                            ArtistTableCanvasStorage canvasStorage,
+                                                            final ContainerLevelAccess worldPosCallable) {
+        return new ArtistTableMenu(windowID, playerInventory, canvasStorage, worldPosCallable);
     }
 
-    public static ArtistTableContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
+    public static ArtistTableMenu createContainerClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         ArtistTableCanvasStorage canvasStorage = ArtistTableCanvasStorage.createForClientSideContainer();
 
-        return new ArtistTableContainer(windowID, playerInventory, canvasStorage, IWorldPosCallable.NULL);
+        return new ArtistTableMenu(windowID, playerInventory, canvasStorage, ContainerLevelAccess.NULL);
     }
 
     public void updatePaintingName(String newPaintingName) {
@@ -161,11 +163,26 @@ public class ArtistTableContainer extends Container {
         this.inventoryOut.setItem(0, outStack);
     }
 
-    protected ItemStack takePainting(PlayerEntity player, ItemStack outStack) {
+    protected ItemStack takePainting(Player player, ItemStack outStack) {
         DummyCanvasData combinedCanvasData = this.getCanvasCombination().canvasData;
-        PaintingData paintingData = Helper.createNewPainting(world, combinedCanvasData, player.getName().getString(), paintingName);
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(this.world);
 
-        FrameItem.setPaintingData(outStack, paintingData);
+        if (combinedCanvasData == null) {
+            Zetter.LOG.error("Cannot find combined canvas data");
+            return ItemStack.EMPTY;
+        }
+
+        /**
+         * Feel like I'm getting ids before getting code always. Maybe make getCanvasCode call
+         * CanvasTracker itself?
+         */
+        final int newId = canvasTracker.getNextPaintingId();
+        final String newCode = PaintingData.getCanvasCode(newId);
+        PaintingData paintingData = PaintingData.createFrom(combinedCanvasData);
+        paintingData.setMetaProperties(player.getName().getString(), this.paintingName);
+        canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
+
+        FrameItem.setPaintingData(outStack, newCode, paintingData);
         FrameItem.setBlockSize(
                 outStack,
                 new int[]{
@@ -217,7 +234,7 @@ public class ArtistTableContainer extends Container {
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(PlayerEntity playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(Player playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -264,36 +281,36 @@ public class ArtistTableContainer extends Container {
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(PlayerEntity player) {
+    public boolean stillValid(Player player) {
         return this.canvasStorage.stillValid(player);
     }
 
     public class SlotCanvas extends Slot {
-        public SlotCanvas(IInventory inventoryIn, int index, int xPosition, int yPosition) {
+        public SlotCanvas(Container inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
         }
 
         // if this function returns false, the player won't be able to insert the given item into this slot
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return ArtistTableTileEntity.isItemValidForCanvasArea(stack);
+            return ArtistTableBlockEntity.isItemValidForCanvasArea(stack);
         }
     }
 
     public class SlotFrameInput extends Slot {
-        public SlotFrameInput(IInventory inventoryIn, int index, int xPosition, int yPosition) {
+        public SlotFrameInput(Container inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
         }
 
         // if this function returns false, the player won't be able to insert the given item into this slot
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return ArtistTableTileEntity.isItemValidForCanvasArea(stack);
+            return ArtistTableBlockEntity.isItemValidForCanvasArea(stack);
         }
     }
 
     public class SlotOutput extends Slot {
-        public SlotOutput(IInventory inventoryIn, int index, int xPosition, int yPosition) {
+        public SlotOutput(Container inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
         }
 
@@ -302,8 +319,8 @@ public class ArtistTableContainer extends Container {
             return false;
         }
 
-        public ItemStack onTake(PlayerEntity player, ItemStack stack) {
-            return ArtistTableContainer.this.takePainting(player, stack);
+        public void onTake(Player player, ItemStack stack) {
+            stack = ArtistTableMenu.this.takePainting(player, stack);
         }
     }
 }

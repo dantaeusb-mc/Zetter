@@ -3,40 +3,39 @@ package com.dantaeusb.zetter.client.gui;
 import com.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import com.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import com.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
-import com.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
-import com.dantaeusb.zetter.container.ArtistTableContainer;
+import com.dantaeusb.zetter.menu.ArtistTableMenu;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.network.packet.CUpdatePaintingPacket;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import java.awt.*;
 import java.util.List;
 
-public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
-    protected final ITextComponent title = new TranslationTextComponent("container.zetter.artistTable");
-    private TextFieldWidget nameField;
+public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> {
+    protected final Component title = new TranslatableComponent("container.zetter.artistTable");
+    private EditBox nameField;
 
     // This is the resource location for the background image
     private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/gui/artist_table.png");
 
-    protected final List<AbstractArtistTableWidget> widgets = Lists.newArrayList();
+    protected final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
     private CombinedCanvasWidget combinedCanvasWidget;
     private HelpWidget helpWidget;
 
     private int tick = 0;
 
-    public ArtistTableScreen(ArtistTableContainer artistTableContainer, PlayerInventory playerInventory, ITextComponent title) {
-        super(artistTableContainer, playerInventory, title);
+    public ArtistTableScreen(ArtistTableMenu artistTableMenu, Inventory playerInventory, Component title) {
+        super(artistTableMenu, playerInventory, title);
 
         this.imageWidth = 176;
         this.imageHeight = 220;
@@ -66,22 +65,22 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         this.initFields();
     }
 
-    public void addWidget(AbstractArtistTableWidget widget) {
-        this.widgets.add(widget);
-        this.children.add(widget);
+    public void addPaintingWidget(AbstractArtistTableWidget widget) {
+        this.artistTableWidgets.add(widget);
+        this.addWidget(widget);
     }
 
     protected void initFields() {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
-        this.nameField = new TextFieldWidget(this.font, this.leftPos + this.INPUT_XPOS + 4, this.topPos + INPUT_YPOS + 4, INPUT_WIDTH, INPUT_HEIGHT, new TranslationTextComponent("container.immersivemp.lock_table"));
+        this.nameField = new EditBox(this.font, this.leftPos + this.INPUT_XPOS + 4, this.topPos + INPUT_YPOS + 4, INPUT_WIDTH, INPUT_HEIGHT, new TranslatableComponent("container.immersivemp.lock_table"));
         this.nameField.setCanLoseFocus(false);
         this.nameField.setTextColor(-1);
         this.nameField.setTextColorUneditable(-1);
         this.nameField.setBordered(false);
         this.nameField.setMaxLength(35);
         this.nameField.setResponder(this::renameItem);
-        this.children.add(this.nameField);
+        this.addWidget(this.nameField);
         this.setInitialFocus(this.nameField);
     }
 
@@ -106,7 +105,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -115,22 +114,23 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
         this.renderTooltip(matrixStack, mouseX, mouseY);
     }
 
-    public void renderNameField(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderNameField(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.nameField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void containerTick() {
+        super.containerTick();
 
         this.tick++;
         this.nameField.tick();
     }
 
     @Override
-    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bind(ARTIST_TABLE_RESOURCE);
+    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
 
         this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
@@ -166,12 +166,12 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
     }
 
     @Override
-    protected void renderTooltip(MatrixStack matrixStack, int x, int y) {
+    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
         super.renderTooltip(matrixStack, x, y);
 
-        for (AbstractArtistTableWidget widget : this.widgets) {
+        for (AbstractArtistTableWidget widget : this.artistTableWidgets) {
             if (widget.isMouseOver(x, y)) {
-                ITextComponent tooltip = widget.getTooltip(x, y);
+                Component tooltip = widget.getTooltip(x, y);
 
                 if (tooltip != null) {
                     this.renderTooltip(matrixStack, tooltip, x, y);
@@ -186,17 +186,17 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableContainer> {
      * @param mouseY
      */
     @Override
-    protected void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
         final int LABEL_XPOS = 5;
         final int LABEL_YPOS = 5;
         this.font.draw(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
 
         final int FONT_Y_SPACING = 10;
-        final int PLAYER_INV_LABEL_XPOS = ArtistTableContainer.PLAYER_INVENTORY_XPOS;
-        final int PLAYER_INV_LABEL_YPOS = ArtistTableContainer.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
+        final int PLAYER_INV_LABEL_XPOS = ArtistTableMenu.PLAYER_INVENTORY_XPOS;
+        final int PLAYER_INV_LABEL_YPOS = ArtistTableMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
-        this.font.draw(matrixStack, this.inventory.getDisplayName(),
+        this.font.draw(matrixStack, this.playerInventoryTitle,
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
     }
 

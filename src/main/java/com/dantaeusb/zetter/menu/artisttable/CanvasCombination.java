@@ -1,17 +1,17 @@
-package com.dantaeusb.zetter.container.artisttable;
+package com.dantaeusb.zetter.menu.artisttable;
 
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import com.dantaeusb.zetter.container.ArtistTableContainer;
+import com.dantaeusb.zetter.menu.ArtistTableMenu;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
-import com.dantaeusb.zetter.tileentity.storage.ArtistTableCanvasStorage;
-import net.minecraft.item.ItemStack;
+import com.dantaeusb.zetter.tileentity.container.ArtistTableCanvasStorage;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Tuple;
-import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -40,12 +40,12 @@ public class CanvasCombination {
     @Nullable
     public final DummyCanvasData canvasData;
 
-    public CanvasCombination(ArtistTableCanvasStorage canvasStorage, World world) {
+    public CanvasCombination(ArtistTableCanvasStorage canvasStorage, Level world) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
-        for (int y = 0; y < ArtistTableContainer.CANVAS_ROW_COUNT; y++) {
-            for (int x = 0; x < ArtistTableContainer.CANVAS_COLUMN_COUNT; x++) {
+        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                 if (canvasStorage.getItem(y * 4 + x) != ItemStack.EMPTY) {
                     if (min == null) {
                         min = new Tuple<>(x ,y);
@@ -74,8 +74,8 @@ public class CanvasCombination {
 
         boolean canvasesReady = true;
 
-        for (int y = 0; y < ArtistTableContainer.CANVAS_ROW_COUNT; y++) {
-            for (int x = 0; x < ArtistTableContainer.CANVAS_COLUMN_COUNT; x++) {
+        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                 ItemStack currentStack = canvasStorage.getItem(y * 4 + x);
 
                 if (currentStack == ItemStack.EMPTY) {
@@ -138,7 +138,7 @@ public class CanvasCombination {
         this.canvasData = CanvasCombination.createCanvasData(canvasStorage, rectangle, world);
     }
 
-    public static DummyCanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, World world) {
+    public static DummyCanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, Level world) {
         final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
         final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
 
@@ -182,9 +182,7 @@ public class CanvasCombination {
             }
         }
 
-        DummyCanvasData combinedCanvasData = Helper.getCombinedCanvas();
-
-        combinedCanvasData.initData(
+        DummyCanvasData combinedCanvasData = DummyCanvasData.createWrap(
             Helper.getResolution(),
             pixelWidth,
             pixelHeight,
@@ -192,7 +190,7 @@ public class CanvasCombination {
         );
 
         if (world.isClientSide()) {
-            Helper.getWorldCanvasTracker(world).registerCanvasData(combinedCanvasData);
+            Helper.getWorldCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
         }
 
         return combinedCanvasData;

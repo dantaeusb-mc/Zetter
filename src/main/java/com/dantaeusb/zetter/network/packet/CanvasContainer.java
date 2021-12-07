@@ -1,23 +1,20 @@
 package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.network.FriendlyByteBuf;
 
 import java.nio.ByteBuffer;
 
 public abstract class CanvasContainer {
     private final static AbstractCanvasData.Type[] typeValues = AbstractCanvasData.Type.values();
 
-    public static AbstractCanvasData readPacketCanvasData(PacketBuffer networkBuffer) {
+    public static AbstractCanvasData readPacketCanvasData(FriendlyByteBuf networkBuffer) {
         try {
             int type = networkBuffer.readInt();
-
-            final String canvasName = networkBuffer.readUtf(32767);
 
             final int resolutionOrdinal = networkBuffer.readInt();
             AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
@@ -34,17 +31,15 @@ public abstract class CanvasContainer {
 
             switch (typeValues[type]) {
                 case CANVAS:
-                    readCanvasData = new CanvasData(canvasName);
+                    readCanvasData = CanvasData.createWrap(resolution, width, height, unwrappedColorData);
                     break;
                 case PAINTING:
-                    readCanvasData = new PaintingData(canvasName);
+                    readCanvasData = PaintingData.createWrap(resolution, width, height, unwrappedColorData);
                     break;
                 default:
-                    readCanvasData = new DummyCanvasData(canvasName);
+                    readCanvasData = DummyCanvasData.createWrap(resolution, width, height, unwrappedColorData);
                     break;
             }
-
-            readCanvasData.initData(resolution, width, height, unwrappedColorData);
 
             return readCanvasData;
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
@@ -56,9 +51,8 @@ public abstract class CanvasContainer {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public static void writePacketCanvasData(PacketBuffer networkBuffer, AbstractCanvasData canvasData) {
+    public static void writePacketCanvasData(FriendlyByteBuf networkBuffer, AbstractCanvasData canvasData) {
         networkBuffer.writeInt(canvasData.getType().ordinal());
-        networkBuffer.writeUtf(canvasData.getId());
         networkBuffer.writeInt(canvasData.getResolution().ordinal());
         networkBuffer.writeInt(canvasData.getWidth());
         networkBuffer.writeInt(canvasData.getHeight());

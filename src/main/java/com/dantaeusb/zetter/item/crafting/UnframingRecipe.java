@@ -6,25 +6,24 @@ import com.dantaeusb.zetter.item.FrameItem;
 import com.dantaeusb.zetter.item.PaintingItem;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.WrittenBookItem;
-import net.minecraft.item.crafting.IRecipeSerializer;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.SpecialRecipe;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.core.NonNullList;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistryEntry;
 
 /**
  * Only for frames, toggle
  */
-public class UnframingRecipe extends SpecialRecipe {
+public class UnframingRecipe extends CustomRecipe {
     public static final Serializer SERIALIZER = new Serializer();
     public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "unframing");
 
@@ -45,7 +44,7 @@ public class UnframingRecipe extends SpecialRecipe {
      * Used to check if a recipe matches current crafting inventory
      * @todo: Maybe we can just extend ShapelessRecipe
      */
-    public boolean matches(CraftingInventory craftingInventory, World world) {
+    public boolean matches(CraftingContainer craftingInventory, Level world) {
         ItemStack frameStack = ItemStack.EMPTY;
 
         for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
@@ -65,7 +64,7 @@ public class UnframingRecipe extends SpecialRecipe {
         return !frameStack.isEmpty() && PaintingItem.getPaintingCode(frameStack) != null;
     }
 
-    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
+    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inv) {
         NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
 
         for(int i = 0; i < remainingItems.size(); ++i) {
@@ -90,7 +89,7 @@ public class UnframingRecipe extends SpecialRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingInventory craftingInventory) {
+    public ItemStack assemble(CraftingContainer craftingInventory) {
         ItemStack frameStack = ItemStack.EMPTY;
 
         for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
@@ -105,7 +104,7 @@ public class UnframingRecipe extends SpecialRecipe {
 
         if (!frameStack.isEmpty() && frameStack.hasTag()) {
             ItemStack outStack = new ItemStack(ModItems.PAINTING);
-            CompoundNBT compoundnbt = frameStack.getTag().copy();
+            CompoundTag compoundnbt = frameStack.getTag().copy();
             outStack.setTag(compoundnbt);
             return outStack;
         } else {
@@ -117,7 +116,7 @@ public class UnframingRecipe extends SpecialRecipe {
      * @todo: Not sure if that's the right thing use CRAFTING_SPECIAL_BOOKCLONING here
      * @return
      */
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER;
     }
 
@@ -128,7 +127,7 @@ public class UnframingRecipe extends SpecialRecipe {
         return width >= 2 && height >= 2;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<UnframingRecipe> {
+    private static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<UnframingRecipe> {
 
         Serializer() {
             setRegistryName(new ResourceLocation(Zetter.MOD_ID, "unframing"));
@@ -136,20 +135,20 @@ public class UnframingRecipe extends SpecialRecipe {
 
         @Override
         public UnframingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = JSONUtils.getAsJsonObject(json, "frame");
+            final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");
             final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
 
             return new UnframingRecipe(recipeId, inputFrame);
         }
 
         @Override
-        public UnframingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public UnframingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
             return new UnframingRecipe(recipeId, frameIngredient);
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, UnframingRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, UnframingRecipe recipe) {
             recipe.inputFrame.toNetwork(buffer);
         }
     }

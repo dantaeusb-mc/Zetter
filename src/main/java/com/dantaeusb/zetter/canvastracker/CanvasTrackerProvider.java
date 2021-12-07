@@ -1,9 +1,10 @@
 package com.dantaeusb.zetter.canvastracker;
 
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
-import net.minecraft.world.World;
+import com.dantaeusb.zetter.core.ModCapabilities;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -11,17 +12,20 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNBT> {
+public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTag> {
     private final Direction NO_SPECIFIC_SIDE = null;
-    private final ICanvasTracker canvasTracker;
+    private final ICanvasTracker canvasTrackerCapability;
 
-    private final String NBT_TAG_NAME_CANVAS_TRACKER = "canvasTracker";
+    /**
+     * @todo: datafix to CanvasTracker
+     */
+    private final String TAG_NAME_CANVAS_TRACKER = "canvasTracker";
 
-    public CanvasTrackerProvider(World world) {
+    public CanvasTrackerProvider(Level world) {
         if (world.isClientSide()) {
-            this.canvasTracker = new CanvasClientTracker(world);
+            this.canvasTrackerCapability = new CanvasClientTracker(world);
         } else {
-            this.canvasTracker = new CanvasServerTracker(world);
+            this.canvasTrackerCapability = new CanvasServerTracker(world);
         }
     }
 
@@ -37,8 +41,8 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
     @Nonnull
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
-        if (CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER == capability) {
-            return (LazyOptional<T>)LazyOptional.of(()-> this.canvasTracker);
+        if (ModCapabilities.CANVAS_TRACKER == capability) {
+            return (LazyOptional<T>)LazyOptional.of(()-> this.canvasTrackerCapability);
         }
 
         return LazyOptional.empty();
@@ -48,16 +52,15 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
      * Write all the capability state information to NBT
      * We need to save data only for Server Implementation of the capability
      */
-    public CompoundNBT serializeNBT() {
-        CompoundNBT nbt = new CompoundNBT();
+    public CompoundTag serializeNBT() {
+        CompoundTag nbt = new CompoundTag();
 
-        if (this.canvasTracker.getWorld() == null || this.canvasTracker.getWorld().isClientSide()) {
+        if (this.canvasTrackerCapability.getWorld() == null || this.canvasTrackerCapability.getWorld().isClientSide()) {
             return nbt;
         }
 
-        Capability<ICanvasTracker> test = CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER;
-        INBT canvasTrackerNBT = test.writeNBT(this.canvasTracker, NO_SPECIFIC_SIDE);
-        nbt.put(NBT_TAG_NAME_CANVAS_TRACKER, canvasTrackerNBT);
+        Tag canvasTrackerNBT = this.canvasTrackerCapability.serializeNBT();
+        nbt.put(TAG_NAME_CANVAS_TRACKER, canvasTrackerNBT);
 
         return nbt;
     }
@@ -66,12 +69,12 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
      * Read the capability state information out of NBT
      * We need to get the data only for Server Implementation of the capability
      */
-    public void deserializeNBT(CompoundNBT nbt) {
-        if (this.canvasTracker.getWorld() == null || this.canvasTracker.getWorld().isClientSide()) {
+    public void deserializeNBT(CompoundTag nbt) {
+        if (this.canvasTrackerCapability.getWorld() == null || this.canvasTrackerCapability.getWorld().isClientSide()) {
             return;
         }
 
-        INBT canvasTrackerNBT = nbt.get(NBT_TAG_NAME_CANVAS_TRACKER);
-        CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER.readNBT(this.canvasTracker, NO_SPECIFIC_SIDE, canvasTrackerNBT);
+        Tag canvasTrackerTag = nbt.get(TAG_NAME_CANVAS_TRACKER);
+        this.canvasTrackerCapability.deserializeNBT(canvasTrackerTag);
     }
 }

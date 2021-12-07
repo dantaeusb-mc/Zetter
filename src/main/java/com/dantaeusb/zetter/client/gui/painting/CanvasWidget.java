@@ -3,27 +3,26 @@ package com.dantaeusb.zetter.client.gui.painting;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.item.CanvasItem;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.IRenderable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 
-public class CanvasWidget extends AbstractPaintingWidget implements IRenderable {
+public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     private static final int CANVAS_SCALE_FACTOR = 5;
     private static final int size = Helper.getResolution().getNumeric() * CANVAS_SCALE_FACTOR;
 
     private boolean canvasDragging = false;
 
     public CanvasWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.painting.canvas"));
+        super(parentScreen, x, y, size, size, new TranslatableComponent("container.zetter.painting.canvas"));
     }
 
     @Override
     public @Nullable
-    ITextComponent getTooltip(int mouseX, int mouseY) {
+    Component getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
@@ -75,7 +74,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable 
         return true;
     }
 
-    public void render(MatrixStack matrixStack) {
+    public void render(PoseStack matrixStack) {
         if (!this.parentScreen.isCanvasAvailable()) {
             return;
         }

@@ -2,9 +2,9 @@ package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.Helper;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.storage.WorldSavedData;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.saveddata.SavedData;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -13,7 +13,7 @@ import java.nio.ByteOrder;
  * It's not enough to just init data, we need to register it with
  * @see com.dantaeusb.zetter.canvastracker.CanvasServerTracker::registerCanvasData();
  */
-public abstract class AbstractCanvasData extends WorldSavedData {
+public abstract class AbstractCanvasData extends SavedData {
     protected static final String NBT_TAG_TYPE = "type";
     protected static final String NBT_TAG_WIDTH = "width";
     protected static final String NBT_TAG_HEIGHT = "height";
@@ -27,10 +27,6 @@ public abstract class AbstractCanvasData extends WorldSavedData {
     protected int width;
     protected int height;
 
-    public AbstractCanvasData(String canvasCode) {
-        super(canvasCode);
-    }
-
     /**
      *
      * @param resolution
@@ -38,7 +34,7 @@ public abstract class AbstractCanvasData extends WorldSavedData {
      * @param height
      * @param color
      */
-    public final void initData(Resolution resolution, int width, int height, byte[] color) {
+    protected final void wrapData(Resolution resolution, int width, int height, byte[] color) {
         if (width % resolution.getNumeric() != 0 || height % resolution.getNumeric() != 0) {
             throw new IllegalArgumentException("Canvas size is not proportional to given canvas resolution");
         }
@@ -114,8 +110,8 @@ public abstract class AbstractCanvasData extends WorldSavedData {
      * @return
      */
     public int getPixelIndex(int pixelX, int pixelY) {
-        pixelX = MathHelper.clamp(pixelX, 0, this.width - 1);
-        pixelY = MathHelper.clamp(pixelY, 0, this.height - 1);
+        pixelX = Mth.clamp(pixelX, 0, this.width - 1);
+        pixelY = Mth.clamp(pixelY, 0, this.height - 1);
 
         return pixelY * this.width + pixelX;
     }
@@ -123,28 +119,28 @@ public abstract class AbstractCanvasData extends WorldSavedData {
     /**
      * reads in data from the NBTTagCompound into this MapDataBase
      */
-    public void load(CompoundNBT compound) {
-        this.width = compound.getInt(NBT_TAG_WIDTH);
-        this.height = compound.getInt(NBT_TAG_HEIGHT);
+    public void load(CompoundTag compoundTag) {
+        this.width = compoundTag.getInt(NBT_TAG_WIDTH);
+        this.height = compoundTag.getInt(NBT_TAG_HEIGHT);
 
-        if (compound.contains(NBT_TAG_RESOLUTION)) {
-            int resolutionOrdinal = compound.getInt(NBT_TAG_RESOLUTION);
+        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
+            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
             this.resolution = Resolution.values()[resolutionOrdinal];
         } else {
             this.resolution = Helper.getResolution();
         }
 
-        this.updateColorData(compound.getByteArray(NBT_TAG_COLOR));
+        this.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
     }
 
-    public CompoundNBT save(CompoundNBT compound) {
-        compound.putInt(NBT_TAG_TYPE, this.getType().ordinal());
-        compound.putInt(NBT_TAG_WIDTH, this.width);
-        compound.putInt(NBT_TAG_HEIGHT, this.height);
-        compound.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());
-        compound.putByteArray(NBT_TAG_COLOR, this.color);
+    public CompoundTag save(CompoundTag compoundTag) {
+        compoundTag.putInt(NBT_TAG_TYPE, this.getType().ordinal());
+        compoundTag.putInt(NBT_TAG_WIDTH, this.width);
+        compoundTag.putInt(NBT_TAG_HEIGHT, this.height);
+        compoundTag.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());
+        compoundTag.putByteArray(NBT_TAG_COLOR, this.color);
 
-        return compound;
+        return compoundTag;
     }
 
     public enum Type {

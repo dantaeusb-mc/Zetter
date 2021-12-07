@@ -6,32 +6,37 @@ import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.FrameItem;
 import com.dantaeusb.zetter.storage.PaintingData;
 import com.google.common.collect.Maps;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntitySize;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.Pose;
-import net.minecraft.entity.item.HangingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.IPacket;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.decoration.HangingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.*;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.fmllegacy.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fmllegacy.network.NetworkHooks;
 import org.apache.commons.lang3.Validate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Map;
+
+import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 
 public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
     public static final String NBT_TAG_FACING = "Facing";
@@ -55,11 +60,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     protected Materials material;
 
-    public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, World world) {
+    public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, Level world) {
         super(type, world);
     }
 
-    public CustomPaintingEntity(World world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize) {
+    public CustomPaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize) {
         super(ModEntities.CUSTOM_PAINTING_ENTITY, world, pos);
 
         this.material = material;
@@ -97,7 +102,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         return this.hasPlate;
     }
 
-    protected float getEyeHeight(Pose poseIn, EntitySize sizeIn) {
+    protected float getEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
         return 0.0F;
     }
 
@@ -108,15 +113,15 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         Validate.notNull(facingDirectionIn);
         this.direction = facingDirectionIn;
         if (facingDirectionIn.getAxis().isHorizontal()) {
-            this.xRot = 0.0F;
-            this.yRot = (float)(this.direction.get2DDataValue() * 90);
+            this.setXRot(0.0F);
+            this.setYRot((float)(this.direction.get2DDataValue() * 90));
         } else {
-            this.xRot = (float)(-90 * facingDirectionIn.getAxisDirection().getStep());
-            this.yRot = 0.0F;
+            this.setXRot(-90 * facingDirectionIn.getAxisDirection().getStep());
+            this.setYRot(0.0F);
         }
 
-        this.xRotO = this.xRot;
-        this.yRotO = this.yRot;
+        this.xRotO = this.getXRot();
+        this.yRotO = this.getYRot();
         this.recalculateBoundingBox();
     }
 
@@ -160,7 +165,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             yHeight = yHeight / 16.0D / 2.0D;
             zWidth = zWidth / 16.0D / 2.0D;
 
-            this.setBoundingBox(new AxisAlignedBB(
+            this.setBoundingBox(new AABB(
                 xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
                 xCenter + xWidth, yCenter + yHeight, zCenter + zWidth
             ));
@@ -189,13 +194,13 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     @Override
-    public ActionResultType interact(PlayerEntity player, Hand hand) {
+    public InteractionResult interact(Player player, InteractionHand hand) {
         if (!this.hasPlate()) {
-            return ActionResultType.PASS;
+            return InteractionResult.PASS;
         }
 
         if (!player.getCommandSenderWorld().isClientSide()) {
-            return ActionResultType.CONSUME;
+            return InteractionResult.CONSUME;
         }
 
         PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
@@ -203,23 +208,23 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         String paintingName = paintingData.getPaintingName();
         String authorName = paintingData.getAuthorName();
 
-        if (StringUtils.isNullOrEmpty(paintingName)) {
-            paintingName = new TranslationTextComponent("item.zetter.painting.unnamed").getString();
+        if (StringUtil.isNullOrEmpty(paintingName)) {
+            paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
         }
 
-        if (StringUtils.isNullOrEmpty(authorName)) {
-            authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
+        if (StringUtil.isNullOrEmpty(authorName)) {
+            authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
         }
 
         player.displayClientMessage(
-            new TranslationTextComponent("item.zetter.customPaintingByAuthor", paintingName, authorName),
+            new TranslatableComponent("item.zetter.customPaintingByAuthor", paintingName, authorName),
             true
         );
 
-        return ActionResultType.CONSUME;
+        return InteractionResult.CONSUME;
     }
 
-    public void addAdditionalSaveData(CompoundNBT compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         compound.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
         compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
         compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
@@ -232,7 +237,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     /**
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
-    public void readAdditionalSaveData(CompoundNBT compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         this.direction = Direction.from2DDataValue(compound.getByte(NBT_TAG_FACING));
         this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
 
@@ -260,7 +265,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.setDirection(this.direction);
     }
 
-    public void writeSpawnData(PacketBuffer buffer) {
+    public void writeSpawnData(FriendlyByteBuf buffer) {
         buffer.writeBlockPos(this.pos);
         buffer.writeByte((byte)this.direction.get2DDataValue());
 
@@ -273,7 +278,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         buffer.writeBoolean(this.hasPlate);
     }
 
-    public void readSpawnData(PacketBuffer buffer) {
+    public void readSpawnData(FriendlyByteBuf buffer) {
         this.pos = buffer.readBlockPos();
         this.direction = Direction.from2DDataValue(buffer.readByte());
 
@@ -323,7 +328,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
-            FrameItem.setPaintingData(canvasStack, paintingData);
+            FrameItem.setPaintingData(canvasStack, this.canvasCode, paintingData);
             FrameItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
             this.spawnAtLocation(canvasStack);
@@ -355,7 +360,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     @Nonnull
     @Override
-    public IPacket<?> getAddEntityPacket() {
+    public Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

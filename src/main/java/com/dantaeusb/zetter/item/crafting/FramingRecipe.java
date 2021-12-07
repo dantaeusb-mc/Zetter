@@ -1,28 +1,26 @@
 package com.dantaeusb.zetter.item.crafting;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.base.CommonProxy;
-import com.dantaeusb.zetter.core.ModCraftingRecipes;
-import com.dantaeusb.zetter.core.ModItems;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.*;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.util.JSONUtils;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.World;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistryEntry;
+
+import net.minecraft.world.item.crafting.CustomRecipe;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeSerializer;
 
 /**
  * Only for frames, toggle
  */
-public class FramingRecipe extends SpecialRecipe {
+public class FramingRecipe extends CustomRecipe {
     public static final Serializer SERIALIZER = new Serializer();
     public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "framing");
 
@@ -45,7 +43,7 @@ public class FramingRecipe extends SpecialRecipe {
      * Used to check if a recipe matches current crafting inventory
      * @todo: Maybe we can just extend ShapelessRecipe
      */
-    public boolean matches(CraftingInventory craftingInventory, World world) {
+    public boolean matches(CraftingContainer craftingInventory, Level world) {
         ItemStack frameStack = ItemStack.EMPTY;
         ItemStack paintingStack = ItemStack.EMPTY;
 
@@ -75,7 +73,7 @@ public class FramingRecipe extends SpecialRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingInventory craftingInventory) {
+    public ItemStack assemble(CraftingContainer craftingInventory) {
         ItemStack frameStack = ItemStack.EMPTY;
         ItemStack paintingStack = ItemStack.EMPTY;
 
@@ -97,7 +95,7 @@ public class FramingRecipe extends SpecialRecipe {
 
         if (!paintingStack.isEmpty() && paintingStack.hasTag()) {
             ItemStack outStack = frameStack.copy();
-            CompoundNBT compoundnbt = paintingStack.getTag().copy();
+            CompoundTag compoundnbt = paintingStack.getTag().copy();
             outStack.setTag(compoundnbt);
             return outStack;
         } else {
@@ -109,7 +107,7 @@ public class FramingRecipe extends SpecialRecipe {
      * @todo: Not sure if that's the right thing use CRAFTING_SPECIAL_BOOKCLONING here
      * @return
      */
-    public IRecipeSerializer<?> getSerializer() {
+    public RecipeSerializer<?> getSerializer() {
         return SERIALIZER;
     }
 
@@ -120,7 +118,7 @@ public class FramingRecipe extends SpecialRecipe {
         return width >= 2 && height >= 2;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<FramingRecipe> {
+    private static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<FramingRecipe> {
 
         Serializer() {
             setRegistryName(new ResourceLocation(Zetter.MOD_ID, "framing"));
@@ -128,24 +126,24 @@ public class FramingRecipe extends SpecialRecipe {
 
         @Override
         public FramingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = JSONUtils.getAsJsonObject(json, "frame");
+            final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");
             final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
 
-            final JsonElement inputPaintingJson = JSONUtils.getAsJsonObject(json, "painting");
+            final JsonElement inputPaintingJson = GsonHelper.getAsJsonObject(json, "painting");
             final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
 
             return new FramingRecipe(recipeId, inputFrame, inputPainting);
         }
 
         @Override
-        public FramingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
+        public FramingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
             Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
             Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
             return new FramingRecipe(recipeId, frameIngredient, paintingIngredient);
         }
 
         @Override
-        public void toNetwork(PacketBuffer buffer, FramingRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, FramingRecipe recipe) {
             recipe.inputFrame.toNetwork(buffer);
             recipe.inputPainting.toNetwork(buffer);
         }

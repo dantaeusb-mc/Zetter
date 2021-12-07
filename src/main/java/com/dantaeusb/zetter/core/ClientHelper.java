@@ -3,9 +3,9 @@ package com.dantaeusb.zetter.core;
 import com.dantaeusb.zetter.Zetter;
 import com.google.common.collect.Sets;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ConfirmOpenLinkScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.util.Util;
+import net.minecraft.client.gui.screens.ConfirmLinkScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.Util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,7 +48,7 @@ public class ClientHelper {
             }
 
             if (mc.options.chatLinksPrompt) {
-                mc.setScreen(new ConfirmOpenLinkScreen((result) -> {
+                mc.setScreen(new ConfirmLinkScreen((result) -> {
                     if (result) {
                         ClientHelper.openUri(uri);
                     }

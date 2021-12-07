@@ -1,6 +1,6 @@
 modLoader="javafml"
 
-loaderVersion="[34,)"
+loaderVersion="[37,)"
 
 license="Mozilla Public License 2.0"
 
@@ -61,13 +61,13 @@ Core values of this mod:
 [[dependencies.zetter]]
     modId="forge"
     mandatory=true
-    versionRange="[34,)"
+    versionRange="[37,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.zetter]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.3,1.17)"
+    versionRange="[1.17.1,1.18)"
     ordering="NONE"
     side="BOTH"

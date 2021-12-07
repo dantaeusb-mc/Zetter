@@ -7,10 +7,10 @@ import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -19,7 +19,7 @@ import java.util.UUID;
 import java.util.Vector;
 
 public class CanvasServerTracker extends CanvasDefaultTracker {
-    private final World world;
+    private final Level world;
     private int lastCanvasId;
     private int lastPaintingId;
 
@@ -27,14 +27,14 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
 
-    public CanvasServerTracker(World world) {
+    public CanvasServerTracker(Level world) {
         this.world = world;
         this.lastCanvasId = 0;
         this.lastPaintingId = 0;
     }
 
     @Override
-    public World getWorld() {
+    public Level getWorld() {
         return this.world;
     }
 
@@ -72,14 +72,14 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     @Nullable
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
         return (T) this.world.getServer().overworld().getDataStorage().get(
-            () -> {
+            (compoundTag) -> {
                 if (type.equals(CanvasData.class)) {
-                    return new CanvasData(canvasCode);
+                    return CanvasData.createLoaded(compoundTag);
                 } else if (type.equals(PaintingData.class)) {
-                    return new PaintingData(canvasCode);
+                    return PaintingData.createLoaded(compoundTag);
                 }
 
-                return new DummyCanvasData(canvasCode);
+                return DummyCanvasData.createDummy();
             },
             canvasCode
         );
@@ -93,13 +93,13 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
      * overworld = getOverworld
      */
     @Override
-    public void registerCanvasData(AbstractCanvasData canvasData) {
+    public void registerCanvasData(String canvasCode, AbstractCanvasData canvasData) {
         if (canvasData instanceof DummyCanvasData) {
             Zetter.LOG.error("Trying to register dummy canvas on server side");
             return;
         }
 
-        this.world.getServer().overworld().getDataStorage().set(canvasData);
+        this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
     }
 
     /**
@@ -120,9 +120,9 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
 
         for (String canvasCode : this.desyncCanvases) {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
-                ServerPlayerEntity playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
+                ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
-                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(this.getCanvasData(canvasCode, DummyCanvasData.class), System.currentTimeMillis());
+                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasCode, this.getCanvasData(canvasCode, DummyCanvasData.class), System.currentTimeMillis());
                 ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }

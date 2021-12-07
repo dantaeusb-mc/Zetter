@@ -3,10 +3,11 @@ package com.dantaeusb.zetter.network.packet;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.network.ServerHandler;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import java.util.function.Supplier;
 
 import java.util.function.Supplier;
 
@@ -19,14 +20,14 @@ public class CCanvasBucketToolPacket {
         this.color = color;
     }
 
-    public static CCanvasBucketToolPacket readPacketData(PacketBuffer buf) {
+    public static CCanvasBucketToolPacket readPacketData(FriendlyByteBuf buf) {
         final int position = buf.readInt();
         final int color = buf.readInt();
 
         return new CCanvasBucketToolPacket(position, color);
     }
 
-    public void writePacketData(PacketBuffer buf) {
+    public void writePacketData(FriendlyByteBuf buf) {
         buf.writeInt(this.position);
         buf.writeInt(this.color);
     }
@@ -41,7 +42,7 @@ public class CCanvasBucketToolPacket {
             return;
         }
 
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
+        final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCanvasBucketToolPacket was received");
         }

@@ -1,7 +1,7 @@
 package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * It's not enough to just init data, we need to register it with
@@ -16,25 +16,38 @@ public class PaintingData extends AbstractCanvasData {
     protected String authorName;
     protected String title;
 
-    public PaintingData(String canvasCode) {
-        super(canvasCode);
+    private PaintingData() {
+        super();
     }
 
-    public PaintingData(int paintingId) {
-        super(getPaintingCode(paintingId));
+    public static PaintingData createWrap(Resolution resolution, int width, int height, byte[] color) {
+        final PaintingData newPainting = new PaintingData();
+        newPainting.wrapData(resolution, width, height, color);
+
+        return newPainting;
     }
 
-    public void copyFrom(AbstractCanvasData templateCanvasData) {
-        if (this.isEditable()) {
-            Zetter.LOG.error("Cannot copy to sealed canvas");
-            return;
-        }
+    public static PaintingData createFrom(AbstractCanvasData templateCanvasData) {
+        final PaintingData newPainting = new PaintingData();
+        newPainting.wrapData(
+                templateCanvasData.getResolution(),
+                templateCanvasData.getWidth(),
+                templateCanvasData.getHeight(),
+                templateCanvasData.color
+        );
 
-        this.resolution = templateCanvasData.getResolution();
-        this.width = templateCanvasData.getWidth();
-        this.height = templateCanvasData.getHeight();
-        this.updateColorData(templateCanvasData.color);
-        this.setDirty();
+        return newPainting;
+    }
+
+    public static PaintingData createLoaded(CompoundTag compoundTag) {
+        final PaintingData newPainting = new PaintingData();
+        newPainting.load(compoundTag);
+
+        return newPainting;
+    }
+
+    public static String getCanvasCode(int canvasId) {
+        return CODE_PREFIX + canvasId;
     }
 
     public void setMetaProperties(String authorName, String title) {
@@ -62,20 +75,20 @@ public class PaintingData extends AbstractCanvasData {
         return Type.PAINTING;
     }
 
-    public void load(CompoundNBT compound) {
-        super.load(compound);
+    public void load(CompoundTag compoundTag) {
+        super.load(compoundTag);
 
-        this.authorName = compound.getString(NBT_TAG_AUTHOR_NAME);
-        this.title = compound.getString(NBT_TAG_TITLE);
+        this.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
+        this.title = compoundTag.getString(NBT_TAG_TITLE);
     }
 
-    public CompoundNBT save(CompoundNBT compound) {
-        super.save(compound);
+    public CompoundTag save(CompoundTag compoundTag) {
+        super.save(compoundTag);
 
-        compound.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
-        compound.putString(NBT_TAG_TITLE, this.title);
+        compoundTag.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
+        compoundTag.putString(NBT_TAG_TITLE, this.title);
 
-        return compound;
+        return compoundTag;
     }
 }
 

@@ -3,26 +3,24 @@ package com.dantaeusb.zetter.item;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.core.Helper;
-import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.RegistryKey;
-import net.minecraft.world.World;
-import net.minecraft.world.server.ServerWorld;
-import org.apache.commons.lang3.StringUtils;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class CanvasItem extends Item
 {
     public static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
     public CanvasItem() {
-        super(new Properties().stacksTo(1).tab(ItemGroup.TAB_TOOLS));
+        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
     }
 
     /**
@@ -33,33 +31,41 @@ public class CanvasItem extends Item
      * @return
      */
     @Nullable
-    public static CanvasData getCanvasData(ItemStack stack, World worldIn) {
+    public static CanvasData getCanvasData(ItemStack stack, Level world) {
         Item canvas = stack.getItem();
 
         if (canvas instanceof CanvasItem) {
-            return ((CanvasItem)canvas).getCustomCanvasData(stack, worldIn);
+            return ((CanvasItem)canvas).getCustomCanvasData(stack, world);
         }
 
         return null;
+    }
+
+    @Nullable
+    public static CanvasData getCanvasData(String canvasCode, Level world) {
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+
+        return canvasTracker.getCanvasData(canvasCode, CanvasData.class);
     }
 
     /**
      * @see {@link FilledMapItem#getCustomMapData(ItemStack, World)}
      */
     @Nullable
-    protected CanvasData getCustomCanvasData(ItemStack stack, World world) {
+    protected CanvasData getCustomCanvasData(ItemStack stack, Level world) {
         CanvasData canvasData = null;
+        String canvasCode = getCanvasCode(stack);
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
         if (canvasTracker != null) {
-            canvasData = canvasTracker.getCanvasData(getCanvasCode(stack), CanvasData.class);
+            canvasData = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
         } else {
             Zetter.LOG.error("Unable to find CanvasTracker capability");
         }
 
         // @todo: Maybe throw an exception if it's happening on client-side?
-        if ((canvasData == null || canvasData.getId().equals(Helper.FALLBACK_CANVAS_CODE)) && world instanceof ServerWorld) {
-            canvasData = createCanvasData(stack, world);
+        if ((canvasData == null || canvasCode.equals(Helper.FALLBACK_CANVAS_CODE)) && world instanceof ServerLevel) {
+            canvasData = createNewCanvasData(stack, world);
         }
 
         return canvasData;
@@ -70,7 +76,7 @@ public class CanvasItem extends Item
      * @return
      */
     public static String getCanvasCode(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = stack.getTag();
 
         String canvasCode = Helper.FALLBACK_CANVAS_CODE;
 
@@ -94,10 +100,10 @@ public class CanvasItem extends Item
     /**
      * Called when item is crafted/smelted. Used only by maps so far.
      */
-    public void onCraftedBy(ItemStack stack, World worldIn, PlayerEntity playerIn) {
+    public void onCraftedBy(ItemStack stack, Level worldIn, Player playerIn) {
         if (worldIn.isClientSide) return;
 
-        createCanvasData(stack, worldIn);
+        createNewCanvasData(stack, worldIn);
     }
 
     /**
@@ -107,11 +113,15 @@ public class CanvasItem extends Item
      * @param worldIn
      * @return
      */
-    private static CanvasData createCanvasData(ItemStack stack, World worldIn) {
-        CanvasData canvasData = Helper.createNewCanvas(worldIn);
-        canvasData.initData(Helper.getResolution().getNumeric(), Helper.getResolution().getNumeric());
+    private static CanvasData createNewCanvasData(ItemStack stack, Level world) {
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        final int numericResolution = Helper.getResolution().getNumeric();
 
-        CanvasItem.setCanvasCode(stack, canvasData.getId());
+        CanvasData canvasData = CanvasData.createFresh(Helper.getResolution(), numericResolution, numericResolution);
+        String canvasCode = CanvasData.getCanvasCode(canvasTracker.getNextCanvasId());
+        canvasTracker.registerCanvasData(canvasCode, canvasData);
+
+        CanvasItem.setCanvasCode(stack, canvasCode);
 
         return canvasData;
     }

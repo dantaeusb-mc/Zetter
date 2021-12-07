@@ -2,11 +2,6 @@ package com.dantaeusb.zetter;
 
 import com.dantaeusb.zetter.base.ClientProxy;
 import com.dantaeusb.zetter.base.CommonProxy;
-import net.minecraft.item.Item;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.ForgeTagHandler;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;

@@ -1,13 +1,13 @@
 package com.dantaeusb.zetter.item;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class PaintsItem extends Item
 {
     public PaintsItem() {
-        super(new Properties().stacksTo(16).tab(ItemGroup.TAB_TOOLS));
+        super(new Properties().stacksTo(16).tab(CreativeModeTab.TAB_TOOLS));
     }
 }

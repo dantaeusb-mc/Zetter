@@ -4,22 +4,27 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.network.ClientHandler;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.network.PacketBuffer;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.LogicalSidedProvider;
-import net.minecraftforge.fml.network.NetworkEvent;
-
+import net.minecraftforge.fmllegacy.LogicalSidedProvider;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
 public class SPaintingSyncMessage {
+    private final String canvasCode;
     private final PaintingData paintingData;
     private final long timestamp;
 
-    public SPaintingSyncMessage(PaintingData paintingData, long timestamp) {
+    public SPaintingSyncMessage(String canvasCode, PaintingData paintingData, long timestamp) {
+        this.canvasCode = canvasCode;
         this.paintingData = paintingData;
         this.timestamp = timestamp;
+    }
+
+    public String getCanvasCode() {
+        return this.canvasCode;
     }
 
     public PaintingData getPaintingData() {
@@ -33,8 +38,9 @@ public class SPaintingSyncMessage {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SPaintingSyncMessage readPacketData(PacketBuffer networkBuffer) {
+    public static SPaintingSyncMessage readPacketData(FriendlyByteBuf networkBuffer) {
         try {
+            String canvasCode = networkBuffer.readUtf();
             long timestamp = networkBuffer.readLong();
             PaintingData readCanvasData = (PaintingData) CanvasContainer.readPacketCanvasData(networkBuffer);
 
@@ -43,7 +49,7 @@ public class SPaintingSyncMessage {
 
             readCanvasData.setMetaProperties(authorName, paintingName);
 
-            return new SPaintingSyncMessage(readCanvasData, timestamp);
+            return new SPaintingSyncMessage(canvasCode, readCanvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SPaintingSyncMessage: " + e);
             return null;
@@ -53,7 +59,8 @@ public class SPaintingSyncMessage {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(PacketBuffer networkBuffer) {
+    public void writePacketData(FriendlyByteBuf networkBuffer) {
+        networkBuffer.writeUtf(this.canvasCode);
         networkBuffer.writeLong(this.timestamp);
         CanvasContainer.writePacketCanvasData(networkBuffer, this.paintingData);
 
@@ -67,7 +74,7 @@ public class SPaintingSyncMessage {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<ClientWorld> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<ClientLevel> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SCanvasSyncMessage context could not provide a ClientWorld.");
             return;

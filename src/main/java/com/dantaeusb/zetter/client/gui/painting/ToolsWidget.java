@@ -2,30 +2,28 @@ package com.dantaeusb.zetter.client.gui.painting;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.IRenderable;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 
-public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
+public class ToolsWidget extends AbstractPaintingWidget implements Widget {
     private Tool currentTool = Tool.PENCIL;
 
     final static int TOOLS_SIZE = 16;
     final static int TOOLS_OFFSET = TOOLS_SIZE + 1; // 1px border between slots
 
     public ToolsWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TOOLS_SIZE, TOOLS_SIZE + TOOLS_OFFSET * 2, new TranslationTextComponent("container.zetter.painting.tools"));
+        super(parentScreen, x, y, TOOLS_SIZE, TOOLS_SIZE + TOOLS_OFFSET * 2, new TranslatableComponent("container.zetter.painting.tools"));
     }
 
     @Override
     public @Nullable
-    ITextComponent getTooltip(int mouseX, int mouseY) {
+    Component getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (Tool tool: Tool.values()) {
             int fromY = this.y + i * TOOLS_OFFSET;
@@ -70,7 +68,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
         return false;
     }
 
-    public void render(MatrixStack matrixStack) {
+    public void render(PoseStack matrixStack) {
 
         int i = 0;
         for (Tool tool: Tool.values()) {
@@ -88,18 +86,18 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
         this.parentScreen.updateSlidersWithCurrentColor();
     }
 
-    public enum Tool implements IStringSerializable {
-        PENCIL("Pencil", new TranslationTextComponent("container.zetter.painting.tools.pencil"), 176, 0),
-        EYEDROPPER("Eyedropper", new TranslationTextComponent("container.zetter.painting.tools.eyedropper"), 192, 0),
-        BUCKET("Bucket", new TranslationTextComponent("container.zetter.painting.tools.bucket"), 208, 0);
+    public enum Tool implements StringRepresentable {
+        PENCIL("Pencil", new TranslatableComponent("container.zetter.painting.tools.pencil"), 176, 0),
+        EYEDROPPER("Eyedropper", new TranslatableComponent("container.zetter.painting.tools.eyedropper"), 192, 0),
+        BUCKET("Bucket", new TranslatableComponent("container.zetter.painting.tools.bucket"), 208, 0);
 
         private final String name;
-        private final TranslationTextComponent title;
+        private final TranslatableComponent title;
 
         public final int uPosition;
         public final int vPosition;
 
-        Tool(String name, TranslationTextComponent title, int uPosition, int vPosition) {
+        Tool(String name, TranslatableComponent title, int uPosition, int vPosition) {
             this.name = name;
             this.title = title;
             this.uPosition = uPosition;

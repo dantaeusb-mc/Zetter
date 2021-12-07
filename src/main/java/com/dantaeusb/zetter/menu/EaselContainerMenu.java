@@ -1,55 +1,48 @@
-package com.dantaeusb.zetter.container;
+package com.dantaeusb.zetter.menu;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import com.dantaeusb.zetter.canvastracker.CanvasTrackerCapability;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import com.dantaeusb.zetter.core.Helper;
-import com.dantaeusb.zetter.core.ModContainers;
-import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.core.ModNetwork;
-import com.dantaeusb.zetter.container.painting.PaintingFrame;
-import com.dantaeusb.zetter.container.painting.PaintingFrameBuffer;
+import com.dantaeusb.zetter.core.*;
+import com.dantaeusb.zetter.entity.item.EaselEntity;
+import com.dantaeusb.zetter.menu.painting.PaintingFrame;
+import com.dantaeusb.zetter.menu.painting.PaintingFrameBuffer;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.item.PaletteItem;
 import com.dantaeusb.zetter.network.packet.*;
-import com.dantaeusb.zetter.tileentity.EaselTileEntity;
-import com.dantaeusb.zetter.tileentity.storage.EaselStorage;
+import com.dantaeusb.zetter.storage.util.CanvasHolder;
+import com.dantaeusb.zetter.tileentity.container.EaselContainer;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.network.play.NetworkPlayerInfo;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.Slot;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.Util;
-import net.minecraft.world.World;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.network.PacketDistributor;
+import net.minecraft.Util;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class EaselContainer extends Container {
+public class EaselContainerMenu extends AbstractContainerMenu {
     public static int FRAME_TIMEOUT = 5000;  // 5 second limit to keep changes buffer, if packet processed later disregard it
 
-    private final PlayerEntity player;
-    private final World world;
+    private final Player player;
+    private final Level world;
+    private EaselEntity entity;
 
     public static final int PALETTE_SLOTS = 14;
     private static final int HOTBAR_SLOT_COUNT = 9;
 
-    private boolean canvasReady = false;
-    private CanvasData canvas;
-
-    private EaselTileEntity tileEntity;
-    private final EaselStorage easelStorage;
+    private @Nullable CanvasHolder<CanvasData> canvas;
+    private final EaselContainer easelContainer;
 
     /**
      * Not needed to be map if there's multiple containers for one TE on server
@@ -65,7 +58,7 @@ public class EaselContainer extends Container {
 
     private Notify firstLoadNotification = ()->{};
 
-    public EaselContainer(int windowID, PlayerInventory invPlayer, EaselStorage easelStorage) {
+    public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer) {
         super(ModContainers.PAINTING, windowID);
 
         if (ModContainers.PAINTING == null)
@@ -73,7 +66,7 @@ public class EaselContainer extends Container {
 
         this.player = invPlayer.player;
         this.world = invPlayer.player.level;
-        this.easelStorage = easelStorage;
+        this.easelContainer = entity.getEaselContainer();
         this.canvasChanges = new PaintingFrameBuffer(System.currentTimeMillis());
 
         final int PALETTE_SLOT_X_SPACING = 152;
@@ -83,14 +76,14 @@ public class EaselContainer extends Container {
         final int HOTBAR_YPOS = 161;
         final int SLOT_X_SPACING = 18;
 
-        this.addSlot(new Slot(this.easelStorage, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
+        this.addSlot(new Slot(this.easelContainer, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ModItems.PALETTE;
             }
         });
 
         if (!this.world.isClientSide()) {
-            ItemStack canvasStack = this.easelStorage.getItem(EaselStorage.CANVAS_SLOT);
+            ItemStack canvasStack = this.easelContainer.getItem(EaselContainer.CANVAS_SLOT);
             String canvasName = CanvasItem.getCanvasCode(canvasStack);
             this.setCanvas(canvasName);
         }
@@ -102,35 +95,38 @@ public class EaselContainer extends Container {
         }
     }
 
-    public static EaselContainer createContainerServerSide(int windowID, PlayerInventory playerInventory, EaselTileEntity tileEntity, EaselStorage easelStorage) {
-        EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
-
-        easelContainer.tileEntity = tileEntity;
-        easelStorage.setMarkDirtyNotificationLambda(easelContainer::markDirty);
-
-        return easelContainer;
+    public void setEntity(EaselEntity entity)
+    {
+        this.entity = entity;
     }
 
-    public static EaselContainer createContainerClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
+    public static EaselContainerMenu createContainerServerSide(int windowID, Inventory playerInventory, EaselEntity entity, EaselContainer easelContainer) {
+        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer);
+        easelContainerMenu.setEntity(entity);
+
+        return easelContainerMenu;
+    }
+
+    public static EaselContainerMenu createContainerClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         // it seems like we have to utilize extraData to pass the canvas data
         // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
-        EaselStorage easelStorage = EaselStorage.createForClientSideContainer();
+        EaselContainer easelContainer = new EaselContainer();
 
         String canvasName = SCanvasNamePacket.readCanvasName(networkBuffer);
 
-        EaselContainer easelContainer = new EaselContainer(windowID, playerInventory, easelStorage);
-        easelContainer.setCanvas(canvasName);
+        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer);
+        easelContainerMenu.setCanvas(canvasName);
 
-        return easelContainer;
+        return easelContainerMenu;
     }
 
     @Nullable
-    public EaselTileEntity getTileEntityReference() {
-        return this.tileEntity;
+    public EaselEntity getEntity() {
+        return this.entity;
     }
 
-    public EaselStorage getEaselStorage() {
-        return this.easelStorage;
+    public EaselContainer getEaselContainer() {
+        return this.easelContainer;
     }
 
     /**
@@ -143,27 +139,15 @@ public class EaselContainer extends Container {
     }
 
     public void markDirty() {
-        SEaselCanvasChangePacket canvasSyncMessage = new SEaselCanvasChangePacket(this.containerId, this.easelStorage.getCanvasStack());
-        ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.player), canvasSyncMessage);
-    }
-
-    @Override
-    @OnlyIn(Dist.CLIENT)
-    public void setAll(List<ItemStack> itemStacks) {
-        super.setAll(itemStacks);
-
-        if (this.firstLoadNotification != null) {
-            this.firstLoadNotification.invoke();
-        }
+        SEaselCanvasChangePacket canvasSyncMessage = new SEaselCanvasChangePacket(this.containerId, this.easelContainer.getCanvasStack());
+        ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) this.player), canvasSyncMessage);
     }
 
     public void handleCanvasChange(ItemStack canvasStack) {
         if (canvasStack.getItem() == ModItems.CANVAS) {
-            this.canvas = CanvasItem.getCanvasData(canvasStack, this.world);
-            this.canvasReady = true;
+            this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.world));
         } else {
             this.canvas = null;
-            this.canvasReady = false;
         }
 
         if (this.firstLoadNotification != null) {
@@ -174,22 +158,20 @@ public class EaselContainer extends Container {
     public void setCanvas(String canvasName) {
         if (canvasName.isEmpty() || canvasName.equals(CanvasData.getCanvasCode(0))) {
             this.canvas = null;
-            this.canvasReady = false;
             return;
         }
 
         ICanvasTracker canvasTracker;
 
         if (this.world.isClientSide()) {
-            canvasTracker = this.world.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+            canvasTracker = this.world.getCapability(ModCapabilities.CANVAS_TRACKER).orElse(null);
         } else {
-            canvasTracker = this.world.getServer().overworld().getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
+            canvasTracker = this.world.getServer().overworld().getCapability(ModCapabilities.CANVAS_TRACKER).orElse(null);
         }
 
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
             this.canvas = null;
-            this.canvasReady = false;
             return;
         }
 
@@ -197,16 +179,14 @@ public class EaselContainer extends Container {
 
         if (canvas == null) {
             this.canvas = null;
-            this.canvasReady = false;
             return;
         }
 
-        this.canvas = canvas;
-        this.canvasReady = true;
+        this.canvas = new CanvasHolder<>(canvasName, canvas);
     }
 
     public int getPaletteColor(int paletteSlot) {
-        ItemStack paletteStack = this.easelStorage.getPaletteStack();
+        ItemStack paletteStack = this.easelContainer.getPaletteStack();
 
         if (paletteStack.isEmpty()) {
             return 0xFF000000;
@@ -217,19 +197,19 @@ public class EaselContainer extends Container {
 
     /**
      * This won't update palette color on the other side and used for quick adjustment
-     * To send information about update use {@link EaselContainer#sendPaletteUpdatePacket}
+     * To send information about update use {@link EaselContainerMenu#sendPaletteUpdatePacket}
      * @param paletteSlot
      * @param color
      */
     public void setPaletteColor(int paletteSlot, int color) {
-        ItemStack paletteStack = this.easelStorage.getPaletteStack();
+        ItemStack paletteStack = this.easelContainer.getPaletteStack();
 
         if (paletteStack.isEmpty()) {
             return;
         }
 
         PaletteItem.updatePaletteColor(paletteStack, paletteSlot, color);
-        this.easelStorage.setChanged();
+        this.easelContainer.setChanged();
     }
 
     public void sendPaletteUpdatePacket(int paletteSlot, int color) {
@@ -242,16 +222,28 @@ public class EaselContainer extends Container {
         ModNetwork.simpleChannel.sendToServer(paletteUpdatePacket);
     }
 
-    public CanvasData getCanvasData() {
-        return this.canvas;
+    public @Nullable String getCanvasCode() {
+        if (this.canvas == null) {
+            return null;
+        }
+
+        return this.canvas.code;
+    }
+
+    public @Nullable CanvasData getCanvasData() {
+        if (this.canvas == null) {
+            return null;
+        }
+
+        return this.canvas.data;
     }
 
     public boolean isCanvasAvailable() {
-        return this.canvasReady;
+        return this.canvas == null;
     }
 
     public boolean isPaletteAvailable() {
-        ItemStack paletteStack = this.easelStorage.getPaletteStack();
+        ItemStack paletteStack = this.easelContainer.getPaletteStack();
 
         return !paletteStack.isEmpty();
     }
@@ -268,12 +260,12 @@ public class EaselContainer extends Container {
      * @param color
      */
     public void writePixelOnCanvasClientSide(int pixelX, int pixelY, int color, UUID playerId) {
-        if (!this.canvasReady) {
+        if (!this.isCanvasAvailable()) {
             // Nothing to draw on
             return;
         }
 
-        int index = this.canvas.getPixelIndex(pixelX, pixelY);
+        int index = this.canvas.data.getPixelIndex(pixelX, pixelY);
 
         if (this.writePixelOnCanvas(index, color)) {
             this.checkFrameBuffer();
@@ -286,14 +278,14 @@ public class EaselContainer extends Container {
     }
 
     public void eyedropper(int slotIndex, int pixelX, int pixelY) {
-        int newColor = this.canvas.getColorAt(pixelX, pixelY);
+        int newColor = this.canvas.data.getColorAt(pixelX, pixelY);
 
         this.setPaletteColor(slotIndex, newColor);
         this.sendPaletteUpdatePacket(slotIndex, newColor);
     }
 
     public void bucket(int pixelX, int pixelY, int color) {
-        int position = this.canvas.getPixelIndex(pixelX, pixelY);
+        int position = this.canvas.data.getPixelIndex(pixelX, pixelY);
 
         CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);
         Zetter.LOG.debug("Sending Bucket Tool Packet: " + bucketToolPacket);
@@ -304,7 +296,12 @@ public class EaselContainer extends Container {
      * Immediately update texture for client - not needed for server cause no renderer used here
      */
     protected void updateTextureClient() {
-        CanvasRenderer.getInstance().updateCanvasTexture(this.canvas);
+        if (this.canvas == null) {
+            Zetter.LOG.error("Attempted to update texture with no canvas loaded in easel");
+            return;
+        }
+
+        CanvasRenderer.getInstance().updateCanvasTexture(this.canvas.code, this.canvas.data);
     }
 
     /**
@@ -318,11 +315,11 @@ public class EaselContainer extends Container {
         this.writePixelOnCanvas(index, color); // do nothing for now
 
         // @todo: chceck where damage applied in vanilla
-        this.easelStorage.getPaletteStack().hurtAndBreak(1, this.player, (player) -> {});
+        this.easelContainer.getPaletteStack().hurtAndBreak(1, this.player, (player) -> {});
     }
 
     private boolean writePixelOnCanvas(int index, int color) {
-        if (!this.canvasReady) {
+        if (!this.isCanvasAvailable()) {
             // Most times checking twice, not sure how to avoid
             return false;
         }
@@ -331,7 +328,7 @@ public class EaselContainer extends Container {
             return false;
         }
 
-        if (this.canvas.getColorAt(index) == color) {
+        if (this.canvas.data.getColorAt(index) == color) {
             // Pixel is not changed
             return false;
         }
@@ -399,14 +396,14 @@ public class EaselContainer extends Container {
             this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
         }
 
-        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.getId());
+        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.code);
     }
 
     public void processBucketToolServer(int position, int bucketColor) {
-        final int width = this.canvas.getWidth();
-        final int height = this.canvas.getHeight();
+        final int width = this.canvas.data.getWidth();
+        final int height = this.canvas.data.getHeight();
         final int length = width * height;
-        final int replacedColor = this.canvas.getColorAt(position);
+        final int replacedColor = this.canvas.data.getColorAt(position);
 
         LinkedList<Integer> positionsQueue = new LinkedList<>();
         Vector<Integer> checkedQueue = new Vector<>();
@@ -420,7 +417,7 @@ public class EaselContainer extends Container {
                     // Ignore checked positions if overlap
                     .filter(currentPosition -> !checkedQueue.contains(currentPosition))
                     .forEach(currentPosition -> {
-                        if (this.canvas.getColorAt(currentPosition) == replacedColor) {
+                        if (this.canvas.data.getColorAt(currentPosition) == replacedColor) {
                             positionsQueue.add(currentPosition);
                             paintQueue.add(currentPosition);
                         }
@@ -433,7 +430,7 @@ public class EaselContainer extends Container {
             this.writePixelOnCanvasServerSide(updatePosition, bucketColor);
         }
 
-        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.getId());
+        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.code);
     }
 
     public static Stream<Integer> getNeighborPositions(int currentCenter, int width, int length) {
@@ -469,10 +466,10 @@ public class EaselContainer extends Container {
      * @param canvasData
      * @param timestamp
      */
-    public void processSync(CanvasData canvasData, long packetTimestamp) {
+    public void processSync(String canvasCode, CanvasData canvasData, long packetTimestamp) {
         long timestamp = System.currentTimeMillis();
 
-        NetworkPlayerInfo playerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(this.player.getUUID());
+        PlayerInfo playerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(this.player.getUUID());
         int latency = playerInfo.getLatency();
 
         latency *= 1.1; // 10% jitter
@@ -511,10 +508,10 @@ public class EaselContainer extends Container {
         }
 
         if (mightDesync) {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getType(), canvasData.getId());
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getType(), canvasCode);
         }
 
-        this.canvas = canvasData;
+        this.canvas = new CanvasHolder<>(canvasCode, canvasData);
 
         this.lastSyncReceivedClock = System.currentTimeMillis();
     }
@@ -546,7 +543,7 @@ public class EaselContainer extends Container {
      * Called when the container is closed.
      * Push painting frames so it will be saved
      */
-    public void removed(PlayerEntity playerIn) {
+    public void removed(Player playerIn) {
         super.removed(playerIn);
 
         if (this.world.isClientSide() && !this.getCanvasChanges().isEmpty()) {
@@ -565,7 +562,7 @@ public class EaselContainer extends Container {
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(PlayerEntity playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(Player playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -612,8 +609,8 @@ public class EaselContainer extends Container {
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(PlayerEntity player) {
-        return this.easelStorage.stillValid(player);
+    public boolean stillValid(Player player) {
+        return this.easelContainer.stillValid(player);
     }
 
     @FunctionalInterface

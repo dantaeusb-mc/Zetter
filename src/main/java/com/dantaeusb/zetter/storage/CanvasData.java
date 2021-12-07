@@ -2,9 +2,9 @@ package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.Helper;
+import net.minecraft.nbt.CompoundTag;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 /**
  * It's not enough to just init data, we need to register it with
@@ -13,27 +13,55 @@ import java.nio.ByteOrder;
 public class CanvasData extends AbstractCanvasData {
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_canvas_";
 
-    public CanvasData(String canvasCode) {
-        super(canvasCode);
-    }
-
-    public CanvasData(int canvasId) {
-        super(getCanvasCode(canvasId));
-    }
-
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
     }
 
-    public void initData(int width, int height) {
-        byte[] defaultColor = new byte[width * height * 4];
-        ByteBuffer defaultColorBuffer = ByteBuffer.wrap(defaultColor);
+    private CanvasData() {
+        super();
+    }
+
+    /**
+     * Create empty canvas data filled with canvas color
+     * @param resolution
+     * @param width
+     * @param height
+     * @return
+     */
+    public static CanvasData createFresh(Resolution resolution, int width, int height) {
+        byte[] color = new byte[width * height * 4];
+        ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
         for (int x = 0; x < width * height; x++) {
             defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
         }
 
-        this.initData(Helper.getResolution(), width, height, defaultColor);
+        final CanvasData newCanvas = new CanvasData();
+        newCanvas.wrapData(resolution, width, height, color);
+
+        return newCanvas;
+    }
+
+    /**
+     * Create canvas from existing data
+     * @param resolution
+     * @param width
+     * @param height
+     * @param color
+     * @return
+     */
+    public static CanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
+        final CanvasData newCanvas = new CanvasData();
+        newCanvas.wrapData(resolution, width, height, color);
+
+        return newCanvas;
+    }
+
+    public static CanvasData createLoaded(CompoundTag compoundTag) {
+        final CanvasData newCanvas = new CanvasData();
+        newCanvas.load(compoundTag);
+
+        return newCanvas;
     }
 
     public boolean isEditable() {

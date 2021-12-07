@@ -2,15 +2,18 @@ package com.dantaeusb.zetter.core;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.block.ArtistTableBlock;
-import com.dantaeusb.zetter.block.EaselBlock;
-import net.minecraft.block.*;
-import net.minecraft.block.material.Material;
+import com.dantaeusb.zetter.deprecated.block.EaselBlock;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModBlocks
@@ -19,8 +22,8 @@ public class ModBlocks
 
     private static final List<Block> BLOCKS = new ArrayList<>();
 
-    public static final Block ARTIST_TABLE = registerBlockItem("artist_table", new ArtistTableBlock(AbstractBlock.Properties.of(Material.WOOD).strength(2.5F).sound(SoundType.WOOD)));
-    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(AbstractBlock.Properties.of(Material.WOOD).strength(1.5F).sound(SoundType.WOOD).noOcclusion()));
+    public static final Block ARTIST_TABLE = registerBlockItem("artist_table", new ArtistTableBlock(BlockBehaviour.Properties.of(Material.WOOD).strength(2.5F).sound(SoundType.WOOD)));
+    public static final Block EASEL = registerBlockItem("easel", new EaselBlock(BlockBehaviour.Properties.of(Material.WOOD).strength(1.5F).sound(SoundType.WOOD).noOcclusion()));
 
     private static Block registerBlockItem(String name, Block block)
     {

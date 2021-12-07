@@ -1,36 +1,32 @@
 package com.dantaeusb.zetter.client.gui.painting;
 
-import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
-import com.dantaeusb.zetter.container.EaselContainer;
-import com.dantaeusb.zetter.item.CanvasItem;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.IRenderable;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.dantaeusb.zetter.menu.EaselContainerMenu;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 
-public class PaletteWidget extends AbstractPaintingWidget implements IRenderable {
+public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     final static int PALETTE_SCALE_FACTOR = 10;
     final static int PALETTE_OFFSET = PALETTE_SCALE_FACTOR + 1; // 1px border between slots
 
     final static int PALETTE_COLS = 2;
 
     final static int WIDTH = PALETTE_SCALE_FACTOR + PALETTE_OFFSET;
-    final static int HEIGHT = PALETTE_SCALE_FACTOR + ((EaselContainer.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET);
+    final static int HEIGHT = PALETTE_SCALE_FACTOR + ((EaselContainerMenu.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET);
 
     private int currentPaletteSlot = 0;
 
     public PaletteWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslationTextComponent("container.zetter.painting.palette"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.palette"));
     }
 
     @Override
     public @Nullable
-    ITextComponent getTooltip(int mouseX, int mouseY) {
+    Component getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
@@ -51,7 +47,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements IRenderable
             return false;
         }
 
-        for (int i = 0; i < EaselContainer.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < EaselContainerMenu.PALETTE_SLOTS; i++) {
             int slotX = this.x + (i % 2) * PALETTE_OFFSET;
             int slotY = this.y + (i / 2) * PALETTE_OFFSET;
 
@@ -71,17 +67,17 @@ public class PaletteWidget extends AbstractPaintingWidget implements IRenderable
         return true;
     }
 
-    public void render(MatrixStack matrixStack) {
+    public void render(PoseStack matrixStack) {
         drawPalette(matrixStack);
         drawPaletteSelector(matrixStack);
     }
 
-    protected void drawPalette(MatrixStack matrixStack) {
+    protected void drawPalette(PoseStack matrixStack) {
         if (!this.parentScreen.isPaletteAvailable()) {
             return;
         }
 
-        for (int i = 0; i < EaselContainer.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < EaselContainerMenu.PALETTE_SLOTS; i++) {
             int fromX = this.x + (i % 2) * PALETTE_OFFSET;
             int fromY = this.y + (i / 2) * PALETTE_OFFSET;
 
@@ -91,7 +87,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements IRenderable
         }
     }
 
-    protected void drawPaletteSelector(MatrixStack matrixStack) {
+    protected void drawPaletteSelector(PoseStack matrixStack) {
         if (!this.parentScreen.isPaletteAvailable()) {
             return;
         }

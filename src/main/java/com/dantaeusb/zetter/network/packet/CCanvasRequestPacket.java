@@ -4,10 +4,10 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.network.ClientHandler;
 import com.dantaeusb.zetter.network.ServerHandler;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.network.PacketBuffer;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import java.util.function.Supplier;
 
 import java.util.function.Supplier;
 
@@ -27,7 +27,7 @@ public class CCanvasRequestPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CCanvasRequestPacket readPacketData(PacketBuffer buf) {
+    public static CCanvasRequestPacket readPacketData(FriendlyByteBuf buf) {
         CCanvasRequestPacket packet = new CCanvasRequestPacket();
 
         packet.type = AbstractCanvasData.Type.values()[buf.readInt()];
@@ -39,7 +39,7 @@ public class CCanvasRequestPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(PacketBuffer buf) {
+    public void writePacketData(FriendlyByteBuf buf) {
         buf.writeInt(this.type.ordinal());
         buf.writeUtf(this.canvasName);
     }
@@ -56,7 +56,7 @@ public class CCanvasRequestPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
-        final ServerPlayerEntity sendingPlayer = ctx.getSender();
+        final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CRequestSyncPacket was received");
         }

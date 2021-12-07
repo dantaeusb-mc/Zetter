@@ -2,16 +2,16 @@ package com.dantaeusb.zetter.canvastracker;
 
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.INBT;
-import net.minecraft.util.Direction;
-import net.minecraft.world.World;
-import net.minecraftforge.common.capabilities.Capability;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class CanvasDefaultTracker implements ICanvasTracker  {
-    public World getWorld() {
+public class CanvasDefaultTracker implements ICanvasTracker {
+    public Level getWorld() {
         return null;
     }
 
@@ -37,30 +37,27 @@ public class CanvasDefaultTracker implements ICanvasTracker  {
 
     @Nullable
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
-        return (T) new DummyCanvasData();
+        return (T) DummyCanvasData.createDummy();
     }
 
-    public void registerCanvasData(AbstractCanvasData canvasData) {}
+    public void registerCanvasData(String canvasCode, AbstractCanvasData canvasData) {
 
-    // Convert to/from NBT
-    static class CanvasTrackerNBTStorage implements Capability.IStorage<CanvasDefaultTracker> {
-        @Override
-        public INBT writeNBT(Capability<CanvasDefaultTracker> capability, CanvasDefaultTracker instance, @Nullable Direction side) {
-            CompoundNBT compound = new CompoundNBT();
-            compound.putInt(NBT_TAG_LAST_CANVAS_ID, instance.getLastCanvasId());
-            compound.putInt(NBT_TAG_LAST_PAINTING_ID, instance.getLastPaintingId());
-            return compound;
-        }
+    }
 
-        @Override
-        public void readNBT(Capability<CanvasDefaultTracker> capability, CanvasDefaultTracker instance, Direction side, @Nullable INBT nbt) {
-            instance.setLastCanvasId(0);
+    public Tag serializeNBT() {
+        CompoundTag compound = new CompoundTag();
+        compound.putInt(NBT_TAG_LAST_CANVAS_ID, this.getLastCanvasId());
+        compound.putInt(NBT_TAG_LAST_PAINTING_ID, this.getLastPaintingId());
+        return compound;
+    }
 
-            if (nbt.getType() == CompoundNBT.TYPE) {
-                CompoundNBT castedNBT = (CompoundNBT) nbt;
-                instance.setLastCanvasId(castedNBT.getInt(NBT_TAG_LAST_CANVAS_ID));
-                instance.setLastPaintingId(castedNBT.getInt(NBT_TAG_LAST_PAINTING_ID));
-            }
+    public void deserializeNBT(Tag nbt) {
+        this.setLastCanvasId(0);
+
+        if (nbt.getType() == CompoundTag.TYPE) {
+            CompoundTag castedNBT = (CompoundTag) nbt;
+            this.setLastCanvasId(castedNBT.getInt(NBT_TAG_LAST_CANVAS_ID));
+            this.setLastPaintingId(castedNBT.getInt(NBT_TAG_LAST_PAINTING_ID));
         }
     }
 }

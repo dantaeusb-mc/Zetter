@@ -2,33 +2,40 @@ package com.dantaeusb.zetter.client.renderer.entity;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import com.dantaeusb.zetter.client.model.EaselModel;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
+import com.dantaeusb.zetter.core.ModEntities;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
-import jdk.nashorn.internal.ir.Block;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.BlockRendererDispatcher;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererManager;
-import net.minecraft.client.renderer.model.IBakedModel;
-import net.minecraft.client.renderer.model.ModelRenderer;
-import net.minecraft.client.renderer.model.ModelResourceLocation;
+import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.util.Direction;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.math.vector.Vector3f;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import com.mojang.math.Vector3f;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.client.model.data.EmptyModelData;
 
 import javax.annotation.Nullable;
@@ -58,6 +65,14 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
     public static final HashMap<String, ModelResourceLocation> FRAME_MODELS = new HashMap<String, ModelResourceLocation>();
     public static final HashMap<String, ResourceLocation> PLATE_TEXTURES = new HashMap<String, ResourceLocation>();
 
+    private final ModelPart platePart;
+
+    public CustomPaintingRenderer(EntityRendererProvider.Context context) {
+        super(context);
+
+        this.platePart = context.bakeLayer(ModEntities.PAINTING_PLATE_LAYER);
+    }
+
     static {
         for (String modelCode: CustomPaintingRenderer.MODEL_CODES) {
             for (CustomPaintingEntity.Materials material: CustomPaintingEntity.Materials.values()) {
@@ -72,25 +87,22 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         }
     }
 
-    private final ModelRenderer plate;
-
-    public CustomPaintingRenderer(EntityRendererManager renderManager) {
-        super(renderManager);
-
-        this.plate = new ModelRenderer(16, 16, 0, 0);
-        this.plate.setPos(0.0F, 0, 0.0F);
-        this.plate.addBox(-3.0F, -1.0F, -2.0F, 6.0F, 2.0F, 2.0F, 0.0F, false);
+    public static LayerDefinition createPlateLayer() {
+        MeshDefinition meshdefinition = new MeshDefinition();
+        PartDefinition partdefinition = meshdefinition.getRoot();
+        partdefinition.addOrReplaceChild("main", CubeListBuilder.create().texOffs(0, 0).addBox(-3.0F, -1.0F, -2.0F, 6.0F, 2.0F, 2.0F), PartPose.ZERO);
+        return LayerDefinition.create(meshdefinition, 16, 16);
     }
 
-    public void render(CustomPaintingEntity entity, float entityYaw, float partialTicks, MatrixStack matrixStack, IRenderTypeBuffer renderBuffers, int combinedLight) {
-        World world = entity.getCommandSenderWorld();
+    public void render(CustomPaintingEntity entity, float entityYaw, float partialTicks, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
+        Level world = entity.getCommandSenderWorld();
 
         matrixStack.pushPose();
 
         /**
          * @todo: use this offset
          */
-        Vector3d vector3d = this.getRenderOffset(entity, partialTicks);
+        Vec3 vector3d = this.getRenderOffset(entity, partialTicks);
         matrixStack.translate(-vector3d.x(), -vector3d.y(), -vector3d.z());
 
         Direction facingDirection = entity.getDirection();
@@ -101,7 +113,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
         // On directions perpendicular to the facing it would be just 0
         matrixStack.translate((double)facingDirection.getStepX() * offsetAlignment, (double)facingDirection.getStepY() * offsetAlignment, (double)facingDirection.getStepZ() * offsetAlignment);
-        matrixStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entity.yRot));
+        matrixStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entity.getYRot()));
 
         // Copied from ItemFrameRenderer
         final boolean flag = entity.isInvisible();
@@ -120,7 +132,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                 for (int v = 0; v < blockHeight; v++) {
                     matrixStack.translate(0, -v, 0D);
 
-                    int offsetCombinedLight = WorldRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, 0, v));
+                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, 0, v));
 
                     if (v == 0) {
                         this.renderModel(entity, "top_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -136,7 +148,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                 for (int h = 0; h < blockWidth; h++) {
                     matrixStack.translate(-h, 0, 0D);
 
-                    int offsetCombinedLight = WorldRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, 0));
+                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, 0));
 
                     if (h == 0) {
                         this.renderModel(entity, "left_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -156,7 +168,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
                     for (int h = 0; h < blockWidth; h++) {
                         matrixStack.translate(-h, -v, 0D);
 
-                        int offsetCombinedLight = WorldRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, v));
+                        int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, v));
 
                         if (v == 0) {
                             if (h == 0) {
@@ -211,7 +223,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
             matrixStack.translate(-16.0D, -16.0D, 0D);
 
-            CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, canvasData, combinedLight);
+            CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getCanvasCode(), canvasData, combinedLight);
             matrixStack.popPose();
         } else {
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getCanvasCode());
@@ -224,8 +236,8 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             matrixStack.translate(0.0D, blockHeight / -2.0D, 0.5D);
 
             final String material = entity.getMaterial().toString();
-            IVertexBuilder vertexBuilder = renderBuffers.getBuffer(RenderType.entityCutout(PLATE_TEXTURES.get(material)));
-            this.plate.render(matrixStack, vertexBuilder, combinedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            VertexConsumer vertexBuilder = renderBuffers.getBuffer(RenderType.entityCutout(PLATE_TEXTURES.get(material)));
+            this.platePart.render(matrixStack, vertexBuilder, combinedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
 
             matrixStack.popPose();
         }
@@ -235,15 +247,15 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         super.render(entity, entityYaw, partialTicks, matrixStack, renderBuffers, combinedLight);
     }
 
-    private void renderModel(CustomPaintingEntity entity, String key, MatrixStack matrixStack, IRenderTypeBuffer renderBuffers, int combinedLight) {
+    private void renderModel(CustomPaintingEntity entity, String key, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
         ModelResourceLocation modelResourceLocation = FRAME_MODELS.get(entity.getMaterial() + "/" + key);
 
-        MatrixStack.Entry currentMatrix = matrixStack.last();
-        IVertexBuilder vertexBuffer = renderBuffers.getBuffer(RenderType.solid());
+        PoseStack.Pose currentMatrix = matrixStack.last();
+        VertexConsumer vertexBuffer = renderBuffers.getBuffer(RenderType.solid());
 
-        IBakedModel frameModel = Minecraft.getInstance().getModelManager().getModel(modelResourceLocation);
+        BakedModel frameModel = Minecraft.getInstance().getModelManager().getModel(modelResourceLocation);
 
-        BlockRendererDispatcher rendererDispatcher = Minecraft.getInstance().getBlockRenderer();
+        BlockRenderDispatcher rendererDispatcher = Minecraft.getInstance().getBlockRenderer();
         rendererDispatcher.getModelRenderer().renderModel(currentMatrix, vertexBuffer, null, frameModel,
                 1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
     }
@@ -263,7 +275,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
     }
 
     @Nullable
-    public static PaintingData getCanvasData(World world, String canvasName) {
+    public static PaintingData getCanvasData(Level world, String canvasName) {
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
         if (canvasTracker == null) {

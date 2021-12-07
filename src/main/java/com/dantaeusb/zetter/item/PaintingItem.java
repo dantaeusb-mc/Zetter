@@ -1,28 +1,26 @@
 package com.dantaeusb.zetter.item;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.StringUtils;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.StringTextComponent;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.World;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.StringUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.List;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
 
 public class PaintingItem extends Item
 {
@@ -31,59 +29,59 @@ public class PaintingItem extends Item
     public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
 
     public PaintingItem() {
-        super(new Properties().stacksTo(1).tab(ItemGroup.TAB_TOOLS));
+        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
     }
 
     public PaintingItem(Item.Properties properties) {
         super(properties);
     }
 
-    public static void setPaintingData(ItemStack stack, PaintingData paintingData) {
-        setPaintingCode(stack, paintingData.getId());
+    public static void setPaintingData(ItemStack stack, String paintingCode, PaintingData paintingData) {
+        setPaintingCode(stack, paintingCode);
 
         setCachedAuthorName(stack, paintingData.getAuthorName());
         setCachedPaintingName(stack, paintingData.getPaintingName());
 
         String widthBlocks = Integer.toString((paintingData.getWidth() / paintingData.getResolution().getNumeric()));
         String heightBlocks = Integer.toString((paintingData.getHeight() / paintingData.getResolution().getNumeric()));
-        TranslationTextComponent blockSizeString = (new TranslationTextComponent("item.zetter.painting.size", widthBlocks, heightBlocks));
+        TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", widthBlocks, heightBlocks));
 
         setCachedStringSize(stack, blockSizeString.getString());
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         if (stack.hasTag()) {
             String authorName = getCachedAuthorName(stack);
 
-            if (StringUtils.isNullOrEmpty(authorName)) {
-                authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
+            if (StringUtil.isNullOrEmpty(authorName)) {
+                authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
             }
 
-            tooltip.add((new TranslationTextComponent("book.byAuthor", authorName)).withStyle(TextFormatting.GRAY));
+            tooltip.add((new TranslatableComponent("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
 
             String stringSize = getCachedStringSize(stack);
 
-            if (!StringUtils.isNullOrEmpty(stringSize)) {
-                tooltip.add((new StringTextComponent(stringSize)).withStyle(TextFormatting.GRAY));
+            if (!StringUtil.isNullOrEmpty(stringSize)) {
+                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
             }
         }
     }
 
-    public ITextComponent getName(ItemStack stack) {
+    public Component getName(ItemStack stack) {
         if (stack.hasTag()) {
             String paintingName = getCachedPaintingName(stack);
 
-            if (StringUtils.isNullOrEmpty(paintingName)) {
-                if (StringUtils.isNullOrEmpty(getPaintingCode(stack))) {
+            if (StringUtil.isNullOrEmpty(paintingName)) {
+                if (StringUtil.isNullOrEmpty(getPaintingCode(stack))) {
                     return super.getName(stack);
                 }
 
-                paintingName = new TranslationTextComponent("item.zetter.painting.unnamed").getString();
+                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
             }
 
-            if (!net.minecraft.util.StringUtils.isNullOrEmpty(paintingName)) {
-                return new StringTextComponent(paintingName);
+            if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
+                return new TextComponent(paintingName);
             }
         }
 
@@ -96,7 +94,7 @@ public class PaintingItem extends Item
 
     @Nullable
     public static String getPaintingCode(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -111,7 +109,7 @@ public class PaintingItem extends Item
 
     @Nullable
     public static String getCachedAuthorName(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -126,7 +124,7 @@ public class PaintingItem extends Item
 
     @Nullable
     public static String getCachedPaintingName(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -141,7 +139,7 @@ public class PaintingItem extends Item
 
     @Nullable
     public static String getCachedStringSize(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;

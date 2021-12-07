@@ -1,28 +1,30 @@
 package com.dantaeusb.zetter.client.gui;
 
 import com.dantaeusb.zetter.client.gui.painting.*;
-import com.dantaeusb.zetter.container.EaselContainer;
+import com.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.IContainerListener;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.text.ITextComponent;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerListener;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-public class PaintingScreen extends ContainerScreen<EaselContainer> implements IContainerListener {
+public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener {
     // This is the resource location for the background image
     private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
 
-    protected final List<AbstractPaintingWidget> widgets = Lists.newArrayList();
+    protected final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
 
     private ToolsWidget toolsWidget;
     private CanvasWidget canvasWidget;
@@ -31,8 +33,12 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     private SlidersWidget slidersWidget;
     private HelpWidget helpWidget;
 
-    public PaintingScreen(EaselContainer paintingContainer, PlayerInventory playerInventory, ITextComponent title) {
+    private final Player player;
+
+    public PaintingScreen(EaselContainerMenu paintingContainer, Inventory playerInventory, Component title) {
         super(paintingContainer, playerInventory, title);
+
+        this.player = playerInventory.player;
 
         this.imageWidth = 176;
         this.imageHeight = 185;
@@ -69,12 +75,12 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
 
         this.colorCodeWidget.initFields();
 
-        this.addWidget(this.canvasWidget);
-        this.addWidget(this.paletteWidget);
-        this.addWidget(this.toolsWidget);
-        this.addWidget(this.slidersWidget);
-        this.addWidget(this.colorCodeWidget);
-        this.addWidget(this.helpWidget);
+        this.addPaintingWidget(this.canvasWidget);
+        this.addPaintingWidget(this.paletteWidget);
+        this.addPaintingWidget(this.toolsWidget);
+        this.addPaintingWidget(this.slidersWidget);
+        this.addPaintingWidget(this.colorCodeWidget);
+        this.addPaintingWidget(this.helpWidget);
 
         this.getMenu().setFirstLoadNotification(this::firstLoadUpdate);
 
@@ -83,9 +89,16 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         this.menu.addSlotListener(this);
     }
 
-    public void addWidget(AbstractPaintingWidget widget) {
-        this.widgets.add(widget);
-        this.addChildren(widget);
+    public void addPaintingWidget(AbstractPaintingWidget widget) {
+        this.paintingWidgets.add(widget);
+        this.addWidget(widget);
+    }
+
+    /**
+     * Make add widget "public" so painting widgets can pipe their components to this screen
+     */
+    public <T extends GuiEventListener & NarratableEntry> void pipeWidget(T widget) {
+        this.addWidget(widget);
     }
 
     public void removed() {
@@ -96,11 +109,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
      * Expose some methods for widgets
      */
 
-    public void addChildren(IGuiEventListener eventListener) {
-        this.children.add(eventListener);
-    }
-
-    public FontRenderer getFont() {
+    public Font getFont() {
         return this.font;
     }
 
@@ -150,7 +159,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     public void useTool(int canvasX, int canvasY) {
         switch (this.toolsWidget.getCurrentTool()) {
             case PENCIL:
-                this.getMenu().writePixelOnCanvasClientSide(canvasX, canvasY, this.getCurrentColor(), this.inventory.player.getUUID());
+                this.getMenu().writePixelOnCanvasClientSide(canvasX, canvasY, this.getCurrentColor(), this.getPlayer().getUUID());
                 break;
             case EYEDROPPER:
                 this.getMenu().eyedropper(this.paletteWidget.getCurrentPaletteSlot(), canvasX, canvasY);
@@ -163,24 +172,25 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     }
 
     @Override
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
         super.render(matrixStack, mouseX, mouseY, partialTicks);
         this.renderTooltip(matrixStack, mouseX, mouseY);
     }
 
     @Override
-    public void tick() {
-        super.tick();
+    public void containerTick() {
+        super.containerTick();
 
         this.getMenu().tick();
         this.colorCodeWidget.tick();
     }
 
     @Override
-    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        this.minecraft.getTextureManager().bind(PAINTING_RESOURCE);
+    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
 
         this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
@@ -193,12 +203,13 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     }
 
     @Override
-    protected void renderTooltip(MatrixStack matrixStack, int x, int y) {
+    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
+
         super.renderTooltip(matrixStack, x, y);
 
-        for (AbstractPaintingWidget widget : this.widgets) {
+        for (AbstractPaintingWidget widget : this.paintingWidgets) {
             if (widget.isMouseOver(x, y)) {
-                ITextComponent tooltip = widget.getTooltip(x, y);
+                Component tooltip = widget.getTooltip(x, y);
 
                 if (tooltip != null) {
                     this.renderTooltip(matrixStack, tooltip, x, y);
@@ -213,7 +224,7 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
      * @param mouseY
      */
     @Override
-    protected void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
         // Do not draw titles to save some extra space
     }
 
@@ -268,6 +279,23 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
+    public Player getPlayer() {
+        return this.player;
+    }
+
+    @Override
+    public void dataChanged(AbstractContainerMenu p_150524_, int p_150525_, int p_150526_) {
+
+    }
+
+    /**
+     * Sends the contents of an inventory slot to the client-side Container. This doesn't have to match the actual
+     * contents of that slot.
+     */
+    public void slotChanged(AbstractContainerMenu containerToSend, int slotInd, ItemStack stack) {
+
+    }
+
     /**
      * Helpers
      */
@@ -286,26 +314,5 @@ public class PaintingScreen extends ContainerScreen<EaselContainer> implements I
     // Returns true if the given x,y coordinates are within the given rectangle
     public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY){
         return ((mouseX >= x && mouseX <= x+xSize) && (mouseY >= y && mouseY <= y+ySize));
-    }
-
-    /**
-     * update the crafting window inventory with the items in the list
-     */
-    public void refreshContainer(Container containerToSend, NonNullList<ItemStack> itemsList) {
-    }
-
-    /**
-     * Sends two ints to the client-side Container. Used for furnace burning time, smelting progress, brewing progress,
-     * and enchanting level. Normally the first int identifies which variable to update, and the second contains the new
-     * value. Both are truncated to shorts in non-local SMP.
-     */
-    public void setContainerData(Container containerIn, int varToUpdate, int newValue) {
-    }
-
-    /**
-     * Sends the contents of an inventory slot to the client-side Container. This doesn't have to match the actual
-     * contents of that slot.
-     */
-    public void slotChanged(Container containerToSend, int slotInd, ItemStack stack) {
     }
 }

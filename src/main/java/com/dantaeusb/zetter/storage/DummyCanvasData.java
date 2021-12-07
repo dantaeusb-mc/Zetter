@@ -1,8 +1,10 @@
 package com.dantaeusb.zetter.storage;
 
 import com.dantaeusb.zetter.Zetter;
-import net.minecraft.nbt.CompoundNBT;
+import com.dantaeusb.zetter.core.Helper;
+import net.minecraft.nbt.CompoundTag;
 
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
@@ -11,12 +13,41 @@ import java.nio.ByteOrder;
  * @see com.dantaeusb.zetter.canvastracker.CanvasServerTracker::registerCanvasData();
  */
 public class DummyCanvasData extends AbstractCanvasData {
-    public DummyCanvasData() {
-        super(Zetter.MOD_ID + "_dummy");
+    private DummyCanvasData() {
+        super();
     }
 
-    public DummyCanvasData(String name) {
-        super(name);
+    public static DummyCanvasData createDummy() {
+        int width = Helper.getResolution().getNumeric();
+        int height = Helper.getResolution().getNumeric();
+        Resolution resolution = Helper.getResolution();
+
+        return DummyCanvasData.createDummy(width, height, resolution);
+    }
+
+    public static DummyCanvasData createDummy(int width, int height, Resolution resolution) {
+
+        byte[] color = new byte[width * height * 4];
+        ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
+
+        final int halfWidth = width / 2;
+        final int halfHeight = width / 2;
+
+        for (int x = 0; x < width * height; x++) {
+            defaultColorBuffer.putInt(x * 4, width > halfWidth ^ height > halfHeight ? Helper.DUMMY_PINK_COLOR : Helper.DUMMY_BLACK_COLOR);
+        }
+
+        final DummyCanvasData newDummyCanvas = new DummyCanvasData();
+        newDummyCanvas.wrapData(resolution, width, height, color);
+
+        return newDummyCanvas;
+    }
+
+    public static DummyCanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
+        final DummyCanvasData newCanvas = new DummyCanvasData();
+        newCanvas.wrapData(resolution, width, height, color);
+
+        return newCanvas;
     }
 
     protected void updateColorData(byte[] color) {
@@ -35,14 +66,14 @@ public class DummyCanvasData extends AbstractCanvasData {
         return Type.DUMMY;
     }
 
-    public void load(CompoundNBT compound) {
+    public void load(CompoundTag compoundTag) {
         Zetter.LOG.error("Trying to read into dummy canvas!");
     }
 
-    public CompoundNBT save(CompoundNBT compound) {
+    public CompoundTag save(CompoundTag compoundTag) {
         Zetter.LOG.error("Trying to save dummy canvas!");
 
-        return compound;
+        return compoundTag;
     }
 }
 

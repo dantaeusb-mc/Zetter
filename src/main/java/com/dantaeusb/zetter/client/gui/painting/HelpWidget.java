@@ -2,15 +2,14 @@ package com.dantaeusb.zetter.client.gui.painting;
 
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
 import com.dantaeusb.zetter.core.ClientHelper;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.IRenderable;
-import net.minecraft.util.Util;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 
-public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
+public class HelpWidget extends AbstractPaintingWidget implements Widget {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#painting";
 
     final static int BUTTON_WIDTH = 11;
@@ -22,7 +21,7 @@ public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
     boolean clicked = false;
 
     public HelpWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslationTextComponent("container.zetter.painting.help"));
+        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslatableComponent("container.zetter.painting.help"));
 
         if (!ClientHelper.openUriAllowed()) {
             this.active = false;
@@ -31,8 +30,8 @@ public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
     }
 
     @Override
-    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
-        return new TranslationTextComponent("container.zetter.painting.help");
+    public @Nullable Component getTooltip(int mouseX, int mouseY) {
+        return new TranslatableComponent("container.zetter.painting.help");
     }
 
     @Override
@@ -53,7 +52,7 @@ public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) {
             return;
         }
@@ -61,7 +60,7 @@ public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
         drawButton(matrixStack, mouseX, mouseY);
     }
 
-    protected void drawButton(MatrixStack matrixStack, int mouseX, int mouseY) {
+    protected void drawButton(PoseStack matrixStack, int mouseX, int mouseY) {
         int buttonU = BUTTON_POSITION_U;
 
         if (this.clicked) {

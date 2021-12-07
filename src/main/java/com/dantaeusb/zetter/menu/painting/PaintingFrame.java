@@ -1,4 +1,4 @@
-package com.dantaeusb.zetter.container.painting;
+package com.dantaeusb.zetter.menu.painting;
 
 import java.util.UUID;
 

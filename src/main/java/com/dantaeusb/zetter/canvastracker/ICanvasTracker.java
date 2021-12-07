@@ -2,7 +2,8 @@ package com.dantaeusb.zetter.canvastracker;
 
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.world.World;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
@@ -22,9 +23,13 @@ public interface ICanvasTracker {
 
     void setLastPaintingId(int id);
 
-    World getWorld();
+    Level getWorld();
 
     <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type);
 
-    void registerCanvasData(AbstractCanvasData canvasData);
+    void registerCanvasData(String canvasCode, AbstractCanvasData canvasData);
+
+    Tag serializeNBT();
+
+    void deserializeNBT(Tag nbt);
 }

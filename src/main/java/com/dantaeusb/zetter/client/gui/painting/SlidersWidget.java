@@ -2,19 +2,17 @@ package com.dantaeusb.zetter.client.gui.painting;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.IRenderable;
-import net.minecraft.client.gui.widget.Widget;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.util.Mth;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.awt.*;
 import java.util.function.BiFunction;
 
-public class SlidersWidget extends AbstractPaintingWidget implements IRenderable {
+public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     final static int SLIDER_WIDTH = 150;
     final static int SLIDER_HEIGHT = 9;
 
@@ -29,11 +27,11 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
     private Integer sliderDraggingIndex;
 
     public SlidersWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslationTextComponent("container.zetter.painting.sliders"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.sliders"));
     }
 
     @Override
-    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
+    public @Nullable Component getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
@@ -74,7 +72,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    public void render(MatrixStack matrixStack) {
+    public void render(PoseStack matrixStack) {
         drawSliderBackground(matrixStack, 0, this.isDraggingSlider(0));
         drawSliderBackground(matrixStack, 1, this.isDraggingSlider(1));
         drawSliderBackground(matrixStack, 2, this.isDraggingSlider(2));
@@ -88,7 +86,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
         drawHandler(matrixStack, 2, this.sliderValuePercent, this.isDraggingSlider(2));
     }
 
-    protected void drawSliderBackground(MatrixStack matrixStack, int verticalOffset, boolean active) {
+    protected void drawSliderBackground(PoseStack matrixStack, int verticalOffset, boolean active) {
         final int SLIDER_POSITION_U = 5;
         final int SLIDER_POSITION_V = 217;
 
@@ -103,7 +101,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
         this.blit(matrixStack, this.x, top, SLIDER_POSITION_U, sliderV, SLIDER_WIDTH, SLIDER_HEIGHT);
     }
 
-    protected void drawSliderForeground(MatrixStack matrixStack, int verticalOffset, BiFunction<float[], Float, Integer> getColorLambda, boolean active) {
+    protected void drawSliderForeground(PoseStack matrixStack, int verticalOffset, BiFunction<float[], Float, Integer> getColorLambda, boolean active) {
         int sliderContentGlobalLeft = this.x + 3;
         int sliderContentGlobalTop = this.y + (verticalOffset * (SLIDER_HEIGHT + SLIDER_DISTANCE)) + 3;
 
@@ -181,7 +179,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
         this.sliderDraggingIndex = sliderIndex;
 
         float percent = (float) (mouseX - this.x - 3) / (SLIDER_WIDTH - 6);
-        float percentC = MathHelper.clamp(percent, 0.0f, 1.0f);
+        float percentC = Mth.clamp(percent, 0.0f, 1.0f);
 
         this.updateSliderPosition(sliderIndex, percentC);
     }
@@ -217,7 +215,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements IRenderable
      * Handlers
      */
 
-    protected void drawHandler(MatrixStack matrixStack, int verticalOffset, float percent, boolean active) {
+    protected void drawHandler(PoseStack matrixStack, int verticalOffset, float percent, boolean active) {
         final int HANDLER_POSITION_U = 0;
         final int HANDLER_POSITION_V = 216;
         final int HANDLER_WIDTH = 5;

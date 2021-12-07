@@ -1,7 +1,6 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
     }
     dependencies {
@@ -12,15 +11,17 @@ apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.11.1-1.16.3-rc'
+version = '0.11.1-1.17.1-rc'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = 'zetter'
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'official', version: '1.16.5'
+    mappings channel: 'official', version: '1.17.1'
 
     runs {
         client {
@@ -80,7 +81,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.16.3-34.1.0'
+    minecraft 'net.minecraftforge:forge:1.17.1-37.1.0'
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
@@ -91,7 +92,7 @@ jar {
             "Specification-Vendor": "dantaeusb",
             "Specification-Version": "0.11.1-rc",
             "Implementation-Title": project.name,
-            "Implementation-Version": "${version}",
+            "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])

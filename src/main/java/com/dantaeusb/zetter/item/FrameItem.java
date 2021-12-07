@@ -1,25 +1,32 @@
 package com.dantaeusb.zetter.item;
 
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
 
-import net.minecraft.item.Item.Properties;
+import net.minecraft.world.item.Item.Properties;
+
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 
 public class FrameItem extends PaintingItem {
     private CustomPaintingEntity.Materials material;
     private boolean hasPlate;
 
     public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super(new Properties().stacksTo(1).tab(ItemGroup.TAB_TOOLS));
+        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
 
         this.material = material;
         this.hasPlate = plated;
@@ -41,11 +48,11 @@ public class FrameItem extends PaintingItem {
      * @param livingEntity
      * @return
      */
-    public static byte getHasPaintingPropertyOverride(ItemStack stack, @Nullable World world, @Nullable LivingEntity livingEntity)
+    public static byte getHasPaintingPropertyOverride(ItemStack stack, @Nullable Level world, @Nullable LivingEntity livingEntity, int weirdInt)
     {
         EnumFrameStyle hasPainting;
 
-        if (StringUtils.isNullOrEmpty(getPaintingCode(stack))) {
+        if (StringUtil.isNullOrEmpty(getPaintingCode(stack))) {
             hasPainting = EnumFrameStyle.EMPTY;
         } else {
             hasPainting = EnumFrameStyle.PAINTING;
@@ -60,7 +67,7 @@ public class FrameItem extends PaintingItem {
 
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
-        CompoundNBT compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -73,21 +80,21 @@ public class FrameItem extends PaintingItem {
      * Hanging painting
      */
 
-    public ActionResultType useOn(ItemUseContext context) {
+    public InteractionResult useOn(UseOnContext context) {
         BlockPos blockPos = context.getClickedPos();
         Direction direction = context.getClickedFace();
         BlockPos facePos = blockPos.relative(direction);
-        PlayerEntity player = context.getPlayer();
+        Player player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
 
         if (player != null && !this.canPlace(player, direction, stack, facePos)) {
-            return ActionResultType.FAIL;
+            return InteractionResult.FAIL;
         } else {
-            if (StringUtils.isNullOrEmpty(FrameItem.getPaintingCode(stack))) {
-                return ActionResultType.FAIL;
+            if (StringUtil.isNullOrEmpty(FrameItem.getPaintingCode(stack))) {
+                return InteractionResult.FAIL;
             }
 
-            World world = context.getLevel();
+            Level world = context.getLevel();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
                     world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack)
@@ -99,19 +106,19 @@ public class FrameItem extends PaintingItem {
                     world.addFreshEntity(paintingEntity);
                 }
 
-                player.setItemInHand(Hand.MAIN_HAND, ItemStack.EMPTY);
-                return ActionResultType.sidedSuccess(world.isClientSide);
+                player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+                return InteractionResult.sidedSuccess(world.isClientSide);
             } else {
-                return ActionResultType.CONSUME;
+                return InteractionResult.CONSUME;
             }
         }
     }
 
-    protected boolean canPlace(PlayerEntity playerIn, Direction directionIn, ItemStack itemStackIn, BlockPos posIn) {
+    protected boolean canPlace(Player playerIn, Direction directionIn, ItemStack itemStackIn, BlockPos posIn) {
         return !directionIn.getAxis().isVertical() && playerIn.mayUseItemAt(posIn, directionIn, itemStackIn);
     }
 
-    public enum EnumFrameStyle implements IStringSerializable
+    public enum EnumFrameStyle implements StringRepresentable
     {
         EMPTY(0, "empty", "Missing painting"),
         PAINTING(1, "painting", "Framed painting");
@@ -143,7 +150,7 @@ public class FrameItem extends PaintingItem {
 
         public byte getPropertyOverrideValue() { return nbtId; }
 
-        public static EnumFrameStyle fromNBT(CompoundNBT compoundNBT, String tagname)
+        public static EnumFrameStyle fromNBT(CompoundTag compoundNBT, String tagname)
         {
             byte hasPaintingValue = 0;
 
@@ -159,7 +166,7 @@ public class FrameItem extends PaintingItem {
          * @param compoundNBT
          * @param tagName
          */
-        public void putIntoNBT(CompoundNBT compoundNBT, String tagName)
+        public void putIntoNBT(CompoundTag compoundNBT, String tagName)
         {
             compoundNBT.putByte(tagName, this.nbtId);
         }

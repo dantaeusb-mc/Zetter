@@ -3,15 +3,9 @@ package com.dantaeusb.zetter.core;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.item.*;
-import net.minecraft.block.*;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.Items;
-import net.minecraft.tags.ITag;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.tags.Tag;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -19,6 +13,8 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import net.minecraft.world.level.block.Block;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModItems
@@ -59,7 +55,7 @@ public class ModItems
 
     private static BlockItem registerBlockItem(String name, Block block)
     {
-        Item.Properties itemProps = new Item.Properties().tab(ItemGroup.TAB_TOOLS);
+        Item.Properties itemProps = new Item.Properties().tab(CreativeModeTab.TAB_TOOLS);
         BlockItem blockItem = new BlockItem(block, itemProps);
 
         return (BlockItem) register(name, blockItem);

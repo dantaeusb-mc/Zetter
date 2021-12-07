@@ -2,20 +2,20 @@ package com.dantaeusb.zetter.client.gui.painting;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.client.gui.PaintingScreen;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import net.minecraft.client.gui.IGuiEventListener;
-import net.minecraft.client.gui.IRenderable;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.util.StringUtils;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.util.StringUtil;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderable {
+public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     final static int TEXTBOX_WIDTH = 82;
     final static int TEXTBOX_HEIGHT = 16;
 
@@ -24,10 +24,10 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("\\p{XDigit}{1,6}");
     private static final Pattern HEX_COLOR_STRICT_PATTERN = Pattern.compile("(\\p{XDigit}{3}|\\p{XDigit}{6})");
 
-    TextFieldWidget textField;
+    EditBox textField;
 
     Predicate<String> hexColorValidator = (text) -> {
-        if (StringUtils.isNullOrEmpty(text)) {
+        if (StringUtil.isNullOrEmpty(text)) {
             return true;
         } else {
             Matcher matcher = HEX_COLOR_PATTERN.matcher(text);
@@ -36,23 +36,23 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     };
 
     public ColorCodeWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslationTextComponent("container.zetter.painting.color_code"));
+        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslatableComponent("container.zetter.painting.color_code"));
     }
 
     @Override
     public @Nullable
-    ITextComponent getTooltip(int mouseX, int mouseY) {
+    Component getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
     public void initFields() {
-        this.textField = new TextFieldWidget(
+        this.textField = new EditBox(
                 this.parentScreen.getFont(),
                 this.x + TEXTBOX_TEXT_OFFSET + 4,
                 this.y + 4,
                 TEXTBOX_WIDTH - 7,
                 12,
-                new TranslationTextComponent("container.zetter.easel")
+                new TranslatableComponent("container.zetter.easel")
         );
 
         this.textField.setCanLoseFocus(false);
@@ -64,8 +64,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
 
         this.textField.setFilter(this.hexColorValidator);
 
-        //this.textField.setResponder(this::renameItem);
-        this.parentScreen.addChildren(this.textField);
+        this.parentScreen.pipeWidget(this.textField);
     }
 
     public void tick() {
@@ -142,14 +141,14 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
         return this.textField.charTyped(codePoint, modifiers);
     }
 
-    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         drawTextbox(matrixStack);
         //drawModeButtons(matrixStack);
 
         this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
-    protected void drawTextbox(MatrixStack matrixStack) {
+    protected void drawTextbox(PoseStack matrixStack) {
         final int TEXTBOX_POSITION_U = 0;
         final int TEXTBOX_POSITION_V = 185;
 
