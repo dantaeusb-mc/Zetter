@@ -44,10 +44,10 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
     public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         Minecraft minecraft = Minecraft.getInstance();
-
         VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
         poseStack.pushPose();
+        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entityYaw));
 
         boolean visible = !easelEntity.isInvisible() && !easelEntity.isInvisibleTo(minecraft.player);
 
@@ -56,7 +56,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         if (easelEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-            CanvasData canvasData = getCanvasData(easelEntity.level, easelEntity.getCanvasName());
+            CanvasData canvasData = getCanvasData(easelEntity.level, easelEntity.getCanvasCode());
 
             if (canvasData != null) {
                 /**
@@ -67,15 +67,14 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
                 // Scale and prepare
                 poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
-                poseStack.translate(0.0D, 12.5D, 5.0D);
+                poseStack.translate(-8.0D, 12.5D, -3.0D);
                 poseStack.mulPose(Vector3f.XP.rotation(0.1745F));
-
                 poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
                 poseStack.translate(-16.0D, -16.0D, 0.1D);
 
-                CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getCanvasName(), canvasData, packedLight);
+                CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getCanvasCode(), canvasData, packedLight);
             } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, easelEntity.getCanvasName());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, easelEntity.getCanvasCode());
             }
         }
 

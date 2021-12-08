@@ -41,13 +41,6 @@ public class CanvasItem extends Item
         return null;
     }
 
-    @Nullable
-    public static CanvasData getCanvasData(String canvasCode, Level world) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
-
-        return canvasTracker.getCanvasData(canvasCode, CanvasData.class);
-    }
-
     /**
      * @see {@link FilledMapItem#getCustomMapData(ItemStack, World)}
      */
@@ -55,6 +48,12 @@ public class CanvasItem extends Item
     protected CanvasData getCustomCanvasData(ItemStack stack, Level world) {
         CanvasData canvasData = null;
         String canvasCode = getCanvasCode(stack);
+
+        if (canvasCode == null && world instanceof ServerLevel) {
+            canvasCode = createNewCanvasData(world);
+            setCanvasCode(stack, canvasCode);
+        }
+
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
         if (canvasTracker != null) {
@@ -63,9 +62,8 @@ public class CanvasItem extends Item
             Zetter.LOG.error("Unable to find CanvasTracker capability");
         }
 
-        // @todo: Maybe throw an exception if it's happening on client-side?
-        if ((canvasData == null || canvasCode.equals(Helper.FALLBACK_CANVAS_CODE)) && world instanceof ServerLevel) {
-            canvasData = createNewCanvasData(stack, world);
+        if (canvasData == null && world instanceof ServerLevel) {
+            Zetter.LOG.error("Unable to find canvas data after creation");
         }
 
         return canvasData;
@@ -75,10 +73,10 @@ public class CanvasItem extends Item
      * @see {@link FilledMapItem#getMapId(ItemStack)}
      * @return
      */
-    public static String getCanvasCode(ItemStack stack) {
+    public static @Nullable String getCanvasCode(ItemStack stack) {
         CompoundTag compoundNBT = stack.getTag();
 
-        String canvasCode = Helper.FALLBACK_CANVAS_CODE;
+        String canvasCode = null;
 
         if (compoundNBT != null && compoundNBT.contains(NBT_TAG_CANVAS_CODE)) {
             canvasCode = compoundNBT.getString(NBT_TAG_CANVAS_CODE);
@@ -97,23 +95,19 @@ public class CanvasItem extends Item
         stack.getOrCreateTag().putString(NBT_TAG_CANVAS_CODE, canvasCode);
     }
 
-    /**
-     * Called when item is crafted/smelted. Used only by maps so far.
-     */
-    public void onCraftedBy(ItemStack stack, Level worldIn, Player playerIn) {
-        if (worldIn.isClientSide) return;
-
-        createNewCanvasData(stack, worldIn);
+    private static void createAndStoreCanvasData(ItemStack stack, Level world) {
+        String canvasCode = createNewCanvasData(world);
+        setCanvasCode(stack, canvasCode);
     }
 
     /**
      *
-     * @see {@link FilledMapItem#createMapData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}
+     * @see {@link FilledMapItem#createNewSavedData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}
      * @param stack
      * @param worldIn
      * @return
      */
-    private static CanvasData createNewCanvasData(ItemStack stack, Level world) {
+    private static String createNewCanvasData(Level world) {
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
         final int numericResolution = Helper.getResolution().getNumeric();
 
@@ -121,8 +115,6 @@ public class CanvasItem extends Item
         String canvasCode = CanvasData.getCanvasCode(canvasTracker.getNextCanvasId());
         canvasTracker.registerCanvasData(canvasCode, canvasData);
 
-        CanvasItem.setCanvasCode(stack, canvasCode);
-
-        return canvasData;
+        return canvasCode;
     }
 }

@@ -33,7 +33,6 @@ public class CPaintingFrameBufferPacket {
         long frameStartTime = buf.readLong();
         ByteBuf bufferData = buf.readBytes(buf.writerIndex() - buf.readerIndex());
 
-        Zetter.LOG.warn(bufferData);
         packet.paintingFrameBuffer = new PaintingFrameBuffer(frameStartTime, bufferData.nioBuffer());
 
         return packet;

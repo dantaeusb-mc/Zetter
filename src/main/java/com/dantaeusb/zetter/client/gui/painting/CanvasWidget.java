@@ -83,6 +83,9 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             int localX = i % 16;
             int localY = i / 16;
 
+            /**
+             * @todo: better use canvas renderer because there's a texture ready to render
+             */
             int color = this.parentScreen.getColorAt(i);
             int globalX = this.x + localX * CANVAS_SCALE_FACTOR;
             int globalY = this.y + localY * CANVAS_SCALE_FACTOR;

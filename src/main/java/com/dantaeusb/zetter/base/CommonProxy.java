@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.base;
 
 import com.dantaeusb.zetter.Zetter;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
@@ -11,6 +12,8 @@ public class CommonProxy {
         registerListeners(modEventBus);
 
         this.enqueueImc();
+
+        Minecraft test = Minecraft.getInstance();
     }
 
     public void registerListeners(IEventBus modEventBus) {

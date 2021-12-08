@@ -66,7 +66,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         this.player = invPlayer.player;
         this.world = invPlayer.player.level;
-        this.easelContainer = entity.getEaselContainer();
+        this.easelContainer = easelContainer;
         this.canvasChanges = new PaintingFrameBuffer(System.currentTimeMillis());
 
         final int PALETTE_SLOT_X_SPACING = 152;
@@ -76,7 +76,15 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         final int HOTBAR_YPOS = 161;
         final int SLOT_X_SPACING = 18;
 
-        this.addSlot(new Slot(this.easelContainer, 1, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
+        // Adds invisible slot so game handles client-server sync, but not showing that slot to the player in screen
+        this.addSlot(new Slot(this.easelContainer, EaselContainer.CANVAS_SLOT, 0, 0) {
+            public boolean mayPlace(ItemStack stack) {
+                return stack.getItem() == ModItems.CANVAS;
+            }
+            //public boolean isActive() { return false; }
+        });
+
+        this.addSlot(new Slot(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ModItems.PALETTE;
             }
@@ -239,7 +247,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public boolean isCanvasAvailable() {
-        return this.canvas == null;
+        return this.canvas != null;
     }
 
     public boolean isPaletteAvailable() {
@@ -278,6 +286,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public void eyedropper(int slotIndex, int pixelX, int pixelY) {
+        if (!this.isCanvasAvailable()) {
+            return;
+        }
+
         int newColor = this.canvas.data.getColorAt(pixelX, pixelY);
 
         this.setPaletteColor(slotIndex, newColor);
@@ -285,6 +297,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public void bucket(int pixelX, int pixelY, int color) {
+        if (!this.isCanvasAvailable()) {
+            return;
+        }
+
         int position = this.canvas.data.getPixelIndex(pixelX, pixelY);
 
         CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);

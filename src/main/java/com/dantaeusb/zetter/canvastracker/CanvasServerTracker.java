@@ -28,6 +28,8 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     private int ticksFromLastSync = 0;
 
     public CanvasServerTracker(Level world) {
+        super();
+
         this.world = world;
         this.lastCanvasId = 0;
         this.lastPaintingId = 0;

@@ -94,8 +94,6 @@ public class PaintingFrameBuffer {
 
         this.buffer.position(lastPosition);
 
-        Zetter.LOG.warn(list);
-
         return list;
     }
 }

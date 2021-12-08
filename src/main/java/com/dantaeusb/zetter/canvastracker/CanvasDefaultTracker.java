@@ -1,5 +1,6 @@
 package com.dantaeusb.zetter.canvastracker;
 
+import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +12,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CanvasDefaultTracker implements ICanvasTracker {
+    public CanvasDefaultTracker() {
+        //this.registerCanvasData(Helper.FALLBACK_CANVAS_CODE, DummyCanvasData.createDummy());
+    }
+
     public Level getWorld() {
         return null;
     }

@@ -86,7 +86,6 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
     }
 
     @Override
-    public void setupAnim(T p_102618_, float p_102619_, float p_102620_, float p_102621_, float p_102622_, float p_102623_) {
-
+    public void setupAnim(EaselEntity entity, float p_102619_, float p_102620_, float p_102621_, float p_102622_, float p_102623_) {
     }
 }

@@ -224,14 +224,14 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         return InteractionResult.CONSUME;
     }
 
-    public void addAdditionalSaveData(CompoundTag compound) {
-        compound.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
-        compound.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
-        compound.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
-        compound.putString(NBT_TAG_MATERIAL, this.material.toString());
-        compound.putBoolean(NBT_TAG_HAS_PLATE, this.hasPlate);
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
+        compoundTag.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
+        compoundTag.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
+        compoundTag.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
+        compoundTag.putString(NBT_TAG_MATERIAL, this.material.toString());
+        compoundTag.putBoolean(NBT_TAG_HAS_PLATE, this.hasPlate);
 
-        super.addAdditionalSaveData(compound);
+        super.addAdditionalSaveData(compoundTag);
     }
 
     /**

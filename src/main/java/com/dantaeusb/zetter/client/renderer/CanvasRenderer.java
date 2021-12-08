@@ -7,6 +7,7 @@ import com.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
 import com.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
+import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.google.common.collect.Maps;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -35,8 +36,8 @@ public class CanvasRenderer implements AutoCloseable {
     private final Map<String, Integer> ticksSinceRenderRequested = Maps.newHashMap();
     private final  Map<String, TextureRequest> textureRequestTimeout = Maps.newHashMap();
 
-    public CanvasRenderer(TextureManager textureManagerIn) {
-        this.textureManager = textureManagerIn;
+    public CanvasRenderer(TextureManager textureManager) {
+        this.textureManager = textureManager;
         instance = this;
     }
 
@@ -116,6 +117,10 @@ public class CanvasRenderer implements AutoCloseable {
 
     private void updateTextureRequestTimeout(int partialTicks) {
         for (Map.Entry<String, TextureRequest> textureRequestEntry : this.textureRequestTimeout.entrySet()) {
+            if (textureRequestEntry.getKey().equals(Helper.FALLBACK_CANVAS_CODE)) {
+                continue;
+            }
+
             TextureRequest textureRequest = textureRequestEntry.getValue();
 
             if (textureRequest.canUpdate()) {

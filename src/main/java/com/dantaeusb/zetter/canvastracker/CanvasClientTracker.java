@@ -15,6 +15,8 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
 
     public CanvasClientTracker(Level world) {
+        super();
+
         this.world = world;
     }
 

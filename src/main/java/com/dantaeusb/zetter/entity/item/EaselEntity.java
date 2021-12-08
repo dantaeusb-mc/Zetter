@@ -1,6 +1,5 @@
 package com.dantaeusb.zetter.entity.item;
 
-import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
@@ -8,11 +7,12 @@ import com.dantaeusb.zetter.network.packet.SCanvasNamePacket;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.tileentity.container.EaselContainer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -23,7 +23,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fmllegacy.network.NetworkHooks;
 
@@ -35,7 +34,6 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     private static final String PALETTE_ITEM_TAG = "PaletteItem";
 
     protected BlockPos pos;
-    protected Direction direction = Direction.SOUTH;
 
     protected EaselContainer easelContainer;
 
@@ -81,62 +79,78 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         return true;
     }
 
-    public void addAdditionalSaveData(CompoundTag tag) {
-        if (!this.easelContainer.getCanvasStack().isEmpty()) {
-            tag.put(EaselEntity.CANVAS_ITEM_TAG, this.easelContainer.getCanvasStack().save(new CompoundTag()));
-        }
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
+        ListTag easelContainerItems = new ListTag();
 
-        if (!this.easelContainer.getPaletteStack().isEmpty()) {
-            tag.put(EaselEntity.PALETTE_ITEM_TAG, this.easelContainer.getPaletteStack().save(new CompoundTag()));
-        }
-    }
+        for(int i = 0; i < this.easelContainer.getContainerSize(); i++) {
+            ItemStack item = this.easelContainer.getItem(i);
+            if (!item.isEmpty()) {
+                CompoundTag compoundtag = new CompoundTag();
+                compoundtag.putByte("Slot", (byte)i);
+                item.save(compoundtag);
 
-    public void readAdditionalSaveData(CompoundTag tag) {
-        if (tag.contains(EaselEntity.CANVAS_ITEM_TAG, 10)) {
-            ItemStack canvasStack = ItemStack.of(tag.getCompound(EaselEntity.CANVAS_ITEM_TAG));
-
-            if (canvasStack.is(ModItems.CANVAS)) {
-                this.easelContainer.setCanvasStack(canvasStack);
-            } else {
-                Zetter.LOG.error("Found non-canvas in Easel storage at slot CanvasItem");
+                easelContainerItems.add(compoundtag);
             }
         }
 
-        if (tag.contains(EaselEntity.PALETTE_ITEM_TAG, 10)) {
-            ItemStack paletteStack = ItemStack.of(tag.getCompound(EaselEntity.PALETTE_ITEM_TAG));
+        compoundTag.put("Items", easelContainerItems);
+    }
 
-            if (paletteStack.is(ModItems.PALETTE)) {
-                this.easelContainer.setItem(1, paletteStack);
-            } else {
-                Zetter.LOG.error("Found non-palette in Easel storage at slot PaletteItem");
-            }
+    public void readAdditionalSaveData(CompoundTag compoundTag) {
+        this.createInventory();
+
+        ListTag easelContainerItems = compoundTag.getList("Items", 10);
+
+        for(int i = 0; i < easelContainerItems.size(); ++i) {
+            CompoundTag compoundtag = easelContainerItems.getCompound(i);
+
+            this.easelContainer.setItem(i, ItemStack.of(compoundtag));
         }
     }
 
+    /**
+     * Needed for entity interaction
+     * @return
+     */
     public boolean isPickable() {
-        return true;
+        return !this.isRemoved();
+    }
+
+    public boolean isPushable() {
+        return false;
     }
 
     @Override
     public InteractionResult interact(Player player, InteractionHand hand) {
         ItemStack heldItem = player.getItemInHand(hand);
 
+        if (player.isCrouching() && heldItem.isEmpty()) {
+            ItemStack canvasStack = this.easelContainer.extractCanvasStack();
+            player.setItemInHand(hand, canvasStack);
+            return InteractionResult.sidedSuccess(this.level.isClientSide);
+        }
+
         final boolean isCanvas = heldItem.is(ModItems.CANVAS);
         final boolean isPalette = heldItem.is(ModItems.PALETTE);
 
         if (isCanvas) {
-            this.openInventory(player);
+            this.easelContainer.setCanvasStack(heldItem);
+            player.setItemInHand(hand, ItemStack.EMPTY);
+            return InteractionResult.sidedSuccess(this.level.isClientSide);
         } else if (isPalette) {
-            this.openInventory(player);
+            this.easelContainer.setPaletteStack(heldItem);
+            player.setItemInHand(hand, ItemStack.EMPTY);
         }
 
-        return InteractionResult.PASS;
+        this.openInventory(player);
+
+        return InteractionResult.sidedSuccess(this.level.isClientSide);
     }
 
     public void openInventory(Player player) {
         if (!this.level.isClientSide) {
             NetworkHooks.openGui((ServerPlayer) player, this, (packetBuffer) -> {
-                SCanvasNamePacket.writeCanvasName(packetBuffer, (this.getCanvasName()));
+                SCanvasNamePacket.writeCanvasName(packetBuffer, (this.getCanvasCode()));
             });
         }
     }
@@ -165,7 +179,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     }
 
     public @Nullable ItemStack getCanvasStack() {
-        return this.easelContainer.getItem(EaselContainer.CANVAS_SLOT);
+        return this.easelContainer.getCanvasStack();
     }
 
     public boolean putCanvasStack(ItemStack itemStack) {
@@ -186,20 +200,27 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
 
     /**
      * Returns current canvas name or empty string if no canvas assigned
+     * @todo: refactor maybe
      * @return
      */
-    public String getCanvasName() {
+    public @Nullable String getCanvasCode() {
         ItemStack canvasStack = this.getCanvasStack();
 
         if (canvasStack != null && canvasStack.isEmpty()) {
-            return "";
+            return null;
         }
 
-        return CanvasItem.getCanvasCode(canvasStack);
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        if (canvasCode == null) {
+            CanvasItem.getCanvasData(canvasStack, this.level);
+            canvasCode = CanvasItem.getCanvasCode(canvasStack);
+        }
+
+        return canvasCode;
     }
 
-    @Nullable
-    public CanvasData getCanvasData() {
+    public @Nullable CanvasData getCanvasData() {
         ItemStack canvasStack = this.getCanvasStack();
 
         if (canvasStack.isEmpty() || canvasStack.getItem() != ModItems.CANVAS) {
@@ -231,10 +252,12 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         return this.playersUsing;
     }
 
-    /*public void setPos(double x, double y, double z) {
+    public void setPos(double x, double y, double z) {
         this.pos = new BlockPos(x, y, z);
+        this.setPosRaw(x, y, z);
+        this.setBoundingBox(this.makeBoundingBox());
         this.hasImpulse = true;
-    }*/
+    }
 
     public BlockPos getPos() {
         return this.pos;
@@ -267,12 +290,12 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
 
     /**
      * @todo: rename params
-     * @param p_31744_
-     * @param p_31745_
-     * @param p_31746_
+     * @param x
+     * @param y
+     * @param z
      */
-    public void push(double p_31744_, double p_31745_, double p_31746_) {
-        if (!this.level.isClientSide && !this.isRemoved() && p_31744_ * p_31744_ + p_31745_ * p_31745_ + p_31746_ * p_31746_ > 0.0D) {
+    public void push(double x, double y, double z) {
+        if (!this.level.isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
             this.kill();
             this.dropAllContents(this.level, this.pos);
         }
@@ -285,6 +308,11 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
      */
     public void dropAllContents(Level world, BlockPos blockPos) {
         Containers.dropContents(world, blockPos, this.easelContainer);
+    }
+
+    @Nullable
+    protected SoundEvent getDeathSound() {
+        return SoundEvents.ARMOR_STAND_BREAK;
     }
 
     /**
