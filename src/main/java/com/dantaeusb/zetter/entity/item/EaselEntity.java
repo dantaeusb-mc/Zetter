@@ -14,14 +14,17 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.*;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fmllegacy.network.NetworkHooks;
 
 import javax.annotation.Nullable;
@@ -50,7 +53,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     }
 
     public Packet<?> getAddEntityPacket() {
-        return new ClientboundAddEntityPacket(this, this.getType(), this.direction.get3DDataValue(), this.getPos());
+        return NetworkHooks.getEntitySpawningPacket(this);
     }
 
     protected void createInventory() {
@@ -108,6 +111,10 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
                 Zetter.LOG.error("Found non-palette in Easel storage at slot PaletteItem");
             }
         }
+    }
+
+    public boolean isPickable() {
+        return true;
     }
 
     @Override
@@ -207,7 +214,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     public ArrayList<Player> calculatePlayersUsing() {
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
-        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
+        /*for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
             if (player.containerMenu instanceof EaselContainerMenu) {
                 EaselContainer storage = ((EaselContainerMenu)player.containerMenu).getEaselContainer();
 
@@ -215,7 +222,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
                     usingPlayers.add(player);
                 }
             }
-        }
+        }*/
 
         return usingPlayers;
     }
@@ -224,18 +231,52 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         return this.playersUsing;
     }
 
-    public void setPos(double x, double y, double z) {
+    /*public void setPos(double x, double y, double z) {
         this.pos = new BlockPos(x, y, z);
         this.hasImpulse = true;
-    }
+    }*/
 
     public BlockPos getPos() {
         return this.pos;
     }
 
-    /*protected AABB makeBoundingBox() {
-        return this.dimensions.makeBoundingBox(this.pos);
-    }*/
+    /**
+     * Drop contents and item then die when moved or hurt
+     */
+
+    public boolean hurt(DamageSource damageSource, float p_31716_) {
+        if (this.isInvulnerableTo(damageSource)) {
+            return false;
+        } else {
+            if (!this.isRemoved() && !this.level.isClientSide) {
+                this.kill();
+                this.markHurt();
+                this.dropAllContents(this.level, this.pos);
+            }
+
+            return true;
+        }
+    }
+
+    public void move(MoverType mover, Vec3 move) {
+        if (!this.level.isClientSide && !this.isRemoved() && move.lengthSqr() > 0.0D) {
+            this.kill();
+            this.dropAllContents(this.level, this.pos);
+        }
+    }
+
+    /**
+     * @todo: rename params
+     * @param p_31744_
+     * @param p_31745_
+     * @param p_31746_
+     */
+    public void push(double p_31744_, double p_31745_, double p_31746_) {
+        if (!this.level.isClientSide && !this.isRemoved() && p_31744_ * p_31744_ + p_31745_ * p_31745_ + p_31746_ * p_31746_ > 0.0D) {
+            this.kill();
+            this.dropAllContents(this.level, this.pos);
+        }
+    }
 
     /**
      * When this tile entity is destroyed, drop all of its contents into the world

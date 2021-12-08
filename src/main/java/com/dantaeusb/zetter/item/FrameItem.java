@@ -100,17 +100,17 @@ public class FrameItem extends PaintingItem {
                     world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack)
             );
 
-            if (paintingEntity.survives()) {
-                if (!world.isClientSide) {
-                    paintingEntity.playPlacementSound();
-                    world.addFreshEntity(paintingEntity);
-                }
-
-                player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-                return InteractionResult.sidedSuccess(world.isClientSide);
-            } else {
+            if (!paintingEntity.survives()) {
                 return InteractionResult.CONSUME;
             }
+
+            if (!world.isClientSide) {
+                paintingEntity.playPlacementSound();
+                world.addFreshEntity(paintingEntity);
+            }
+
+            player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            return InteractionResult.sidedSuccess(world.isClientSide);
         }
     }
 

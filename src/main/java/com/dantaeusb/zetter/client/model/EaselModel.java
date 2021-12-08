@@ -42,7 +42,7 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
                 CubeListBuilder.create()
                         .texOffs(0, 0)
                         .addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F),
-                PartPose.offset(0.0F, 0.0F, 0.0F)
+                PartPose.offset(-8.0F, 0.0F, -8.0F)
         );
 
         partdefinition.addOrReplaceChild(
@@ -50,7 +50,7 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
                 CubeListBuilder.create()
                         .texOffs(6, 5)
                         .addBox(0.0F, 12.0F, 3.0F, 16.0F, 18.0F, 1.0F),
-                PartPose.rotation(0.1745F, 0.0F, 0.0F)
+                PartPose.offsetAndRotation(-8.0F, 0.0F, -8.0F, 0.1745F, 0.0F, 0.0F)
         );
 
         partdefinition.addOrReplaceChild(
@@ -58,15 +58,15 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
                 CubeListBuilder.create()
                         .texOffs(0, 0)
                         .addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F),
-                PartPose.rotation(0.1745F, 0.0F, 0.0F)
+                PartPose.offsetAndRotation(-8.0F, 0.0F, -8.0F,0.1745F, 0.0F, 0.0F)
         );
 
         partdefinition.addOrReplaceChild(
                 BACK_LEG,
                 CubeListBuilder.create()
                         .texOffs(0, 6)
-                        .addBox(17.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F),
-                PartPose.offsetAndRotation(0.0F, 0.0F, 15.0F, -0.2182F, 0.0F, 0.0F)
+                        .addBox(0.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F),
+                PartPose.offsetAndRotation(-1.0F, 0.0F, 7.0F, -0.2182F, 0.0F, 0.0F)
         );
 
         partdefinition.addOrReplaceChild(
@@ -75,7 +75,7 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
                         .texOffs(0, 6)
                         .addBox(12.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F)
                         .addBox(2.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F),
-                PartPose.offsetAndRotation(0.0F, 0.0F, -3.0F, 0.1745F, 0.0F, 0.0F)
+                PartPose.offsetAndRotation(-8.0F, 0.0F, -11.0F, 0.1745F, 0.0F, 0.0F)
         );
 
         return LayerDefinition.create(meshdefinition, 64, 64);
