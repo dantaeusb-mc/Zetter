@@ -18,6 +18,10 @@ public class SCanvasNamePacket {
      * Writes the raw packet data to the data stream.
      */
     public static void writeCanvasName(FriendlyByteBuf buf, String canvasName) {
+        if (canvasName == null) {
+            canvasName = "";
+        }
+
         buf.writeUtf(canvasName);
     }
 }

@@ -1,14 +1,11 @@
 package com.dantaeusb.zetter.network.packet;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.network.ClientHandler;
 import com.dantaeusb.zetter.network.ServerHandler;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.fmllegacy.network.NetworkEvent;
-import java.util.function.Supplier;
-
 import java.util.function.Supplier;
 
 public class CCanvasRequestPacket {
@@ -61,6 +58,6 @@ public class CCanvasRequestPacket {
             Zetter.LOG.warn("EntityPlayerMP was null when CRequestSyncPacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processRequestSync(packetIn, sendingPlayer));
+        ctx.enqueueWork(() -> ServerHandler.processCanvasRequest(packetIn, sendingPlayer));
     }
 }

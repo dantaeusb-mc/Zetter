@@ -12,14 +12,16 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
+ * @deprecated
+ * Use Entity's SyncData instead
  * @link {SSetSlotPacket}
  */
 public class SEaselCanvasChangePacket {
-    private int windowId;
-    private ItemStack item = ItemStack.EMPTY;
+    private int entityId;
+    private ItemStack item;
 
-    public SEaselCanvasChangePacket(int windowId, ItemStack item) {
-        this.windowId = windowId;
+    public SEaselCanvasChangePacket(int entityId, ItemStack item) {
+        this.entityId = entityId;
         this.item = item.copy();
     }
 
@@ -42,12 +44,12 @@ public class SEaselCanvasChangePacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
-        networkBuffer.writeByte(this.windowId);
+        networkBuffer.writeByte(this.entityId);
         networkBuffer.writeItem(this.item);
     }
 
-    public int getWindowId() {
-        return this.windowId;
+    public int getEntityId() {
+        return this.entityId;
     }
 
     public ItemStack getItem() {
@@ -71,6 +73,6 @@ public class SEaselCanvasChangePacket {
     @Override
     public String toString()
     {
-        return "SEaselCanvasChangePacket[windowId=" + this.windowId + ",stack=" + this.item + "]";
+        return "SEaselCanvasChangePacket[windowId=" + this.entityId + ",stack=" + this.item + "]";
     }
 }

@@ -2,6 +2,7 @@ package com.dantaeusb.zetter.network;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import com.dantaeusb.zetter.entity.item.EaselEntity;
 import com.dantaeusb.zetter.menu.ArtistTableMenu;
 import com.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.dantaeusb.zetter.core.Helper;
@@ -15,6 +16,7 @@ import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.Entity;
 
 public class ClientHandler {
     public static void processCanvasSync(final SCanvasSyncMessage packetIn, ClientLevel world) {
@@ -68,9 +70,13 @@ public class ClientHandler {
 
     public static void processEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, ClientLevel world) {
         LocalPlayer player = Minecraft.getInstance().player;
+        Entity easel = world.getEntity(packetIn.getEntityId());
+
+        if (world.getEntity(packetIn.getEntityId()) instanceof EaselEntity) {
+            ((EaselEntity) easel).putCanvasStack(packetIn.getItem());
+        }
 
         if (player.containerMenu instanceof EaselContainerMenu) {
-            ((EaselContainerMenu) player.containerMenu).handleCanvasChange(packetIn.getItem());
         }
     }
 }

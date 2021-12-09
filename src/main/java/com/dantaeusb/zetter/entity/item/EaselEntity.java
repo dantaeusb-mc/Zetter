@@ -1,15 +1,21 @@
 package com.dantaeusb.zetter.entity.item;
 
+import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.network.packet.SCanvasNamePacket;
+import com.dantaeusb.zetter.network.packet.SEaselCanvasChangePacket;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.tileentity.container.EaselContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -18,13 +24,17 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fmllegacy.network.NetworkHooks;
+import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -33,8 +43,9 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     private static final String CANVAS_ITEM_TAG = "CanvasItem";
     private static final String PALETTE_ITEM_TAG = "PaletteItem";
 
-    protected BlockPos pos;
+    private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(EaselEntity.class, EntityDataSerializers.STRING);
 
+    protected BlockPos pos;
     protected EaselContainer easelContainer;
 
     /** The list of players currently using this easel */
@@ -47,7 +58,15 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     }
 
     protected void defineSynchedData() {
-        // Nothing here!
+        this.entityData.define(DATA_ID_CANVAS_CODE, "");
+    }
+
+    public String getCanvasCode() {
+        return this.entityData.get(DATA_ID_CANVAS_CODE);
+    }
+
+    protected void setCanvasCode(String canvasCode) {
+        this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
     }
 
     public Packet<?> getAddEntityPacket() {
@@ -71,7 +90,14 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         }
 
         this.easelContainer.addListener(this);
-        //this.updateContainerEquipment();
+        this.updateDataFromInventory();
+        this.itemHandler = net.minecraftforge.common.util.LazyOptional.of(() -> new net.minecraftforge.items.wrapper.InvWrapper(this.easelContainer));
+    }
+
+    protected void updateDataFromInventory() {
+        if (!this.level.isClientSide) {
+            this.setCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
+        }
     }
 
     public boolean canPlayerAccessInventory(Player player) {
@@ -168,14 +194,8 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
 
     // specific
 
-    public EaselContainer getEaselContainer() {
-        return this.easelContainer;
-    }
-
     public boolean hasCanvas() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        return !canvasStack.isEmpty();
+        return this.getCanvasCode() != null;
     }
 
     public @Nullable ItemStack getCanvasStack() {
@@ -183,41 +203,23 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     }
 
     public boolean putCanvasStack(ItemStack itemStack) {
-        if (itemStack.getItem() != ModItems.CANVAS) {
+        if (itemStack.equals(ItemStack.EMPTY)) {
+            this.easelContainer.setCanvasStack(itemStack);
+            return true;
+        }
+
+        if (!itemStack.is(ModItems.CANVAS)) {
+            Zetter.LOG.error("Trying to put non-canvas on easel, item likely will be removed");
             return false;
         }
 
-        if (this.hasCanvas()) {
-            return false;
-        }
-
+        // @todo: seems dumb, lazy load ftw
+        // Also could already have canvas, but it's client-only right now so we disregard client data
         // Initialize data if it's not yet
         CanvasItem.getCanvasData(itemStack, this.level);
         this.easelContainer.setCanvasStack(itemStack);
 
         return true;
-    }
-
-    /**
-     * Returns current canvas name or empty string if no canvas assigned
-     * @todo: refactor maybe
-     * @return
-     */
-    public @Nullable String getCanvasCode() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack != null && canvasStack.isEmpty()) {
-            return null;
-        }
-
-        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-        if (canvasCode == null) {
-            CanvasItem.getCanvasData(canvasStack, this.level);
-            canvasCode = CanvasItem.getCanvasCode(canvasStack);
-        }
-
-        return canvasCode;
     }
 
     public @Nullable CanvasData getCanvasData() {
@@ -329,7 +331,41 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     }
 
     @Override
-    public void containerChanged(Container p_18983_) {
+    public void containerChanged(Container easelContainer) {
+        ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
 
+        if (!canvasStack.isEmpty() && CanvasItem.getCanvasCode(canvasStack) == null) {
+            // Initialize if not yet
+            CanvasItem.getCanvasData(canvasStack, this.level);
+        }
+
+        this.updateDataFromInventory();
+    }
+
+    /**
+     * Not sure why Forge uses it but let's keep it there
+     */
+
+    private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
+
+    @Override
+    public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.core.Direction facing) {
+        if (this.isAlive() && capability == net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && itemHandler != null)
+            return itemHandler.cast();
+        return super.getCapability(capability, facing);
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        if (itemHandler != null) {
+            net.minecraftforge.common.util.LazyOptional<?> oldHandler = itemHandler;
+            itemHandler = null;
+            oldHandler.invalidate();
+        }
+    }
+
+    public boolean hasInventoryChanged(Container container) {
+        return this.easelContainer != container;
     }
 }

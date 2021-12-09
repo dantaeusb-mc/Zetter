@@ -25,6 +25,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Tuple;
 import net.minecraft.Util;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -75,14 +77,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         final int HOTBAR_XPOS = 8;
         final int HOTBAR_YPOS = 161;
         final int SLOT_X_SPACING = 18;
-
-        // Adds invisible slot so game handles client-server sync, but not showing that slot to the player in screen
-        this.addSlot(new Slot(this.easelContainer, EaselContainer.CANVAS_SLOT, 0, 0) {
-            public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() == ModItems.CANVAS;
-            }
-            //public boolean isActive() { return false; }
-        });
 
         this.addSlot(new Slot(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean mayPlace(ItemStack stack) {
@@ -146,11 +140,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         this.firstLoadNotification = firstLoadNotification;
     }
 
-    public void markDirty() {
-        SEaselCanvasChangePacket canvasSyncMessage = new SEaselCanvasChangePacket(this.containerId, this.easelContainer.getCanvasStack());
-        ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) this.player), canvasSyncMessage);
-    }
-
     public void handleCanvasChange(ItemStack canvasStack) {
         if (canvasStack.getItem() == ModItems.CANVAS) {
             this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.world));
@@ -164,7 +153,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public void setCanvas(String canvasName) {
-        if (canvasName.isEmpty() || canvasName.equals(CanvasData.getCanvasCode(0))) {
+        if (canvasName == null || canvasName.equals(CanvasData.getCanvasCode(0))) {
             this.canvas = null;
             return;
         }
@@ -482,6 +471,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * @param canvasData
      * @param timestamp
      */
+    @OnlyIn(Dist.CLIENT)
     public void processSync(String canvasCode, CanvasData canvasData, long packetTimestamp) {
         long timestamp = System.currentTimeMillis();
 

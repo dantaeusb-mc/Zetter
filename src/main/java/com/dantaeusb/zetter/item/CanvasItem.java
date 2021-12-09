@@ -3,6 +3,7 @@ package com.dantaeusb.zetter.item;
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.core.Helper;
+import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +15,8 @@ import javax.annotation.Nullable;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+
+import java.util.Stack;
 
 public class CanvasItem extends Item
 {
@@ -73,7 +76,11 @@ public class CanvasItem extends Item
      * @see {@link FilledMapItem#getMapId(ItemStack)}
      * @return
      */
-    public static @Nullable String getCanvasCode(ItemStack stack) {
+    public static @Nullable String getCanvasCode(@Nullable ItemStack stack) {
+        if (stack == null || !stack.is(ModItems.CANVAS)) {
+            return null;
+        }
+
         CompoundTag compoundNBT = stack.getTag();
 
         String canvasCode = null;

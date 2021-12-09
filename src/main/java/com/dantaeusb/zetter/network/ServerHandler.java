@@ -47,7 +47,7 @@ public class ServerHandler {
         }
     }
 
-    public static void processRequestSync(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
         // Get overworld world instance
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
         final Level world = server.overworld();
