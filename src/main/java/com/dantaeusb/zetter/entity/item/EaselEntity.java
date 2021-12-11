@@ -1,6 +1,7 @@
 package com.dantaeusb.zetter.entity.item;
 
 import com.dantaeusb.zetter.Zetter;
+import com.dantaeusb.zetter.core.ModEntities;
 import com.dantaeusb.zetter.core.ModNetwork;
 import com.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.dantaeusb.zetter.core.ModItems;
@@ -10,6 +11,7 @@ import com.dantaeusb.zetter.network.packet.SEaselCanvasChangePacket;
 import com.dantaeusb.zetter.storage.CanvasData;
 import com.dantaeusb.zetter.tileentity.container.EaselContainer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.protocol.Packet;
@@ -25,11 +27,16 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.DiodeBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -38,10 +45,12 @@ import net.minecraftforge.fmllegacy.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.function.Predicate;
 
 public class EaselEntity extends Entity implements ContainerListener, MenuProvider {
-    private static final String CANVAS_ITEM_TAG = "CanvasItem";
-    private static final String PALETTE_ITEM_TAG = "PaletteItem";
+    protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> {
+        return entity instanceof EaselEntity;
+    };
 
     private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(EaselEntity.class, EntityDataSerializers.STRING);
 
@@ -51,6 +60,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     /** The list of players currently using this easel */
     private ArrayList<Player> playersUsing = new ArrayList<>();
     private int ticksSinceSync;
+    private int checkInterval = 0;
 
     public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
         super(type, world);
@@ -187,8 +197,33 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
             return;
         }
 
+        this.checkOutOfWorld();
         if (++this.ticksSinceSync > 200) {
             this.playersUsing = this.calculatePlayersUsing();
+        }
+
+        if (this.checkInterval++ == 100) {
+            this.checkInterval = 0;
+            if (!this.isRemoved() && !this.survives()) {
+                this.discard();
+                this.dropItem(null);
+                this.dropAllContents(this.level, this.getPos());
+            }
+        }
+    }
+
+    public boolean survives() {
+        if (!this.level.noCollision(this)) {
+            return false;
+        } else {
+            BlockPos posBelow = this.getPos().below();
+            BlockState blockBelowState = this.level.getBlockState(posBelow);
+
+            if (!blockBelowState.getMaterial().isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
+                return false;
+            }
+
+            return this.level.getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
         }
     }
 
@@ -273,12 +308,17 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         if (this.isInvulnerableTo(damageSource)) {
             return false;
         } else {
-            if (!this.isRemoved() && !this.level.isClientSide) {
-                this.kill();
-                this.markHurt();
-                this.dropAllContents(this.level, this.pos);
-            }
+            if (!this.level.isClientSide) {
+                if (!this.isRemoved()) {
+                    this.kill();
+                    this.markHurt();
+                    this.dropAllContents(this.level, this.pos);
+                }
 
+                if (!damageSource.isExplosion()) {
+                    this.playSound(this.getRemoveItemSound(), 1.0F, 1.0F);
+                }
+            }
             return true;
         }
     }
@@ -286,6 +326,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     public void move(MoverType mover, Vec3 move) {
         if (!this.level.isClientSide && !this.isRemoved() && move.lengthSqr() > 0.0D) {
             this.kill();
+            this.dropItem(null);
             this.dropAllContents(this.level, this.pos);
         }
     }
@@ -299,7 +340,26 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     public void push(double x, double y, double z) {
         if (!this.level.isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
             this.kill();
+            this.dropItem(null);
             this.dropAllContents(this.level, this.pos);
+        }
+    }
+
+    /**
+     * Drop an item associated with this entity
+     * @param p_31717_
+     */
+    public void dropItem(@Nullable Entity entity) {
+        if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+            this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
+            if (entity instanceof Player) {
+                Player player = (Player)entity;
+                if (player.getAbilities().instabuild) {
+                    return;
+                }
+            }
+
+            this.spawnAtLocation(ModItems.EASEL);
         }
     }
 
@@ -310,11 +370,6 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
      */
     public void dropAllContents(Level world, BlockPos blockPos) {
         Containers.dropContents(world, blockPos, this.easelContainer);
-    }
-
-    @Nullable
-    protected SoundEvent getDeathSound() {
-        return SoundEvents.ARMOR_STAND_BREAK;
     }
 
     /**
@@ -340,6 +395,15 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         }
 
         this.updateDataFromInventory();
+    }
+
+    /**
+     * Copied from armor stand
+     * @return
+     */
+
+    public SoundEvent getRemoveItemSound() {
+        return SoundEvents.ARMOR_STAND_BREAK;
     }
 
     /**

@@ -38,7 +38,7 @@ public class ModEntities
 
         EASEL_ENTITY =
                 EntityType.Builder.<EaselEntity>of(EaselEntity::new, MobCategory.MISC)
-                        .sized(1.0F, 2.0F)
+                        .sized(0.8F, 2.0F)
                         .build(Zetter.MOD_ID + "_easel_entity");
         EASEL_ENTITY.setRegistryName(Zetter.MOD_ID, "_easel_entity");
         event.getRegistry().register(EASEL_ENTITY);
