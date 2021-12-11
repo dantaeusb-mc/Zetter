@@ -2,18 +2,16 @@ package com.dantaeusb.zetter.client.renderer.entity;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import com.dantaeusb.zetter.client.model.EaselModel;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
-import com.dantaeusb.zetter.core.ModEntities;
+import com.dantaeusb.zetter.core.ModModels;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
-import com.dantaeusb.zetter.storage.CanvasData;
-import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
@@ -24,7 +22,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -43,6 +40,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity> {
+    public static ModelLayerLocation PAINTING_PLATE_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "custom_painting"), "plate_layer");
+
     public static final String[] MODEL_CODES = {
         "1x1",
         "top_left",
@@ -70,7 +69,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
     public CustomPaintingRenderer(EntityRendererProvider.Context context) {
         super(context);
 
-        this.platePart = context.bakeLayer(ModEntities.PAINTING_PLATE_LAYER);
+        this.platePart = context.bakeLayer(CustomPaintingRenderer.PAINTING_PLATE_LAYER);
     }
 
     static {

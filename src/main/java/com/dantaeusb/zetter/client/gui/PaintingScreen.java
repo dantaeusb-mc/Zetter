@@ -198,8 +198,9 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.canvasWidget.render(matrixStack);
         this.paletteWidget.render(matrixStack);
         this.slidersWidget.render(matrixStack);
-        this.colorCodeWidget.render(matrixStack, x, y, partialTicks);
         this.helpWidget.render(matrixStack, x, y, partialTicks);
+        // @todo: If color code goes not last, it may stop others from drawing. Is there an exception maybe?
+        this.colorCodeWidget.render(matrixStack, x, y, partialTicks);
     }
 
     @Override

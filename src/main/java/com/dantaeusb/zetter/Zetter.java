@@ -1,13 +1,9 @@
 package com.dantaeusb.zetter;
 
-import com.dantaeusb.zetter.base.ClientProxy;
-import com.dantaeusb.zetter.base.CommonProxy;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,7 +21,6 @@ public class Zetter
     public static final Logger LOG = LogManager.getLogger(MOD_ID);
 
     public static Zetter instance;
-    public static CommonProxy proxy;
 
     public static boolean quarkEnabled;
 
@@ -34,8 +29,5 @@ public class Zetter
 
         quarkEnabled = ModList.get().isLoaded("quark");
         MOD_EVENT_BUS = FMLJavaModLoadingContext.get().getModEventBus();
-
-        proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
-        proxy.start();
     }
 }

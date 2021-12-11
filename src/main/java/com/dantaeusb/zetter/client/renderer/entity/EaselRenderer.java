@@ -5,6 +5,7 @@ import com.dantaeusb.zetter.client.model.EaselModel;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
 import com.dantaeusb.zetter.core.ModEntities;
+import com.dantaeusb.zetter.core.ModModels;
 import com.dantaeusb.zetter.entity.item.EaselEntity;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.CanvasData;
@@ -35,7 +36,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
     public EaselRenderer(EntityRendererProvider.Context context) {
         super(context);
 
-        this.model = new EaselModel<>(context.bakeLayer(ModEntities.EASEL_BODY_LAYER));
+        this.model = new EaselModel<>(context.bakeLayer(EaselModel.EASEL_BODY_LAYER));
     }
 
     public final boolean addLayer(RenderLayer<EaselEntity, EntityModel<EaselEntity>> layer) {
