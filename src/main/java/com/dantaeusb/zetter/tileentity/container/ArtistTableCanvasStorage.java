@@ -12,9 +12,10 @@ import java.util.function.Predicate;
 
 /**
  * This class was copied from a tutorial and I believe is no longer needed, better migrate to
- * SimpleContainer. Currently we have a 3-level system of storing ItemStacks
+ * ItemStackHandler. Currently we have a 3-level system of storing ItemStacks
  * causing us to do a lot of unnecessary calls.
- * Either use SimpleContainer or ItemStackHandler directly
+ *
+ * @todo: replace with ItemStackHandler
  */
 
 public class ArtistTableCanvasStorage implements Container {

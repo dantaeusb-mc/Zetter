@@ -1,19 +1,16 @@
 package com.dantaeusb.zetter.entity.item;
 
 import com.dantaeusb.zetter.Zetter;
-import com.dantaeusb.zetter.core.ModEntities;
-import com.dantaeusb.zetter.core.ModNetwork;
+import com.dantaeusb.zetter.core.ItemStackHandlerListener;
 import com.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.network.packet.SCanvasNamePacket;
-import com.dantaeusb.zetter.network.packet.SEaselCanvasChangePacket;
 import com.dantaeusb.zetter.storage.CanvasData;
-import com.dantaeusb.zetter.tileentity.container.EaselContainer;
+import com.dantaeusb.zetter.entity.item.container.EaselContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -26,28 +23,29 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.animal.horse.AbstractHorse;
-import net.minecraft.world.entity.decoration.HangingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DiodeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fmllegacy.network.NetworkHooks;
-import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
-public class EaselEntity extends Entity implements ContainerListener, MenuProvider {
+public class EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
+    private static final String EASEL_STORAGE_TAG = "storage";
+    private static final String CANVAS_CODE_TAG = "CanvasCode";
+
     protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> {
         return entity instanceof EaselEntity;
     };
@@ -56,6 +54,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
 
     protected BlockPos pos;
     protected EaselContainer easelContainer;
+    protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
     /** The list of players currently using this easel */
     private ArrayList<Player> playersUsing = new ArrayList<>();
@@ -85,34 +84,41 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
 
     protected void createInventory() {
         EaselContainer currentEaselStorage = this.easelContainer;
-        this.easelContainer = new EaselContainer();
+        this.easelContainer = new EaselContainer(this);
 
         if (currentEaselStorage != null) {
             currentEaselStorage.removeListener(this);
-            int i = Math.min(currentEaselStorage.getContainerSize(), this.easelContainer.getContainerSize());
+            int i = Math.min(currentEaselStorage.getSlots(), this.easelContainer.getSlots());
 
             for(int j = 0; j < i; ++j) {
-                ItemStack itemstack = currentEaselStorage.getItem(j);
+                ItemStack itemstack = currentEaselStorage.getStackInSlot(j);
                 if (!itemstack.isEmpty()) {
-                    this.easelContainer.setItem(j, itemstack.copy());
+                    this.easelContainer.setStackInSlot(j, itemstack.copy());
                 }
             }
         }
 
         this.easelContainer.addListener(this);
         this.updateDataFromInventory();
-        this.itemHandler = net.minecraftforge.common.util.LazyOptional.of(() -> new net.minecraftforge.items.wrapper.InvWrapper(this.easelContainer));
     }
 
     protected void updateDataFromInventory() {
-        if (!this.level.isClientSide) {
-            this.setCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
-        }
+        this.setCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
     }
 
     public boolean canPlayerAccessInventory(Player player) {
         // @todo: this
         return true;
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+                && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
+            return this.easelContainerOptional.cast();
+        }
+
+        return super.getCapability(capability, direction);
     }
 
     /**
@@ -125,15 +131,22 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
     }
 
     public void addAdditionalSaveData(CompoundTag compoundTag) {
-        ListTag easelContainerItems = this.easelContainer.createTag();
-        compoundTag.put("Items", easelContainerItems);
+        compoundTag.put(EASEL_STORAGE_TAG, this.easelContainer.serializeNBT());
+
+        if (this.getCanvasCode() != null) {
+            compoundTag.putString(CANVAS_CODE_TAG, this.getCanvasCode());
+        }
     }
 
     public void readAdditionalSaveData(CompoundTag compoundTag) {
         this.createInventory();
 
-        ListTag easelContainerItems = compoundTag.getList("Items", 10);
-        this.easelContainer.fromTag(easelContainerItems);
+        this.easelContainer.deserializeNBT(compoundTag.getCompound(EASEL_STORAGE_TAG));
+
+        final String canvasCode = compoundTag.getString(CANVAS_CODE_TAG);
+        if (canvasCode != null) {
+            this.setCanvasCode(canvasCode);
+        }
     }
 
     /**
@@ -259,6 +272,17 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         return  CanvasItem.getCanvasData(canvasStack, this.level);
     }
 
+    public void containerChanged(ItemStackHandler easelContainer) {
+        ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
+
+        if (!canvasStack.isEmpty() && CanvasItem.getCanvasCode(canvasStack) == null) {
+            // Initialize if not yet
+            CanvasItem.getCanvasData(canvasStack, this.level);
+        }
+
+        this.updateDataFromInventory();
+    }
+
     // track using players to send packets
 
     public ArrayList<Player> calculatePlayersUsing() {
@@ -361,7 +385,9 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
      * @param blockPos
      */
     public void dropAllContents(Level world, BlockPos blockPos) {
-        Containers.dropContents(world, blockPos, this.easelContainer);
+        for (int i = 0; i < this.easelContainer.getSlots(); i++) {
+            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
+        }
     }
 
     /**
@@ -377,18 +403,6 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         return EaselContainerMenu.createContainerServerSide(windowID, playerInventory, this, this.easelContainer);
     }
 
-    @Override
-    public void containerChanged(Container easelContainer) {
-        ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
-
-        if (!canvasStack.isEmpty() && CanvasItem.getCanvasCode(canvasStack) == null) {
-            // Initialize if not yet
-            CanvasItem.getCanvasData(canvasStack, this.level);
-        }
-
-        this.updateDataFromInventory();
-    }
-
     /**
      * Copied from armor stand
      * @return
@@ -396,32 +410,5 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
 
     public SoundEvent getRemoveItemSound() {
         return SoundEvents.ARMOR_STAND_BREAK;
-    }
-
-    /**
-     * Not sure why Forge uses it but let's keep it there
-     */
-
-    private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
-
-    @Override
-    public <T> net.minecraftforge.common.util.LazyOptional<T> getCapability(net.minecraftforge.common.capabilities.Capability<T> capability, @Nullable net.minecraft.core.Direction facing) {
-        if (this.isAlive() && capability == net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && itemHandler != null)
-            return itemHandler.cast();
-        return super.getCapability(capability, facing);
-    }
-
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        if (itemHandler != null) {
-            net.minecraftforge.common.util.LazyOptional<?> oldHandler = itemHandler;
-            itemHandler = null;
-            oldHandler.invalidate();
-        }
-    }
-
-    public boolean hasInventoryChanged(Container container) {
-        return this.easelContainer != container;
     }
 }

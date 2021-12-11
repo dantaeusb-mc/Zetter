@@ -40,7 +40,7 @@ public class ModEntities
                 EntityType.Builder.<EaselEntity>of(EaselEntity::new, MobCategory.MISC)
                         .sized(0.8F, 2.0F)
                         .build(Zetter.MOD_ID + "_easel_entity");
-        EASEL_ENTITY.setRegistryName(Zetter.MOD_ID, "_easel_entity");
+        EASEL_ENTITY.setRegistryName(Zetter.MOD_ID, "easel_entity");
         event.getRegistry().register(EASEL_ENTITY);
     }
 

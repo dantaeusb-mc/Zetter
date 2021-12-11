@@ -10,7 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class ModContainers {
+public class ModContainerMenus {
     public static MenuType<EaselContainerMenu> PAINTING;
     public static MenuType<ArtistTableMenu> ARTIST_TABLE;
 

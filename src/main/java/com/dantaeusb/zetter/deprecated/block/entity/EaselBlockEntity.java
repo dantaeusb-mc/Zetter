@@ -4,7 +4,7 @@ import com.dantaeusb.zetter.core.ModEntities;
 import com.dantaeusb.zetter.deprecated.block.EaselBlock;
 import com.dantaeusb.zetter.entity.item.EaselEntity;
 import com.dantaeusb.zetter.core.ModBlockEntities;
-import com.dantaeusb.zetter.tileentity.container.EaselContainer;
+import com.dantaeusb.zetter.entity.item.container.EaselContainer;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
@@ -82,10 +82,7 @@ public class EaselBlockEntity extends BlockEntity {
     {
         super.save(compoundTag);
 
-        CompoundTag easelStorage = new CompoundTag();
-        ListTag easelContainerItems = this.easelContainer.createTag();
-        easelStorage.put("Items", easelContainerItems);
-
+        CompoundTag easelStorage = this.easelContainer.serializeNBT();
         compoundTag.put(EASEL_STORAGE_TAG, easelStorage);
 
         return compoundTag;
@@ -97,9 +94,7 @@ public class EaselBlockEntity extends BlockEntity {
         super.load(compoundTag);
 
         CompoundTag easelStorage = compoundTag.getCompound(EASEL_STORAGE_TAG);
-        ListTag easelContainerItems = easelStorage.getList("Items", Tag.TAG_COMPOUND);
-
-        this.easelContainer.fromTag(easelContainerItems);
+        this.easelContainer.deserializeNBT(easelStorage);
     }
 
     // network stack

@@ -32,8 +32,8 @@ public class ClientProxy extends CommonProxy {
     }
 
     public void clientSetup(FMLClientSetupEvent event) {
-        MenuScreens.register(ModContainers.PAINTING, PaintingScreen::new);
-        MenuScreens.register(ModContainers.ARTIST_TABLE, ArtistTableScreen::new);
+        MenuScreens.register(ModContainerMenus.PAINTING, PaintingScreen::new);
+        MenuScreens.register(ModContainerMenus.ARTIST_TABLE, ArtistTableScreen::new);
 
         for (Item frame : ModItems.FRAMES.values()) {
             ItemProperties.register(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);

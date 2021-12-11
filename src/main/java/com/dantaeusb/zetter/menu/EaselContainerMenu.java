@@ -12,13 +12,12 @@ import com.dantaeusb.zetter.item.CanvasItem;
 import com.dantaeusb.zetter.item.PaletteItem;
 import com.dantaeusb.zetter.network.packet.*;
 import com.dantaeusb.zetter.storage.util.CanvasHolder;
-import com.dantaeusb.zetter.tileentity.container.EaselContainer;
+import com.dantaeusb.zetter.entity.item.container.EaselContainer;
 import com.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -27,7 +26,7 @@ import net.minecraft.Util;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.items.SlotItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -61,9 +60,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     private Notify firstLoadNotification = ()->{};
 
     public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer) {
-        super(ModContainers.PAINTING, windowID);
+        super(ModContainerMenus.PAINTING, windowID);
 
-        if (ModContainers.PAINTING == null)
+        if (ModContainerMenus.PAINTING == null)
             throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
 
         this.player = invPlayer.player;
@@ -78,14 +77,14 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         final int HOTBAR_YPOS = 161;
         final int SLOT_X_SPACING = 18;
 
-        this.addSlot(new Slot(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
+        this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ModItems.PALETTE;
             }
         });
 
         if (!this.world.isClientSide()) {
-            ItemStack canvasStack = this.easelContainer.getItem(EaselContainer.CANVAS_SLOT);
+            ItemStack canvasStack = this.easelContainer.getCanvasStack();
             String canvasName = CanvasItem.getCanvasCode(canvasStack);
             this.setCanvas(canvasName);
         }
@@ -206,7 +205,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
 
         PaletteItem.updatePaletteColor(paletteStack, paletteSlot, color);
-        this.easelContainer.setChanged();
+        this.easelContainer.changed();
     }
 
     public void sendPaletteUpdatePacket(int paletteSlot, int color) {

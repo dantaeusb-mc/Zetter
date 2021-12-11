@@ -2,16 +2,15 @@ package com.dantaeusb.zetter.menu;
 
 import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import com.dantaeusb.zetter.core.ModContainerMenus;
 import com.dantaeusb.zetter.menu.artisttable.CanvasCombination;
 import com.dantaeusb.zetter.core.Helper;
-import com.dantaeusb.zetter.core.ModContainers;
 import com.dantaeusb.zetter.core.ModItems;
 import com.dantaeusb.zetter.item.FrameItem;
 import com.dantaeusb.zetter.storage.DummyCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;
 import com.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import com.dantaeusb.zetter.tileentity.container.ArtistTableCanvasStorage;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Container;
@@ -53,7 +52,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
     public ArtistTableMenu(int windowID, Inventory invPlayer,
                            ArtistTableCanvasStorage canvasStorage,
                            final ContainerLevelAccess worldPosCallable) {
-        super(ModContainers.ARTIST_TABLE, windowID);
+        super(ModContainerMenus.ARTIST_TABLE, windowID);
 
         this.worldPosCallable = worldPosCallable;
 

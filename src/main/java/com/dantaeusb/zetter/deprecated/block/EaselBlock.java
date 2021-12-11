@@ -57,18 +57,6 @@ public class EaselBlock extends BaseEntityBlock {
         builder.add(HALF, FACING);
     }
 
-    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean isMoving) {
-        if (!state.is(newState.getBlock())) {
-            BlockEntity tileEntity = world.getBlockEntity(pos);
-            if (tileEntity instanceof EaselBlockEntity) {
-                Containers.dropContents(world, pos, ((EaselBlockEntity) tileEntity).getEaselContainer());
-                world.updateNeighbourForOutputSignal(pos, this);
-            }
-
-            super.onRemove(state, world, pos, newState, isMoving);
-        }
-    }
-
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState blockState, BlockEntityType<T> entityType) {
