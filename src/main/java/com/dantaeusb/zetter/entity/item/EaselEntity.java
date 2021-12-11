@@ -115,20 +115,17 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         return true;
     }
 
+    /**
+     * This is temporary for migrating from BE to Entity
+     * @return
+     */
+    @Deprecated()
+    public EaselContainer getEaselContainer() {
+        return this.easelContainer;
+    }
+
     public void addAdditionalSaveData(CompoundTag compoundTag) {
-        ListTag easelContainerItems = new ListTag();
-
-        for(int i = 0; i < this.easelContainer.getContainerSize(); i++) {
-            ItemStack item = this.easelContainer.getItem(i);
-            if (!item.isEmpty()) {
-                CompoundTag compoundtag = new CompoundTag();
-                compoundtag.putByte("Slot", (byte)i);
-                item.save(compoundtag);
-
-                easelContainerItems.add(compoundtag);
-            }
-        }
-
+        ListTag easelContainerItems = this.easelContainer.createTag();
         compoundTag.put("Items", easelContainerItems);
     }
 
@@ -136,12 +133,7 @@ public class EaselEntity extends Entity implements ContainerListener, MenuProvid
         this.createInventory();
 
         ListTag easelContainerItems = compoundTag.getList("Items", 10);
-
-        for(int i = 0; i < easelContainerItems.size(); ++i) {
-            CompoundTag compoundtag = easelContainerItems.getCompound(i);
-
-            this.easelContainer.setItem(i, ItemStack.of(compoundtag));
-        }
+        this.easelContainer.fromTag(easelContainerItems);
     }
 
     /**

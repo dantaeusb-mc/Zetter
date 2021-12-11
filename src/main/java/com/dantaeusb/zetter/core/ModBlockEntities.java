@@ -12,23 +12,24 @@ import net.minecraftforge.fml.common.Mod;
 public class ModBlockEntities
 {
     /**
-     * All easels should be converted to tile entities
+     * All easels should be converted to entities
      */
     @Deprecated
-    public static BlockEntityType<EaselBlockEntity> EASEL_TILE_ENTITY;
-    public static BlockEntityType<ArtistTableBlockEntity> ARTIST_TABLE_TILE_ENTITY;
+    public static BlockEntityType<EaselBlockEntity> EASEL_BLOCK_ENTITY;
+    public static BlockEntityType<ArtistTableBlockEntity> ARTIST_TABLE_BLOCK_ENTITY;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onTileEntityTypeRegistration(final RegistryEvent.Register<BlockEntityType<?>> event) {
-        EASEL_TILE_ENTITY =
+        // Do not change names, it'll break compatibility
+        EASEL_BLOCK_ENTITY =
                 BlockEntityType.Builder.of(EaselBlockEntity::new, ModBlocks.EASEL).build(null);
-        EASEL_TILE_ENTITY.setRegistryName(Zetter.MOD_ID, "easel_tile_entity");
-        event.getRegistry().register(EASEL_TILE_ENTITY);
+        EASEL_BLOCK_ENTITY.setRegistryName(Zetter.MOD_ID, "easel_tile_entity");
+        event.getRegistry().register(EASEL_BLOCK_ENTITY);
 
-        ARTIST_TABLE_TILE_ENTITY =
+        ARTIST_TABLE_BLOCK_ENTITY =
                 BlockEntityType.Builder.of(ArtistTableBlockEntity::new, ModBlocks.ARTIST_TABLE).build(null);
-        ARTIST_TABLE_TILE_ENTITY.setRegistryName(Zetter.MOD_ID, "artist_table_tile_entity");
-        event.getRegistry().register(ARTIST_TABLE_TILE_ENTITY);
+        ARTIST_TABLE_BLOCK_ENTITY.setRegistryName(Zetter.MOD_ID, "artist_table_tile_entity");
+        event.getRegistry().register(ARTIST_TABLE_BLOCK_ENTITY);
     }
 }

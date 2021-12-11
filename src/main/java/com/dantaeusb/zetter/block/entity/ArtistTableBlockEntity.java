@@ -30,7 +30,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
     private final ArtistTableCanvasStorage canvasStorage;
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.ARTIST_TABLE_TILE_ENTITY, pos, state);
+        super(ModBlockEntities.ARTIST_TABLE_BLOCK_ENTITY, pos, state);
 
         this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::setChanged);
     }

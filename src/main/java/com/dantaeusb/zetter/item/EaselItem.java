@@ -72,7 +72,7 @@ public class EaselItem extends Item
                     world.addFreshEntity(easel);
 
                     world.playSound(null, easel.getX(), easel.getY(), easel.getZ(), SoundEvents.ARMOR_STAND_PLACE, SoundSource.BLOCKS, 0.75F, 0.8F);
-                    //world.gameEvent(context.getPlayer(), GameEvent.ENTITY_PLACE, easel);
+                    world.gameEvent(context.getPlayer(), GameEvent.ENTITY_PLACE, easel);
                 }
 
                 easelItem.shrink(1);

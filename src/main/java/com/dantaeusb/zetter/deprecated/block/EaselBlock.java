@@ -1,22 +1,13 @@
 package com.dantaeusb.zetter.deprecated.block;
 
-import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.core.ModBlockEntities;
 import com.dantaeusb.zetter.deprecated.block.entity.EaselBlockEntity;
-import com.dantaeusb.zetter.core.ModItems;
-import com.dantaeusb.zetter.network.packet.SCanvasNamePacket;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
-import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -24,7 +15,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.shapes.Shapes;
@@ -33,17 +23,13 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.fmllegacy.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
@@ -67,67 +53,6 @@ public class EaselBlock extends BaseEntityBlock {
         return RenderShape.INVISIBLE;
     }
 
-    public InteractionResult use(BlockState state, Level world, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
-        if (world.isClientSide) return InteractionResult.SUCCESS;
-
-        ItemStack heldItem = player.getItemInHand(InteractionHand.MAIN_HAND);
-
-        BlockPos tileEntityPos = pos;
-        if (state.getValue(DoorBlock.HALF) == DoubleBlockHalf.UPPER) {
-            tileEntityPos = tileEntityPos.below();
-        }
-
-        EaselBlockEntity easelTileEntity = (EaselBlockEntity) world.getBlockEntity(tileEntityPos);
-
-        if (easelTileEntity == null) return InteractionResult.FAIL;
-
-        if (!player.isCrouching()) {
-            ItemStack easelCanvasStack = easelTileEntity.getEaselContainer().getCanvasStack();
-
-            if (easelCanvasStack.isEmpty()) {
-                if (heldItem.getItem() == ModItems.CANVAS && easelTileEntity.putCanvasStack(heldItem)) {
-                    player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-                    world.sendBlockUpdated(tileEntityPos, state, state, 2);
-
-                    return InteractionResult.SUCCESS;
-                }
-            }
-
-            MenuProvider namedContainerProvider = this.getMenuProvider(state, world, tileEntityPos);
-
-            if (namedContainerProvider != null) {
-                if (!(player instanceof ServerPlayer)) return InteractionResult.FAIL;
-
-                ServerPlayer serverPlayerEntity = (ServerPlayer)player;
-                BlockPos finalTileEntityPos = tileEntityPos;
-
-                NetworkHooks.openGui(serverPlayerEntity, namedContainerProvider, (packetBuffer) -> this.writeCanvasIdToNetwork(state, world, finalTileEntityPos, player, packetBuffer));
-            }
-
-            return InteractionResult.SUCCESS;
-        } else {
-            if (heldItem.isEmpty()) {
-                ItemStack canvasStack = easelTileEntity.getEaselContainer().extractCanvasStack();
-                world.sendBlockUpdated(tileEntityPos, state, state, Block.UPDATE_CLIENTS);
-
-                // No canvas to grab
-                if (canvasStack.isEmpty()) {
-                    return InteractionResult.FAIL;
-                }
-
-                player.setItemInHand(InteractionHand.MAIN_HAND, canvasStack);
-
-                return InteractionResult.SUCCESS;
-            }
-
-            return InteractionResult.FAIL;
-        }
-    }
-
-    public boolean isPathfindable(BlockState state, BlockGetter worldIn, BlockPos pos, PathComputationType type) {
-        return true;
-    }
-
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(HALF, FACING);
     }
@@ -145,8 +70,9 @@ public class EaselBlock extends BaseEntityBlock {
     }
 
     @Nullable
-    public BlockEntityTicker<EaselBlockEntity> getTicker(Level world, BlockEntityType<EaselBlockEntity> entityType) {
-        return world.isClientSide() ? createTickerHelper(entityType, ModBlockEntities.EASEL_TILE_ENTITY, EaselBlockEntity::tick) : null;
+    @Override
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState blockState, BlockEntityType<T> entityType) {
+        return world.isClientSide() ? null : createTickerHelper(entityType, ModBlockEntities.EASEL_BLOCK_ENTITY, EaselBlockEntity::serverTick);
     }
 
     /*
@@ -193,18 +119,6 @@ public class EaselBlock extends BaseEntityBlock {
         BlockPos blockpos = pos.below();
         BlockState blockstate = worldIn.getBlockState(blockpos);
         return state.getValue(HALF) == DoubleBlockHalf.LOWER ? blockstate.isFaceSturdy(worldIn, blockpos, Direction.UP) : blockstate.is(this);
-    }
-
-    protected void writeCanvasIdToNetwork(BlockState state, Level worldIn, BlockPos pos, Player player, FriendlyByteBuf networkBuffer) {
-        BlockEntity easelTileEntity = worldIn.getBlockEntity(pos);
-
-        if (!(easelTileEntity instanceof EaselBlockEntity)) {
-            Zetter.LOG.error("Cannot find EaselTileEntity to send canvas data to client");
-
-            return;
-        }
-
-        SCanvasNamePacket.writeCanvasName(networkBuffer, ((EaselBlockEntity) easelTileEntity).getCanvasName());
     }
 
     public void setPlacedBy(Level worldIn, BlockPos pos, BlockState state, LivingEntity placer, ItemStack stack) {

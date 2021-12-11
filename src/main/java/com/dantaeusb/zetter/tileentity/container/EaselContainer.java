@@ -1,8 +1,10 @@
 package com.dantaeusb.zetter.tileentity.container;
 
+import com.dantaeusb.zetter.core.ModItems;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemStackHandler;
 
 
 public class EaselContainer extends SimpleContainer implements Container {
@@ -13,6 +15,12 @@ public class EaselContainer extends SimpleContainer implements Container {
 
     public EaselContainer() {
         super(STORAGE_SIZE);
+    }
+
+    @Override
+    public boolean canPlaceItem(int index, ItemStack stack) {
+        return (index == 0 && stack.getItem() == ModItems.CANVAS)
+                || (index == 1 && stack.getItem() == ModItems.PALETTE);
     }
 
     /**
