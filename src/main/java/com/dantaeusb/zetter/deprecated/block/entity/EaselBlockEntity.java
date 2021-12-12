@@ -78,14 +78,12 @@ public class EaselBlockEntity extends BlockEntity {
      */
 
     @Override
-    public CompoundTag save(CompoundTag compoundTag)
+    public void saveAdditional(CompoundTag compoundTag)
     {
         super.save(compoundTag);
 
         CompoundTag easelStorage = this.easelContainer.serializeNBT();
         compoundTag.put(EASEL_STORAGE_TAG, easelStorage);
-
-        return compoundTag;
     }
 
     @Override
@@ -103,11 +101,7 @@ public class EaselBlockEntity extends BlockEntity {
     @Nullable
     public ClientboundBlockEntityDataPacket getUpdatePacket()
     {
-        CompoundTag nbtTagCompound = new CompoundTag();
-        save(nbtTagCompound);
-
-        int tileEntityType = 42;
-        return new ClientboundBlockEntityDataPacket(this.worldPosition, tileEntityType, nbtTagCompound);
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override

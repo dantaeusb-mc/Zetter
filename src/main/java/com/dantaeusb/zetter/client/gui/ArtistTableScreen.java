@@ -73,7 +73,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected void initFields() {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
-        this.nameField = new EditBox(this.font, this.leftPos + this.INPUT_XPOS + 4, this.topPos + INPUT_YPOS + 4, INPUT_WIDTH, INPUT_HEIGHT, new TranslatableComponent("container.immersivemp.lock_table"));
+        this.nameField = new EditBox(this.font, this.leftPos + this.INPUT_XPOS + 4, this.topPos + INPUT_YPOS + 4, INPUT_WIDTH, INPUT_HEIGHT, new TranslatableComponent("container.zetter.artist_table"));
         this.nameField.setCanLoseFocus(false);
         this.nameField.setTextColor(-1);
         this.nameField.setTextColorUneditable(-1);

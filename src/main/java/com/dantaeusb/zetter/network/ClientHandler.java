@@ -17,9 +17,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 
 public class ClientHandler {
-    public static void processCanvasSync(final SCanvasSyncMessage packetIn, ClientLevel world) {
+    public static void processCanvasSync(final SCanvasSyncMessage packetIn, Level world) {
         final LocalPlayer player = Minecraft.getInstance().player;
         final String canvasCode = packetIn.getCanvasCode();
         final AbstractCanvasData canvasData = packetIn.getCanvasData();
@@ -54,7 +55,7 @@ public class ClientHandler {
         canvasTracker.registerCanvasData(canvasCode, canvasData);
     }
 
-    public static void processPaintingSync(final SPaintingSyncMessage packetIn, ClientLevel world) {
+    public static void processPaintingSync(final SPaintingSyncMessage packetIn, Level world) {
         String canvasCode = packetIn.getCanvasCode();
         PaintingData canvasData = packetIn.getPaintingData();
 
@@ -68,7 +69,7 @@ public class ClientHandler {
         canvasTracker.registerCanvasData(canvasCode, canvasData);
     }
 
-    public static void processEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, ClientLevel world) {
+    public static void processEaselCanvasUpdate(final SEaselCanvasChangePacket packetIn, Level world) {
         LocalPlayer player = Minecraft.getInstance().player;
         Entity easel = world.getEntity(packetIn.getEntityId());
 

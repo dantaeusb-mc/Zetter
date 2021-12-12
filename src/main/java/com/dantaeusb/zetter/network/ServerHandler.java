@@ -14,7 +14,7 @@ import com.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fmllegacy.network.PacketDistributor;
+import net.minecraftforge.network.PacketDistributor;
 
 public class ServerHandler {
     /**

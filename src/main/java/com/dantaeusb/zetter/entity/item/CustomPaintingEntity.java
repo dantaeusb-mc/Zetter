@@ -24,8 +24,8 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fmllegacy.common.registry.IEntityAdditionalSpawnData;
-import net.minecraftforge.fmllegacy.network.NetworkHooks;
+import net.minecraftforge.entity.IEntityAdditionalSpawnData;
+import net.minecraftforge.network.NetworkHooks;
 import org.apache.commons.lang3.Validate;
 
 import javax.annotation.Nonnull;
@@ -309,7 +309,6 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     /**
      * Checks if the entity is in range to render.
      */
-    @OnlyIn(Dist.CLIENT)
     public boolean shouldRenderAtSqrDistance(double distance) {
         double d0 = 16.0D;
         d0 = d0 * 64.0D * getViewScale();
@@ -348,7 +347,6 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Sets a target for the client to interpolate towards over the next few ticks
      * Copied from PaintingEntity
      */
-    @OnlyIn(Dist.CLIENT)
     public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
         BlockPos blockpos = this.pos.offset(x - this.getX(), y - this.getY(), z - this.getZ());
         this.setPos(blockpos.getX(), blockpos.getY(), blockpos.getZ());

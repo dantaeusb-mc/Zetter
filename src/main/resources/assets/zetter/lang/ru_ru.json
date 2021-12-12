@@ -13,6 +13,7 @@
   "container.zetter.painting.sliders": "Настройка цвета (HSV)",
   "container.zetter.painting.help": "Онлайн руководство",
   "container.zetter.artist_table.help": "Онлайн руководство",
+  "entity.zetter.easel": "Мольберт",
   "entity.zetter.custom_painting_entity": "Обрамленная картинка",
   "item.zetter.canvas": "Холст",
   "item.zetter.painting": "Картина",

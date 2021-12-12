@@ -52,14 +52,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
     // NBT stack
 
     @Override
-    public CompoundTag save(CompoundTag parentNBTTagCompound)
+    public void saveAdditional(CompoundTag parentNBTTagCompound)
     {
         super.save(parentNBTTagCompound); // The super call is required to save and load the tileEntity's location
 
         CompoundTag canvasNbt = this.canvasStorage.serializeNBT();
         parentNBTTagCompound.put(ARTIST_TABLE_CANVAS_STORAGE_TAG, canvasNbt);
-
-        return parentNBTTagCompound;
     }
 
     @Override
@@ -80,11 +78,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
     @Nullable
     public ClientboundBlockEntityDataPacket getUpdatePacket()
     {
-        CompoundTag nbtTagCompound = new CompoundTag();
-        save(nbtTagCompound);
-
-        int tileEntityType = 43;
-        return new ClientboundBlockEntityDataPacket(this.worldPosition, tileEntityType, nbtTagCompound);
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     @Override

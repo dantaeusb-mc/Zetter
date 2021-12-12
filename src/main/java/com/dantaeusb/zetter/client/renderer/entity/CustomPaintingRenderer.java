@@ -4,7 +4,6 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import com.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import com.dantaeusb.zetter.core.Helper;
-import com.dantaeusb.zetter.core.ModModels;
 import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import com.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.dantaeusb.zetter.storage.PaintingData;

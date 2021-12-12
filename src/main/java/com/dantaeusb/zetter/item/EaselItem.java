@@ -49,8 +49,8 @@ public class EaselItem extends Item
             AABB aabb = ModEntities.EASEL_ENTITY.getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
 
             if (
-                world.noCollision((Entity)null, aabb, (collidedEntity) -> true) &&
-                world.getEntities((Entity)null, aabb).isEmpty()
+                world.noCollision(null, aabb) &&
+                world.getEntities(null, aabb).isEmpty()
             ) {
                 if (world instanceof ServerLevel) {
                     /*EaselEntity easel = ModEntities.EASEL_ENTITY.create(

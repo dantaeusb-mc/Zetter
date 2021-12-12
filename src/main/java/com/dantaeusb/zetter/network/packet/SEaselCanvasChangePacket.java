@@ -5,9 +5,10 @@ import com.dantaeusb.zetter.network.ClientHandler;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.common.util.LogicalSidedProvider;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.fmllegacy.LogicalSidedProvider;
-import net.minecraftforge.fmllegacy.network.NetworkEvent;
+import net.minecraftforge.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -16,6 +17,7 @@ import java.util.function.Supplier;
  * Use Entity's SyncData instead
  * @link {SSetSlotPacket}
  */
+@Deprecated()
 public class SEaselCanvasChangePacket {
     private int entityId;
     private ItemStack item;
@@ -61,7 +63,7 @@ public class SEaselCanvasChangePacket {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<ClientLevel> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SEaselCanvasChangePacket context could not provide a ClientWorld.");
             return;

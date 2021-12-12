@@ -4,19 +4,10 @@ import com.dantaeusb.zetter.Zetter;
 import com.dantaeusb.zetter.client.model.EaselModel;
 import com.dantaeusb.zetter.client.renderer.entity.CustomPaintingRenderer;
 import com.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
-import com.dantaeusb.zetter.entity.item.CustomPaintingEntity;
-import com.dantaeusb.zetter.entity.item.EaselEntity;
-import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.client.model.ForgeModelBakery;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -27,7 +18,7 @@ public class ModModels
     @SuppressWarnings("unused")
     public static void onModelRegistryEvent(ModelRegistryEvent event) {
         for (ModelResourceLocation modelLocation : CustomPaintingRenderer.FRAME_MODELS.values()) {
-            ModelLoader.addSpecialModel(modelLocation);
+            ForgeModelBakery.addSpecialModel(modelLocation);
         }
     }
 
