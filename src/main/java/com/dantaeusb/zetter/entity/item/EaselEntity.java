@@ -70,12 +70,40 @@ public class EaselEntity extends Entity implements ItemStackHandlerListener, Men
         this.entityData.define(DATA_ID_CANVAS_CODE, "");
     }
 
-    public String getCanvasCode() {
-        return this.entityData.get(DATA_ID_CANVAS_CODE);
+    public @Nullable String getCanvasCode() {
+        String canvasCode = this.entityData.get(DATA_ID_CANVAS_CODE);
+
+        if (canvasCode.isEmpty()) {
+            return null;
+        }
+
+        return canvasCode;
     }
 
-    protected void setCanvasCode(String canvasCode) {
-        this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
+    protected void setCanvasCode(@Nullable String canvasCode) {
+        if (canvasCode != null) {
+            this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
+        } else {
+            this.entityData.set(DATA_ID_CANVAS_CODE, "");
+        }
+    }
+
+    public void onSyncedDataUpdated(EntityDataAccessor<?> entityDataAccessor) {
+        super.onSyncedDataUpdated(entityDataAccessor);
+
+        /**
+         * As canvas is not synced on client side, we need to handle the situation
+         * where canvas is automatically initialized when placed on easel,
+         * and update canvas code on canvas item on client side accordingly
+         */
+        if (
+            this.level.isClientSide
+            && DATA_ID_CANVAS_CODE.equals(entityDataAccessor)
+            && this.getCanvasCode() != null
+        ) {
+            final ItemStack canvasStack = this.easelContainer.getCanvasStack();
+            CanvasItem.setCanvasCode(canvasStack, this.getCanvasCode());
+        }
     }
 
     public Packet<?> getAddEntityPacket() {
@@ -144,6 +172,7 @@ public class EaselEntity extends Entity implements ItemStackHandlerListener, Men
         this.easelContainer.deserializeNBT(compoundTag.getCompound(EASEL_STORAGE_TAG));
 
         final String canvasCode = compoundTag.getString(CANVAS_CODE_TAG);
+
         if (canvasCode != null) {
             this.setCanvasCode(canvasCode);
         }

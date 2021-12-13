@@ -13,6 +13,8 @@
   "container.zetter.painting.sliders": "Ajuste de color HSV ",
   "container.zetter.painting.help": "Manual en Linea",
   "container.zetter.artist_table.help": "Manual en Linea",
+  "entity.zetter.easel": "Caballete",
+  "item.zetter.easel": "Caballete",
   "item.zetter.canvas": "Lienzo",
   "item.zetter.paints": "Pinturas",
   "item.zetter.painting": "Pintura",
