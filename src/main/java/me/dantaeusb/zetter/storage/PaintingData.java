@@ -14,6 +14,8 @@ public class PaintingData extends AbstractCanvasData {
     protected static final String NBT_TAG_AUTHOR_NAME = "author_name";
     protected static final String NBT_TAG_TITLE = "title";
 
+    public static final int MAX_GENERATION = 2;
+
     protected String authorName;
     protected String title;
 

@@ -24,6 +24,11 @@ public class PaintingItem extends Item
     public static final String NBT_TAG_CACHED_PAINTING_NAME = "CachedPaintingName";
     public static final String NBT_TAG_CACHED_AUTHOR_NAME = "CachedAuthorName";
     public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
+    public static final String NBT_TAG_GENERATION = "Generation";
+
+    public static final int GENERATION_ORIGINAL = 0;
+    public static final int GENERATION_COPY = 1;
+    public static final int GENERATION_COPY_OF_COPY = 2;
 
     public PaintingItem() {
         super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
@@ -33,7 +38,7 @@ public class PaintingItem extends Item
         super(properties);
     }
 
-    public static void setPaintingData(ItemStack stack, String paintingCode, PaintingData paintingData) {
+    public static void setPaintingData(ItemStack stack, String paintingCode, PaintingData paintingData, int generation) {
         setPaintingCode(stack, paintingCode);
 
         setCachedAuthorName(stack, paintingData.getAuthorName());
@@ -44,6 +49,7 @@ public class PaintingItem extends Item
         TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", widthBlocks, heightBlocks));
 
         setCachedStringSize(stack, blockSizeString.getString());
+        setGeneration(stack, generation);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -143,5 +149,19 @@ public class PaintingItem extends Item
         }
 
         return compoundNBT.getString(NBT_TAG_CACHED_STRING_SIZE);
+    }
+
+    public static void setGeneration(ItemStack stack, int generation) {
+        stack.getOrCreateTag().putInt(NBT_TAG_GENERATION, generation);
+    }
+
+    public static int getGeneration(ItemStack stack) {
+        CompoundTag compoundNBT = stack.getTag();
+
+        if (compoundNBT == null) {
+            return 0;
+        }
+
+        return compoundNBT.getInt(NBT_TAG_GENERATION);
     }
 }

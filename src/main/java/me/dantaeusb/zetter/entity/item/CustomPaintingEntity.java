@@ -42,6 +42,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
     public static final String NBT_TAG_MATERIAL = "Material";
     public static final String NBT_TAG_HAS_PLATE = "HasPlate";
+    public static final String NBT_TAG_GENERATION = "Generation";
 
     protected String canvasCode;
 
@@ -55,6 +56,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     protected int blockHeight;
 
     protected boolean hasPlate;
+    protected int generation;
 
     protected Materials material;
 
@@ -62,7 +64,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         super(type, world);
     }
 
-    public CustomPaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize) {
+    public CustomPaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
         super(ZetterEntities.CUSTOM_PAINTING_ENTITY, world, pos);
 
         this.material = material;
@@ -72,6 +74,8 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
         this.blockWidth = blockSize[0];
         this.blockHeight = blockSize[1];
+
+        this.generation = generation;
 
         this.setDirection(facing);
     }
@@ -228,6 +232,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         compoundTag.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
         compoundTag.putString(NBT_TAG_MATERIAL, this.material.toString());
         compoundTag.putBoolean(NBT_TAG_HAS_PLATE, this.hasPlate);
+        compoundTag.putInt(NBT_TAG_GENERATION, this.generation);
 
         super.addAdditionalSaveData(compoundTag);
     }
@@ -248,8 +253,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (compound.contains(NBT_TAG_MATERIAL)) {
             this.material = Materials.fromString(compound.getString(NBT_TAG_MATERIAL));
         } else {
-            // @todo: replace to OAK on release
-            this.material = Materials.DARK_OAK;
+            this.material = Materials.OAK;
         }
 
         if (compound.contains(NBT_TAG_HAS_PLATE)) {
@@ -257,6 +261,13 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         } else {
             // @todo: remove on release?
             this.hasPlate = false;
+        }
+
+        if (compound.contains(NBT_TAG_GENERATION)) {
+            this.generation = compound.getInt(NBT_TAG_GENERATION);
+        } else {
+            // Only originals were available before this tag was added
+            this.generation = 0;
         }
 
         super.readAdditionalSaveData(compound);
@@ -325,7 +336,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
-            FrameItem.setPaintingData(canvasStack, this.canvasCode, paintingData);
+            FrameItem.setPaintingData(canvasStack, this.canvasCode, paintingData, this.generation);
             FrameItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
             this.spawnAtLocation(canvasStack);
@@ -352,6 +363,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public void playPlacementSound() {
         this.playSound(SoundEvents.PAINTING_PLACE, 1.0F, 1.0F);
+    }
+
+    @Override
+    public ItemStack getPickResult() {
+        return new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.getMaterial(), this.hasPlate())));
     }
 
     @Nonnull

@@ -94,7 +94,7 @@ public class FrameItem extends PaintingItem {
             Level world = context.getLevel();
 
             CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
-                    world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack)
+                    world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack), getGeneration(stack)
             );
 
             if (!paintingEntity.survives()) {

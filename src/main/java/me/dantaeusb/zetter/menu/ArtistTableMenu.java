@@ -182,7 +182,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
         paintingData.setMetaProperties(player.getName().getString(), this.paintingName);
         canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
 
-        FrameItem.setPaintingData(outStack, newCode, paintingData);
+        FrameItem.setPaintingData(outStack, newCode, paintingData, 0);
         FrameItem.setBlockSize(
                 outStack,
                 new int[]{
