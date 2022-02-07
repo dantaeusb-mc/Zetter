@@ -104,6 +104,11 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
         this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
     }
 
+    @Override
+    public void unregisterCanvasData(String canvasCode) {
+        Zetter.LOG.error("Trying to unregister canvas on server side, not supported yet");
+    }
+
     /**
      * Server handling - ticking, tracking from players and syncing
      */

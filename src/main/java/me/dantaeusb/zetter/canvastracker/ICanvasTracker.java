@@ -28,6 +28,8 @@ public interface ICanvasTracker {
 
     void registerCanvasData(String canvasCode, AbstractCanvasData canvasData);
 
+    void unregisterCanvasData(String canvasCode);
+
     Tag serializeNBT();
 
     void deserializeNBT(Tag nbt);

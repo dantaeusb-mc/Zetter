@@ -58,21 +58,6 @@ public class FrameItem extends PaintingItem {
         return hasPainting.getPropertyOverrideValue();
     }
 
-    public static void setBlockSize(ItemStack stack, int[] blockSize) {
-        stack.getOrCreateTag().putIntArray(CustomPaintingEntity.NBT_TAG_BLOCK_SIZE, blockSize);
-    }
-
-    @Nullable
-    public static int[] getBlockSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
-
-        if (compoundNBT == null) {
-            return null;
-        }
-
-        return compoundNBT.getIntArray(CustomPaintingEntity.NBT_TAG_BLOCK_SIZE);
-    }
-
     /**
      * Hanging painting
      */

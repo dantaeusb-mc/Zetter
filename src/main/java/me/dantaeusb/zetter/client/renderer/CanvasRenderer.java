@@ -32,7 +32,12 @@ public class CanvasRenderer implements AutoCloseable {
 
     private final Timer timer = new Timer(20.0F, 0L);
 
+    /**
+     * Canvasses marked as managed will be unloaded after some time
+     * If canvas is not managed, it should not be added to this map
+     */
     private final Map<String, Integer> ticksSinceRenderRequested = Maps.newHashMap();
+
     private final  Map<String, TextureRequest> textureRequestTimeout = Maps.newHashMap();
 
     public CanvasRenderer(TextureManager textureManager) {
@@ -65,7 +70,9 @@ public class CanvasRenderer implements AutoCloseable {
         // We won't ever render or request 0 canvas, as 0 is a fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
 
-        this.ticksSinceRenderRequested.put(canvasCode, 0);
+        if (canvas.isManaged()) {
+            this.ticksSinceRenderRequested.put(canvasCode, 0);
+        }
 
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvasCode, canvas, false);
 
@@ -135,7 +142,7 @@ public class CanvasRenderer implements AutoCloseable {
      * on this canvas since we're not using it
      * @param canvasCode
      */
-    protected void unloadCanvas(String canvasCode) {
+    public void unloadCanvas(String canvasCode) {
         Zetter.LOG.debug("Unloading canvas " + canvasCode);
 
         this.canvasRendererInstances.remove(canvasCode);

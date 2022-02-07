@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.item.crafting;
 import me.dantaeusb.zetter.Zetter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -94,8 +95,10 @@ public class FramingRecipe extends CustomRecipe {
 
         if (!paintingStack.isEmpty() && paintingStack.hasTag()) {
             ItemStack outStack = frameStack.copy();
+
             CompoundTag compoundnbt = paintingStack.getTag().copy();
             outStack.setTag(compoundnbt);
+
             return outStack;
         } else {
             return ItemStack.EMPTY;

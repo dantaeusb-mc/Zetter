@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.menu;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.core.ZetterContainerMenus;
+import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombination;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -149,14 +150,14 @@ public class ArtistTableMenu extends AbstractContainerMenu {
                     existingStack.resetHoverName();
                 }
 
-                FrameItem.setCachedPaintingName(outStack, this.paintingName);
+                PaintingItem.setCachedPaintingName(outStack, this.paintingName);
             } else if (!this.paintingName.equals(FrameItem.getCachedAuthorName(outStack))) {
-                FrameItem.setCachedPaintingName(outStack, this.paintingName);
+                PaintingItem.setCachedPaintingName(outStack, this.paintingName);
             }
 
             final String authorName = this.player.getName().getString();
             if (!authorName.equals(FrameItem.getCachedAuthorName(outStack))) {
-                FrameItem.setCachedAuthorName(outStack, authorName);
+                PaintingItem.setCachedAuthorName(outStack, authorName);
             }
         }
 
@@ -182,14 +183,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
         paintingData.setMetaProperties(player.getName().getString(), this.paintingName);
         canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
 
-        FrameItem.setPaintingData(outStack, newCode, paintingData, 0);
-        FrameItem.setBlockSize(
-                outStack,
-                new int[]{
-                        paintingData.getWidth() / paintingData.getResolution().getNumeric(),
-                        paintingData.getHeight() / paintingData.getResolution().getNumeric()
-                }
-        );
+        PaintingItem.setPaintingData(outStack, newCode, paintingData, 0);
 
         if (!player.isCreative()) {
             this.canvasStorage.clearContent();

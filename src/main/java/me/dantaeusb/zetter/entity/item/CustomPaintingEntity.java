@@ -337,7 +337,6 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
             FrameItem.setPaintingData(canvasStack, this.canvasCode, paintingData, this.generation);
-            FrameItem.setBlockSize(canvasStack, new int[]{this.blockWidth, this.blockHeight});
 
             this.spawnAtLocation(canvasStack);
         }

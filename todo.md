@@ -1,5 +1,6 @@
 #### Pre-release tasks:
 
+* \[HIGH\] ZG Any server response leads to painting sale
 * \[HIGH\] Not saving current palette selection and pixel buffer in Easel Entity;
 * \[HIGH\] Requested non-existent canvas errors because of synceddata desync;
 * \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;
@@ -10,6 +11,7 @@
 
 #### Release tasks:
 
+* \[HIGH\] When dropping painting, if cannot be loaded, just drop frame (gallery workaround);
 * \[HIGH\] Configuration file for texture size;
 * \[HIGH\] Reduce saving and sending format to write RGB data instead of RGBA;
 * \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel;

@@ -46,6 +46,10 @@ public class CanvasDefaultTracker implements ICanvasTracker {
 
     }
 
+    public void unregisterCanvasData(String canvasCode) {
+
+    }
+
     public Tag serializeNBT() {
         CompoundTag compound = new CompoundTag();
         compound.putInt(NBT_TAG_LAST_CANVAS_ID, this.getLastCanvasId());

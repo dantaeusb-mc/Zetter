@@ -2,9 +2,12 @@ package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.client.renderer.item.CanvasItemRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.storage.CanvasData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
@@ -14,6 +17,9 @@ import javax.annotation.Nullable;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.client.IItemRenderProperties;
+
+import java.util.function.Consumer;
 
 public class CanvasItem extends Item
 {
@@ -31,7 +37,7 @@ public class CanvasItem extends Item
      * @return
      */
     @Nullable
-    public static CanvasData getCanvasData(ItemStack stack, Level world) {
+    public static CanvasData getCanvasData(ItemStack stack, @Nullable Level world) {
         Item canvas = stack.getItem();
 
         if (canvas instanceof CanvasItem) {
@@ -120,5 +126,22 @@ public class CanvasItem extends Item
         canvasTracker.registerCanvasData(canvasCode, canvasData);
 
         return canvasCode;
+    }
+
+    @Override
+    public void initializeClient(Consumer<IItemRenderProperties> consumer)
+    {
+        if (Minecraft.getInstance() == null) return;
+
+        consumer.accept(new IItemRenderProperties()
+        {
+            private final CanvasItemRenderer stackRenderer = Minecraft.getInstance() != null ? new CanvasItemRenderer(
+                    Minecraft.getInstance().getBlockEntityRenderDispatcher(),
+                    Minecraft.getInstance().getEntityModels()
+            ) : null;
+
+            @Override
+            public BlockEntityWithoutLevelRenderer getItemStackRenderer() { return stackRenderer; }
+        });
     }
 }

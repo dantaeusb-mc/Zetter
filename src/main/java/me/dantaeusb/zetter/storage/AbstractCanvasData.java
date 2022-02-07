@@ -32,6 +32,15 @@ public abstract class AbstractCanvasData extends SavedData {
     protected int height;
 
     /**
+     * This flag means that client can automatically manage
+     * the lifetime of the canvas data and remove it from memory
+     * if it was not used for some time. This can be toggled
+     * off to keep data in memory for as long as needed but
+     * this data will have to be collected manually.
+     */
+    protected boolean managed = true;
+
+    /**
      *
      * @param resolution
      * @param width
@@ -75,6 +84,14 @@ public abstract class AbstractCanvasData extends SavedData {
 
     public int getColorAt(int pixelX, int pixelY) {
         return this.getColorAt(this.getPixelIndex(pixelX, pixelY));
+    }
+
+    public void setManaged(boolean managed) {
+        this.managed = managed;
+    }
+
+    public boolean isManaged() {
+        return this.managed;
     }
 
     public int getWidth() {
