@@ -1,5 +1,5 @@
 {
-  "parent": "builtin/entity",
+  "parent": "builtin/generated",
   "textures": {
     "layer0": "zetter:item/canvas"
   }

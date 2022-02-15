@@ -61,7 +61,7 @@ Core values of this mod:
 [[dependencies.zetter]]
     modId="forge"
     mandatory=true
-    versionRange="[38,)"
+    versionRange="[39,)"
     ordering="NONE"
     side="BOTH"
 

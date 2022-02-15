@@ -128,7 +128,7 @@ public class CanvasItem extends Item
         return canvasCode;
     }
 
-    @Override
+    /*@Override
     public void initializeClient(Consumer<IItemRenderProperties> consumer)
     {
         if (Minecraft.getInstance() == null) return;
@@ -143,5 +143,5 @@ public class CanvasItem extends Item
             @Override
             public BlockEntityWithoutLevelRenderer getItemStackRenderer() { return stackRenderer; }
         });
-    }
+    }*/
 }

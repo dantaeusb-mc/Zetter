@@ -43,6 +43,7 @@ public class ZetterSetup
     @SuppressWarnings("unused")
     public static void onImcSetupEvent(InterModEnqueueEvent event) {
         InterModComms.sendTo("carryon", "blacklistEntity", () -> "zetter:custom_painting_entity");
+        InterModComms.sendTo("carryon", "blacklistEntity", () -> "zetter:easel_entity");
         InterModComms.sendTo("carryon", "blacklistBlock", () -> "zetter:easel");
     }
 
