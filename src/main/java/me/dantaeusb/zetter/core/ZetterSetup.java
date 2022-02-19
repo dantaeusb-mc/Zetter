@@ -26,17 +26,19 @@ public class ZetterSetup
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onClientSetupEvent(FMLClientSetupEvent event) {
-        MenuScreens.register(ZetterContainerMenus.PAINTING, PaintingScreen::new);
-        MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE, ArtistTableScreen::new);
+        event.enqueueWork(() -> {
+            MenuScreens.register(ZetterContainerMenus.PAINTING, PaintingScreen::new);
+            MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE, ArtistTableScreen::new);
 
-        for (Item frame : ZetterItems.FRAMES.values()) {
-            ItemProperties.register(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
-            ItemProperties.register(frame, new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
-        }
+            for (Item frame : ZetterItems.FRAMES.values()) {
+                ItemProperties.register(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
+                ItemProperties.register(frame, new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
+            }
 
-        ItemBlockRenderTypes.setRenderLayer(ZetterBlocks.EASEL, RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(ZetterBlocks.EASEL, RenderType.cutout());
 
-        new CanvasRenderer(Minecraft.getInstance().getTextureManager());
+            new CanvasRenderer(Minecraft.getInstance().getTextureManager());
+        });
     }
 
     @SubscribeEvent

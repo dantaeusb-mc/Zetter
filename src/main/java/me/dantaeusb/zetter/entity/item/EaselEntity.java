@@ -43,7 +43,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
-public class EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
+public class   EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
     private static final String EASEL_STORAGE_TAG = "storage";
     private static final String CANVAS_CODE_TAG = "CanvasCode";
 
@@ -205,12 +205,17 @@ public class EaselEntity extends Entity implements ItemStackHandlerListener, Men
         final boolean isPalette = heldItem.is(ZetterItems.PALETTE);
 
         if (isCanvas) {
-            this.easelContainer.setCanvasStack(heldItem);
-            player.setItemInHand(hand, ItemStack.EMPTY);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            if (this.easelContainer.getCanvasStack().isEmpty()) {
+                this.easelContainer.setCanvasStack(heldItem);
+                player.setItemInHand(hand, ItemStack.EMPTY);
+
+                return InteractionResult.sidedSuccess(this.level.isClientSide);
+            }
         } else if (isPalette) {
-            this.easelContainer.setPaletteStack(heldItem);
-            player.setItemInHand(hand, ItemStack.EMPTY);
+            if (this.easelContainer.getPaletteStack().isEmpty()) {
+                this.easelContainer.setPaletteStack(heldItem);
+                player.setItemInHand(hand, ItemStack.EMPTY);
+            }
         }
 
         this.openInventory(player);
