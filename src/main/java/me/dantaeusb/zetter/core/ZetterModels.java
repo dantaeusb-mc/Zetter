@@ -25,8 +25,8 @@ public class ZetterModels
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onEntityRenderersRegistryEvent(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ZetterEntities.CUSTOM_PAINTING_ENTITY, CustomPaintingRenderer::new);
-        event.registerEntityRenderer(ZetterEntities.EASEL_ENTITY, EaselRenderer::new);
+        event.registerEntityRenderer(ZetterEntities.CUSTOM_PAINTING_ENTITY.get(), CustomPaintingRenderer::new);
+        event.registerEntityRenderer(ZetterEntities.EASEL_ENTITY.get(), EaselRenderer::new);
     }
 
     @SubscribeEvent

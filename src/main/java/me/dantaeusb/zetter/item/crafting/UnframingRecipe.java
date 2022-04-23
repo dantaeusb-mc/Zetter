@@ -103,7 +103,7 @@ public class UnframingRecipe extends CustomRecipe {
         }
 
         if (!frameStack.isEmpty() && frameStack.hasTag()) {
-            ItemStack outStack = new ItemStack(ZetterItems.PAINTING);
+            ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
             CompoundTag compoundnbt = frameStack.getTag().copy();
             outStack.setTag(compoundnbt);
             return outStack;

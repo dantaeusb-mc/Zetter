@@ -33,7 +33,7 @@ public class CanvasItem extends Item
      *
      * @see {@link FilledMapItem#getMapData(ItemStack, World)}
      * @param stack
-     * @param worldIn
+     * @param world
      * @return
      */
     @Nullable
@@ -80,7 +80,7 @@ public class CanvasItem extends Item
      * @return
      */
     public static @Nullable String getCanvasCode(@Nullable ItemStack stack) {
-        if (stack == null || !stack.is(ZetterItems.CANVAS)) {
+        if (stack == null || !stack.is(ZetterItems.CANVAS.get())) {
             return null;
         }
 

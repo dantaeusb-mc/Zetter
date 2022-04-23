@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter;
 
+import me.dantaeusb.zetter.core.*;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -29,5 +30,11 @@ public class Zetter
 
         quarkEnabled = ModList.get().isLoaded("quark");
         MOD_EVENT_BUS = FMLJavaModLoadingContext.get().getModEventBus();
+
+        ZetterBlocks.init(MOD_EVENT_BUS);
+        ZetterItems.init(MOD_EVENT_BUS);
+        ZetterBlockEntities.init(MOD_EVENT_BUS);
+        ZetterContainerMenus.init(MOD_EVENT_BUS);
+        ZetterEntities.init(MOD_EVENT_BUS);
     }
 }

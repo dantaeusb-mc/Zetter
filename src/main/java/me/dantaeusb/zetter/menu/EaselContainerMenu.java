@@ -63,7 +63,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     private Notify firstLoadNotification = ()->{};
 
     public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer) {
-        super(ZetterContainerMenus.PAINTING, windowID);
+        super(ZetterContainerMenus.PAINTING.get(), windowID);
 
         if (ZetterContainerMenus.PAINTING == null)
             throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
@@ -82,7 +82,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
             public boolean mayPlace(ItemStack stack) {
-                return stack.getItem() == ZetterItems.PALETTE;
+                return stack.getItem() == ZetterItems.PALETTE.get();
             }
         });
 
@@ -143,7 +143,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public void handleCanvasChange(ItemStack canvasStack) {
-        if (canvasStack.getItem() == ZetterItems.CANVAS) {
+        if (canvasStack.getItem() == ZetterItems.CANVAS.get()) {
             this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.world));
         } else {
             this.canvas = null;
@@ -469,9 +469,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     /**
-     * Add all newest pixels to the canvas when syncing to keep recent player's changes
+     * Add all newest pixels to the canvas when syncing to keep recent player's changesv
+     * @param canvasCode
      * @param canvasData
-     * @param timestamp
+     * @param packetTimestamp
      */
     @OnlyIn(Dist.CLIENT)
     public void processSync(String canvasCode, CanvasData canvasData, long packetTimestamp) {
@@ -589,7 +590,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
             // Inventory
             } else {
-                if (sourceStack.getItem() == ZetterItems.PALETTE) {
+                if (sourceStack.getItem() == ZetterItems.PALETTE.get()) {
                     if (!this.moveItemStackTo(sourceStack, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }

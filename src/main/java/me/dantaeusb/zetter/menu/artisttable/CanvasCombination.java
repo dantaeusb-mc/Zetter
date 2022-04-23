@@ -87,7 +87,7 @@ public class CanvasCombination {
                             return;
                         }
                     }
-                } else if (currentStack.getItem() == ZetterItems.CANVAS) {
+                } else if (currentStack.getItem() == ZetterItems.CANVAS.get()) {
                     if ((x < min.getA() || x > max.getA()) || (y < min.getB() || y > max.getB())) {
                         this.state = State.INVALID_SHAPE;
                         this.rectangle = CanvasCombination.getZeroRect();

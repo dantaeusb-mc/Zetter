@@ -59,7 +59,7 @@ public class EaselBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState blockState, BlockEntityType<T> entityType) {
-        return world.isClientSide() ? null : createTickerHelper(entityType, ZetterBlockEntities.EASEL_BLOCK_ENTITY, EaselBlockEntity::serverTick);
+        return world.isClientSide() ? null : createTickerHelper(entityType, ZetterBlockEntities.EASEL_BLOCK_ENTITY.get(), EaselBlockEntity::serverTick);
     }
 
     /*

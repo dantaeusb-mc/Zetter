@@ -75,7 +75,7 @@ public class ArtistTableCanvasStorage implements Container {
 
     @Override
     public boolean canPlaceItem(int index, ItemStack stack) {
-        if (stack.getItem() == ZetterItems.CANVAS) {
+        if (stack.getItem() == ZetterItems.CANVAS.get()) {
             return stackHandler.isItemValid(index, stack);
         }
 

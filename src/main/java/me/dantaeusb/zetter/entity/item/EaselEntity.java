@@ -201,8 +201,8 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return InteractionResult.sidedSuccess(this.level.isClientSide);
         }
 
-        final boolean isCanvas = heldItem.is(ZetterItems.CANVAS);
-        final boolean isPalette = heldItem.is(ZetterItems.PALETTE);
+        final boolean isCanvas = heldItem.is(ZetterItems.CANVAS.get());
+        final boolean isPalette = heldItem.is(ZetterItems.PALETTE.get());
 
         if (isCanvas) {
             if (this.easelContainer.getCanvasStack().isEmpty()) {
@@ -283,7 +283,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return true;
         }
 
-        if (!itemStack.is(ZetterItems.CANVAS)) {
+        if (!itemStack.is(ZetterItems.CANVAS.get())) {
             Zetter.LOG.error("Trying to put non-canvas on easel, item likely will be removed");
             return false;
         }
@@ -301,7 +301,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     CanvasData getCanvasData() {
         ItemStack canvasStack = this.getCanvasStack();
 
-        if (canvasStack.isEmpty() || canvasStack.getItem() != ZetterItems.CANVAS) {
+        if (canvasStack.isEmpty() || canvasStack.getItem() != ZetterItems.CANVAS.get()) {
             return null;
         }
 
@@ -399,7 +399,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     /**
      * Drop an item associated with this entity
-     * @param p_31717_
+     * @param entity
      */
     public void dropItem(@Nullable Entity entity) {
         if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
@@ -411,7 +411,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 }
             }
 
-            this.spawnAtLocation(ZetterItems.EASEL);
+            this.spawnAtLocation(ZetterItems.EASEL.get());
         }
     }
 
@@ -441,7 +441,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     @Override
     public ItemStack getPickResult() {
-        return new ItemStack(ZetterItems.EASEL);
+        return new ItemStack(ZetterItems.EASEL.get());
     }
 
     /**

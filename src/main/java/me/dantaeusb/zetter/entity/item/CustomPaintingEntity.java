@@ -65,7 +65,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
     }
 
     public CustomPaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
-        super(ZetterEntities.CUSTOM_PAINTING_ENTITY, world, pos);
+        super(ZetterEntities.CUSTOM_PAINTING_ENTITY.get(), world, pos);
 
         this.material = material;
         this.hasPlate = hasPlate;
@@ -332,7 +332,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
 
-            ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)));
+            ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)).get());
 
             PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
@@ -366,7 +366,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     @Override
     public ItemStack getPickResult() {
-        return new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.getMaterial(), this.hasPlate())));
+        return new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.getMaterial(), this.hasPlate())).get());
     }
 
     @Nonnull

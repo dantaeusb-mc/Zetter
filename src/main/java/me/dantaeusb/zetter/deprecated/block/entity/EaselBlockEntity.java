@@ -27,13 +27,13 @@ public class EaselBlockEntity extends BlockEntity {
     private static final String EASEL_STORAGE_TAG = "storage";
 
     public EaselBlockEntity(BlockPos pos, BlockState state) {
-        super(ZetterBlockEntities.EASEL_BLOCK_ENTITY, pos, state);
+        super(ZetterBlockEntities.EASEL_BLOCK_ENTITY.get(), pos, state);
 
         this.easelContainer = new EaselContainer();
     }
 
     public static void serverTick(Level world, BlockPos pos, BlockState state, EaselBlockEntity easelBlockEntity) {
-        if (world.getBlockEntity(pos).getType() == ZetterBlockEntities.EASEL_BLOCK_ENTITY) {
+        if (world.getBlockEntity(pos).getType() == ZetterBlockEntities.EASEL_BLOCK_ENTITY.get()) {
             final ItemStack canvasStack = easelBlockEntity.getEaselContainer().getCanvasStack();
             final ItemStack paletteStack = easelBlockEntity.getEaselContainer().getPaletteStack();
 
@@ -43,7 +43,7 @@ public class EaselBlockEntity extends BlockEntity {
             float f = Mth.abs(180.0F - state.getValue(EaselBlock.FACING).toYRot());
 
             Vec3 vec3 = Vec3.atBottomCenterOf(pos);
-            EaselEntity easelEntity = new EaselEntity(ZetterEntities.EASEL_ENTITY, world);
+            EaselEntity easelEntity = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
             easelEntity.setPos(vec3);
             easelEntity.setYRot(f);
 

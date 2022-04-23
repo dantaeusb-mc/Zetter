@@ -30,7 +30,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
     private final ArtistTableCanvasStorage canvasStorage;
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
-        super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY, pos, state);
+        super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(), pos, state);
 
         this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::setChanged);
     }
@@ -128,7 +128,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
 
     static public boolean isItemValidForCanvasArea(ItemStack itemStack)
     {
-        return itemStack.getItem() == ZetterItems.CANVAS;
+        return itemStack.getItem() == ZetterItems.CANVAS.get();
     }
 
     static public boolean isItemValidForFrameMainMaterial(ItemStack itemStack)

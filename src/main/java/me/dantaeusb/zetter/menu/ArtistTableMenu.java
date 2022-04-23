@@ -53,7 +53,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
     public ArtistTableMenu(int windowID, Inventory invPlayer,
                            ArtistTableCanvasStorage canvasStorage,
                            final ContainerLevelAccess worldPosCallable) {
-        super(ZetterContainerMenus.ARTIST_TABLE, windowID);
+        super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
 
         this.worldPosCallable = worldPosCallable;
 
@@ -126,9 +126,6 @@ public class ArtistTableMenu extends AbstractContainerMenu {
 
     /**
      * Called from network when player presses a button
-     * @param authorPlayer
-     * @param paintingName
-     * @param clientCombinedCanvasData Canvas data used to check correctness of data
      */
     public void updatePaintingOutput() {
         ItemStack existingStack = this.inventoryOut.getItem(0);
@@ -136,7 +133,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
 
         if (this.isCanvasReady()) {
             if (existingStack.isEmpty()) {
-                outStack = new ItemStack(ZetterItems.PAINTING);
+                outStack = new ItemStack(ZetterItems.PAINTING.get());
             } else {
                 outStack = existingStack;
             }
@@ -247,7 +244,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
 
             // Inventory
             } else {
-                if (sourceStack.getItem() == ZetterItems.PALETTE) {
+                if (sourceStack.getItem() == ZetterItems.PALETTE.get()) {
                     if (!this.moveItemStackTo(sourceStack, 0, 1, false)) {
                         return ItemStack.EMPTY;
                     }

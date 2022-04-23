@@ -19,6 +19,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
+import net.minecraftforge.registries.RegistryObject;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ZetterSetup
@@ -27,15 +28,15 @@ public class ZetterSetup
     @SuppressWarnings("unused")
     public static void onClientSetupEvent(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            MenuScreens.register(ZetterContainerMenus.PAINTING, PaintingScreen::new);
-            MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE, ArtistTableScreen::new);
+            MenuScreens.register(ZetterContainerMenus.PAINTING.get(), PaintingScreen::new);
+            MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
-            for (Item frame : ZetterItems.FRAMES.values()) {
-                ItemProperties.register(frame, new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
-                ItemProperties.register(frame, new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
+            for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
+                ItemProperties.register(frame.get(), new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
+                ItemProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
             }
 
-            ItemBlockRenderTypes.setRenderLayer(ZetterBlocks.EASEL, RenderType.cutout());
+            ItemBlockRenderTypes.setRenderLayer(ZetterBlocks.EASEL.get(), RenderType.cutout());
 
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
         });

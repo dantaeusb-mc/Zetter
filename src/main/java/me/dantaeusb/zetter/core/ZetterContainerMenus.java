@@ -6,24 +6,21 @@ import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ZetterContainerMenus {
-    public static MenuType<EaselContainerMenu> PAINTING;
-    public static MenuType<ArtistTableMenu> ARTIST_TABLE;
+    private static final DeferredRegister<MenuType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, Zetter.MOD_ID);
 
-    @SubscribeEvent
-    @SuppressWarnings("unused")
-    public static void onContainerRegistry(final RegistryEvent.Register<MenuType<?>> event)
-    {
-        PAINTING = IForgeMenuType.create(EaselContainerMenu::createContainerClientSide);
-        PAINTING.setRegistryName(Zetter.MOD_ID, "painting_container");
-        event.getRegistry().register(PAINTING);
+    public static RegistryObject<MenuType<EaselContainerMenu>> PAINTING = CONTAINERS.register("painting_container", () -> IForgeMenuType.create(EaselContainerMenu::createContainerClientSide));
+    public static RegistryObject<MenuType<ArtistTableMenu>> ARTIST_TABLE = CONTAINERS.register("artist_table_container", () -> IForgeMenuType.create(ArtistTableMenu::createContainerClientSide));
 
-        ARTIST_TABLE = IForgeMenuType.create(ArtistTableMenu::createContainerClientSide);
-        ARTIST_TABLE.setRegistryName(Zetter.MOD_ID, "artist_table_container");
-        event.getRegistry().register(ARTIST_TABLE);
+    public static void init(IEventBus bus) {
+        CONTAINERS.register(bus);
     }
 }

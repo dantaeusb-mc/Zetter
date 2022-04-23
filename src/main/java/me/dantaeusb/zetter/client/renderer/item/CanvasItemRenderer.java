@@ -22,6 +22,7 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
+import java.util.Objects;
 
 public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
     private static ItemRenderer renderer = null;
@@ -75,7 +76,7 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
 
     public static void handleModel(Map<ResourceLocation, BakedModel> modelRegistry)
     {
-        ResourceLocation location = new ModelResourceLocation(ZetterItems.CANVAS.getRegistryName(), "inventory");
+        ResourceLocation location = new ModelResourceLocation(Objects.requireNonNull(ZetterItems.CANVAS.get().getRegistryName()), "inventory");
         bakedModel = modelRegistry.get(location);
     }
 }

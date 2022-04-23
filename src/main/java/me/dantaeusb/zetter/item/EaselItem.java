@@ -40,7 +40,7 @@ public class EaselItem extends Item
             BlockPlaceContext placeContext = new BlockPlaceContext(context);
             BlockPos pos = placeContext.getClickedPos();
             Vec3 vec3 = Vec3.atBottomCenterOf(pos);
-            AABB aabb = ZetterEntities.EASEL_ENTITY.getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
+            AABB aabb = ZetterEntities.EASEL_ENTITY.get().getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
 
             if (
                 world.noCollision(null, aabb) &&
@@ -51,7 +51,7 @@ public class EaselItem extends Item
                             (ServerLevel)world, easelItem.getTag(), (Component)null, context.getPlayer(), pos, MobSpawnType.SPAWN_EGG, true, true
                     );*/
 
-                    EaselEntity easel = new EaselEntity(ZetterEntities.EASEL_ENTITY, world);
+                    EaselEntity easel = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
                     easel.setPos(vec3);
 
                     if (easel == null) {
