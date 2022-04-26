@@ -35,14 +35,14 @@ public class ZetterItems
 
     public static final HashMap<String, RegistryObject<FrameItem>> FRAMES = new HashMap<>();
 
-    public static final RegistryObject<FrameItem> ACACIA_FRAME = ITEMS.register("acacia_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.ACACIA, false));
-    public static final RegistryObject<FrameItem> BIRCH_FRAME = ITEMS.register("birch_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.BIRCH, false));
-    public static final RegistryObject<FrameItem> DARK_OAK_FRAME = ITEMS.register("dark_oak_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.DARK_OAK, false));
-    public static final RegistryObject<FrameItem> JUNGLE_FRAME = ITEMS.register("jungle_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.JUNGLE, false));
-    public static final RegistryObject<FrameItem> OAK_FRAME = ITEMS.register("oak_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.OAK, false));
-    public static final RegistryObject<FrameItem> SPRUCE_FRAME = ITEMS.register("spruce_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.SPRUCE, false));
-    public static final RegistryObject<FrameItem> CRIMSON_FRAME = ITEMS.register("crimson_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.CRIMSON, false));
-    public static final RegistryObject<FrameItem> WARPED_FRAME = ITEMS.register("warped_basic_frame", () -> new FrameItem(CustomPaintingEntity.Materials.WARPED, false));
+    public static final RegistryObject<FrameItem> ACACIA_FRAME = registerFrame("acacia_basic_frame", CustomPaintingEntity.Materials.ACACIA, false);
+    public static final RegistryObject<FrameItem> BIRCH_FRAME = registerFrame("birch_basic_frame", CustomPaintingEntity.Materials.BIRCH, false);
+    public static final RegistryObject<FrameItem> DARK_OAK_FRAME = registerFrame("dark_oak_basic_frame", CustomPaintingEntity.Materials.DARK_OAK, false);
+    public static final RegistryObject<FrameItem> JUNGLE_FRAME = registerFrame("jungle_basic_frame", CustomPaintingEntity.Materials.JUNGLE, false);
+    public static final RegistryObject<FrameItem> OAK_FRAME = registerFrame("oak_basic_frame", CustomPaintingEntity.Materials.OAK, false);
+    public static final RegistryObject<FrameItem> SPRUCE_FRAME = registerFrame("spruce_basic_frame", CustomPaintingEntity.Materials.SPRUCE, false);
+    public static final RegistryObject<FrameItem> CRIMSON_FRAME = registerFrame("crimson_basic_frame", CustomPaintingEntity.Materials.CRIMSON, false);
+    public static final RegistryObject<FrameItem> WARPED_FRAME = registerFrame("warped_basic_frame", CustomPaintingEntity.Materials.WARPED, false);
 
     public static final RegistryObject<FrameItem> ACACIA_PLATED_FRAME = registerFrame("acacia_plated_frame", CustomPaintingEntity.Materials.ACACIA, true);
     public static final RegistryObject<FrameItem> BIRCH_PLATED_FRAME = registerFrame("birch_plated_frame", CustomPaintingEntity.Materials.BIRCH, true);
