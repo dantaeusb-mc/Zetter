@@ -118,6 +118,11 @@ public class ArtistTableMenu extends AbstractContainerMenu {
         return new ArtistTableMenu(windowID, playerInventory, canvasStorage, ContainerLevelAccess.NULL);
     }
 
+    /**
+     * Called from client and from network when player
+     * changes something in the name field
+     * (update painting name)
+     */
     public void updatePaintingName(String newPaintingName) {
         this.paintingName = newPaintingName;
 
@@ -125,7 +130,8 @@ public class ArtistTableMenu extends AbstractContainerMenu {
     }
 
     /**
-     * Called from network when player presses a button
+     * Update contents of painting when some
+     * of the input parameters changed (i.e. name, canvases)
      */
     public void updatePaintingOutput() {
         ItemStack existingStack = this.inventoryOut.getItem(0);
@@ -278,18 +284,6 @@ public class ArtistTableMenu extends AbstractContainerMenu {
 
     public class SlotCanvas extends Slot {
         public SlotCanvas(Container inventoryIn, int index, int xPosition, int yPosition) {
-            super(inventoryIn, index, xPosition, yPosition);
-        }
-
-        // if this function returns false, the player won't be able to insert the given item into this slot
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return ArtistTableBlockEntity.isItemValidForCanvasArea(stack);
-        }
-    }
-
-    public class SlotFrameInput extends Slot {
-        public SlotFrameInput(Container inventoryIn, int index, int xPosition, int yPosition) {
             super(inventoryIn, index, xPosition, yPosition);
         }
 

@@ -24,7 +24,7 @@ public class ZetterNetwork {
     public static final byte PAINTING_UNLOAD_CANVAS = 23;
     public static final byte CANVAS_SYNC = 24;
     public static final byte PALETTE_UPDATE = 25;
-    public static final byte PAINTING_CREATE = 27;
+    public static final byte PAINTING_RENAME = 26;
     public static final byte EASEL_CANVAS_CHANGE = 28;
     public static final byte PAINTING_SYNC = 29;
     public static final byte PAINTING_BUCKET = 30;
@@ -70,9 +70,9 @@ public class ZetterNetwork {
                 CPaletteUpdatePacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_CREATE, CUpdatePaintingPacket.class,
-                CUpdatePaintingPacket::writePacketData, CUpdatePaintingPacket::readPacketData,
-                CUpdatePaintingPacket::handle,
+        simpleChannel.registerMessage(PAINTING_RENAME, CRenamePaintingPacket.class,
+                CRenamePaintingPacket::writePacketData, CRenamePaintingPacket::readPacketData,
+                CRenamePaintingPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(EASEL_CANVAS_CHANGE, SEaselCanvasChangePacket.class,

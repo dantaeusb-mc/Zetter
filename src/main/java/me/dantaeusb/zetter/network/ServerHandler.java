@@ -122,7 +122,7 @@ public class ServerHandler {
         }
     }
 
-    public static void processCreatePainting(final CUpdatePaintingPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processRenamePainting(final CRenamePaintingPacket packetIn, ServerPlayer sendingPlayer) {
         if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
             ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;
             artistTableMenu.updatePaintingName(packetIn.getPaintingName());

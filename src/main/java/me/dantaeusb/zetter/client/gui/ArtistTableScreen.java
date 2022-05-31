@@ -5,7 +5,7 @@ import me.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.network.packet.CUpdatePaintingPacket;
+import me.dantaeusb.zetter.network.packet.CRenamePaintingPacket;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -86,19 +86,24 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
     // Listener interface - to track name field availability
 
+    /**
+     * Update field on client and _always_ send
+     * rename packet, so even if there's no valid
+     * canvas, it will have name after all requirements
+     * for painting are met -- otherwise it can
+     * dismiss name field if you place canvas after
+     * entering a name
+     * @param name
+     */
     private void renameItem(String name) {
         this.menu.updatePaintingName(name);
-
-        if (this.getMenu().isCanvasReady()) {
-            this.sendRenamePacket(name);
-        }
+        this.sendRenamePacket(name);
     }
 
     private void sendRenamePacket(String name) {
-        CUpdatePaintingPacket modePacket = new CUpdatePaintingPacket(
+        CRenamePaintingPacket modePacket = new CRenamePaintingPacket(
                 this.menu.containerId,
-                this.nameField.getValue(),
-                this.menu.getCanvasCombination().canvasData
+                this.nameField.getValue()
         );
 
         ZetterNetwork.simpleChannel.sendToServer(modePacket);
