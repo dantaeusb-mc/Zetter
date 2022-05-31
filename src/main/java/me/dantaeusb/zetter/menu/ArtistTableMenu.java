@@ -1,7 +1,9 @@
 package me.dantaeusb.zetter.menu;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterContainerMenus;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombination;
@@ -11,19 +13,17 @@ import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
-import me.dantaeusb.zetter.tileentity.container.ArtistTableCanvasStorage;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.Container;
-import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.SlotItemHandler;
 import org.apache.commons.lang3.StringUtils;
 
-public class ArtistTableMenu extends AbstractContainerMenu {
+public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackHandlerListener {
     private static final int HOTBAR_SLOT_COUNT = 9;
 
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
@@ -33,35 +33,30 @@ public class ArtistTableMenu extends AbstractContainerMenu {
     public static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
-    private final ContainerLevelAccess worldPosCallable;
-
     private final Player player;
     private final Level world;
 
-    private ArtistTableCanvasStorage canvasStorage;
+    private ArtistTableContainer artistTableContainer;
 
     private CanvasCombination canvasCombination;
 
     private String paintingName = "";
 
-    protected final SimpleContainer inventoryOut = new SimpleContainer(1);
+    protected final ItemStackHandler inventoryOut = new ItemStackHandler(1);
 
     // gui position of the player inventory grid
     public static final int PLAYER_INVENTORY_XPOS = 8;
     public static final int PLAYER_INVENTORY_YPOS = 138;
 
     public ArtistTableMenu(int windowID, Inventory invPlayer,
-                           ArtistTableCanvasStorage canvasStorage,
-                           final ContainerLevelAccess worldPosCallable) {
+                           ArtistTableContainer artistTableContainer) {
         super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
-
-        this.worldPosCallable = worldPosCallable;
 
         this.player = invPlayer.player;
         this.world = invPlayer.player.level;
 
-        this.canvasStorage = canvasStorage;
-        this.canvasStorage.setMarkDirtyNotificationLambda(this::updateCanvasCombination);
+        this.artistTableContainer = artistTableContainer;
+        this.artistTableContainer.addListener(this);
 
         final int SLOT_X_SPACING = 18;
         final int SLOT_Y_SPACING = 18;
@@ -93,7 +88,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
                 int slotNumber = y * CANVAS_COLUMN_COUNT + x;
                 int xpos = CANVAS_INVENTORY_XPOS + x * SLOT_X_SPACING;
                 int ypos = CANVAS_INVENTORY_YPOS + y * SLOT_Y_SPACING;
-                this.addSlot(new SlotCanvas(this.canvasStorage, slotNumber,  xpos, ypos));
+                this.addSlot(new SlotCanvas(this.artistTableContainer, slotNumber,  xpos, ypos));
             }
         }
 
@@ -106,16 +101,15 @@ public class ArtistTableMenu extends AbstractContainerMenu {
         this.updateCanvasCombination();
     }
 
-    public static ArtistTableMenu createContainerServerSide(int windowID, Inventory playerInventory,
-                                                            ArtistTableCanvasStorage canvasStorage,
-                                                            final ContainerLevelAccess worldPosCallable) {
-        return new ArtistTableMenu(windowID, playerInventory, canvasStorage, worldPosCallable);
+    public static ArtistTableMenu createMenuServerSide(int windowID, Inventory playerInventory,
+                                                       ArtistTableContainer artistTableContainer) {
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer);
     }
 
-    public static ArtistTableMenu createContainerClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
-        ArtistTableCanvasStorage canvasStorage = ArtistTableCanvasStorage.createForClientSideContainer();
+    public static ArtistTableMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+        ArtistTableContainer artistTableContainer = new ArtistTableContainer();
 
-        return new ArtistTableMenu(windowID, playerInventory, canvasStorage, ContainerLevelAccess.NULL);
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer);
     }
 
     /**
@@ -134,7 +128,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
      * of the input parameters changed (i.e. name, canvases)
      */
     public void updatePaintingOutput() {
-        ItemStack existingStack = this.inventoryOut.getItem(0);
+        ItemStack existingStack = this.inventoryOut.getStackInSlot(0);
         ItemStack outStack;
 
         if (this.isCanvasReady()) {
@@ -164,7 +158,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
             }
         }
 
-        this.inventoryOut.setItem(0, outStack);
+        this.inventoryOut.setStackInSlot(0, outStack);
     }
 
     protected ItemStack takePainting(Player player, ItemStack outStack) {
@@ -189,14 +183,18 @@ public class ArtistTableMenu extends AbstractContainerMenu {
         PaintingItem.setPaintingData(outStack, newCode, paintingData, 0);
 
         if (!player.isCreative()) {
-            this.canvasStorage.clearContent();
+            this.artistTableContainer.clear();
         }
 
         return outStack;
     }
 
+    public void containerChanged(ItemStackHandler container) {
+        this.updateCanvasCombination();
+    }
+
     public void updateCanvasCombination() {
-        this.canvasCombination = new CanvasCombination(this.canvasStorage, this.world);
+        this.canvasCombination = new CanvasCombination(this.artistTableContainer, this.world);
         this.updatePaintingOutput();
     }
 
@@ -215,6 +213,11 @@ public class ArtistTableMenu extends AbstractContainerMenu {
     /*
       Common handlers
      */
+
+    public void removed(Player player) {
+        super.removed(player);
+        this.artistTableContainer.removeListener(this);
+    }
 
     /**
      * Called to determine if the current slot is valid for the stack merging (double-click) code. The stack passed in is
@@ -279,24 +282,24 @@ public class ArtistTableMenu extends AbstractContainerMenu {
      * Determines whether supplied player can use this container
      */
     public boolean stillValid(Player player) {
-        return this.canvasStorage.stillValid(player);
+        return this.artistTableContainer.stillValid(player);
     }
 
-    public class SlotCanvas extends Slot {
-        public SlotCanvas(Container inventoryIn, int index, int xPosition, int yPosition) {
-            super(inventoryIn, index, xPosition, yPosition);
+    public class SlotCanvas extends SlotItemHandler {
+        public SlotCanvas(ItemStackHandler stackHandler, int index, int xPosition, int yPosition) {
+            super(stackHandler, index, xPosition, yPosition);
         }
 
         // if this function returns false, the player won't be able to insert the given item into this slot
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return ArtistTableBlockEntity.isItemValidForCanvasArea(stack);
+            return ArtistTableMenu.this.artistTableContainer.isItemValid(this.getSlotIndex(), stack);
         }
     }
 
-    public class SlotOutput extends Slot {
-        public SlotOutput(Container inventoryIn, int index, int xPosition, int yPosition) {
-            super(inventoryIn, index, xPosition, yPosition);
+    public class SlotOutput extends SlotItemHandler {
+        public SlotOutput(ItemStackHandler stackHandler, int index, int xPosition, int yPosition) {
+            super(stackHandler, index, xPosition, yPosition);
         }
 
         @Override
@@ -305,7 +308,7 @@ public class ArtistTableMenu extends AbstractContainerMenu {
         }
 
         public void onTake(Player player, ItemStack stack) {
-            stack = ArtistTableMenu.this.takePainting(player, stack);
+            ArtistTableMenu.this.takePainting(player, stack);
         }
     }
 }

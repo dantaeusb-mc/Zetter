@@ -27,7 +27,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DiodeBlock;
@@ -321,6 +320,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     // track using players to send packets
 
+    /**
+     * @todo: Does not work!
+     * @return
+     */
     public ArrayList<Player> calculatePlayersUsing() {
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
@@ -436,7 +439,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
-        return EaselContainerMenu.createContainerServerSide(windowID, playerInventory, this, this.easelContainer);
+        return EaselContainerMenu.createMenuServerSide(windowID, playerInventory, this, this.easelContainer);
     }
 
     @Override

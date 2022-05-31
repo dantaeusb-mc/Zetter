@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
+import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
@@ -8,7 +9,6 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import me.dantaeusb.zetter.tileentity.container.ArtistTableCanvasStorage;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
@@ -40,13 +40,13 @@ public class CanvasCombination {
     @Nullable
     public final DummyCanvasData canvasData;
 
-    public CanvasCombination(ArtistTableCanvasStorage canvasStorage, Level world) {
+    public CanvasCombination(ArtistTableContainer artistTableContainer, Level world) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                if (canvasStorage.getItem(y * 4 + x) != ItemStack.EMPTY) {
+                if (artistTableContainer.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
                     if (min == null) {
                         min = new Tuple<>(x ,y);
                     }
@@ -76,7 +76,7 @@ public class CanvasCombination {
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                ItemStack currentStack = canvasStorage.getItem(y * 4 + x);
+                ItemStack currentStack = artistTableContainer.getStackInSlot(y * 4 + x);
 
                 if (currentStack == ItemStack.EMPTY) {
                     if (x >= min.getA() && x <= max.getA()) {
@@ -135,10 +135,10 @@ public class CanvasCombination {
 
         this.state = State.READY;
         this.rectangle = rectangle;
-        this.canvasData = CanvasCombination.createCanvasData(canvasStorage, rectangle, world);
+        this.canvasData = CanvasCombination.createCanvasData(artistTableContainer, rectangle, world);
     }
 
-    public static DummyCanvasData createCanvasData(ArtistTableCanvasStorage canvasStorage, Rectangle rectangle, Level world) {
+    public static DummyCanvasData createCanvasData(ArtistTableContainer artistTableContainer, Rectangle rectangle, Level world) {
         final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
         final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
 
@@ -146,7 +146,7 @@ public class CanvasCombination {
 
         for (int slotY = rectangle.y; slotY < rectangle.y + rectangle.height; slotY++) {
             for (int slotX = rectangle.x; slotX < rectangle.x + rectangle.width; slotX++) {
-                ItemStack canvasStack = canvasStorage.getItem(slotY * 4 + slotX);
+                ItemStack canvasStack = artistTableContainer.getStackInSlot(slotY * 4 + slotX);
 
                 CanvasData smallCanvasData = CanvasItem.getCanvasData(canvasStack, world);
 

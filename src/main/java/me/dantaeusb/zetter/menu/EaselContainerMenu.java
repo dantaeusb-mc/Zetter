@@ -104,14 +104,14 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         this.entity = entity;
     }
 
-    public static EaselContainerMenu createContainerServerSide(int windowID, Inventory playerInventory, EaselEntity entity, EaselContainer easelContainer) {
+    public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselEntity entity, EaselContainer easelContainer) {
         EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer);
         easelContainerMenu.setEntity(entity);
 
         return easelContainerMenu;
     }
 
-    public static EaselContainerMenu createContainerClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+    public static EaselContainerMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         // it seems like we have to utilize extraData to pass the canvas data
         // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
         EaselContainer easelContainer = new EaselContainer();

@@ -1,9 +1,12 @@
 package me.dantaeusb.zetter.block.entity;
 
+import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
+import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
-import me.dantaeusb.zetter.tileentity.container.ArtistTableCanvasStorage;
+import net.minecraft.core.Direction;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Containers;
@@ -14,25 +17,44 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
-public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider {
+public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHandlerListener, MenuProvider {
     private static final String ARTIST_TABLE_CANVAS_STORAGE_TAG = "canvas_storage";
 
-    private final ArtistTableCanvasStorage canvasStorage;
+    protected ArtistTableContainer artistTableContainer;
+    protected final LazyOptional<ItemStackHandler> artistTableContainerOptional = LazyOptional.of(() -> this.artistTableContainer);
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
         super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(), pos, state);
+        this.createInventory();
+    }
 
-        this.canvasStorage = ArtistTableCanvasStorage.createForTileEntity(this::canPlayerAccessInventory, this::setChanged);
+    protected void createInventory() {
+        ArtistTableContainer currentArtistTableContainer = this.artistTableContainer;
+        this.artistTableContainer = new ArtistTableContainer(this);
+
+        if (currentArtistTableContainer != null) {
+            int i = Math.min(currentArtistTableContainer.getSlots(), this.artistTableContainer.getSlots());
+
+            for(int j = 0; j < i; ++j) {
+                ItemStack itemstack = currentArtistTableContainer.getStackInSlot(j);
+                if (!itemstack.isEmpty()) {
+                    this.artistTableContainer.setStackInSlot(j, itemstack.copy());
+                }
+            }
+        }
     }
 
     public boolean canPlayerAccessInventory(Player player) {
@@ -41,6 +63,10 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
         } else {
             return player.distanceToSqr((double)this.worldPosition.getX() + 0.5D, (double)this.worldPosition.getY() + 0.5D, (double)this.worldPosition.getZ() + 0.5D) <= 64.0D;
         }
+    }
+
+    public void containerChanged(ItemStackHandler container) {
+        this.setChanged();
     }
 
     @Override
@@ -54,7 +80,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
     @Override
     public void saveAdditional(CompoundTag compoundTag)
     {
-        CompoundTag canvasNbt = this.canvasStorage.serializeNBT();
+        CompoundTag canvasNbt = this.artistTableContainer.serializeNBT();
         compoundTag.put(ARTIST_TABLE_CANVAS_STORAGE_TAG, canvasNbt);
     }
 
@@ -64,9 +90,9 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
         super.load(parentNBTTagCompound);
 
         CompoundTag canvasNbt = parentNBTTagCompound.getCompound(ARTIST_TABLE_CANVAS_STORAGE_TAG);
-        this.canvasStorage.deserializeNBT(canvasNbt);
+        this.artistTableContainer.deserializeNBT(canvasNbt);
 
-        if (this.canvasStorage.getContainerSize() != ArtistTableCanvasStorage.STORAGE_SIZE)
+        if (this.artistTableContainer.getSlots() != ArtistTableContainer.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
 
@@ -104,14 +130,23 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
      * @param blockPos
      */
     public void dropAllContents(Level world, BlockPos blockPos) {
-        Containers.dropContents(world, blockPos, this.canvasStorage);
+        for (int i = 0; i < this.artistTableContainer.getSlots(); i++) {
+            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.artistTableContainer.getStackInSlot(i));
+        }
     }
-
-    //
-
     @Override
     public Component getDisplayName() {
         return new TranslatableComponent("container.zetter.artistTable");
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+                && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
+            return this.artistTableContainerOptional.cast();
+        }
+
+        return super.getCapability(capability, direction);
     }
 
     /**
@@ -123,21 +158,6 @@ public class ArtistTableBlockEntity extends BlockEntity implements MenuProvider 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
-        return ArtistTableMenu.createContainerServerSide(windowID, playerInventory, this.canvasStorage, ContainerLevelAccess.create(this.level, this.worldPosition));
-    }
-
-    static public boolean isItemValidForCanvasArea(ItemStack itemStack)
-    {
-        return itemStack.getItem() == ZetterItems.CANVAS.get();
-    }
-
-    static public boolean isItemValidForFrameMainMaterial(ItemStack itemStack)
-    {
-        return true;
-    }
-
-    static public boolean isItemValidForFrameDetailMaterial(ItemStack itemStack)
-    {
-        return true;
+        return ArtistTableMenu.createMenuServerSide(windowID, playerInventory, this.artistTableContainer);
     }
 }
