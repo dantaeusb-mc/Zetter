@@ -48,10 +48,8 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         poseStack.pushPose();
         poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entityYaw));
 
-        boolean visible = !easelEntity.isInvisible() && !easelEntity.isInvisibleTo(minecraft.player);
-
         // last are r, g, b, a
-        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, visible ? 0.01F : 1.0F);
+        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
 
         if (easelEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability

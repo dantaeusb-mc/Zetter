@@ -30,7 +30,6 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
     private final ModelPart frontLegs;
 
     public EaselModel(ModelPart part) {
-        super(RenderType::entityCutoutNoCullZOffset);
         this.rack = part.getChild(RACK);
         this.canvas = part.getChild(CANVAS);
         this.topPlank = part.getChild(TOP_PLANK);
