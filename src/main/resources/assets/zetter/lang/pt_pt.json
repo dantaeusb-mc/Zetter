@@ -13,7 +13,7 @@
   "container.zetter.painting.sliders": "Ajuste de cor HSV",
   "container.zetter.painting.help": "Manual Online",
   "container.zetter.artist_table.help": "Manual Online",
-  "entity.zetter.easel": "Cavalete",
+  "entity.zetter.easel_entity": "Cavalete",
   "item.zetter.easel": "Cavalete",
   "item.zetter.canvas": "Tela",
   "item.zetter.paints": "Tintas",

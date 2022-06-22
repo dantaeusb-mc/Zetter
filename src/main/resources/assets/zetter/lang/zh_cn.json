@@ -13,7 +13,7 @@
   "container.zetter.painting.sliders": "HSV 颜色调整",
   "container.zetter.painting.help": "在线手册",
   "container.zetter.artist_table.help": "在线手册",
-  "entity.zetter.easel": "画架",
+  "entity.zetter.easel_entity": "画架",
   "entity.zetter.custom_painting_entity": "裱框画",
   "item.zetter.canvas": "画布",
   "item.zetter.painting": "绘画",

@@ -15,7 +15,7 @@
   "container.zetter.artist_table.combined_canvas": "Podgląd obrazu",
   "container.zetter.artist_table.help": "Podręcznik online",
   "entity.zetter.custom_painting_entity": "Obraz w ramie",
-  "entity.zetter.easel": "Sztaluga",
+  "entity.zetter.easel_entity": "Sztaluga",
   "item.zetter.easel": "Sztaluga",
   "item.zetter.canvas": "Płótno",
   "item.zetter.painting": "Obraz",
