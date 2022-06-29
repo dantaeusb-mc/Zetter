@@ -8,6 +8,12 @@ buildscript {
     }
 }
 
+plugins {
+    // Other plugins like maven-publish, idea, eclipse, etc. go here
+    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply from: "https://moddingtutorials.org/applesilicon.gradle"
@@ -15,7 +21,7 @@ apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.15.0-1.18.2-rc'
+version = '0.16.0-1.18.2-beta'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
@@ -23,7 +29,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'official', version: '1.18.2'
+    mappings channel: 'parchment', version: '2022.06.26-1.18.2'
 
     runs {
         client {
@@ -92,7 +98,7 @@ jar {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.15.0-rc",
+            "Specification-Version": "0.16.0-beta",
             "Implementation-Title": project.name,
             "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",

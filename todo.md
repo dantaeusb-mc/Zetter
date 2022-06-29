@@ -1,6 +1,5 @@
 #### Pre-release tasks:
 
-* \[HIGH\] ZG Any server response leads to painting sale
 * \[HIGH\] Not saving current palette selection and pixel buffer in Easel Entity;
 * \[HIGH\] Requested non-existent canvas errors because of synceddata desync;
 * \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;
@@ -20,7 +19,6 @@
 * \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
 * \[MED\] It is said that capability (getCapability) should be cached by modders, we may need to do that here: Helper#getWorldCanvasTracker()
-* \[LOW\] Use ObjectHolders;
   
 #### Would-be-nice-to-do:
 
@@ -40,3 +38,5 @@
 * Show canvas in hands like map;
 * Texture dispatcher which will prevent not only client request canvases too quick but server to sync canvases too frequent;
 * Think about creating own atlas map with loaded paintings.
+* Kubelka-Munk model for color blending? See https://stackoverflow.com/questions/1351442/is-there-an-algorithm-for-color-mixing-that-works-like-mixing-real-colors
+* Floyd–Steinberg dithering filter https://www.wikiwand.com/en/Floyd%E2%80%93Steinberg_dithering

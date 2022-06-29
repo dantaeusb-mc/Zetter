@@ -96,8 +96,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
             }
 
             int color = Integer.parseInt(text, 16) | 0xFF000000;
-            this.parentScreen.updateCurrentPaletteColor(color);
-            this.parentScreen.pushPaletteUpdateColor();
+            this.parentScreen.getMenu().setPaletteColor(color);
         } catch (NumberFormatException exception) {
             Zetter.LOG.error("Invalid color number");
             return;

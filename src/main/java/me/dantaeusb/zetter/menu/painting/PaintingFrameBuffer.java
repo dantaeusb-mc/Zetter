@@ -70,8 +70,8 @@ public class PaintingFrameBuffer {
         return this.buffer.asReadOnlyBuffer();
     }
 
-    public Vector<PaintingFrame> getFrames(UUID ownerId) {
-        Vector<PaintingFrame> list = new Vector<>();
+    public Vector<PaintingActionFrame> getFrames(UUID ownerId) {
+        Vector<PaintingActionFrame> list = new Vector<>();
         int lastPosition = this.buffer.position();
         this.buffer.rewind();
 
@@ -86,7 +86,7 @@ public class PaintingFrameBuffer {
             }
 
             long frameTime = this.frameStartTime + timeOffset;
-            PaintingFrame frame = new PaintingFrame(frameTime, position, color, ownerId);
+            PaintingActionFrame frame = new PaintingActionFrame(frameTime, position, color, ownerId);
             list.add(frame);
         }
 

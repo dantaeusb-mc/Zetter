@@ -118,7 +118,7 @@ public class ServerHandler {
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
         if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
             EaselContainerMenu paintingContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
-            paintingContainer.setPaletteColor(packetIn.getSlotIndex(), packetIn.getColor());
+            paintingContainer.setPaletteColor(packetIn.getColor(), packetIn.getSlotIndex());
         }
     }
 
@@ -126,13 +126,6 @@ public class ServerHandler {
         if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
             ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;
             artistTableMenu.updatePaintingName(packetIn.getPaintingName());
-        }
-    }
-
-    public static void processBucketTool(final CCanvasBucketToolPacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu easelContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
-            easelContainer.processBucketToolServer(packetIn.position, packetIn.color);
         }
     }
 }

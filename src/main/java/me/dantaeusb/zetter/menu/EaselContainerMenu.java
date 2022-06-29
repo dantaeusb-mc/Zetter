@@ -6,11 +6,12 @@ import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.menu.painting.PaintingFrame;
+import me.dantaeusb.zetter.menu.painting.PaintingActionFrame;
 import me.dantaeusb.zetter.menu.painting.PaintingFrameBuffer;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
-import me.dantaeusb.zetter.network.packet.CCanvasBucketToolPacket;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
+import me.dantaeusb.zetter.menu.painting.tools.*;
 import me.dantaeusb.zetter.network.packet.CPaintingFrameBufferPacket;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
 import me.dantaeusb.zetter.network.packet.SCanvasNamePacket;
@@ -33,7 +34,6 @@ import net.minecraftforge.items.SlotItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class EaselContainerMenu extends AbstractContainerMenu {
     public static int FRAME_TIMEOUT = 5000;  // 5 second limit to keep changes buffer, if packet processed later disregard it
@@ -54,7 +54,23 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     // Only player's buffer on client, all users on server
     private PaintingFrameBuffer canvasChanges;
 
-    private final LinkedList<PaintingFrame> lastFrames = new LinkedList<>();
+    // Client-only I think
+    private HashMap<String, HashMap<String, AbstractToolParameter>> parameters = new HashMap<>();
+
+    private String currentTool = Pencil.CODE;
+
+    // Tools available for use
+    private final HashMap<String, AbstractTool> tools = new HashMap<>(){{
+        put(Pencil.CODE, new Pencil(EaselContainerMenu.this));
+        put(Brush.CODE, new Brush(EaselContainerMenu.this));
+        put(Bucket.CODE, new Bucket(EaselContainerMenu.this));
+        put(Eyedropper.CODE, new Eyedropper(EaselContainerMenu.this));
+    }};
+
+    private int currentPaletteSlot = 0;
+
+    // @todo: remove below
+    private final LinkedList<PaintingActionFrame> lastFrames = new LinkedList<>();
 
     private long lastFrameBufferSendClock = 0L;
     private long lastSyncReceivedClock = 0L;
@@ -62,6 +78,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     private Notify firstLoadNotification = ()->{};
 
+    /*
+     *
+     * Initializing
+     *
+     */
     public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer) {
         super(ZetterContainerMenus.PAINTING.get(), windowID);
 
@@ -99,11 +120,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
     }
 
-    public void setEntity(EaselEntity entity)
-    {
-        this.entity = entity;
-    }
-
     public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselEntity entity, EaselContainer easelContainer) {
         EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer);
         easelContainerMenu.setEntity(entity);
@@ -124,20 +140,81 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         return easelContainerMenu;
     }
 
+    /*
+     *
+     * Getter-setters
+     *
+     */
     @Nullable
     public EaselEntity getEntity() {
         return this.entity;
+    }
+
+    public void setEntity(EaselEntity entity)
+    {
+        this.entity = entity;
     }
 
     public EaselContainer getEaselContainer() {
         return this.easelContainer;
     }
 
+    public int getCurrentPaletteSlot() {
+        return this.currentPaletteSlot;
+    }
+
+    public void setCurrentPaletteSlot(int slotIndex) {
+        this.currentPaletteSlot = slotIndex;
+
+        // @todo!
+        //this.updateSlidersWithCurrentColor();
+    }
+
+    public HashMap<String, AbstractTool> getTools() {
+        return this.tools;
+    }
+
+    public AbstractTool getCurrentTool() {
+        return this.getTool(this.currentTool);
+    }
+
+    public AbstractTool getTool(String toolCode) {
+        return this.tools.get(toolCode);
+    }
+
+    public void setCurrentTool(String toolCode) {
+        if (!this.tools.containsKey(toolCode)) {
+            throw new IllegalStateException("No such tool: " + toolCode);
+        }
+
+        this.currentTool = toolCode;
+    }
+
+    public HashMap<String, AbstractToolParameter> getCurrentToolParameters() {
+        return this.parameters.get(this.currentTool);
+    }
+
+    public AbstractToolParameter getCurrentToolParameter(String parameter) {
+        return this.parameters.get(this.currentTool).get(parameter);
+    }
+
+    public int getCurrentColor() {
+        return this.getPaletteColor(this.getCurrentPaletteSlot());
+    }
+
+    /*
+     *
+     * Application logic
+     *
+     */
+    public void useTool(float canvasX, float canvasY) {
+        this.getCurrentTool().apply(this.getCanvasData(), this.getCurrentToolParameters(), this.getCurrentColor(), canvasX, canvasY);
+    }
+
     /**
      * Because we don't have a special Slot for the canvas, we're using custom
      * update functions and network message
      */
-
     public void setFirstLoadNotification(Notify firstLoadNotification) {
         this.firstLoadNotification = firstLoadNotification;
     }
@@ -196,27 +273,34 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     /**
      * This won't update palette color on the other side and used for quick adjustment
-     * To send information about update use {@link EaselContainerMenu#sendPaletteUpdatePacket}
-     * @param paletteSlot
      * @param color
      */
-    public void setPaletteColor(int paletteSlot, int color) {
+    public void setPaletteColor(int color) {
+        this.setPaletteColor(color, this.currentPaletteSlot);
+    }
+
+    public void setPaletteColor(int color, int slot) {
         ItemStack paletteStack = this.easelContainer.getPaletteStack();
 
         if (paletteStack.isEmpty()) {
             return;
         }
 
-        PaletteItem.updatePaletteColor(paletteStack, paletteSlot, color);
+        PaletteItem.updatePaletteColor(paletteStack, slot, color);
+
+        if (this.world.isClientSide) {
+            this.sendPaletteUpdatePacket();
+        }
+
         this.easelContainer.changed();
     }
 
-    public void sendPaletteUpdatePacket(int paletteSlot, int color) {
+    public void sendPaletteUpdatePacket() {
         if (!this.isPaletteAvailable()) {
             return;
         }
 
-        CPaletteUpdatePacket paletteUpdatePacket = new CPaletteUpdatePacket(paletteSlot, color);
+        CPaletteUpdatePacket paletteUpdatePacket = new CPaletteUpdatePacket(this.currentPaletteSlot, this.getCurrentColor());
         Zetter.LOG.debug("Sending Palette Update: " + paletteUpdatePacket);
         ZetterNetwork.simpleChannel.sendToServer(paletteUpdatePacket);
     }
@@ -252,98 +336,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         this.dropOldFrames();
     }
 
-    /**
-     * Handle screen event - only on client. On server canvas is modified by handling frames
-     * @param pixelX
-     * @param pixelY
-     * @param color
-     */
-    public void writePixelOnCanvasClientSide(int pixelX, int pixelY, int color, UUID playerId) {
-        if (!this.isCanvasAvailable()) {
-            // Nothing to draw on
-            return;
-        }
-
-        int index = this.canvas.data.getPixelIndex(pixelX, pixelY);
-
-        if (this.writePixelOnCanvas(index, color)) {
-            this.checkFrameBuffer();
-            this.getCanvasChanges().writeChange(this.world.getGameTime(), index, color);
-
-            PaintingFrame newFrame = new PaintingFrame(System.currentTimeMillis(), (short) index, color, playerId);
-            this.placeFrame(newFrame);
-            this.updateTextureClient();
-        }
-    }
-
-    public void eyedropper(int slotIndex, int pixelX, int pixelY) {
-        if (!this.isCanvasAvailable()) {
-            return;
-        }
-
-        int newColor = this.canvas.data.getColorAt(pixelX, pixelY);
-
-        this.setPaletteColor(slotIndex, newColor);
-        this.sendPaletteUpdatePacket(slotIndex, newColor);
-    }
-
-    public void bucket(int pixelX, int pixelY, int color) {
-        if (!this.isCanvasAvailable()) {
-            return;
-        }
-
-        int position = this.canvas.data.getPixelIndex(pixelX, pixelY);
-
-        CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);
-        Zetter.LOG.debug("Sending Bucket Tool Packet: " + bucketToolPacket);
-        ZetterNetwork.simpleChannel.sendToServer(bucketToolPacket);
-    }
-
-    /**
-     * Immediately update texture for client - not needed for server cause no renderer used here
-     */
-    protected void updateTextureClient() {
-        if (this.canvas == null) {
-            Zetter.LOG.error("Attempted to update texture with no canvas loaded in easel");
-            return;
-        }
-
-        CanvasRenderer.getInstance().updateCanvasTexture(this.canvas.code, this.canvas.data);
-    }
-
-    /**
-     * @todo: Move to TE as Container created per-player
+    /*
      *
-     * @param index
-     * @param color
-     * @return
+     * Networking
+     *
      */
-    private void writePixelOnCanvasServerSide(int index, int color) {
-        this.writePixelOnCanvas(index, color); // do nothing for now
-
-        // @todo: chceck where damage applied in vanilla
-        this.easelContainer.getPaletteStack().hurtAndBreak(1, this.player, (player) -> {});
-    }
-
-    private boolean writePixelOnCanvas(int index, int color) {
-        if (!this.isCanvasAvailable()) {
-            // Most times checking twice, not sure how to avoid
-            return false;
-        }
-
-        if (!this.isPaletteAvailable()) {
-            return false;
-        }
-
-        if (this.canvas.data.getColorAt(index) == color) {
-            // Pixel is not changed
-            return false;
-        }
-
-        this.getCanvasData().updateCanvasPixel(index, color);
-
-        return true;
-    }
 
     /**
      * Checks and sends frame buffer if it's full or it's time to
@@ -393,79 +390,17 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public void processFrameBufferServer(PaintingFrameBuffer paintingFrameBuffer, UUID ownerId) {
         long currentTime = this.world.getGameTime();
 
-        for (PaintingFrame frame: paintingFrameBuffer.getFrames(ownerId)) {
+        for (PaintingActionFrame frame: paintingFrameBuffer.getFrames(ownerId)) {
             if (currentTime - frame.getFrameTime() > FRAME_TIMEOUT) {
                 // Update will be sent to player anyway, and they'll request new sync if they're confused
                 Zetter.LOG.debug("Skipping painting frame, too old");
                 continue;
             }
 
-            this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
+            //this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
         }
 
         ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.code);
-    }
-
-    public void processBucketToolServer(int position, int bucketColor) {
-        final int width = this.canvas.data.getWidth();
-        final int height = this.canvas.data.getHeight();
-        final int length = width * height;
-        final int replacedColor = this.canvas.data.getColorAt(position);
-
-        LinkedList<Integer> positionsQueue = new LinkedList<>();
-        Vector<Integer> checkedQueue = new Vector<>();
-        Vector<Integer> paintQueue = new Vector<>();
-
-        positionsQueue.add(position);
-        paintQueue.add(position);
-
-        do {
-            getNeighborPositions(positionsQueue.pop(), width, length)
-                    // Ignore checked positions if overlap
-                    .filter(currentPosition -> !checkedQueue.contains(currentPosition))
-                    .forEach(currentPosition -> {
-                        if (this.canvas.data.getColorAt(currentPosition) == replacedColor) {
-                            positionsQueue.add(currentPosition);
-                            paintQueue.add(currentPosition);
-                        }
-
-                        checkedQueue.add(currentPosition);
-                    });
-        } while (!positionsQueue.isEmpty());
-
-        for (int updatePosition: paintQueue) {
-            this.writePixelOnCanvasServerSide(updatePosition, bucketColor);
-        }
-
-        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.code);
-    }
-
-    public static Stream<Integer> getNeighborPositions(int currentCenter, int width, int length) {
-        List<Integer> neighborPositions = new ArrayList<>(4);
-
-        final int topPosition = currentCenter - width;
-        if (topPosition >= 0) {
-            neighborPositions.add(topPosition);
-        }
-
-        final int leftPosition = currentCenter - 1;
-        // on a single row
-        if (leftPosition >= 0 && leftPosition / width == currentCenter / width) {
-            neighborPositions.add(leftPosition);
-        }
-
-        final int rightPosition = currentCenter + 1;
-        // on a single row
-        if (rightPosition < length && rightPosition / width == currentCenter / width) {
-            neighborPositions.add(rightPosition);
-        }
-
-        final int bottomPosition = currentCenter + width;
-        if (bottomPosition < length) {
-            neighborPositions.add(bottomPosition);
-        }
-
-        return neighborPositions.stream();
     }
 
     /**
@@ -504,7 +439,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         Zetter.LOG.debug("Latency: " + latency);
 
-        for (PaintingFrame oldFrame: this.lastFrames) {
+        for (PaintingActionFrame oldFrame: this.lastFrames) {
             if (oldFrame.getFrameTime() < lowTrustInterval.getA()) {
                 // @todo: reasonable to remove older frames right there
             } else {
@@ -525,7 +460,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         this.lastSyncReceivedClock = System.currentTimeMillis();
     }
 
-    protected void placeFrame(PaintingFrame frame) {
+    protected void placeFrame(PaintingActionFrame frame) {
         this.lastFrames.add(frame);
         this.lastPushedFrameClock = System.currentTimeMillis();
     }
@@ -533,8 +468,8 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     protected void dropOldFrames() {
         long minTime = Util.getMillis() - FRAME_TIMEOUT * 50;
 
-        for (Iterator<PaintingFrame> iterator = this.lastFrames.iterator(); iterator.hasNext(); ) {
-            PaintingFrame oldFrame = iterator.next();
+        for (Iterator<PaintingActionFrame> iterator = this.lastFrames.iterator(); iterator.hasNext(); ) {
+            PaintingActionFrame oldFrame = iterator.next();
             if (oldFrame.getFrameTime() < minTime) {
                 iterator.remove();
             } else {
@@ -545,7 +480,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     /*
-      Common handlers
+     *
+     * Common handlers
+     *
      */
 
     /**

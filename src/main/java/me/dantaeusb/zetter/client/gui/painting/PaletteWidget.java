@@ -18,8 +18,6 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     final static int WIDTH = PALETTE_SCALE_FACTOR + PALETTE_OFFSET;
     final static int HEIGHT = PALETTE_SCALE_FACTOR + ((EaselContainerMenu.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET);
 
-    private int currentPaletteSlot = 0;
-
     public PaletteWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.palette"));
     }
@@ -28,11 +26,6 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     public @Nullable
     Component getTooltip(int mouseX, int mouseY) {
         return null;
-    }
-
-
-    public int getCurrentPaletteSlot() {
-        return this.currentPaletteSlot;
     }
 
     @Override
@@ -62,14 +55,14 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
             return false;
         }
 
-        this.setCurrentPaletteSlot(slotIndex);
+        this.parentScreen.getMenu().setCurrentPaletteSlot(slotIndex);
 
         return true;
     }
 
     public void render(PoseStack matrixStack) {
         drawPalette(matrixStack);
-        drawPaletteSelector(matrixStack);
+        drawPaletteSelector(matrixStack, this.parentScreen.getMenu().getCurrentPaletteSlot());
     }
 
     protected void drawPalette(PoseStack matrixStack) {
@@ -81,13 +74,13 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
             int fromX = this.x + (i % 2) * PALETTE_OFFSET;
             int fromY = this.y + (i / 2) * PALETTE_OFFSET;
 
-            int color = this.parentScreen.getPaletteColor(i);
+            int color = this.parentScreen.getMenu().getPaletteColor(i);
 
-            this.fillGradient(matrixStack, fromX, fromY, fromX + PALETTE_SCALE_FACTOR, fromY + PALETTE_SCALE_FACTOR, color, color);
+            fill(matrixStack, fromX, fromY, fromX + PALETTE_SCALE_FACTOR, fromY + PALETTE_SCALE_FACTOR, color);
         }
     }
 
-    protected void drawPaletteSelector(PoseStack matrixStack) {
+    protected void drawPaletteSelector(PoseStack matrixStack, int currentPaletteSlot) {
         if (!this.parentScreen.isPaletteAvailable()) {
             return;
         }
@@ -101,11 +94,5 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
         int selectorPositionY = this.y + (currentPaletteSlot / 2) * PALETTE_OFFSET - PALETTE_BORDER;
 
         this.blit(matrixStack, selectorPositionX, selectorPositionY, SELECTOR_POSITION_U, SELECTOR_POSITION_V, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2);
-    }
-
-    protected void setCurrentPaletteSlot(int slotIndex) {
-        this.currentPaletteSlot = slotIndex;
-
-        this.parentScreen.updateSlidersWithCurrentColor();
     }
 }

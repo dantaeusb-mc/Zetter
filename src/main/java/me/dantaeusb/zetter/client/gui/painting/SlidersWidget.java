@@ -64,7 +64,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (this.sliderDraggingIndex != null) {
             // If we were changing palette colors, sync them with server
-            this.parentScreen.pushPaletteUpdateColor();
+            this.parentScreen.getMenu().sendPaletteUpdatePacket();
         }
 
         this.sliderDraggingIndex = null;
@@ -113,13 +113,14 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
             sliderContentHeight += 4;
         }
 
-        Color currentColor = new Color(parentScreen.getCurrentColor());
+        Color currentColor = new Color(parentScreen.getMenu().getCurrentColor());
         float[] currentColorHSB = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
 
+        // We're not doing gradient because it's too smooth for Minecraft :)
         for (int i = 0; i < sliderContentWidth; i++) {
             int color = getColorLambda.apply(currentColorHSB, (float) i / sliderContentWidth);
 
-            this.fillGradient(matrixStack, sliderContentGlobalLeft + i, sliderContentGlobalTop, sliderContentGlobalLeft + i + 1, sliderContentGlobalTop + sliderContentHeight, color, color);
+            fill(matrixStack, sliderContentGlobalLeft + i, sliderContentGlobalTop, sliderContentGlobalLeft + i + 1, sliderContentGlobalTop + sliderContentHeight, color);
         }
     }
 
@@ -136,7 +137,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public void updateSlidersWithCurrentColor() {
-        Color currentColor = new Color(parentScreen.getCurrentColor());
+        Color currentColor = new Color(parentScreen.getMenu().getCurrentColor());
         float[] currentColorHSB = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
 
         this.sliderHuePercent = currentColorHSB[0];
@@ -185,7 +186,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     }
 
     protected void updateSliderPosition(int sliderIndex, float percent) {
-        Color currentColor = new Color(this.parentScreen.getCurrentColor());
+        Color currentColor = new Color(this.parentScreen.getMenu().getCurrentColor());
         float[] currentColorHSB = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
 
         int newColor;
@@ -204,11 +205,11 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
                 this.sliderValuePercent = percent;
                 break;
             default:
-                newColor = this.parentScreen.getCurrentColor();
+                newColor = this.parentScreen.getMenu().getCurrentColor();
                 break;
         }
 
-        this.parentScreen.updateCurrentPaletteColor(newColor);
+        this.parentScreen.getMenu().setPaletteColor(newColor);
     }
 
     /**

@@ -2,21 +2,21 @@ package me.dantaeusb.zetter.menu.painting;
 
 import java.util.UUID;
 
-public class PaintingFrame {
+public class PaintingActionFrame {
     private long frameTime;
     private int pixelIndex;
     private int color;
-    private UUID ownerId;
+    private UUID authorId;
 
-    public PaintingFrame(byte[] frameData) {
+    public PaintingActionFrame(byte[] frameData) {
 
     }
 
-    public PaintingFrame(long frameTime, int pixelIndex, int color, UUID ownerId) {
+    public PaintingActionFrame(long frameTime, int pixelIndex, int color, UUID ownerId) {
         this.frameTime = frameTime;
         this.pixelIndex = pixelIndex;
         this.color = color;
-        this.ownerId = ownerId;
+        this.authorId = ownerId;
     }
 
     public long getFrameTime() {
@@ -33,6 +33,6 @@ public class PaintingFrame {
 
     @Override
     public String toString(){
-        return String.format("Pixel: %d with color %X changed by %s", this.pixelIndex, this.color, this.ownerId.toString());
+        return String.format("Pixel: %d with color %X changed by %s", this.pixelIndex, this.color, this.authorId.toString());
     }
 }

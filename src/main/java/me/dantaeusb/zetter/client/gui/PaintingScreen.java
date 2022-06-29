@@ -125,50 +125,22 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         return this.menu.getCanvasData().getColorAt(pixelIndex);
     }
 
-    public int getColorAt(int pixelX, int pixelY) {
-        return this.menu.getCanvasData().getColorAt(pixelX, pixelY);
-    }
-
-    public int getCurrentColor() {
-        return this.getPaletteColor(this.paletteWidget.getCurrentPaletteSlot());
-    }
-
     public int getPaletteColor(int slot) {
-        return this.menu.getPaletteColor(slot);
+        return this.getMenu().getPaletteColor(slot);
     }
 
     public void firstLoadUpdate() {
         this.updateSlidersWithCurrentColor();
     }
 
+    // @todo: not a screen thing
     public void updateCurrentPaletteColor(int color) {
-        this.menu.setPaletteColor(this.paletteWidget.getCurrentPaletteSlot(), color);
+        this.getMenu().setPaletteColor(color);
         this.slidersWidget.updateSlidersWithCurrentColor();
-        // Triggers eternal loop
-        //this.colorCodeWidget.updateColorValue(color);
-    }
-
-    public void pushPaletteUpdateColor() {
-        this.menu.sendPaletteUpdatePacket(this.paletteWidget.getCurrentPaletteSlot(), this.getCurrentColor());
     }
 
     public void updateSlidersWithCurrentColor() {
         this.slidersWidget.updateSlidersWithCurrentColor();
-    }
-
-    public void useTool(int canvasX, int canvasY) {
-        switch (this.toolsWidget.getCurrentTool()) {
-            case PENCIL:
-                this.getMenu().writePixelOnCanvasClientSide(canvasX, canvasY, this.getCurrentColor(), this.getPlayer().getUUID());
-                break;
-            case EYEDROPPER:
-                this.getMenu().eyedropper(this.paletteWidget.getCurrentPaletteSlot(), canvasX, canvasY);
-                this.updateSlidersWithCurrentColor();
-                break;
-            case BUCKET:
-                this.getMenu().bucket(canvasX, canvasY, this.getCurrentColor());
-                break;
-        }
     }
 
     @Override
@@ -195,7 +167,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
         this.toolsWidget.render(matrixStack);
-        this.canvasWidget.render(matrixStack);
+        this.canvasWidget.render(matrixStack, x, y, partialTicks);
         this.paletteWidget.render(matrixStack);
         this.slidersWidget.render(matrixStack);
         this.helpWidget.render(matrixStack, x, y, partialTicks);
@@ -268,8 +240,6 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      * @param mouseX
      * @param mouseY
      * @param button
-     * @param dragX
-     * @param dragY
      * @return
      */
     @Override

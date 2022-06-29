@@ -44,6 +44,6 @@ public class CCanvasBucketToolPacket {
             Zetter.LOG.warn("EntityPlayerMP was null when CCanvasBucketToolPacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processBucketTool(packetIn, sendingPlayer));
+        //ctx.enqueueWork(() -> ServerHandler.processBucketTool(packetIn, sendingPlayer));
     }
 }
