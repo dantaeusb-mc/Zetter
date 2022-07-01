@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.packet.CRenamePaintingPacket;
 import com.google.common.collect.Lists;
@@ -17,7 +18,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
-import java.awt.*;
 import java.util.List;
 
 public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> {

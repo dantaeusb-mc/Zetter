@@ -1,15 +1,17 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.function.BiFunction;
 
 public class SlidersWidget extends AbstractPaintingWidget implements Widget {
@@ -73,6 +75,10 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public void render(PoseStack matrixStack) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
+
         drawSliderBackground(matrixStack, 0, this.isDraggingSlider(0));
         drawSliderBackground(matrixStack, 1, this.isDraggingSlider(1));
         drawSliderBackground(matrixStack, 2, this.isDraggingSlider(2));
@@ -138,7 +144,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
 
     public void updateSlidersWithCurrentColor() {
         Color currentColor = new Color(parentScreen.getMenu().getCurrentColor());
-        float[] currentColorHSB = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
+        float[] currentColorHSB = currentColor.toHSB();
 
         this.sliderHuePercent = currentColorHSB[0];
         this.sliderSaturationPercent = 1.0f - currentColorHSB[1];

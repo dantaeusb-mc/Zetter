@@ -109,13 +109,13 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
 
         if (!this.parentScreen.isCanvasAvailable()) {
             return;
         }
-
-        matrixStack.pushPose();
 
         // A bit dumb but avoiding direct calls
         for (int i = 0; i < Helper.getResolution().getNumeric() * Helper.getResolution().getNumeric(); i++) {
@@ -132,7 +132,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             fill(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color);
         }
 
-        if (this.isHovered) {
+        if (mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
             int canvasX = (mouseX - this.x) / CANVAS_SCALE_FACTOR;
             int canvasY = (mouseY - this.y) / CANVAS_SCALE_FACTOR;
@@ -141,8 +141,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         } else {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
-
-        matrixStack.popPose();
     }
 
     public void renderCursor(PoseStack matrixStack, int localX, int localY) {

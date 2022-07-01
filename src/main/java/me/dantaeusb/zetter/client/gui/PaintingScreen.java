@@ -22,7 +22,7 @@ import java.util.List;
 
 public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener {
     // This is the resource location for the background image
-    private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
+    public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
 
     protected final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
 

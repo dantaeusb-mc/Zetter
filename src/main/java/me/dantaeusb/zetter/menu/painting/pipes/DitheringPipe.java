@@ -11,10 +11,6 @@ import java.util.HashMap;
  * space that is often used in pixel art
  */
 public class DitheringPipe implements Pipe {
-    @Override
-    public int process(float posX, float posY, int newColor, int oldColor) {
-        return 0x00000000;
-    }
 
     @Override
     public boolean shouldUsePipe(HashMap<String, AbstractToolParameter> params) {

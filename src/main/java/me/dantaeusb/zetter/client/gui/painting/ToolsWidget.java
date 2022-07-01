@@ -1,10 +1,12 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.menu.painting.tools.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -74,6 +76,9 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public void render(PoseStack matrixStack) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
 
         int i = 0;
         for (ToolButton tool: this.tools) {

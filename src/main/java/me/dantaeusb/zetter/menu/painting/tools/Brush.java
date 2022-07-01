@@ -2,12 +2,13 @@ package me.dantaeusb.zetter.menu.painting.tools;
 
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
-import me.dantaeusb.zetter.menu.painting.pipes.BrushPipe;
+import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -17,9 +18,9 @@ public class Brush extends AbstractTool {
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.brush");
 
     public Brush(EaselContainerMenu menu) {
-        super(Brush.CODE, menu, new LinkedList<Pipe>() {{
-            new DitheringPipe();
-            new BrushPipe();
+        super(Brush.CODE, menu, new ArrayList<>() {{
+            add(new DitheringPipe());
+            add(new BlendingPipe());
         }});
     }
 

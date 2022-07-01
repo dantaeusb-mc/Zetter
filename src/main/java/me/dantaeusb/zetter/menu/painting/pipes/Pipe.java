@@ -6,17 +6,6 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import java.util.HashMap;
 
 public interface Pipe {
-    /**
-     * Get action through pipe
-     *
-     * @param posX
-     * @param posY
-     * @param newColor
-     * @param oldColor
-     *
-     * @return Resulting color
-     */
-    int process(float posX, float posY, int newColor, int oldColor);
 
     boolean shouldUsePipe(HashMap<String, AbstractToolParameter> params);
 

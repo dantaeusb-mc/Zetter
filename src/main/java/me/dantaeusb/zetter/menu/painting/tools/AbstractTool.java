@@ -1,12 +1,16 @@
 package me.dantaeusb.zetter.menu.painting.tools;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Tuple;
 
+import java.awt.color.ICC_ColorSpace;
+import java.awt.color.ICC_Profile;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

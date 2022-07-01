@@ -1,9 +1,11 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
@@ -53,6 +55,10 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
+
         if (!this.visible) {
             return;
         }

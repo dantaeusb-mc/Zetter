@@ -10,7 +10,7 @@ import me.dantaeusb.zetter.menu.painting.PaintingActionFrame;
 import me.dantaeusb.zetter.menu.painting.PaintingFrameBuffer;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
+import me.dantaeusb.zetter.menu.painting.parameters.*;
 import me.dantaeusb.zetter.menu.painting.tools.*;
 import me.dantaeusb.zetter.network.packet.CPaintingFrameBufferPacket;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
@@ -55,7 +55,21 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     private PaintingFrameBuffer canvasChanges;
 
     // Client-only I think
-    private HashMap<String, HashMap<String, AbstractToolParameter>> parameters = new HashMap<>();
+    private HashMap<String, HashMap<String, AbstractToolParameter>> parameters = new HashMap<>(){{
+        put(Pencil.CODE, new HashMap<>() {{
+            put(SizeParameter.CODE, new SizeParameter());
+            put(OpacityParameter.CODE, new OpacityParameter());
+            put(DitheringParameter.CODE, new DitheringParameter());
+            put(BlendingParameter.CODE, new BlendingParameter());
+        }});
+
+        put(Brush.CODE, new HashMap<>() {{
+            put(SizeParameter.CODE, new SizeParameter());
+            put(OpacityParameter.CODE, new OpacityParameter());
+            put(DitheringParameter.CODE, new DitheringParameter());
+            put(BlendingParameter.CODE, new BlendingParameter());
+        }});
+    }};
 
     private String currentTool = Pencil.CODE;
 
