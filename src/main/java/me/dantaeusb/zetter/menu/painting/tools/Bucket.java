@@ -11,12 +11,15 @@ import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.network.packet.CCanvasBucketToolPacket;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 public class Bucket extends AbstractTool {
     public static final String CODE = "bucket";
+
+    public static final int HOTKEY = GLFW.GLFW_KEY_F;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.bucket");
 

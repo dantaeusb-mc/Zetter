@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
 import me.dantaeusb.zetter.menu.painting.parameters.BlendingParameter;
 import me.dantaeusb.zetter.menu.painting.parameters.OpacityParameter;
 import me.dantaeusb.zetter.storage.CanvasData;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.commons.lang3.function.TriFunction;
 
 import java.util.Arrays;
@@ -16,7 +17,8 @@ public class BlendingPipe implements Pipe {
 
     @Override
     public boolean shouldUsePipe(HashMap<String, AbstractToolParameter> params) {
-        return true;
+        // We do not blend on max intensity
+        return !((Float) params.get(OpacityParameter.CODE).value >= 1F);
     }
 
     @Override
@@ -150,16 +152,19 @@ public class BlendingPipe implements Pipe {
     }
 
     public enum BlendingOption {
-        RGB("rgb", BlendingPipe::blendRGB),
-        RYB("ryb", BlendingPipe::blendRYB),
-        RGBC("rgbc", BlendingPipe::blendRGBC);
+        RGB("rgb", BlendingPipe::blendRGB, new TranslatableComponent("container.zetter.painting.blending.additive")),
+        RYB("ryb", BlendingPipe::blendRYB, new TranslatableComponent("container.zetter.painting.blending.subtractive")),
+        RGBC("rgbc", BlendingPipe::blendRGBC, new TranslatableComponent("container.zetter.painting.blending.realistic"));
 
         public final String code;
         public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;
 
-        BlendingOption(String code, TriFunction<Integer, Integer, Float, Integer> blendingFunction) {
+        public final TranslatableComponent translatableComponent;
+
+        BlendingOption(String code, TriFunction<Integer, Integer, Float, Integer> blendingFunction, TranslatableComponent translatableComponent) {
             this.code = code;
             this.blendingFunction = blendingFunction;
+            this.translatableComponent = translatableComponent;
         }
     }
 }

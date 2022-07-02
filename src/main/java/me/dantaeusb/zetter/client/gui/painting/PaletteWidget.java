@@ -65,14 +65,14 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     public void render(PoseStack matrixStack) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         drawPalette(matrixStack);
         drawPaletteSelector(matrixStack, this.parentScreen.getMenu().getCurrentPaletteSlot());
     }
 
     protected void drawPalette(PoseStack matrixStack) {
-        if (!this.parentScreen.isPaletteAvailable()) {
+        if (!this.parentScreen.getMenu().isPaletteAvailable()) {
             return;
         }
 
@@ -87,12 +87,12 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     }
 
     protected void drawPaletteSelector(PoseStack matrixStack, int currentPaletteSlot) {
-        if (!this.parentScreen.isPaletteAvailable()) {
+        if (!this.parentScreen.getMenu().isPaletteAvailable()) {
             return;
         }
 
         final int SELECTOR_POSITION_U = 82;
-        final int SELECTOR_POSITION_V = 185;
+        final int SELECTOR_POSITION_V = 0;
 
         final int PALETTE_BORDER = 3;
 

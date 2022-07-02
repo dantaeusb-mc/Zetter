@@ -5,10 +5,14 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
 
 abstract public class AbstractPaintingWidget extends AbstractWidget implements GuiEventListener {
+    // This is the resource location for the background image
+    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting-widgets.png");
+
     protected final PaintingScreen parentScreen;
 
     public AbstractPaintingWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {

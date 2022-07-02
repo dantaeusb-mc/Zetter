@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ import java.util.LinkedList;
 
 public class Brush extends AbstractTool {
     public static final String CODE = "brush";
+
+    public static final int HOTKEY = GLFW.GLFW_KEY_B;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.brush");
 

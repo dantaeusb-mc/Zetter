@@ -1,20 +1,20 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.Mth;
 
 import javax.annotation.Nullable;
 import java.util.function.BiFunction;
 
-public class SlidersWidget extends AbstractPaintingWidget implements Widget {
+public class SliderWidget extends AbstractPaintingWidget implements Widget {
     final static int SLIDER_WIDTH = 150;
     final static int SLIDER_HEIGHT = 9;
 
@@ -28,7 +28,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     private float sliderValuePercent = 0.0f;
     private Integer sliderDraggingIndex;
 
-    public SlidersWidget(PaintingScreen parentScreen, int x, int y) {
+    public SliderWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.sliders"));
     }
 
@@ -77,15 +77,15 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
     public void render(PoseStack matrixStack) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         drawSliderBackground(matrixStack, 0, this.isDraggingSlider(0));
         drawSliderBackground(matrixStack, 1, this.isDraggingSlider(1));
         drawSliderBackground(matrixStack, 2, this.isDraggingSlider(2));
 
-        drawSliderForeground(matrixStack, 0, SlidersWidget::getHue, this.isDraggingSlider(0));
-        drawSliderForeground(matrixStack, 1, SlidersWidget::getSaturation, this.isDraggingSlider(1));
-        drawSliderForeground(matrixStack, 2, SlidersWidget::getValue, this.isDraggingSlider(2));
+        drawSliderForeground(matrixStack, 0, SliderWidget::getHue, this.isDraggingSlider(0));
+        drawSliderForeground(matrixStack, 1, SliderWidget::getSaturation, this.isDraggingSlider(1));
+        drawSliderForeground(matrixStack, 2, SliderWidget::getValue, this.isDraggingSlider(2));
 
         drawHandler(matrixStack, 0, this.sliderHuePercent, this.isDraggingSlider(0));
         drawHandler(matrixStack, 1, this.sliderSaturationPercent, this.isDraggingSlider(1));
@@ -94,7 +94,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
 
     protected void drawSliderBackground(PoseStack matrixStack, int verticalOffset, boolean active) {
         final int SLIDER_POSITION_U = 5;
-        final int SLIDER_POSITION_V = 217;
+        final int SLIDER_POSITION_V = 80;
 
         int top = this.y + (verticalOffset * (SLIDER_HEIGHT + SLIDER_DISTANCE));
 
@@ -224,7 +224,7 @@ public class SlidersWidget extends AbstractPaintingWidget implements Widget {
 
     protected void drawHandler(PoseStack matrixStack, int verticalOffset, float percent, boolean active) {
         final int HANDLER_POSITION_U = 0;
-        final int HANDLER_POSITION_V = 216;
+        final int HANDLER_POSITION_V = 80;
         final int HANDLER_WIDTH = 5;
         final int HANDLER_HEIGHT = 11;
 

@@ -7,14 +7,15 @@ import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 public class Pencil extends AbstractTool {
     public static final String CODE = "pencil";
+
+    public static final int HOTKEY = GLFW.GLFW_KEY_P;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.pencil");
 

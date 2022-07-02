@@ -9,6 +9,10 @@ public class Color {
     public static final Color white     = new Color(255, 255, 255);
     public static final Color WHITE = white;
 
+    public static final Color screenGray = new Color(198, 198, 198);
+
+    public static final Color SCREEN_GRAY = screenGray;
+
     public static final Color lightGray = new Color(192, 192, 192);
 
     public static final Color LIGHT_GRAY = lightGray;

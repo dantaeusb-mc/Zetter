@@ -144,7 +144,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         drawTextbox(matrixStack);
         //drawModeButtons(matrixStack);

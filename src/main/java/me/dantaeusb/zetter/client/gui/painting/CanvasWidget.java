@@ -113,7 +113,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
 
-        if (!this.parentScreen.isCanvasAvailable()) {
+        if (!this.parentScreen.getMenu().isCanvasAvailable()) {
             return;
         }
 

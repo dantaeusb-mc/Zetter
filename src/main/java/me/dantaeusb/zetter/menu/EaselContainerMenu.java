@@ -3,6 +3,9 @@ package me.dantaeusb.zetter.menu;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
+import me.dantaeusb.zetter.client.gui.painting.tabs.AbstractTab;
+import me.dantaeusb.zetter.client.gui.painting.tabs.ColorTab;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
@@ -40,6 +43,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     private static final int HOTBAR_SLOT_COUNT = 9;
 
+    public static final int PLAYER_INVENTORY_XPOS = 38;
+    public static final int PLAYER_INVENTORY_YPOS = 156;
+
     /*
      * Canvas
      */
@@ -49,11 +55,18 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * State and networking
      */
 
+    // @todo: actually move to container to share between players?
     // Only player's buffer on client, all users on server
     private final LinkedList<PaintingActionBuffer> actionsQueue = new LinkedList<>();
 
     // Saved painting states
     private Queue<int[]> snapshots;
+
+    /*
+     * Tabs
+     */
+
+    private TabsWidget.Tab currentTab = TabsWidget.Tab.COLOR;
 
     /*
      * Tools
@@ -111,14 +124,23 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         this.world = invPlayer.player.level;
         this.easelContainer = easelContainer;
 
-        final int PALETTE_SLOT_X_SPACING = 152;
-        final int PALETTE_SLOT_Y_SPACING = 94;
+        final int CANVAS_SLOT_X = 180;
+        final int CANVAS_SLOT_Y = 9;
 
-        final int HOTBAR_XPOS = 8;
-        final int HOTBAR_YPOS = 161;
+        final int PALETTE_SLOT_X = 180;
+        final int PALETTE_SLOT_Y = 132;
+
+        final int HOTBAR_XPOS = 38;
+        final int HOTBAR_YPOS = 214;
         final int SLOT_X_SPACING = 18;
 
-        this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X_SPACING, PALETTE_SLOT_Y_SPACING) {
+        this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.CANVAS_SLOT, CANVAS_SLOT_X, CANVAS_SLOT_Y) {
+            public boolean mayPlace(ItemStack stack) {
+                return stack.getItem() == ZetterItems.CANVAS.get();
+            }
+        });
+
+        this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X, PALETTE_SLOT_Y) {
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ZetterItems.PALETTE.get();
             }
@@ -133,7 +155,16 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         // Add the players hotbar to the gui - the [xpos, ypos] location of each item
         for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
             int slotNumber = x;
-            addSlot(new Slot(invPlayer, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
+            addSlot(new Slot(invPlayer, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS) {
+                @Override
+                public boolean isActive() {
+                    if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
+                        return super.isActive();
+                    }
+
+                    return false;
+                }
+            });
         }
     }
 
@@ -211,8 +242,12 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         return this.toolParameters.get(this.currentTool);
     }
 
-    public AbstractToolParameter getCurrentToolParameter(String parameter) {
-        return this.toolParameters.get(this.currentTool).get(parameter);
+    public AbstractToolParameter getCurrentToolParameter(String code) {
+        return this.toolParameters.get(this.currentTool).get(code);
+    }
+
+    public AbstractToolParameter setCurrentToolParameter(String code, AbstractToolParameter parameter) {
+        return this.toolParameters.get(this.currentTool).put(code, parameter);
     }
 
     public int getCurrentColor() {
@@ -346,6 +381,14 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
 
         return PaletteItem.getPaletteColors(paletteStack)[paletteSlot];
+    }
+
+    public void setCurrentTab(TabsWidget.Tab tab) {
+        this.currentTab = tab;
+    }
+
+    public TabsWidget.Tab getCurrentTab() {
+        return this.currentTab;
     }
 
     /**

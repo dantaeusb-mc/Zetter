@@ -4,12 +4,15 @@ import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 
 public class Eyedropper extends AbstractTool {
     public static final String CODE = "eyedropper";
+
+    public static final int HOTKEY = GLFW.GLFW_KEY_I;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.eyedropper");
 
