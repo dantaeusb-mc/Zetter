@@ -9,6 +9,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.Tuple;
 
+import javax.annotation.Nullable;
 import java.awt.color.ICC_ColorSpace;
 import java.awt.color.ICC_Profile;
 import java.util.ArrayList;
@@ -43,7 +44,11 @@ public abstract class AbstractTool {
         return true;
     }
 
-    public boolean shouldAddAction(float lastPosX, float lastPosY, float newPosX, float newPosY) {
+    public boolean shouldAddAction(float newPosX, float newPosY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
+        if (lastPosX == null || lastPosY == null) {
+            return true;
+        }
+
         return Math.floor(lastPosX) != Math.floor(newPosX) || Math.floor(lastPosY) != Math.floor(newPosY);
     }
 
@@ -52,7 +57,10 @@ public abstract class AbstractTool {
     /**
      * Apply current tool to the canvas
      * Position is float for between-pixel coloring with brush
-     * <p>
+     *
+     * Should be idempotent! Actions sent across network, not changes!
+     * No random or side effects!
+     *
      * Returns palette damage!
      */
     public abstract int apply(CanvasData canvas, HashMap<String, AbstractToolParameter> params, int color, float posX, float posY);

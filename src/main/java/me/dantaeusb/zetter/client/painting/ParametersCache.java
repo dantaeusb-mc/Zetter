@@ -1,2 +1,4 @@
-package me.dantaeusb.zetter.client.painting;public class ParametersCache {
+package me.dantaeusb.zetter.client.painting;
+
+public class ParametersCache {
 }

@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.menu.painting.PaintingFrameBuffer;
+import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
 import me.dantaeusb.zetter.network.ServerHandler;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,12 +14,12 @@ import java.util.function.Supplier;
  * @todo: add entity and/or painting UUID
  */
 public class CPaintingFrameBufferPacket {
-    private PaintingFrameBuffer paintingFrameBuffer;
+    private PaintingActionBuffer paintingFrameBuffer;
 
     public CPaintingFrameBufferPacket() {
     }
 
-    public CPaintingFrameBufferPacket(PaintingFrameBuffer paintingFrameBuffer) {
+    public CPaintingFrameBufferPacket(PaintingActionBuffer paintingFrameBuffer) {
         this.paintingFrameBuffer = paintingFrameBuffer;
     }
 
@@ -33,7 +33,7 @@ public class CPaintingFrameBufferPacket {
         long frameStartTime = buf.readLong();
         ByteBuf bufferData = buf.readBytes(buf.writerIndex() - buf.readerIndex());
 
-        packet.paintingFrameBuffer = new PaintingFrameBuffer(frameStartTime, bufferData.nioBuffer());
+        //packet.paintingFrameBuffer = new PaintingActionFrameBuffer(frameStartTime, bufferData.nioBuffer());
 
         return packet;
     }
@@ -42,11 +42,11 @@ public class CPaintingFrameBufferPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeLong(this.paintingFrameBuffer.getFrameStartTime());
-        buf.writeBytes(this.paintingFrameBuffer.getBufferData());
+        //buf.writeLong(this.paintingFrameBuffer.getFrameStartTime());
+        //buf.writeBytes(this.paintingFrameBuffer.getBufferData());
     }
 
-    public PaintingFrameBuffer getFrameBuffer() {
+    public PaintingActionBuffer getFrameBuffer() {
         return this.paintingFrameBuffer;
     }
 

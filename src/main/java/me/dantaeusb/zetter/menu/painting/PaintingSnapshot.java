@@ -5,41 +5,18 @@ import net.minecraft.util.Tuple;
 import java.util.Stack;
 import java.util.UUID;
 
-public class PaintingAction {
-    public final UUID authorId;
-    public final String toolCode;
-    public final Long startTime;
+/**
+ * Snapshots are complete copy of current canvas
+ * at a particular time, they're created only on
+ * server side but then send to client for easier
+ * state restoration
+ */
+public class PaintingSnapshot {
+    private final Long snapshotTime;
+    private final int[] colors;
 
-    private boolean committed = false;
-    private Stack<Tuple<Float, Float>> frames = new Stack<>();
-
-    public PaintingAction(UUID authorId, String toolCode, Long startTime) {
-        this.authorId = authorId;
-        this.toolCode = toolCode;
-        this.startTime = startTime;
-    }
-
-    /**
-     * Add action coordinates (like path of the brush)
-     * Returns true if can add, false if it should be committed
-     * and new action stack prepared
-     *
-     * @param posX
-     * @param posY
-     * @return
-     */
-    public boolean addFrame(float posX, float posY) {
-        // @todo: check that it's not the time to submit action
-        this.frames.push(new Tuple<>(posX, posY));
-
-        return true;
-    }
-
-    public void commit() {
-        this.committed = true;
-    }
-
-    public boolean isCommitted() {
-        return this.committed;
+    public PaintingSnapshot(Long snapshotTime, int[] colors) {
+        this.snapshotTime = snapshotTime;
+        this.colors = colors;
     }
 }
