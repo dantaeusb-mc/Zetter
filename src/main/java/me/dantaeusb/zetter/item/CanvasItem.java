@@ -39,7 +39,7 @@ public class CanvasItem extends Item
             String canvasCode = getCanvasCode(stack);
 
             if (!StringUtil.isNullOrEmpty(canvasCode)) {
-                new TranslatableComponent("item.zetter.canvas.painted");
+                return new TranslatableComponent("item.zetter.canvas.painted");
             }
         }
 
