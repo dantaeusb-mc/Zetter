@@ -9,6 +9,10 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 
@@ -27,6 +31,19 @@ public class CanvasItem extends Item
 
     public CanvasItem() {
         super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
+    }
+
+
+    public Component getName(ItemStack stack) {
+        if (stack.hasTag()) {
+            String canvasCode = getCanvasCode(stack);
+
+            if (!StringUtil.isNullOrEmpty(canvasCode)) {
+                new TranslatableComponent("item.zetter.canvas.painted");
+            }
+        }
+
+        return new TranslatableComponent("item.zetter.canvas.blank");
     }
 
     /**

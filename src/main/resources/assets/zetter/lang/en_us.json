@@ -18,6 +18,8 @@
   "entity.zetter.custom_painting_entity": "Framed Painting",
   "item.zetter.easel": "Easel",
   "item.zetter.canvas": "Canvas",
+  "item.zetter.canvas.empty": "Blank canvas",
+  "item.zetter.canvas.painted": "Painted canvas",
   "item.zetter.painting": "Painting",
   "item.zetter.paints": "Paints",
   "item.zetter.palette": "Palette",

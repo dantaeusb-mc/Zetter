@@ -11,7 +11,7 @@ public class PaintingAction {
     public final Long startTime;
 
     private boolean committed = false;
-    private Stack<Tuple<Float, Float>> coordinates = new Stack<>();
+    private Stack<Tuple<Float, Float>> frames = new Stack<>();
 
     public PaintingAction(UUID authorId, String toolCode, Long startTime) {
         this.authorId = authorId;
@@ -28,9 +28,9 @@ public class PaintingAction {
      * @param posY
      * @return
      */
-    public boolean addCoordinates(float posX, float posY) {
+    public boolean addFrame(float posX, float posY) {
         // @todo: check that it's not the time to submit action
-        this.coordinates.push(new Tuple<>(posX, posY));
+        this.frames.push(new Tuple<>(posX, posY));
 
         return true;
     }
