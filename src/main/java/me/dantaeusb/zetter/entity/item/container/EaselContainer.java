@@ -43,6 +43,14 @@ public class EaselContainer extends ItemStackHandler {
         this.listeners.remove(listener);
     }
 
+    public void damagePalette(int damage) {
+        final int maxDamage = this.getPaletteStack().getMaxDamage() - 1;
+        int newDamage = this.getPaletteStack().getDamageValue() + damage;
+        newDamage = Math.min(newDamage, maxDamage);
+
+        this.getPaletteStack().setDamageValue(newDamage);
+    }
+
     /**
      * @todo: this
      * @return

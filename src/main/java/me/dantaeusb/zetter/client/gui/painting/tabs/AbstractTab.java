@@ -1,17 +1,21 @@
 package me.dantaeusb.zetter.client.gui.painting.tabs;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
+import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.IntensityInterface;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
 public class AbstractTab extends AbstractPaintingWidget {
-    private static final int POSITION_X = 37;
-    private static final int POSITION_Y = 155;
-    private static final int WIDTH = 162;
-    private static final int HEIGHT = 76;
+    public static final int POSITION_X = 37;
+    public static final int POSITION_Y = 155;
+    public static final int WIDTH = 162;
+    public static final int HEIGHT = 76;
 
     protected final List<AbstractPaintingWidget> tabWidgets = Lists.newArrayList();
 
@@ -21,6 +25,12 @@ public class AbstractTab extends AbstractPaintingWidget {
 
     public void addTabWidget(AbstractPaintingWidget widget) {
         this.tabWidgets.add(widget);
+    }
+
+    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+        for (AbstractPaintingWidget widget : this.tabWidgets) {
+            widget.renderLabels(matrixStack, mouseX, mouseY);
+        }
     }
 
     public void containerTick() {

@@ -1,6 +1,8 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -24,6 +26,8 @@ abstract public class AbstractPaintingWidget extends AbstractWidget implements G
     public @Nullable Component getTooltip(int mouseX, int mouseY) {
         return this.getMessage();
     }
+
+    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {}
 
     /**
      * @todo: Would be nice to make actual narrations, it seems quite easy with widget system

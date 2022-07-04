@@ -18,7 +18,7 @@ public class PaletteItem extends Item
     {
         CompoundTag compoundNBT = stack.getTag();
 
-        int[] paletteColors = null;
+        int[] paletteColors;
         if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_PALETTE_COLORS)) {
             paletteColors = compoundNBT.getIntArray(NBT_TAG_NAME_PALETTE_COLORS);
         } else {

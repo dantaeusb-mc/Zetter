@@ -65,7 +65,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
 
         this.textField.setFilter(this.hexColorValidator);
 
-        this.parentScreen.pipeWidget(this.textField);
+        //this.parentScreen.pipeWidget(this.textField);
     }
 
     public void tick() {

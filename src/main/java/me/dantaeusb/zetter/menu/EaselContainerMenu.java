@@ -4,8 +4,6 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
-import me.dantaeusb.zetter.client.gui.painting.tabs.AbstractTab;
-import me.dantaeusb.zetter.client.gui.painting.tabs.ColorTab;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
@@ -13,7 +11,6 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.menu.painting.parameters.*;
 import me.dantaeusb.zetter.menu.painting.tools.*;
-import me.dantaeusb.zetter.network.packet.CPaintingFrameBufferPacket;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
 import me.dantaeusb.zetter.network.packet.SCanvasNamePacket;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
@@ -24,12 +21,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.SlotItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class EaselContainerMenu extends AbstractContainerMenu {
     /*
@@ -42,6 +39,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     private final EaselContainer easelContainer;
 
     private static final int HOTBAR_SLOT_COUNT = 9;
+
+    private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
+    private static final int PLAYER_INVENTORY_COLUMN_COUNT = 9;
 
     public static final int PLAYER_INVENTORY_XPOS = 38;
     public static final int PLAYER_INVENTORY_YPOS = 156;
@@ -73,20 +73,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      */
 
     // Client-only I think
-    private HashMap<String, HashMap<String, AbstractToolParameter>> toolParameters = new HashMap<>(){{
-        put(Pencil.CODE, new HashMap<>() {{
-            put(SizeParameter.CODE, new SizeParameter());
-            put(OpacityParameter.CODE, new OpacityParameter());
-            put(DitheringParameter.CODE, new DitheringParameter());
-            put(BlendingParameter.CODE, new BlendingParameter());
-        }});
-
-        put(Brush.CODE, new HashMap<>() {{
-            put(SizeParameter.CODE, new SizeParameter());
-            put(OpacityParameter.CODE, new OpacityParameter());
-            put(DitheringParameter.CODE, new DitheringParameter());
-            put(BlendingParameter.CODE, new BlendingParameter());
-        }});
+    private HashMap<String, AbstractToolParameters> toolParameters = new HashMap<>(){{
+        put(Pencil.CODE, new PencilParameters());
+        put(Brush.CODE, new BrushParameters());
     }};
 
     private String currentTool = Pencil.CODE;
@@ -99,6 +88,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         put(Eyedropper.CODE, new Eyedropper(EaselContainerMenu.this));
     }};
 
+    private List<Consumer<AbstractToolParameters>> toolUpdateListeners = new ArrayList<>();
+
+    private List<Consumer<Integer>> colorUpdateListeners = new ArrayList<>();
+
     /*
      * Palette
      */
@@ -106,8 +99,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public static final int PALETTE_SLOTS = 14;
 
     private int currentPaletteSlot = 0;
-
-    private Notify firstLoadNotification = ()->{};
 
     /*
      *
@@ -130,9 +121,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         final int PALETTE_SLOT_X = 180;
         final int PALETTE_SLOT_Y = 132;
 
+        final int SLOT_X_SPACING = 18;
+        final int SLOT_Y_SPACING = 18;
         final int HOTBAR_XPOS = 38;
         final int HOTBAR_YPOS = 214;
-        final int SLOT_X_SPACING = 18;
 
         this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.CANVAS_SLOT, CANVAS_SLOT_X, CANVAS_SLOT_Y) {
             public boolean mayPlace(ItemStack stack) {
@@ -165,6 +157,26 @@ public class EaselContainerMenu extends AbstractContainerMenu {
                     return false;
                 }
             });
+        }
+
+        // Add the rest of the players inventory to the gui
+        for (int y = 0; y < PLAYER_INVENTORY_ROW_COUNT; y++) {
+            for (int x = 0; x < PLAYER_INVENTORY_COLUMN_COUNT; x++) {
+                int slotNumber = HOTBAR_SLOT_COUNT + y * PLAYER_INVENTORY_COLUMN_COUNT + x;
+                int xpos = PLAYER_INVENTORY_XPOS + x * SLOT_X_SPACING;
+                int ypos = PLAYER_INVENTORY_YPOS + y * SLOT_Y_SPACING;
+
+                this.addSlot(new Slot(invPlayer, slotNumber,  xpos, ypos) {
+                    @Override
+                    public boolean isActive() {
+                        if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
+                            return super.isActive();
+                        }
+
+                        return false;
+                    }
+                });
+            }
         }
     }
 
@@ -202,11 +214,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     {
         this.entity = entity;
     }
-
-    public EaselContainer getEaselContainer() {
-        return this.easelContainer;
-    }
-
     public int getCurrentPaletteSlot() {
         return this.currentPaletteSlot;
     }
@@ -214,8 +221,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public void setCurrentPaletteSlot(int slotIndex) {
         this.currentPaletteSlot = slotIndex;
 
-        // @todo!
-        //this.updateSlidersWithCurrentColor();
+        for (Consumer<Integer> listener: this.colorUpdateListeners) {
+            listener.accept(this.getCurrentColor());
+        }
     }
 
     public HashMap<String, AbstractTool> getTools() {
@@ -236,18 +244,14 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
 
         this.currentTool = toolCode;
+
+        for (Consumer<AbstractToolParameters> listener: this.toolUpdateListeners) {
+            listener.accept(this.getCurrentToolParameters());
+        }
     }
 
-    public HashMap<String, AbstractToolParameter> getCurrentToolParameters() {
+    public AbstractToolParameters getCurrentToolParameters() {
         return this.toolParameters.get(this.currentTool);
-    }
-
-    public AbstractToolParameter getCurrentToolParameter(String code) {
-        return this.toolParameters.get(this.currentTool).get(code);
-    }
-
-    public AbstractToolParameter setCurrentToolParameter(String code, AbstractToolParameter parameter) {
-        return this.toolParameters.get(this.currentTool).put(code, parameter);
     }
 
     public int getCurrentColor() {
@@ -266,6 +270,20 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * @param posY
      */
     public void useTool(float posX, float posY) {
+        // No palette or no paints left
+        if (this.easelContainer.getPaletteStack().isEmpty() || this.easelContainer.getPaletteStack().getDamageValue() >= this.easelContainer.getPaletteStack().getMaxDamage() - 1) {
+            return;
+        }
+
+        if (this.getCanvasData() == null) {
+            return;
+        }
+
+        if (!this.checkActionSafety(posX, posY)) {
+            Zetter.LOG.warn("Unsafe action: X:" + posX + " Y:" + posY);
+            return;
+        }
+
         PaintingActionBuffer lastAction = null;
 
         if (!this.actionsQueue.isEmpty()) {
@@ -274,7 +292,8 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         Float lastX = null, lastY = null;
 
-        if (lastAction != null && lastAction.toolCode.equals(this.currentTool)) {
+        // @todo: when we will do tick/commit, it will be resetting after .5s allowing to do dot dot dot?
+        if (lastAction != null && lastAction.toolCode.equals(this.currentTool) && !lastAction.isCommitted()) {
             final PaintingActionBuffer.PaintingAction lastSubAction = lastAction.getLastAction();
 
             if (lastSubAction != null) {
@@ -284,9 +303,23 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
 
         if (this.getCurrentTool().shouldAddAction(posX, posY, lastX, lastY)) {
-            this.getCurrentTool().apply(this.getCanvasData(), this.getCurrentToolParameters(), this.getCurrentColor(), posX, posY);
+            int damage = this.getCurrentTool().apply(this.getCanvasData(), this.getCurrentToolParameters(), this.getCurrentColor(), posX, posY);
             this.recordAction(posX, posY);
+
+            this.easelContainer.damagePalette(damage);
         }
+    }
+
+    private boolean checkActionSafety(float posX, float posY) {
+        if (posX < 0 || posY < 0) {
+            return false;
+        }
+
+        if (posX > this.getCanvasData().getWidth() || posY > this.getCanvasData().getHeight()) {
+            return false;
+        }
+
+        return true;
     }
 
     private void recordAction(float posX, float posY) {
@@ -323,12 +356,22 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         return newAction;
     }
 
-    /**
-     * Because we don't have a special Slot for the canvas, we're using custom
-     * update functions and network message
-     */
-    public void setFirstLoadNotification(Notify firstLoadNotification) {
-        this.firstLoadNotification = firstLoadNotification;
+    public void addToolUpdateListener(Consumer<AbstractToolParameters> subscriber) {
+        this.toolUpdateListeners.add(subscriber);
+        subscriber.accept(this.getCurrentToolParameters());
+    }
+
+    public void removeToolUpdateListener(Consumer<AbstractToolParameters> subscriber) {
+        this.toolUpdateListeners.remove(subscriber);
+    }
+
+    public void addColorUpdateListener(Consumer<Integer> subscriber) {
+        this.colorUpdateListeners.add(subscriber);
+        subscriber.accept(this.getCurrentColor());
+    }
+
+    public void removeColorUpdateListener(Consumer<Integer> subscriber) {
+        this.colorUpdateListeners.remove(subscriber);
     }
 
     public void handleCanvasChange(ItemStack canvasStack) {
@@ -336,10 +379,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.world));
         } else {
             this.canvas = null;
-        }
-
-        if (this.firstLoadNotification != null) {
-            this.firstLoadNotification.invoke();
         }
     }
 
@@ -648,10 +687,5 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      */
     public boolean stillValid(Player player) {
         return this.easelContainer.stillValid(player);
-    }
-
-    @FunctionalInterface
-    public interface Notify {   // Some folks use Runnable, but I prefer not to use it for non-thread-related tasks
-        void invoke();
     }
 }

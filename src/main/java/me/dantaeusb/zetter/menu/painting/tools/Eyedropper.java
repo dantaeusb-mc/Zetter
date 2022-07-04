@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.menu.painting.tools;
 
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
+import me.dantaeusb.zetter.menu.painting.parameters.NoParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
@@ -9,7 +9,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class Eyedropper extends AbstractTool {
+public class Eyedropper extends AbstractTool<NoParameters> {
     public static final String CODE = "eyedropper";
 
     public static final int HOTKEY = GLFW.GLFW_KEY_I;
@@ -22,7 +22,7 @@ public class Eyedropper extends AbstractTool {
     }
 
     @Override
-    public ToolShape getShape(HashMap<String, AbstractToolParameter> params) {
+    public ToolShape getShape(NoParameters params) {
         return null;
     }
 
@@ -32,7 +32,7 @@ public class Eyedropper extends AbstractTool {
     }
 
     @Override
-    public int apply(CanvasData canvas, HashMap<String, AbstractToolParameter> params, int color, float posX, float posY) {
+    public int apply(CanvasData canvas, NoParameters params, int color, float posX, float posY) {
         int newColor = canvas.getColorAt((int) posX, (int) posY);
 
         this.menu.setPaletteColor(newColor);

@@ -3,23 +3,31 @@ package me.dantaeusb.zetter.client.gui.painting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.core.tools.Color;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.PencilParameters;
 import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.menu.painting.tools.Brush;
 import me.dantaeusb.zetter.menu.painting.tools.Bucket;
 import me.dantaeusb.zetter.menu.painting.tools.Eyedropper;
 import me.dantaeusb.zetter.menu.painting.tools.Pencil;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class BlendingWidget extends AbstractPaintingWidget implements Widget {
-    private final static int WIDTH = 58;
-    private final static int HEIGHT = 20;
+    public final static int WIDTH = 58;
+    public final static int HEIGHT = 32;
+    public final static int FONT_Y_MARGIN = 12;
 
     private final static int BLENDING_BUTTON_WIDTH = 19;
 
@@ -30,14 +38,16 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
     public BlendingWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.blending"));
 
-        final int BLENDING_BUTTON_U = 208;
-        final int BLENDING_BUTTON_V = 69;
+        final int BLENDING_BUTTON_U = 77;
+        final int BLENDING_BUTTON_V = 32;
 
         this.buttons = new LinkedList<>() {{
-            push(new BlendingButton(BlendingPipe.BlendingOption.RGB, BLENDING_BUTTON_U, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
-            push(new BlendingButton(BlendingPipe.BlendingOption.RYB, BLENDING_BUTTON_U, BLENDING_BUTTON_V + BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
-            push(new BlendingButton(BlendingPipe.BlendingOption.RGBC, BLENDING_BUTTON_U, BLENDING_BUTTON_V + BLENDING_BUTTON_WIDTH * 2, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
+            push(new BlendingButton(BlendingPipe.BlendingOption.RYB, BLENDING_BUTTON_U, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
+            push(new BlendingButton(BlendingPipe.BlendingOption.RGB, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
+            push(new BlendingButton(BlendingPipe.BlendingOption.RGBC, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH * 2, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
         }};
+
+        Collections.reverse(this.buttons);
     }
 
     @Override
@@ -50,11 +60,32 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
         int iMouseX = (int) mouseX;
         int iMouseY = (int) mouseY;
 
-        if (this.isMouseOver(mouseX, mouseY)) {
-            this.parentScreen.getMenu().getCurrentToolParameter("blending");
+        // Quick check
+        if (!this.isMouseOver(mouseX, mouseY)) {
+            return false;
         }
 
-        return super.mouseClicked(mouseX, mouseY, button);
+        int i = 0;
+        for (BlendingButton blendingButton: this.buttons) {
+            int fromX = this.x + i * BLENDING_BUTTON_WIDTH;
+
+            if (PaintingScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, blendingButton.width, blendingButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+                AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
+
+                if (parameters instanceof BlendingInterface) {
+                    ((BlendingInterface) parameters).setBlending(blendingButton.blending);
+                } else {
+                    throw new RuntimeException("Cannot apply blending parameter");
+                }
+
+                this.playDownSound(Minecraft.getInstance().getSoundManager());
+                return true;
+            }
+
+            i++;
+        }
+
+        return false;
     }
 
     public void render(PoseStack matrixStack) {
@@ -62,7 +93,27 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
+        AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
+        BlendingPipe.BlendingOption blending = null;
 
+        if (parameters instanceof BlendingInterface) {
+            blending = ((BlendingInterface) parameters).getBlending();
+        } else {
+            throw new RuntimeException("Cannot render blending parameter");
+        }
+
+        int i = 0;
+        for (BlendingButton blendingButton: this.buttons) {
+            int fromX = this.x + i * BLENDING_BUTTON_WIDTH;
+            int vOffset = blending == blendingButton.blending ? BLENDING_BUTTON_HEIGHT : 0;
+
+            this.blit(matrixStack, fromX, this.y + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
+            i++;
+        }
+    }
+
+    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+        this.parentScreen.getFont().draw(matrixStack, this.getMessage(), (float) this.x - this.parentScreen.getGuiLeft(), (float) this.y - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
     }
 
     public class BlendingButton {

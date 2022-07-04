@@ -5,10 +5,7 @@ import com.mojang.blaze3d.vertex.*;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Widget;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -19,13 +16,19 @@ import javax.annotation.Nullable;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class CanvasWidget extends AbstractPaintingWidget implements Widget {
-    private static final int CANVAS_SCALE_FACTOR = 5;
-    private static final int size = Helper.getResolution().getNumeric() * CANVAS_SCALE_FACTOR;
+    private static final int CANVAS_SCALE_FACTOR = 6;
+    private static final int SIZE = 128;
 
     private boolean canvasDragging = false;
 
+    private int canvasOffsetX;
+    private int canvasOffsetY;
+
     public CanvasWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, size, size, new TranslatableComponent("container.zetter.painting.canvas"));
+        super(parentScreen, x, y, SIZE, SIZE, new TranslatableComponent("container.zetter.painting.canvas"));
+
+        this.canvasOffsetX = (SIZE - (parentScreen.getMenu().getCanvasData().getWidth() * CANVAS_SCALE_FACTOR)) / 2;
+        this.canvasOffsetY = (SIZE - (parentScreen.getMenu().getCanvasData().getHeight() * CANVAS_SCALE_FACTOR)) / 2;
     }
 
     @Override
@@ -41,12 +44,9 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int iMouseX = (int) mouseX;
-        int iMouseY = (int) mouseY;
-
         if (this.isMouseOver(mouseX, mouseY)) {
             this.canvasDragging = true;
-            this.handleCanvasInteraction(iMouseX, iMouseY);
+            this.handleCanvasInteraction(mouseX, mouseY);
             return true;
         }
 
@@ -100,8 +100,16 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
      * @return
      */
     protected boolean handleCanvasInteraction(double mouseX, double mouseY) {
-        final float canvasX = (float) ((mouseX - this.x) / (float) CANVAS_SCALE_FACTOR);
-        final float canvasY = (float) ((mouseY - this.y) / (float) CANVAS_SCALE_FACTOR);
+        final float canvasX = (float) ((mouseX - this.x - this.canvasOffsetX) / (float) CANVAS_SCALE_FACTOR);
+        final float canvasY = (float) ((mouseY - this.y - this.canvasOffsetY) / (float) CANVAS_SCALE_FACTOR);
+
+        if (canvasX < 0 || canvasX > this.parentScreen.getMenu().getCanvasData().getWidth()) {
+            return false;
+        }
+
+        if (canvasY < 0 || canvasY > this.parentScreen.getMenu().getCanvasData().getHeight()) {
+            return false;
+        }
 
         this.parentScreen.getMenu().useTool(canvasX, canvasY);
 
@@ -119,23 +127,27 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
 
         // A bit dumb but avoiding direct calls
         for (int i = 0; i < Helper.getResolution().getNumeric() * Helper.getResolution().getNumeric(); i++) {
-            int localX = i % 16;
-            int localY = i / 16;
+            int canvasX = i % 16;
+            int canvasY = i / 16;
 
             /**
              * @todo: better use canvas renderer because there's a texture ready to render
              */
             int color = this.parentScreen.getColorAt(i);
-            int globalX = this.x + localX * CANVAS_SCALE_FACTOR;
-            int globalY = this.y + localY * CANVAS_SCALE_FACTOR;
+            int globalX = this.x + this.canvasOffsetX + canvasX * CANVAS_SCALE_FACTOR;
+            int globalY = this.y + this.canvasOffsetY + canvasY * CANVAS_SCALE_FACTOR;
 
             fill(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color);
         }
 
-        if (mouseX >= this.x && mouseY >= this.y && mouseX < this.x + this.width && mouseY < this.y + this.height) {
+        if (    mouseX >= this.x + this.canvasOffsetX
+                && mouseY >= this.y + this.canvasOffsetY
+                && mouseX < this.x + this.canvasOffsetX + this.parentScreen.getMenu().getCanvasData().getWidth() * CANVAS_SCALE_FACTOR
+                && mouseY < this.y + this.canvasOffsetY + this.parentScreen.getMenu().getCanvasData().getHeight() * CANVAS_SCALE_FACTOR
+        ) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-            int canvasX = (mouseX - this.x) / CANVAS_SCALE_FACTOR;
-            int canvasY = (mouseY - this.y) / CANVAS_SCALE_FACTOR;
+            int canvasX = (mouseX - this.x - this.canvasOffsetX) / CANVAS_SCALE_FACTOR;
+            int canvasY = (mouseY - this.y - this.canvasOffsetY) / CANVAS_SCALE_FACTOR;
 
             this.renderCursor(matrixStack, canvasX, canvasY);
         } else {
@@ -143,9 +155,9 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         }
     }
 
-    public void renderCursor(PoseStack matrixStack, int localX, int localY) {
-        int globalX1 = this.x + localX * CANVAS_SCALE_FACTOR - 1;
-        int globalY1 = this.y + localY * CANVAS_SCALE_FACTOR - 1;
+    public void renderCursor(PoseStack matrixStack, int canvasX, int canvasY) {
+        int globalX1 = this.x + this.canvasOffsetX + canvasX * CANVAS_SCALE_FACTOR - 1;
+        int globalY1 = this.y + this.canvasOffsetY + canvasY * CANVAS_SCALE_FACTOR - 1;
         int globalX2 = globalX1 + CANVAS_SCALE_FACTOR + 1;
         int globalY2 = globalY1 + CANVAS_SCALE_FACTOR + 1;
 

@@ -2,22 +2,18 @@ package me.dantaeusb.zetter.menu.painting.tools;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.util.FastColor;
 import net.minecraft.util.Tuple;
 
 import javax.annotation.Nullable;
-import java.awt.color.ICC_ColorSpace;
-import java.awt.color.ICC_Profile;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
 
-public abstract class AbstractTool {
+public abstract class AbstractTool<T extends AbstractToolParameters> {
     /**
      * Serializable code of the current tool
      */
@@ -63,7 +59,7 @@ public abstract class AbstractTool {
      *
      * Returns palette damage!
      */
-    public abstract int apply(CanvasData canvas, HashMap<String, AbstractToolParameter> params, int color, float posX, float posY);
+    public abstract int apply(CanvasData canvas, T params, int color, float posX, float posY);
 
     /**
      * Do pixel change: apply all pipes and calculate final color
@@ -72,15 +68,16 @@ public abstract class AbstractTool {
      * @param params
      * @param color
      * @param index
+     * @param localIntensity Local localIntensity! Used for brush smoothing, do not mix with blending localIntensity!
      */
-    protected void pixelChange(CanvasData canvas, HashMap<String, AbstractToolParameter> params, int color, int index) {
+    protected void pixelChange(CanvasData canvas, T params, int color, int index, float localIntensity) {
         if (!this.publishable()) {
             throw new IllegalStateException("Non-publishable tools cannot change pixels!");
         }
 
         for (Pipe pipe : this.pipes) {
-            if (pipe.shouldUsePipe(params)) {
-                color = pipe.applyPipe(canvas, params, color, index);
+            if (pipe.shouldUsePipe(this, params)) {
+                color = pipe.applyPipe(canvas, params, color, index, localIntensity);
             }
         }
 
@@ -90,7 +87,7 @@ public abstract class AbstractTool {
     /**
      * Get cursor shape
      */
-    public abstract ToolShape getShape(HashMap<String, AbstractToolParameter> params);
+    public abstract ToolShape getShape(T params);
 
     public String getCode() {
         return this.code;

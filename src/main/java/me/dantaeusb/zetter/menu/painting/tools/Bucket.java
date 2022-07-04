@@ -1,12 +1,10 @@
 package me.dantaeusb.zetter.menu.painting.tools;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
-import me.dantaeusb.zetter.menu.painting.parameters.OpacityParameter;
+import me.dantaeusb.zetter.menu.painting.parameters.BucketParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.NoParameters;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.network.packet.CCanvasBucketToolPacket;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -16,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class Bucket extends AbstractTool {
+public class Bucket extends AbstractTool<BucketParameters> {
     public static final String CODE = "bucket";
 
     public static final int HOTKEY = GLFW.GLFW_KEY_F;
@@ -28,7 +26,7 @@ public class Bucket extends AbstractTool {
     }
 
     @Override
-    public ToolShape getShape(HashMap<String, AbstractToolParameter> params) {
+    public ToolShape getShape(BucketParameters params) {
         return null;
     }
 
@@ -38,9 +36,9 @@ public class Bucket extends AbstractTool {
     }
 
     @Override
-    public int apply(CanvasData canvas, HashMap<String, AbstractToolParameter> params, int color, float posX, float posY) {
+    public int apply(CanvasData canvas, BucketParameters params, int color, float posX, float posY) {
         int position = canvas.getPixelIndex((int) posX, (int) posY);
-        float opacity = (float) params.get(OpacityParameter.CODE).getValue();
+        float opacity = (float) params.getIntensity();
         int opacityByte = (int) (opacity * 0xFF);
 
         CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);
@@ -75,7 +73,7 @@ public class Bucket extends AbstractTool {
         } while (!positionsQueue.isEmpty());
 
         for (int updateIndex: paintQueue) {
-            this.pixelChange(canvas, params, color, updateIndex);
+            this.pixelChange(canvas, params, color, updateIndex, 1f);
         }
 
         // @todo: mark desync on backend or just do a snapshot

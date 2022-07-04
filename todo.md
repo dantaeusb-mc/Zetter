@@ -10,6 +10,7 @@
 
 #### Release tasks:
 
+* \[HIGH\] Labels are weird after screen resize;
 * \[HIGH\] Remove awt usage;
 * \[HIGH\] When dropping painting, if cannot be loaded, just drop frame (gallery workaround);
 * \[HIGH\] Configuration file for texture size;

@@ -1,36 +1,68 @@
 package me.dantaeusb.zetter.menu.painting.pipes;
 
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
-import me.dantaeusb.zetter.menu.painting.parameters.BlendingParameter;
-import me.dantaeusb.zetter.menu.painting.parameters.OpacityParameter;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.IntensityInterface;
+import me.dantaeusb.zetter.menu.painting.tools.AbstractTool;
+import me.dantaeusb.zetter.menu.painting.tools.Brush;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.commons.lang3.function.TriFunction;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.function.BiFunction;
-import java.util.stream.DoubleStream;
 
 public class BlendingPipe implements Pipe {
 
     @Override
-    public boolean shouldUsePipe(HashMap<String, AbstractToolParameter> params) {
+    public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params) {
+        if (tool instanceof Brush) {
+            return true;
+        }
+
         // We do not blend on max intensity
-        return !((Float) params.get(OpacityParameter.CODE).value >= 1F);
+        if (params instanceof IntensityInterface) {
+            return ((IntensityInterface) params).getIntensity() < 1f;
+        }
+
+        return false;
     }
 
     @Override
-    public int applyPipe(CanvasData canvas, HashMap<String, AbstractToolParameter> params, int color, int index) {
+    public int applyPipe(CanvasData canvas, AbstractToolParameters params, int color, int index, float localIntensity) {
         final int originalColor = canvas.getColorAt(index);
-        final float intensity = (float) params.get(OpacityParameter.CODE).value;
 
-        return ((BlendingOption) params.get(BlendingParameter.CODE).value).blendingFunction.apply(color, originalColor, intensity);
+        float intensity = 1f;
+        if (params instanceof IntensityInterface) {
+            intensity = ((IntensityInterface) params).getIntensity();
+        }
+
+        intensity *= localIntensity;
+
+        BlendingOption blending = BlendingOption.DEFAULT;
+        if (params instanceof BlendingInterface) {
+            blending = ((BlendingInterface) params).getBlending();
+        }
+
+        return blending.blendingFunction.apply(color, originalColor, intensity);
     }
 
+    /**
+     * Basic blending, in target color space so nothing fancy here
+     * @param newColor
+     * @param oldColor
+     * @param intensity
+     * @return
+     */
     public static int blendRGB(int newColor, int oldColor, float intensity) {
-        return newColor;
+        final Color newColorModel = new Color(newColor);
+        final Color oldColorModel = new Color(oldColor);
+
+        return new Color(
+                (newColorModel.getRed() * intensity + oldColorModel.getRed() * (1f - intensity)) / 255,
+                (newColorModel.getGreen() * intensity + oldColorModel.getGreen() * (1f - intensity)) / 255,
+                (newColorModel.getBlue() * intensity + oldColorModel.getBlue() * (1f - intensity)) / 255
+        ).getRGB();
     }
 
     /**
@@ -155,6 +187,8 @@ public class BlendingPipe implements Pipe {
         RGB("rgb", BlendingPipe::blendRGB, new TranslatableComponent("container.zetter.painting.blending.additive")),
         RYB("ryb", BlendingPipe::blendRYB, new TranslatableComponent("container.zetter.painting.blending.subtractive")),
         RGBC("rgbc", BlendingPipe::blendRGBC, new TranslatableComponent("container.zetter.painting.blending.realistic"));
+
+        public static final BlendingOption DEFAULT = RYB;
 
         public final String code;
         public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;

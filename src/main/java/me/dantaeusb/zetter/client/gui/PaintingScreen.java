@@ -6,11 +6,11 @@ import me.dantaeusb.zetter.client.gui.painting.tabs.ColorTab;
 import me.dantaeusb.zetter.client.gui.painting.tabs.InventoryTab;
 import me.dantaeusb.zetter.client.gui.painting.tabs.ParametersTab;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.menu.painting.tools.Brush;
 import me.dantaeusb.zetter.menu.painting.tools.Bucket;
 import me.dantaeusb.zetter.menu.painting.tools.Eyedropper;
@@ -28,8 +28,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -39,7 +37,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
 
     private final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
 
-    private HashMap<TabsWidget.Tab, AbstractTab> tabs = new HashMap<>();
+    private final HashMap<TabsWidget.Tab, AbstractTab> tabs = new HashMap<>();
 
     private ToolsWidget toolsWidget;
     private TabsWidget tabsWidget;
@@ -93,22 +91,44 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
 
         // Tabs
 
-        this.tabs.put(TabsWidget.Tab.COLOR, new ColorTab(this, this.getGuiLeft(), this.getGuiTop()));
-        this.tabs.put(TabsWidget.Tab.PARAMETERS, new ParametersTab(this, this.getGuiLeft(), this.getGuiTop()));
-        this.tabs.put(TabsWidget.Tab.INVENTORY, new InventoryTab(this, this.getGuiLeft(), this.getGuiTop()));
+        final ColorTab colorTab = new ColorTab(this, this.getGuiLeft(), this.getGuiTop());
+        final ParametersTab parametersTab = new ParametersTab(this, this.getGuiLeft(), this.getGuiTop());
+        final InventoryTab inventoryTab = new InventoryTab(this, this.getGuiLeft(), this.getGuiTop());
+
+        this.tabs.put(TabsWidget.Tab.COLOR, colorTab);
+        this.tabs.put(TabsWidget.Tab.PARAMETERS, parametersTab);
+        this.tabs.put(TabsWidget.Tab.INVENTORY, inventoryTab);
 
         // Other
 
-        this.getMenu().setFirstLoadNotification(this::firstLoadUpdate);
-
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
+        this.menu.addToolUpdateListener(this::updateCurrentTool);
+        this.menu.addColorUpdateListener(this::updateCurrentColor);
         this.menu.addSlotListener(this);
     }
 
     public void addPaintingWidget(AbstractPaintingWidget widget) {
         this.paintingWidgets.add(widget);
         this.addWidget(widget);
+    }
+
+    /**
+     * We do not do that directly because widget do not control
+     * life cycle. We need to remove reference when screen re-created.
+     * @param parameters
+     */
+    public void updateCurrentTool(AbstractToolParameters parameters) {
+        ((ParametersTab) this.tabs.get(TabsWidget.Tab.PARAMETERS)).update(parameters);
+    }
+
+    /**
+     * We do not do that directly because widget do not control
+     * life cycle. We need to remove reference when screen re-created.
+     * @param parameters
+     */
+    public void updateCurrentColor(Integer color) {
+        ((ColorTab) this.tabs.get(TabsWidget.Tab.COLOR)).update(color);
     }
 
     /**
@@ -120,6 +140,9 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
 
     public void removed() {
         super.removed();
+        this.menu.removeToolUpdateListener(this::updateCurrentTool);
+        this.menu.removeColorUpdateListener(this::updateCurrentColor);
+        this.menu.removeSlotListener(this);
     }
 
     /**
@@ -140,15 +163,6 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
 
     public int getColorAt(int pixelIndex) {
         return this.menu.getCanvasData().getColorAt(pixelIndex);
-    }
-
-    public void firstLoadUpdate() {
-        this.updateSlidersWithCurrentColor();
-    }
-
-
-    public void updateSlidersWithCurrentColor() {
-        //this.slidersWidget.updateSlidersWithCurrentColor();
     }
 
     @Override
@@ -211,12 +225,14 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         //this.font.draw(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
 
         final int FONT_Y_SPACING = 12;
-        final int TAB_LABEL_XPOS = EaselContainerMenu.PLAYER_INVENTORY_XPOS;
+        final int TAB_LABEL_XPOS = EaselContainerMenu.PLAYER_INVENTORY_XPOS - 1;
         final int TAB_LABEL_YPOS = EaselContainerMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
         this.font.draw(matrixStack, this.getMenu().getCurrentTab().translatableComponent,
                 TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB());
+
+        this.getCurrentTab().renderLabels(matrixStack, mouseX, mouseY);
     }
 
     /**
@@ -247,6 +263,25 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
             default:
                 return super.keyPressed(keyCode, scanCode, modifiers);
         }
+    }
+
+    /**
+     * We have a little complicated logic with active tabs here
+     * @param mouseX
+     * @param mouseY
+     * @param button
+     * @return
+     */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        super.mouseClicked(mouseX, mouseY, button);
+        boolean result;
+
+        //if (!result) {
+        result = this.getCurrentTab().mouseClicked(mouseX, mouseY, button);
+        //}
+
+        return result;
     }
 
     /**
@@ -297,7 +332,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      * contents of that slot.
      */
     public void slotChanged(AbstractContainerMenu containerToSend, int slotInd, ItemStack stack) {
-
+        this.updateCurrentColor(this.getMenu().getCurrentColor());
     }
 
     /**

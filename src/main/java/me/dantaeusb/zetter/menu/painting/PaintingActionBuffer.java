@@ -1,10 +1,9 @@
 package me.dantaeusb.zetter.menu.painting;
 
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameter;
+import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.UUID;
 
 public class PaintingActionBuffer {
@@ -17,7 +16,7 @@ public class PaintingActionBuffer {
     public final UUID authorId;
     public final String toolCode;
 
-    public final HashMap<String, AbstractToolParameter> parameters;
+    public final AbstractToolParameters parameters;
     public final Long startTime;
 
     /**
@@ -40,11 +39,11 @@ public class PaintingActionBuffer {
 
     private boolean canceled = false;
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, HashMap<String, AbstractToolParameter> parameters) {
+    public PaintingActionBuffer(UUID authorId, String toolCode, AbstractToolParameters parameters) {
         this(authorId, toolCode, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, HashMap<String, AbstractToolParameter> parameters, Long startTime, ByteBuffer buffer) {
+    public PaintingActionBuffer(UUID authorId, String toolCode, AbstractToolParameters parameters, Long startTime, ByteBuffer buffer) {
         this.actionId = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
         this.toolCode = toolCode;
@@ -62,7 +61,7 @@ public class PaintingActionBuffer {
      * @param parameters
      * @return
      */
-    public boolean canContinue(UUID authorId, String toolCode, HashMap<String, AbstractToolParameter> parameters) {
+    public boolean canContinue(UUID authorId, String toolCode, AbstractToolParameters parameters) {
         return !this.shouldCommit() && this.isActionCompatible(authorId, toolCode, parameters);
     }
 
@@ -73,7 +72,7 @@ public class PaintingActionBuffer {
      * @param parameters
      * @return
      */
-    public boolean isActionCompatible(UUID authorId, String toolCode, HashMap<String, AbstractToolParameter> parameters) {
+    public boolean isActionCompatible(UUID authorId, String toolCode, AbstractToolParameters parameters) {
         return  this.authorId == authorId &&
                 this.toolCode.equals(toolCode);
     }
