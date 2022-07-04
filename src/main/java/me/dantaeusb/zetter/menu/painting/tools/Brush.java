@@ -51,33 +51,17 @@ public class Brush extends AbstractTool<BrushParameters> {
     }
 
     @Override
-    public int apply(CanvasData canvas, BrushParameters params, int color, float posX, float posY) {
-        final int width = canvas.getWidth();
-        final int height = canvas.getHeight();
+    public int apply(CanvasData canvasData, BrushParameters params, int color, float posX, float posY) {
+        final int width = canvasData.getWidth();
+        final int height = canvasData.getHeight();
 
-        final int posXi = (int) Math.floor(posX);
-        final int posYi = (int) Math.floor(posY);
+        final int brushSize = 3;
 
-        final int index = posYi * width + posXi;
-
-        List<Tuple<Integer, Integer>> affectedPixels = new LinkedList<>();
-
-        // @todo: it's not what should happen
-        affectedPixels.add(new Tuple<>(posXi - 1, posYi - 1));
-        affectedPixels.add(new Tuple<>(posXi, posYi - 1));
-        affectedPixels.add(new Tuple<>(posXi + 1, posYi - 1));
-
-        affectedPixels.add(new Tuple<>(posXi - 1, posYi));
-        affectedPixels.add(new Tuple<>(posXi, posYi));
-        affectedPixels.add(new Tuple<>(posXi + 1, posYi));
-
-        affectedPixels.add(new Tuple<>(posXi - 1, posYi + 1));
-        affectedPixels.add(new Tuple<>(posXi, posYi + 1));
-        affectedPixels.add(new Tuple<>(posXi + 1, posYi + 1));
+        List<Tuple<Integer, Integer>> affectedPixels = Brush.getPixelsInDistance(canvasData, posX, posY, brushSize);
 
         for (Tuple<Integer, Integer> pixel : affectedPixels) {
             final double distanceToCenter = Math.sqrt(Math.pow(posX - (pixel.getA() + .5d), 2) + Math.pow(posY - (pixel.getB() + .5d), 2));
-            final double proximity = Math.max(Math.min(1d - (distanceToCenter / 3d), 1d), 0d); // 3d - size
+            final double proximity = Brush.clamp(1d - (distanceToCenter / brushSize), 0d, 1d); // 3d - size
 
             if (proximity == 0) {
                 continue;
@@ -85,10 +69,34 @@ public class Brush extends AbstractTool<BrushParameters> {
 
             final int localIndex = pixel.getB() * width + pixel.getA();
 
-            this.pixelChange(canvas, params, color, localIndex, bezierIntensity(proximity));
+            this.pixelChange(canvasData, params, color, localIndex, bezierIntensity(proximity));
         }
 
         return 1;
+    }
+
+    private static List<Tuple<Integer, Integer>> getPixelsInDistance(CanvasData canvasData, float posX, float posY, float size) {
+        float radius = size / 2f;
+
+        int minX = (int) Brush.clamp(Math.floor(posX - radius), 0d, canvasData.getWidth() - 1);
+        int maxX = (int) Brush.clamp(Math.ceil(posX + radius), 0d, canvasData.getWidth() - 1);
+
+        int minY = (int) Brush.clamp(Math.floor(posY - radius), 0d, canvasData.getHeight() - 1);
+        int maxY = (int) Brush.clamp(Math.ceil(posY + radius), 0d, canvasData.getHeight() - 1);
+
+        List<Tuple<Integer, Integer>> pixels = new LinkedList<>();
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                pixels.add(new Tuple<>(x, y));
+            }
+        }
+
+        return pixels;
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.min(Math.max(value, min), max);
     }
 
     // https://pomax.github.io/bezierinfo/#yforx

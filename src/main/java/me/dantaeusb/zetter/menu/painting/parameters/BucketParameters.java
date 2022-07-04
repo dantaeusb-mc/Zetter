@@ -6,20 +6,18 @@ import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import java.security.InvalidParameterException;
 
 public class BucketParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface {
-    private float intensity = 1f;
-    private BlendingPipe.BlendingOption blending;
 
     public BucketParameters() {
         this(1f, BlendingPipe.BlendingOption.DEFAULT);
     }
 
     public BucketParameters(float intensity, BlendingPipe.BlendingOption blending) {
-        this.intensity = intensity;
-        this.blending = blending;
+        this.values.put("intensity", intensity);
+        this.values.put("blending", blending.name());
     }
 
     public float getIntensity() {
-        return intensity;
+        return (float) this.values.get("intensity");
     }
 
     public void setIntensity(float intensity) {
@@ -27,14 +25,14 @@ public class BucketParameters extends AbstractToolParameters implements Intensit
             throw new InvalidParameterException("Intensity out of bounds");
         }
 
-        this.intensity = intensity;
+        this.values.put("intensity", intensity);
     }
 
     public BlendingPipe.BlendingOption getBlending() {
-        return blending;
+        return BlendingPipe.BlendingOption.valueOf((String) this.values.get("blending"));
     }
 
     public void setBlending(BlendingPipe.BlendingOption blending) {
-        this.blending = blending;
+        this.values.put("blending", blending.name());
     }
 }

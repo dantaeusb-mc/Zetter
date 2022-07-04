@@ -39,9 +39,9 @@ public class ZetterNetwork {
                 ZetterNetwork::isThisProtocolAcceptedByServer
         );
 
-        simpleChannel.registerMessage(PAINTING_FRAME, CPaintingFrameBufferPacket.class,
-                CPaintingFrameBufferPacket::writePacketData, CPaintingFrameBufferPacket::readPacketData,
-                CPaintingFrameBufferPacket::handle,
+        simpleChannel.registerMessage(PAINTING_FRAME, CCanvasActionBufferPacket.class,
+                CCanvasActionBufferPacket::writePacketData, CCanvasActionBufferPacket::readPacketData,
+                CCanvasActionBufferPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_REQUEST_CANVAS, CCanvasRequestPacket.class,

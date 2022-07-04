@@ -7,33 +7,32 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.function.Supplier;
 
 /**
  * Painting update - get frame buffer from client when they're making changes
- * @todo: add entity and/or painting UUID
  */
-public class CPaintingFrameBufferPacket {
-    private PaintingActionBuffer paintingFrameBuffer;
+public class CCanvasActionBufferPacket {
+    private Queue<PaintingActionBuffer> paintingActionBuffers;
 
-    public CPaintingFrameBufferPacket() {
+    public CCanvasActionBufferPacket() {
+        this.paintingActionBuffers = new LinkedList<>();
     }
 
-    public CPaintingFrameBufferPacket(PaintingActionBuffer paintingFrameBuffer) {
-        this.paintingFrameBuffer = paintingFrameBuffer;
+    public CCanvasActionBufferPacket(Queue<PaintingActionBuffer> paintingActionBuffers) {
+        this.paintingActionBuffers = paintingActionBuffers;
     }
 
     /**
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CPaintingFrameBufferPacket readPacketData(FriendlyByteBuf buf) {
-        CPaintingFrameBufferPacket packet = new CPaintingFrameBufferPacket();
-
-        long frameStartTime = buf.readLong();
-        ByteBuf bufferData = buf.readBytes(buf.writerIndex() - buf.readerIndex());
-
-        //packet.paintingFrameBuffer = new PaintingActionFrameBuffer(frameStartTime, bufferData.nioBuffer());
+    public static CCanvasActionBufferPacket readPacketData(FriendlyByteBuf buf) {
+        CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket();
 
         return packet;
     }
@@ -41,16 +40,13 @@ public class CPaintingFrameBufferPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf buf) {
-        //buf.writeLong(this.paintingFrameBuffer.getFrameStartTime());
-        //buf.writeBytes(this.paintingFrameBuffer.getBufferData());
+    public void writePacketData(FriendlyByteBuf buffer) {
+        for (PaintingActionBuffer actionBuffer : this.paintingActionBuffers) {
+            PaintingActionBuffer.writePacketData(actionBuffer, buffer);
+        }
     }
 
-    public PaintingActionBuffer getFrameBuffer() {
-        return this.paintingFrameBuffer;
-    }
-
-    public static void handle(final CPaintingFrameBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(final CCanvasActionBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 

@@ -6,39 +6,31 @@ import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import java.security.InvalidParameterException;
 
 public class PencilParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface, DitheringInterface {
-
-    private int size;
-
-    private float intensity;
-
-    private BlendingPipe.BlendingOption blending;
-    private DitheringPipe.DitheringOption dithering;
-
     public PencilParameters() {
         this(1, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
     }
 
     public PencilParameters(int size, float intensity, BlendingPipe.BlendingOption blending, DitheringPipe.DitheringOption dithering) {
-        this.size = size;
-        this.intensity = intensity;
-        this.blending = blending;
-        this.dithering = dithering;
+        this.values.put("size", size);
+        this.values.put("intensity", intensity);
+        this.values.put("blending", blending.name());
+        this.values.put("dithering", dithering.name());
     }
 
-    public int getSize() {
-        return this.size;
+    public float getSize() {
+        return (float) this.values.get("size");
     }
 
-    public void setSize(int size) {
-        if (size < 1 || size > 5) {
+    public void setSize(float size) {
+        if (size < 1f || size > 5f) {
             throw new InvalidParameterException("Incorrect size");
         }
 
-        this.size = size;
+        this.values.put("size", size);
     }
 
     public float getIntensity() {
-        return intensity;
+        return (float) this.values.get("intensity");
     }
 
     public void setIntensity(float intensity) {
@@ -46,22 +38,22 @@ public class PencilParameters extends AbstractToolParameters implements Intensit
             throw new InvalidParameterException("Intensity out of bounds");
         }
 
-        this.intensity = intensity;
+        this.values.put("intensity", intensity);
     }
 
     public BlendingPipe.BlendingOption getBlending() {
-        return blending;
+        return BlendingPipe.BlendingOption.valueOf((String) this.values.get("blending"));
     }
 
     public void setBlending(BlendingPipe.BlendingOption blending) {
-        this.blending = blending;
+        this.values.put("blending", blending.name());
     }
 
     public DitheringPipe.DitheringOption getDithering() {
-        return dithering;
+        return DitheringPipe.DitheringOption.valueOf((String) this.values.get("dithering"));
     }
 
     public void setDithering(DitheringPipe.DitheringOption dithering) {
-        this.dithering = dithering;
+        this.values.put("dithering", dithering.name());
     }
 }

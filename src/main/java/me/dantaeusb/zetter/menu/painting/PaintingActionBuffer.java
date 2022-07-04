@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.menu.painting;
 
 import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
+import net.minecraft.network.FriendlyByteBuf;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -28,7 +29,7 @@ public class PaintingActionBuffer {
     private static final int FRAME_SIZE = 1 + 2 + 8 + 8;
     public static final int BUFFER_SIZE = FRAME_SIZE * MAX_FRAMES;
 
-    private final ByteBuffer buffer;
+    private final ByteBuffer actionBuffer;
 
     private PaintingAction lastAction;
 
@@ -43,14 +44,28 @@ public class PaintingActionBuffer {
         this(authorId, toolCode, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, AbstractToolParameters parameters, Long startTime, ByteBuffer buffer) {
+    public PaintingActionBuffer(UUID authorId, String toolCode, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
         this.actionId = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
         this.toolCode = toolCode;
         this.parameters = parameters;
         this.startTime = startTime;
 
-        this.buffer = buffer;
+        this.actionBuffer = actionBuffer;
+    }
+
+    private PaintingActionBuffer(UUID actionId, UUID authorId, String toolCode, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
+        this.actionId = actionId;
+        this.authorId = authorId;
+        this.toolCode = toolCode;
+        this.parameters = parameters;
+        this.startTime = startTime;
+
+        this.actionBuffer = actionBuffer;
+
+        this.committed = true;
+        this.sent = true;
+        this.canceled = canceled;
     }
 
     /**
@@ -94,7 +109,7 @@ public class PaintingActionBuffer {
             return true;
         }
 
-        if (!this.buffer.hasRemaining()) {
+        if (!this.actionBuffer.hasRemaining()) {
             return true;
         }
 
@@ -128,7 +143,7 @@ public class PaintingActionBuffer {
         final int passedTime = (int) (currentTime - this.startTime);
 
         final PaintingAction action = new PaintingAction(passedTime, posX, posY, extra);
-        action.writeToBuffer(this.buffer);
+        action.writeToBuffer(this.actionBuffer);
 
         this.lastAction = action;
 
@@ -165,6 +180,10 @@ public class PaintingActionBuffer {
         this.canceled = false;
     }
 
+    public boolean isCanceled() {
+        return this.canceled;
+    }
+
     public @Nullable PaintingAction getLastAction() {
         return this.lastAction;
     }
@@ -174,8 +193,8 @@ public class PaintingActionBuffer {
      * @return
      */
     public ByteBuffer getBufferData() {
-        this.buffer.flip();
-        return this.buffer.asReadOnlyBuffer();
+        this.actionBuffer.flip();
+        return this.actionBuffer.asReadOnlyBuffer();
     }
 
     public static class PaintingAction {
@@ -222,5 +241,37 @@ public class PaintingActionBuffer {
             // Other
             buffer.put(this.extra);
         }
+    }
+
+    public static void writePacketData(PaintingActionBuffer actionBuffer, FriendlyByteBuf buffer) {
+        buffer.writeUUID(actionBuffer.actionId);
+        buffer.writeUUID(actionBuffer.authorId);
+        buffer.writeUtf(actionBuffer.toolCode, 32);
+        buffer.writeLong(actionBuffer.startTime);
+        buffer.writeBoolean(actionBuffer.canceled);
+        AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
+        buffer.writeInt(actionBuffer.actionBuffer.capacity());
+        buffer.writeBytes(actionBuffer.actionBuffer);
+    }
+
+    public static PaintingActionBuffer readPacketData(FriendlyByteBuf buffer) {
+        UUID actionId = buffer.readUUID();
+        UUID authorId = buffer.readUUID();
+        String toolCode = buffer.readUtf(32);
+        Long startTime = buffer.readLong();
+        boolean canceled = buffer.readBoolean();
+        AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer);
+        int bufferSize = buffer.readInt();
+        ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
+
+        return new PaintingActionBuffer(
+                actionId,
+                authorId,
+                toolCode,
+                parameters,
+                startTime,
+                actionsBuffer,
+                canceled
+        );
     }
 }

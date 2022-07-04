@@ -11,6 +11,7 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.menu.painting.parameters.*;
 import me.dantaeusb.zetter.menu.painting.tools.*;
+import me.dantaeusb.zetter.network.packet.CCanvasActionBufferPacket;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
 import me.dantaeusb.zetter.network.packet.SCanvasNamePacket;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
@@ -46,6 +47,8 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public static final int PLAYER_INVENTORY_XPOS = 38;
     public static final int PLAYER_INVENTORY_YPOS = 156;
 
+    private int tick = 0;
+
     /*
      * Canvas
      */
@@ -57,7 +60,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     // @todo: actually move to container to share between players?
     // Only player's buffer on client, all users on server
-    private final LinkedList<PaintingActionBuffer> actionsQueue = new LinkedList<>();
+    private final Deque<PaintingActionBuffer> actionsQueue = new LinkedList<>();
 
     // Saved painting states
     private Queue<int[]> snapshots;
@@ -323,11 +326,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     private void recordAction(float posX, float posY) {
-        PaintingActionBuffer lastAction = null;
-
-        if (!this.actionsQueue.isEmpty()) {
-            lastAction = this.actionsQueue.getLast();
-        }
+        PaintingActionBuffer lastAction = this.actionsQueue.peekLast();
 
         if (lastAction == null) {
             lastAction = this.createAction();
@@ -342,12 +341,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     private PaintingActionBuffer createAction() {
-        if (!this.actionsQueue.isEmpty()) {
-            final PaintingActionBuffer lastAction = this.actionsQueue.getLast();
+        final PaintingActionBuffer lastAction = this.actionsQueue.peekLast();
 
-            if (!lastAction.isCommitted()) {
-                lastAction.commit();
-            }
+        if (lastAction != null && !lastAction.isCommitted()) {
+            lastAction.commit();
         }
 
         final PaintingActionBuffer newAction = new PaintingActionBuffer(this.player.getUUID(), this.currentTool, this.getCurrentToolParameters());
@@ -501,36 +498,42 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      */
 
     /**
-     * Checks and sends frame buffer if it's full or it's time to
-     * Should be called before every change
-     *
-     * Just updating frame start time for prepared buffer if nothing happens
+     * Checks and sends action buffer on client
      */
     protected void tickActionsQueue() {
-        /*if (this.getCanvasChanges().isEmpty()) {
-            try {
-                this.canvasChanges.updateStartFrameTime(System.currentTimeMillis());
-            } catch (Exception e) {
-                Zetter.LOG.error("Cannot update Painting Frame Buffer start time: " + e.getMessage());
-            }
-
+        if (++this.tick % 20 != 0) {
             return;
         }
 
-        if (this.canvasChanges.shouldBeSent(System.currentTimeMillis())) {
-            if (this.world.isClientSide()) {
-                this.canvasChanges.getFrames(this.player.getUUID());
-                CPaintingFrameBufferPacket paintingFrameBufferPacket = new CPaintingFrameBufferPacket(this.canvasChanges);
-                ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
+        final Queue<PaintingActionBuffer> unsentActions = new LinkedList<>();
+        Iterator<PaintingActionBuffer> iterator = this.actionsQueue.descendingIterator();
 
-                this.lastFrameBufferSendClock = System.currentTimeMillis();
-            } else {
-                Zetter.LOG.warn("Unnecessary Painting Frame Buffer check on server");
+        while(iterator.hasNext()) {
+            PaintingActionBuffer paintingActionBuffer = iterator.next();
+
+            if (!paintingActionBuffer.isCommitted()) {
+                if (paintingActionBuffer.shouldCommit()) {
+                    paintingActionBuffer.commit();
+                } else {
+                    continue;
+                }
             }
 
-            // It'll be created on request next time
-            this.canvasChanges = null;
-        }*/
+            if (paintingActionBuffer.isSent()) {
+                break;
+            }
+
+            unsentActions.add(paintingActionBuffer);
+        }
+
+        if (!unsentActions.isEmpty()) {
+            CCanvasActionBufferPacket paintingFrameBufferPacket = new CCanvasActionBufferPacket(unsentActions);
+            ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
+
+            for (PaintingActionBuffer unsentAction : unsentActions) {
+                unsentAction.setSent();
+            }
+        }
     }
 
     /**

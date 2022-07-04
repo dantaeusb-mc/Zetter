@@ -184,19 +184,16 @@ public class BlendingPipe implements Pipe {
     }
 
     public enum BlendingOption {
-        RGB("rgb", BlendingPipe::blendRGB, new TranslatableComponent("container.zetter.painting.blending.additive")),
-        RYB("ryb", BlendingPipe::blendRYB, new TranslatableComponent("container.zetter.painting.blending.subtractive")),
-        RGBC("rgbc", BlendingPipe::blendRGBC, new TranslatableComponent("container.zetter.painting.blending.realistic"));
+        RGB(BlendingPipe::blendRGB, new TranslatableComponent("container.zetter.painting.blending.additive")),
+        RYB(BlendingPipe::blendRYB, new TranslatableComponent("container.zetter.painting.blending.subtractive")),
+        RGBC(BlendingPipe::blendRGBC, new TranslatableComponent("container.zetter.painting.blending.realistic"));
 
         public static final BlendingOption DEFAULT = RYB;
-
-        public final String code;
         public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;
 
         public final TranslatableComponent translatableComponent;
 
-        BlendingOption(String code, TriFunction<Integer, Integer, Float, Integer> blendingFunction, TranslatableComponent translatableComponent) {
-            this.code = code;
+        BlendingOption(TriFunction<Integer, Integer, Float, Integer> blendingFunction, TranslatableComponent translatableComponent) {
             this.blendingFunction = blendingFunction;
             this.translatableComponent = translatableComponent;
         }

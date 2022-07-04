@@ -24,11 +24,11 @@ public class ServerHandler {
      *
      * @todo: send changes to TE, not container, as it's created per player
      */
-    public static void processFrameBuffer(final CPaintingFrameBufferPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processFrameBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
         if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
             EaselContainerMenu paintingContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
 
-            paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUUID());
+            //paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUUID());
 
             /**
              * Keep it there, but it's not really useful since it's easier to sync whole canvas and keep recent
