@@ -330,11 +330,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         if (lastAction == null) {
             lastAction = this.createAction();
-            this.actionsQueue.add(lastAction);
         } else if (!lastAction.canContinue(this.player.getUUID(), this.currentTool, this.getCurrentToolParameters())) {
             lastAction.commit();
             lastAction = this.createAction();
-            this.actionsQueue.add(lastAction);
         }
 
         lastAction.addFrame(posX, posY);

@@ -29,10 +29,16 @@ public class CCanvasActionBufferPacket {
 
     /**
      * Reads the raw packet data from the data stream.
-     * Seems like buf is always at least 256 bytes, so we have to process written buffer size
+     * Seems like buffer is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CCanvasActionBufferPacket readPacketData(FriendlyByteBuf buf) {
+    public static CCanvasActionBufferPacket readPacketData(FriendlyByteBuf buffer) {
+        int actionBuffersCount = buffer.readInt();
+
         CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket();
+
+        for (int i = 0; i < actionBuffersCount; i++) {
+            packet.paintingActionBuffers.add(PaintingActionBuffer.readPacketData(buffer));
+        }
 
         return packet;
     }
@@ -41,6 +47,8 @@ public class CCanvasActionBufferPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buffer) {
+        buffer.writeInt(this.paintingActionBuffers.size());
+
         for (PaintingActionBuffer actionBuffer : this.paintingActionBuffers) {
             PaintingActionBuffer.writePacketData(actionBuffer, buffer);
         }

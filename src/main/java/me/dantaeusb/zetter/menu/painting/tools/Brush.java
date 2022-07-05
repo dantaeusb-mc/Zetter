@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
+import me.dantaeusb.zetter.menu.painting.tools.brush.Bezier;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Tuple;
@@ -22,6 +23,8 @@ public class Brush extends AbstractTool<BrushParameters> {
     public static final int HOTKEY = GLFW.GLFW_KEY_B;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.brush");
+
+    private final Bezier brushBezier = new Bezier(0.455, 0.030, 0.515, 0.955);
 
     public Brush(EaselContainerMenu menu) {
         super(Brush.CODE, menu, new ArrayList<>() {{
@@ -69,7 +72,7 @@ public class Brush extends AbstractTool<BrushParameters> {
 
             final int localIndex = pixel.getB() * width + pixel.getA();
 
-            this.pixelChange(canvasData, params, color, localIndex, bezierIntensity(proximity));
+            this.pixelChange(canvasData, params, color, localIndex, (float) this.brushBezier.solve(proximity, 0.001d));
         }
 
         return 1;
@@ -97,21 +100,5 @@ public class Brush extends AbstractTool<BrushParameters> {
 
     private static double clamp(double value, double min, double max) {
         return Math.min(Math.max(value, min), max);
-    }
-
-    // https://pomax.github.io/bezierinfo/#yforx
-    // Quad cubic 0.455, 0.030, 0.515, 0.955 (CSS)
-    private static float bezierIntensity(double distance) {
-        final double a = 0.455;
-        final double b = 0.030;
-        final double c = 0.515;
-        final double d = 0.955;
-
-        double result = (-a + 3 * b - 3 * c + d) * Math.pow(distance, 3) +
-                        (3 * a - 6 * b + 3 * c) * Math.pow(distance, 2) +
-                        (-3 * a + 3 * b) * distance +
-                        a;
-
-        return (float) Math.max(Math.min(result, 1d), 0d);
     }
 }

@@ -16,6 +16,14 @@ public abstract class AbstractToolParameters {
         buffer.writeCollection(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
     }
 
+    /**
+     * Uses Java's ObjectOutputStream which apparently is extremely inefficient
+     * for primitives. It takes 79 bytes to send float and int.
+     * Though works good for enums/strings
+     * @todo: fix that wasteful serializer
+     * @param buffer
+     * @param entry
+     */
     private static void writeEntry(FriendlyByteBuf buffer, Map.Entry<String, Object> entry) {
 
         try {
@@ -63,7 +71,8 @@ public abstract class AbstractToolParameters {
         final String key = buffer.readUtf(128);
         final int length = buffer.readInt();
 
-        final byte[] input = buffer.readBytes(length).array();
+        final byte[] input = new byte[length];
+        buffer.readBytes(length).nioBuffer().get(input);
 
         try {
             ByteArrayInputStream byteStream = new ByteArrayInputStream(input);
