@@ -1,21 +1,34 @@
 package me.dantaeusb.zetter.menu.painting;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
 import net.minecraft.network.FriendlyByteBuf;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.stream.Stream;
 
+/**
+ * Because actions could be repetitive, we don't send only one action,
+ * but try to accumulate similar actions made in short amount of time.
+ *
+ * To do so, we store common information, like tool, parameters and color
+ * In one place, and canvas actions (where action was applied) in another.
+ *
+ * Theoretically, we also can use relative time of "sub-action" but
+ * it's complicated and not yet worth it
+ */
 public class PaintingActionBuffer {
     private static final int MAX_FRAMES = 100;
     private static final long MAX_TIME = 5000L;
     private static final long MAX_INACTIVE_TIME = 1000L;
 
     public final UUID actionId;
-
     public final UUID authorId;
     public final String toolCode;
+
+    public final int color;
 
     public final AbstractToolParameters parameters;
     public final Long startTime;
@@ -26,10 +39,10 @@ public class PaintingActionBuffer {
      * 4+4 bytes x and y as floats
      * 8 bytes -- extra
      */
-    private static final int FRAME_SIZE = 1 + 2 + 8 + 8;
+    private static final int FRAME_SIZE = 1 + 2 + 8;
     public static final int BUFFER_SIZE = FRAME_SIZE * MAX_FRAMES;
 
-    private final ByteBuffer actionBuffer;
+    private ByteBuffer actionBuffer;
 
     private PaintingAction lastAction;
 
@@ -40,28 +53,31 @@ public class PaintingActionBuffer {
 
     private boolean canceled = false;
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, AbstractToolParameters parameters) {
-        this(authorId, toolCode, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
+    public PaintingActionBuffer(UUID authorId, String toolCode, int color, AbstractToolParameters parameters) {
+        this(authorId, toolCode, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
+    public PaintingActionBuffer(UUID authorId, String toolCode, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
         this.actionId = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
         this.toolCode = toolCode;
+        this.color = color;
         this.parameters = parameters;
         this.startTime = startTime;
 
         this.actionBuffer = actionBuffer;
     }
 
-    private PaintingActionBuffer(UUID actionId, UUID authorId, String toolCode, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
+    private PaintingActionBuffer(UUID actionId, UUID authorId, String toolCode, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
         this.actionId = actionId;
         this.authorId = authorId;
         this.toolCode = toolCode;
+        this.color = color;
         this.parameters = parameters;
         this.startTime = startTime;
 
-        this.actionBuffer = actionBuffer;
+        // When we create with data, it should be non-editable
+        this.actionBuffer = actionBuffer.asReadOnlyBuffer();
 
         this.committed = true;
         this.sent = true;
@@ -126,10 +142,6 @@ public class PaintingActionBuffer {
      * @return
      */
     public boolean addFrame(float posX, float posY) {
-        return this.addFrame(posX, posY, new byte[8]);
-    }
-
-    public boolean addFrame(float posX, float posY, byte[] extra) {
         if (this.committed) {
             return false;
         }
@@ -142,15 +154,28 @@ public class PaintingActionBuffer {
         final long currentTime = System.currentTimeMillis();
         final int passedTime = (int) (currentTime - this.startTime);
 
-        final PaintingAction action = new PaintingAction(passedTime, posX, posY, extra);
-        action.writeToBuffer(this.actionBuffer);
+        final PaintingAction action = new PaintingAction(passedTime, posX, posY);
+        PaintingAction.writeToBuffer(action, this.actionBuffer);
 
         this.lastAction = action;
 
         return true;
     }
 
+    public Stream<PaintingAction> getActionStream() {
+        this.actionBuffer.flip();
+
+        if (this.actionBuffer.limit() % FRAME_SIZE != 0) {
+            throw new IllegalStateException("Incorrect amount of frames in buffer");
+        } else if (this.actionBuffer.limit() == 0) {
+            throw new IllegalStateException("Incoming action buffer is empty");
+        }
+
+        return Stream.generate(() -> PaintingAction.readFromBuffer(this.actionBuffer)).limit(this.actionBuffer.limit() / FRAME_SIZE);
+    }
+
     public void commit() {
+        this.sealBuffer();
         this.committed = true;
     }
 
@@ -192,9 +217,9 @@ public class PaintingActionBuffer {
      * Prepare the data for sending - flip & lock
      * @return
      */
-    public ByteBuffer getBufferData() {
+    public void sealBuffer() {
         this.actionBuffer.flip();
-        return this.actionBuffer.asReadOnlyBuffer();
+        this.actionBuffer = this.actionBuffer.asReadOnlyBuffer();
     }
 
     public static class PaintingAction {
@@ -203,9 +228,8 @@ public class PaintingActionBuffer {
         public final int time;
         public final float posX;
         public final float posY;
-        public final byte[] extra;
 
-        public PaintingAction(int time, float posX, float posY, @Nullable byte[] extra) {
+        public PaintingAction(int time, float posX, float posY) {
             this.meta = (byte) 0x1;
 
             if (time > 0xFFFF) {
@@ -215,31 +239,40 @@ public class PaintingActionBuffer {
             this.time = time;
             this.posX = posX;
             this.posY = posY;
-
-            byte[] extraResult = new byte[8];
-
-            if (extra != null) {
-                System.arraycopy(extra, 0, extraResult, 0, 8);
-            }
-
-            this.extra = extraResult;
         }
 
-        public void writeToBuffer(ByteBuffer buffer) {
+        private PaintingAction(byte meta, int time, float posX, float posY) {
+            this.meta = meta;
+            this.time = time;
+            this.posX = posX;
+            this.posY = posY;
+        }
+
+        public static void writeToBuffer(PaintingAction action, ByteBuffer buffer) {
             // Meta
             buffer.put((byte) 0x1);
 
             // Time
-            buffer.put((byte) (this.time & 0xFF));
-            buffer.put((byte) ((this.time >> 8) & 0xFF));
+            buffer.put((byte) (action.time & 0xFF));
+            buffer.put((byte) ((action.time >> 8) & 0xFF));
 
             // Position
-            buffer.putFloat(this.posX);
-            buffer.putFloat(this.posY);
+            buffer.putFloat(action.posX);
+            buffer.putFloat(action.posY);
+        }
 
-            int iterator = 0;
-            // Other
-            buffer.put(this.extra);
+        public static PaintingAction readFromBuffer(ByteBuffer buffer) {
+            // Meta
+            final byte meta = buffer.get();
+
+            // Time
+            final int time = buffer.get() << 8 & buffer.get();
+
+            // Position
+            final float posX = buffer.getFloat();
+            final float posY = buffer.getFloat();
+
+            return new PaintingAction(meta, time, posX, posY);
         }
     }
 
@@ -247,10 +280,12 @@ public class PaintingActionBuffer {
         buffer.writeUUID(actionBuffer.actionId);
         buffer.writeUUID(actionBuffer.authorId);
         buffer.writeUtf(actionBuffer.toolCode, 32);
+        buffer.writeInt(actionBuffer.color);
         buffer.writeLong(actionBuffer.startTime);
         buffer.writeBoolean(actionBuffer.canceled);
         AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
-        buffer.writeInt(actionBuffer.actionBuffer.capacity());
+
+        buffer.writeInt(actionBuffer.actionBuffer.limit());
         buffer.writeBytes(actionBuffer.actionBuffer);
     }
 
@@ -258,9 +293,11 @@ public class PaintingActionBuffer {
         UUID actionId = buffer.readUUID();
         UUID authorId = buffer.readUUID();
         String toolCode = buffer.readUtf(32);
+        int color = buffer.readInt();
         Long startTime = buffer.readLong();
         boolean canceled = buffer.readBoolean();
-        AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer);
+        AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, toolCode);
+
         int bufferSize = buffer.readInt();
         ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
 
@@ -268,6 +305,7 @@ public class PaintingActionBuffer {
                 actionId,
                 authorId,
                 toolCode,
+                color,
                 parameters,
                 startTime,
                 actionsBuffer,

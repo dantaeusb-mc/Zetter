@@ -4,9 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.menu.painting.parameters.BucketParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.NoParameters;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
-import me.dantaeusb.zetter.network.packet.CCanvasBucketToolPacket;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
@@ -38,13 +36,7 @@ public class Bucket extends AbstractTool<BucketParameters> {
     @Override
     public int apply(CanvasData canvas, BucketParameters params, int color, float posX, float posY) {
         int position = canvas.getPixelIndex((int) posX, (int) posY);
-        float opacity = (float) params.getIntensity();
-        int opacityByte = (int) (opacity * 0xFF);
-
-        CCanvasBucketToolPacket bucketToolPacket = new CCanvasBucketToolPacket(position, color);
-        Zetter.LOG.debug("Sending Bucket Tool Packet: " + bucketToolPacket);
-        ZetterNetwork.simpleChannel.sendToServer(bucketToolPacket);
-
+        float opacity = params.getIntensity();
 
         final int width = canvas.getWidth();
         final int height = canvas.getHeight();
@@ -75,9 +67,6 @@ public class Bucket extends AbstractTool<BucketParameters> {
         for (int updateIndex: paintQueue) {
             this.pixelChange(canvas, params, color, updateIndex, 1f);
         }
-
-        // @todo: mark desync on backend or just do a snapshot
-        //((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(canvas.code);
 
         return Math.round(paintQueue.size() * opacity);
     }

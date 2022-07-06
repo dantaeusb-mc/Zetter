@@ -345,7 +345,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             lastAction.commit();
         }
 
-        final PaintingActionBuffer newAction = new PaintingActionBuffer(this.player.getUUID(), this.currentTool, this.getCurrentToolParameters());
+        final PaintingActionBuffer newAction = new PaintingActionBuffer(this.player.getUUID(), this.currentTool, this.getCurrentColor(), this.getCurrentToolParameters());
         this.actionsQueue.add(newAction);
 
         return newAction;
@@ -485,6 +485,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         return !paletteStack.isEmpty();
     }
 
+    /**
+     *
+     * @todo: move to entity?
+     */
     public void tick() {
         this.tickActionsQueue();
     }
@@ -496,6 +500,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      */
 
     /**
+     * @todo: move to entity?
      * Checks and sends action buffer on client
      */
     protected void tickActionsQueue() {
@@ -536,20 +541,19 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     /**
      * Called from network - process player's work (only on server)
+     * @todo: move to entity?
      * @param actionBuffer
      */
-    public void processFrameBufferServer(PaintingActionBuffer actionBuffer, UUID ownerId) {
-        /*long currentTime = this.world.getGameTime();
-
-        for (PaintingActionFrame frame: paintingFrameBuffer.getFrames(ownerId)) {
-            if (currentTime - frame.getFrameTime() > FRAME_TIMEOUT) {
-                // Update will be sent to player anyway, and they'll request new sync if they're confused
-                Zetter.LOG.debug("Skipping painting frame, too old");
-                continue;
-            }
-
-            //this.writePixelOnCanvasServerSide(frame.getPixelIndex(), frame.getColor());
-        }*/
+    public void processActionBufferServer(PaintingActionBuffer actionBuffer) {
+        actionBuffer.getActionStream().forEach((PaintingActionBuffer.PaintingAction action) -> {
+            this.getTool(actionBuffer.toolCode).apply(
+                    this.getCanvasData(),
+                    actionBuffer.parameters,
+                    actionBuffer.color,
+                    action.posX,
+                    action.posY
+            );
+        });
 
         ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.code);
     }

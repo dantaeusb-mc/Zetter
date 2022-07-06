@@ -58,7 +58,10 @@ public class Brush extends AbstractTool<BrushParameters> {
         final int width = canvasData.getWidth();
         final int height = canvasData.getHeight();
 
+        final float intensity = params.getIntensity();
+
         final int brushSize = 3;
+        double totalDamage = 0;
 
         List<Tuple<Integer, Integer>> affectedPixels = Brush.getPixelsInDistance(canvasData, posX, posY, brushSize);
 
@@ -71,11 +74,14 @@ public class Brush extends AbstractTool<BrushParameters> {
             }
 
             final int localIndex = pixel.getB() * width + pixel.getA();
+            final double localIntensity = this.brushBezier.solve(proximity, 0.001d);
 
-            this.pixelChange(canvasData, params, color, localIndex, (float) this.brushBezier.solve(proximity, 0.001d));
+            this.pixelChange(canvasData, params, color, localIndex, (float) localIntensity);
+
+            totalDamage += localIntensity;
         }
 
-        return 1;
+        return (int) Math.round(totalDamage * intensity);
     }
 
     private static List<Tuple<Integer, Integer>> getPixelsInDistance(CanvasData canvasData, float posX, float posY, float size) {

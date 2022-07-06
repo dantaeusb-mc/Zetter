@@ -114,6 +114,7 @@ public class BlendingPipe implements Pipe {
         float rybY = .5F * (rgbG + Math.min(rgbR, rgbG));
         float rybB = .5F * (rgbB + rgbG - Math.min(rgbR, rgbG));
 
+        // Actually probably better to avoid division by zero?
         float n = Math.max(Math.max(rybR, rybY), rybB) / Math.max(Math.max(rgbR, rgbG), rgbB);
 
         if (Float.isNaN(n) || n == 0F) {
@@ -141,7 +142,7 @@ public class BlendingPipe implements Pipe {
         float rgbB = 2F * (rybB - Math.min(rybY, rybB));
 
         float n = Math.max(Math.max(rgbR, rgbG), rgbB) / Math.max(Math.max(rybR, rybY), rybB);
-        n = n == 0F ? 1F : n;
+        n = n == 0F || Float.isNaN(n) ? 1F : n;
 
         rgbR /= n;
         rgbG /= n;
@@ -150,7 +151,6 @@ public class BlendingPipe implements Pipe {
         float b = Math.min(Math.min(1F - ryb[0], 1F - ryb[1]), 1F - ryb[2]);
 
         return new float[] { rgbR + b, rgbG + b, rgbB + b };
-
     }
 
     /**

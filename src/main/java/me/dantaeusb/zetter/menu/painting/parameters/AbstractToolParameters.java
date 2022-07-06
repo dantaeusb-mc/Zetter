@@ -1,5 +1,8 @@
 package me.dantaeusb.zetter.menu.painting.parameters;
 
+import me.dantaeusb.zetter.menu.painting.tools.Brush;
+import me.dantaeusb.zetter.menu.painting.tools.Bucket;
+import me.dantaeusb.zetter.menu.painting.tools.Pencil;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Tuple;
@@ -25,7 +28,6 @@ public abstract class AbstractToolParameters {
      * @param entry
      */
     private static void writeEntry(FriendlyByteBuf buffer, Map.Entry<String, Object> entry) {
-
         try {
             buffer.writeUtf(entry.getKey(), 128);
             ByteArrayOutputStream streamOutput = new ByteArrayOutputStream();
@@ -38,15 +40,27 @@ public abstract class AbstractToolParameters {
 
             buffer.writeInt(output.length);
             buffer.writeBytes(streamOutput.toByteArray());
-
         } catch (IOException e) {
             throw new SerializationException("Unable to write value for parameter " + entry.getKey());
         }
     }
 
-    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer) {
+    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer, String toolCode) {
         // @todo: varies!
-        AbstractToolParameters toolParameters = new BrushParameters();
+        AbstractToolParameters toolParameters;
+
+        switch (toolCode) {
+            case Brush.CODE:
+                toolParameters = new BrushParameters();
+                break;
+            case Bucket.CODE:
+                toolParameters = new BucketParameters();
+                break;
+            case Pencil.CODE:
+            default:
+                toolParameters = new PencilParameters();
+                break;
+        }
 
         final List<Tuple<String, Object>> rawParameters = buffer.readCollection(
                 NonNullList::createWithCapacity,

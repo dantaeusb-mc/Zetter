@@ -17,7 +17,7 @@ public class ZetterNetwork {
     public static SimpleChannel simpleChannel;
     // @todo: rename this on release, it's zetter:zetter_channel 0.1
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
-    public static final String MESSAGE_PROTOCOL_VERSION = "0.1";
+    public static final String MESSAGE_PROTOCOL_VERSION = "0.2";
 
     public static final byte PAINTING_FRAME = 21;
     public static final byte PAINTING_REQUEST_CANVAS = 22;
@@ -27,7 +27,6 @@ public class ZetterNetwork {
     public static final byte PAINTING_RENAME = 26;
     public static final byte EASEL_CANVAS_CHANGE = 28;
     public static final byte PAINTING_SYNC = 29;
-    public static final byte PAINTING_BUCKET = 30;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -79,11 +78,6 @@ public class ZetterNetwork {
                 SEaselCanvasChangePacket::writePacketData, SEaselCanvasChangePacket::readPacketData,
                 SEaselCanvasChangePacket::handle,
                 Optional.of(PLAY_TO_CLIENT));
-
-        simpleChannel.registerMessage(PAINTING_BUCKET, CCanvasBucketToolPacket.class,
-                CCanvasBucketToolPacket::writePacketData, CCanvasBucketToolPacket::readPacketData,
-                CCanvasBucketToolPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
     }
 
     public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {

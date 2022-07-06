@@ -3,13 +3,11 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
 import me.dantaeusb.zetter.network.ServerHandler;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.function.Supplier;
 
@@ -25,6 +23,10 @@ public class CCanvasActionBufferPacket {
 
     public CCanvasActionBufferPacket(Queue<PaintingActionBuffer> paintingActionBuffers) {
         this.paintingActionBuffers = paintingActionBuffers;
+    }
+
+    public Queue<PaintingActionBuffer> getPaintingActionBuffers() {
+        return this.paintingActionBuffers;
     }
 
     /**
@@ -63,6 +65,6 @@ public class CCanvasActionBufferPacket {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processFrameBuffer(packetIn, sendingPlayer));
+        ctx.enqueueWork(() -> ServerHandler.processActionBuffer(packetIn, sendingPlayer));
     }
 }

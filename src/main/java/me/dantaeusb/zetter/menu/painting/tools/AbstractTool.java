@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.menu.painting.tools;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;

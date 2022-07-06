@@ -6,6 +6,7 @@ import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -24,18 +25,25 @@ public class ServerHandler {
      *
      * @todo: send changes to TE, not container, as it's created per player
      */
-    public static void processFrameBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processActionBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
         if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu paintingContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
+            EaselContainerMenu paintingMenu = (EaselContainerMenu)sendingPlayer.containerMenu;
 
-            //paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUUID());
+            for (PaintingActionBuffer actionBuffer : packetIn.getPaintingActionBuffers()) {
+                if (!actionBuffer.authorId.equals(sendingPlayer.getUUID())) {
+                    Zetter.LOG.warn("Received action from player claimed another player UUID, ignoring");
+                    return;
+                }
+
+                paintingMenu.processActionBufferServer(actionBuffer);
+            }
 
             /**
              * Keep it there, but it's not really useful since it's easier to sync whole canvas and keep recent
              * changes on top
              */
 
-            /*for (PlayerEntity playerEntity : paintingContainer.getTileEntityReference().getPlayersUsing()) {
+            /*for (PlayerEntity playerEntity : paintingMenu.getTileEntityReference().getPlayersUsing()) {
                 if (playerEntity.equals(sendingPlayer)) {
                     // No need to send it back
                     continue;
