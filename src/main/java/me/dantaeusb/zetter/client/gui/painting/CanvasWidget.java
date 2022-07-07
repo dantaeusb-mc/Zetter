@@ -93,7 +93,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     }
 
     /**
-     * Apply used tool
+     * Apply used tool. Could apply outside the canvas!
+     * It is for tool to decide if it's going to apply interaction
      *
      * @param mouseX
      * @param mouseY
@@ -102,14 +103,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     protected boolean handleCanvasInteraction(double mouseX, double mouseY) {
         final float canvasX = (float) ((mouseX - this.x - this.canvasOffsetX) / (float) CANVAS_SCALE_FACTOR);
         final float canvasY = (float) ((mouseY - this.y - this.canvasOffsetY) / (float) CANVAS_SCALE_FACTOR);
-
-        if (canvasX < 0 || canvasX > this.parentScreen.getMenu().getCanvasData().getWidth()) {
-            return false;
-        }
-
-        if (canvasY < 0 || canvasY > this.parentScreen.getMenu().getCanvasData().getHeight()) {
-            return false;
-        }
 
         this.parentScreen.getMenu().useTool(canvasX, canvasY);
 
@@ -140,14 +133,14 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             fill(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color);
         }
 
-        if (    mouseX >= this.x + this.canvasOffsetX
-                && mouseY >= this.y + this.canvasOffsetY
-                && mouseX < this.x + this.canvasOffsetX + this.parentScreen.getMenu().getCanvasData().getWidth() * CANVAS_SCALE_FACTOR
-                && mouseY < this.y + this.canvasOffsetY + this.parentScreen.getMenu().getCanvasData().getHeight() * CANVAS_SCALE_FACTOR
+        if (    mouseX >= this.x
+                && mouseY >= this.y
+                && mouseX < this.x + this.width
+                && mouseY < this.y + this.height
         ) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-            int canvasX = (mouseX - this.x - this.canvasOffsetX) / CANVAS_SCALE_FACTOR;
-            int canvasY = (mouseY - this.y - this.canvasOffsetY) / CANVAS_SCALE_FACTOR;
+            int canvasX = (int) Math.floor((mouseX - this.x - this.canvasOffsetX) / (double) CANVAS_SCALE_FACTOR);
+            int canvasY = (int) Math.floor((mouseY - this.y - this.canvasOffsetY) / (double) CANVAS_SCALE_FACTOR);
 
             this.renderCursor(matrixStack, canvasX, canvasY);
         } else {

@@ -79,6 +79,8 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     private HashMap<String, AbstractToolParameters> toolParameters = new HashMap<>(){{
         put(Pencil.CODE, new PencilParameters());
         put(Brush.CODE, new BrushParameters());
+        put(Eyedropper.CODE, new NoParameters());
+        put(Bucket.CODE, new BucketParameters());
     }};
 
     private String currentTool = Pencil.CODE;
@@ -282,11 +284,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             return;
         }
 
-        if (!this.checkActionSafety(posX, posY)) {
-            Zetter.LOG.warn("Unsafe action: X:" + posX + " Y:" + posY);
-            return;
-        }
-
         PaintingActionBuffer lastAction = null;
 
         if (!this.actionsQueue.isEmpty()) {
@@ -305,24 +302,15 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             }
         }
 
-        if (this.getCurrentTool().shouldAddAction(posX, posY, lastX, lastY)) {
+        if (this.getCurrentTool().shouldAddAction(this.getCanvasData(), this.getCurrentToolParameters(), posX, posY, lastX, lastY)) {
             int damage = this.getCurrentTool().apply(this.getCanvasData(), this.getCurrentToolParameters(), this.getCurrentColor(), posX, posY);
-            this.recordAction(posX, posY);
+
+            if (this.getCurrentTool().publishable()) {
+                this.recordAction(posX, posY);
+            }
 
             this.easelContainer.damagePalette(damage);
         }
-    }
-
-    private boolean checkActionSafety(float posX, float posY) {
-        if (posX < 0 || posY < 0) {
-            return false;
-        }
-
-        if (posX > this.getCanvasData().getWidth() || posY > this.getCanvasData().getHeight()) {
-            return false;
-        }
-
-        return true;
     }
 
     private void recordAction(float posX, float posY) {
@@ -340,6 +328,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     private PaintingActionBuffer createAction() {
         final PaintingActionBuffer lastAction = this.actionsQueue.peekLast();
+
+        if (!this.getCurrentTool().publishable()) {
+            throw new IllegalStateException("Cannot create non-publishable action");
+        }
 
         if (lastAction != null && !lastAction.isCommitted()) {
             lastAction.commit();
@@ -490,7 +482,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * @todo: move to entity?
      */
     public void tick() {
-        this.tickActionsQueue();
+        this.tick++;
+
+        if (this.tick % 20 == 0) {
+            this.sendActionsQueueClient(false);
+        }
     }
 
     /*
@@ -503,11 +499,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * @todo: move to entity?
      * Checks and sends action buffer on client
      */
-    protected void tickActionsQueue() {
-        if (++this.tick % 20 != 0) {
-            return;
-        }
-
+    protected void sendActionsQueueClient(boolean forceCommit) {
         final Queue<PaintingActionBuffer> unsentActions = new LinkedList<>();
         Iterator<PaintingActionBuffer> iterator = this.actionsQueue.descendingIterator();
 
@@ -515,7 +507,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             PaintingActionBuffer paintingActionBuffer = iterator.next();
 
             if (!paintingActionBuffer.isCommitted()) {
-                if (paintingActionBuffer.shouldCommit()) {
+                if (forceCommit || paintingActionBuffer.shouldCommit()) {
                     paintingActionBuffer.commit();
                 } else {
                     continue;
@@ -627,13 +619,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public void removed(Player playerIn) {
         super.removed(playerIn);
 
-        /*if (this.world.isClientSide() && !this.getCanvasChanges().isEmpty()) {
-            this.canvasChanges.getFrames(playerIn.getUUID());
-            CPaintingFrameBufferPacket modePacket = new CPaintingFrameBufferPacket(this.canvasChanges);
-            ZetterNetwork.simpleChannel.sendToServer(modePacket);
-
-            this.lastFrameBufferSendClock = System.currentTimeMillis();
-        }*/
+        if (this.world.isClientSide()) {
+            this.sendActionsQueueClient(true);
+        }
     }
 
     /**

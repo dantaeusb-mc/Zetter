@@ -41,7 +41,15 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
         return true;
     }
 
-    public boolean shouldAddAction(float newPosX, float newPosY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
+    public boolean shouldAddAction(CanvasData canvasData, T parameters, float newPosX, float newPosY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
+        if (newPosX < 0 || newPosX > canvasData.getWidth()) {
+            return false;
+        }
+
+        if (newPosY < 0 || newPosY > canvasData.getHeight()) {
+            return false;
+        }
+
         if (lastPosX == null || lastPosY == null) {
             return true;
         }
@@ -66,19 +74,23 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      * Do pixel change: apply all pipes and calculate final color
      *
      * @param canvas
-     * @param params
+     * @param parameters
      * @param color
      * @param index
      * @param localIntensity Local localIntensity! Used for brush smoothing, do not mix with blending localIntensity!
      */
-    protected void pixelChange(CanvasData canvas, T params, int color, int index, float localIntensity) {
+    protected void pixelChange(CanvasData canvas, T parameters, int color, int index, float localIntensity) {
         if (!this.publishable()) {
             throw new IllegalStateException("Non-publishable tools cannot change pixels!");
         }
 
+        if (index < 0 || index > canvas.getWidth() * canvas.getHeight()) {
+            throw new IllegalStateException("Trying to update pixel outside of the canvas!");
+        }
+
         for (Pipe pipe : this.pipes) {
-            if (pipe.shouldUsePipe(this, params)) {
-                color = pipe.applyPipe(canvas, params, color, index, localIntensity);
+            if (pipe.shouldUsePipe(this, parameters)) {
+                color = pipe.applyPipe(canvas, parameters, color, index, localIntensity);
             }
         }
 

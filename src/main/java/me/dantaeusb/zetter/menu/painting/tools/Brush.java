@@ -43,7 +43,18 @@ public class Brush extends AbstractTool<BrushParameters> {
         return this.translatableComponent;
     }
 
-    public boolean shouldAddAction(float newPosX, float newPosY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
+    @Override
+    public boolean shouldAddAction(CanvasData canvasData, BrushParameters params, float newPosX, float newPosY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
+        int maxActiveDistance = (int) Math.ceil(params.getSize() / 2);
+
+        if (newPosX < -maxActiveDistance || newPosX > canvasData.getWidth() + maxActiveDistance) {
+            return false;
+        }
+
+        if (newPosY < -maxActiveDistance || newPosY > canvasData.getHeight() + maxActiveDistance) {
+            return false;
+        }
+
         if (lastPosX == null || lastPosY == null) {
             return true;
         }

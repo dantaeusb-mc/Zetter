@@ -163,7 +163,7 @@ public class PaintingActionBuffer {
     }
 
     public Stream<PaintingAction> getActionStream() {
-        this.actionBuffer.flip();
+        this.actionBuffer.rewind();
 
         if (this.actionBuffer.limit() % FRAME_SIZE != 0) {
             throw new IllegalStateException("Incorrect amount of frames in buffer");

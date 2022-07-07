@@ -6,7 +6,6 @@ import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
 import java.security.InvalidParameterException;
 
 public class BucketParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface {
-
     public BucketParameters() {
         this(1f, BlendingPipe.BlendingOption.DEFAULT);
     }
