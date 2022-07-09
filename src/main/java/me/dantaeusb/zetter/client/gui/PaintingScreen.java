@@ -10,11 +10,12 @@ import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.tools.Brush;
-import me.dantaeusb.zetter.menu.painting.tools.Bucket;
-import me.dantaeusb.zetter.menu.painting.tools.Eyedropper;
-import me.dantaeusb.zetter.menu.painting.tools.Pencil;
+import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.tools.Brush;
+import me.dantaeusb.zetter.painting.tools.Bucket;
+import me.dantaeusb.zetter.painting.tools.Eyedropper;
+import me.dantaeusb.zetter.painting.tools.Pencil;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -40,6 +41,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
     private final HashMap<TabsWidget.Tab, AbstractTab> tabs = new HashMap<>();
 
     private ToolsWidget toolsWidget;
+    private HistoryWidget historyWidget;
     private TabsWidget tabsWidget;
     private CanvasWidget canvasWidget;
     private PaletteWidget paletteWidget;
@@ -66,8 +68,11 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         final int TOOLS_POSITION_X = 4;
         final int TOOLS_POSITION_Y = 4;
 
+        final int HISTORY_POSITION_X = 4;
+        final int HISTORY_POSITION_Y = 112;
+
         final int TABS_POSITION_X = 4;
-        final int TABS_POSITION_Y = 142;
+        final int TABS_POSITION_Y = 145;
 
         final int PALETTE_POSITION_X = 175;
         final int PALETTE_POSITION_Y = 38;
@@ -80,12 +85,14 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.canvasWidget = new CanvasWidget(this, this.getGuiLeft() + CANVAS_POSITION_X, this.getGuiTop() + CANVAS_POSITION_Y);
         this.paletteWidget = new PaletteWidget(this, this.getGuiLeft() + PALETTE_POSITION_X, this.getGuiTop() + PALETTE_POSITION_Y);
         this.toolsWidget = new ToolsWidget(this, this.getGuiLeft() + TOOLS_POSITION_X, this.getGuiTop() + TOOLS_POSITION_Y);
+        this.historyWidget = new HistoryWidget(this, this.getGuiLeft() + HISTORY_POSITION_X, this.getGuiTop() + HISTORY_POSITION_Y);
         this.tabsWidget = new TabsWidget(this, this.getGuiLeft() + TABS_POSITION_X, this.getGuiTop() + TABS_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
         this.addPaintingWidget(this.canvasWidget);
         this.addPaintingWidget(this.paletteWidget);
         this.addPaintingWidget(this.toolsWidget);
+        this.addPaintingWidget(this.historyWidget);
         this.addPaintingWidget(this.tabsWidget);
         this.addPaintingWidget(this.helpWidget);
 
@@ -125,7 +132,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
     /**
      * We do not do that directly because widget do not control
      * life cycle. We need to remove reference when screen re-created.
-     * @param parameters
+     * @param color
      */
     public void updateCurrentColor(Integer color) {
         ((ColorTab) this.tabs.get(TabsWidget.Tab.COLOR)).update(color);
@@ -173,13 +180,6 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
     }
 
     @Override
-    public void containerTick() {
-        super.containerTick();
-
-        this.getMenu().tick();
-    }
-
-    @Override
     protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -189,6 +189,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
 
         this.toolsWidget.render(matrixStack);
         this.tabsWidget.render(matrixStack);
+        this.historyWidget.render(matrixStack);
         this.canvasWidget.render(matrixStack, x, y, partialTicks);
         this.paletteWidget.render(matrixStack);
         this.helpWidget.render(matrixStack, x, y, partialTicks);
@@ -249,16 +250,16 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
                 this.minecraft.player.closeContainer();
                 return true;
             case Pencil.HOTKEY:
-                this.getMenu().setCurrentTool(Pencil.CODE);
+                this.getMenu().setCurrentTool(Tools.PENCIL);
                 return true;
             case Brush.HOTKEY:
-                this.getMenu().setCurrentTool(Brush.CODE);
+                this.getMenu().setCurrentTool(Tools.BRUSH);
                 return true;
             case Eyedropper.HOTKEY:
-                this.getMenu().setCurrentTool(Eyedropper.CODE);
+                this.getMenu().setCurrentTool(Tools.EYEDROPPER);
                 return true;
             case Bucket.HOTKEY:
-                this.getMenu().setCurrentTool(Bucket.CODE);
+                this.getMenu().setCurrentTool(Tools.BUCKET);
                 return true;
             default:
                 return super.keyPressed(keyCode, scanCode, modifiers);

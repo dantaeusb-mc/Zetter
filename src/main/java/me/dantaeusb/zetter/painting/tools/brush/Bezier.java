@@ -1,4 +1,4 @@
-package me.dantaeusb.zetter.menu.painting.tools.brush;
+package me.dantaeusb.zetter.painting.tools.brush;
 
 /**
  * Using WebKit animation beziers for reference

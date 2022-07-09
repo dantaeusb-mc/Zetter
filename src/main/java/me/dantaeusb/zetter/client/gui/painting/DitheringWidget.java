@@ -4,9 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.painting.parameters.*;
-import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
-import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -14,16 +14,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DitheringWidget extends AbstractPaintingWidget implements Widget {
-    private final static int WIDTH = 77;
+    private final static int WIDTH = 80;
     private final static int HEIGHT = 32;
     private final static int FONT_Y_MARGIN = 12;
 
-    private final static int DITHERING_BUTTON_WIDTH = 19;
+    private final static int DITHERING_BUTTON_WIDTH = 20;
 
     private final static int DITHERING_BUTTON_HEIGHT = 20;
 
@@ -35,12 +34,10 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
         final int DITHERING_BUTTON_U = 0;
         final int DITHERING_BUTTON_V = 32;
 
-        this.buttons = new LinkedList<>() {{
-            push(new DitheringButton(DitheringPipe.DitheringOption.NO_DITHERING, DITHERING_BUTTON_U, DITHERING_BUTTON_V, DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_HEIGHT));
-            push(new DitheringButton(DitheringPipe.DitheringOption.DENSE_DITHERING, DITHERING_BUTTON_U + DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_V, DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_HEIGHT));
+        this.buttons = new ArrayList<>() {{
+            add(new DitheringButton(DitheringPipe.DitheringOption.NO_DITHERING, DITHERING_BUTTON_U, DITHERING_BUTTON_V, DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_HEIGHT));
+            add(new DitheringButton(DitheringPipe.DitheringOption.DENSE_DITHERING, DITHERING_BUTTON_U + DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_V, DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_HEIGHT));
         }};
-
-        Collections.reverse(this.buttons);
     }
 
     @Override

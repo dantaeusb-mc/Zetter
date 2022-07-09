@@ -8,7 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 public class PaletteItem extends Item
 {
     public static final String NBT_TAG_NAME_PALETTE_COLORS = "paletteColors";
-    public static int PALETTE_SIZE = 14;
+    public static int PALETTE_SIZE = 16;
 
     public PaletteItem() {
         super(new Properties().durability(4096).tab(CreativeModeTab.TAB_TOOLS));
@@ -21,6 +21,22 @@ public class PaletteItem extends Item
         int[] paletteColors;
         if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_PALETTE_COLORS)) {
             paletteColors = compoundNBT.getIntArray(NBT_TAG_NAME_PALETTE_COLORS);
+
+            if(paletteColors.length != PALETTE_SIZE) {
+                int[] fixedPaletteColors = new int[PALETTE_SIZE];
+
+                System.arraycopy(paletteColors, 0, fixedPaletteColors, 0, paletteColors.length);
+
+                final int[] defaultPaletteColors = getDefaultPaletteColors();
+
+                if (PALETTE_SIZE - paletteColors.length >= 0) {
+                    System.arraycopy(defaultPaletteColors, paletteColors.length, fixedPaletteColors, paletteColors.length, PALETTE_SIZE - paletteColors.length);
+                }
+
+                paletteColors = fixedPaletteColors;
+
+                setPaletteColors(stack, paletteColors);
+            }
         } else {
             paletteColors = getDefaultPaletteColors();
         }
@@ -32,20 +48,22 @@ public class PaletteItem extends Item
     {
         int[] paletteColors = new int[PALETTE_SIZE];
 
-        paletteColors[0] = 0xFFAA0000; //dark-red
-        paletteColors[1] = 0xFFFF5555; //red
-        paletteColors[2] = 0xFFFFAA00; //gold
-        paletteColors[3] = 0xFFFFFF55; //yellow
-        paletteColors[4] = 0xFF00AA00; //dark-green
-        paletteColors[5] = 0xFF55FF55; //green
-        paletteColors[6] = 0xFF55FFFF; //aqua
-        paletteColors[7] = 0xFF00AAAA; //dark-aqua
-        paletteColors[8] = 0xFF0000AA; //dark-blue
-        paletteColors[9] = 0xFF5555FF; //blue
-        paletteColors[10] = 0xFFFF55FF; //light-purple
-        paletteColors[11] = 0xFFAA00AA; //purple
-        paletteColors[12] = 0xFFAAAAAA; //gray
-        paletteColors[13] = 0xFF555555; //dark-gray
+        paletteColors[0] = 0xFFAA0000; //low red
+        paletteColors[1] = 0xFFFF5555; //high red
+        paletteColors[2] = 0xFFAA5500; //low yellow
+        paletteColors[3] = 0xFFFFFF55; //high yellow
+        paletteColors[4] = 0xFF00AA00; //low green
+        paletteColors[5] = 0xFF55FF55; //high green
+        paletteColors[6] = 0xFF55FFFF; //low cyan
+        paletteColors[7] = 0xFF00AAAA; //high cyan
+        paletteColors[8] = 0xFF0000AA; //low blue
+        paletteColors[9] = 0xFF5555FF; //high blue
+        paletteColors[10] = 0xFFAA00AA; //low magenta
+        paletteColors[11] = 0xFFFF55FF; //high magenta
+        paletteColors[12] = 0xFF555555; //low gray
+        paletteColors[13] = 0xFFAAAAAA; //gray
+        paletteColors[14] = 0xFF000000; //black
+        paletteColors[15] = 0xFFFFFFFF; //white
 
         return paletteColors;
     }
@@ -54,7 +72,7 @@ public class PaletteItem extends Item
      * Sets key id
      *
      * @param stack the stack
-     * @param keyId the new UUID
+     * @param paletteColors the new colors
      */
     public static void setPaletteColors(ItemStack stack, int[] paletteColors)
     {

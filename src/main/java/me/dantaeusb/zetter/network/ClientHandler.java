@@ -32,7 +32,7 @@ public class ClientHandler {
             if (canvasCode.equals(((EaselContainerMenu) player.containerMenu).getCanvasCode())) {
                 // Pushing changes that were added after sync packet was created
                 // @todo: remove cast
-                ((EaselContainerMenu) player.containerMenu).processSync(canvasCode, (CanvasData) canvasData, packetIn.getTimestamp());
+                ((EaselContainerMenu) player.containerMenu).handleCanvasSync(canvasCode, (CanvasData) canvasData, packetIn.getTimestamp());
             }
         }
 

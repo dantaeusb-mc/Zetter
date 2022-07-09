@@ -3,7 +3,7 @@ package me.dantaeusb.zetter.client.gui.painting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.menu.painting.tools.*;
+import me.dantaeusb.zetter.painting.Tools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -11,8 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ToolsWidget extends AbstractPaintingWidget implements Widget {
@@ -29,14 +28,12 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
         final int TOOL_BUTTON_U = 208;
         final int TOOL_BUTTON_V = 69;
 
-        this.buttons = new LinkedList<>() {{
-            push(new ToolButton(parentScreen.getMenu().getTool(Pencil.CODE), TOOL_BUTTON_U, TOOL_BUTTON_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            push(new ToolButton(parentScreen.getMenu().getTool(Brush.CODE), TOOL_BUTTON_U, TOOL_BUTTON_V + TOOL_BUTTON_HEIGHT, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            push(new ToolButton(parentScreen.getMenu().getTool(Eyedropper.CODE), TOOL_BUTTON_U, TOOL_BUTTON_V + TOOL_BUTTON_HEIGHT * 2, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            push(new ToolButton(parentScreen.getMenu().getTool(Bucket.CODE), TOOL_BUTTON_U, TOOL_BUTTON_V + TOOL_BUTTON_HEIGHT * 3, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+        this.buttons = new ArrayList<>() {{
+            add(new ToolButton(Tools.PENCIL, TOOL_BUTTON_U, TOOL_BUTTON_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tools.BRUSH, TOOL_BUTTON_U, TOOL_BUTTON_V + TOOL_BUTTON_HEIGHT, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tools.EYEDROPPER, TOOL_BUTTON_U, TOOL_BUTTON_V + TOOL_BUTTON_HEIGHT * 2, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tools.BUCKET, TOOL_BUTTON_U, TOOL_BUTTON_V + TOOL_BUTTON_HEIGHT * 3, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
         }};
-
-        Collections.reverse(this.buttons);
     }
 
     @Override
@@ -71,7 +68,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
             int fromY = this.y + i * TOOLS_OFFSET;
 
             if (PaintingScreen.isInRect(this.x, fromY, toolButton.width, toolButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
-                this.setCurrentTool(toolButton);
+                this.updateCurrentTool(toolButton);
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 return true;
             }
@@ -97,18 +94,18 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
         }
     }
 
-    protected void setCurrentTool(ToolButton toolButton) {
-        this.parentScreen.getMenu().setCurrentTool(toolButton.tool.getCode());
+    protected void updateCurrentTool(ToolButton toolButton) {
+        this.parentScreen.getMenu().setCurrentTool(toolButton.tool);
     }
 
     public class ToolButton {
-        public final AbstractTool tool;
+        public final Tools tool;
         public final int uPosition;
         public final int vPosition;
         public final int height;
         public final int width;
 
-        ToolButton(AbstractTool tool, int uPosition, int vPosition, int width, int height) {
+        ToolButton(Tools tool, int uPosition, int vPosition, int width, int height) {
             this.tool = tool;
             this.uPosition = uPosition;
             this.vPosition = vPosition;
@@ -117,7 +114,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
         }
 
         public TranslatableComponent getTooltip() {
-            return this.tool.getTranslatableComponent();
+            return this.tool.getTool().getTranslatableComponent();
         }
     }
 }

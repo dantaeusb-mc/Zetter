@@ -7,22 +7,31 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.ArrayDeque;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
  * Painting update - get frame buffer from client when they're making changes
  */
 public class CCanvasActionBufferPacket {
+    private int entityId;
     private Queue<PaintingActionBuffer> paintingActionBuffers;
 
-    public CCanvasActionBufferPacket() {
-        this.paintingActionBuffers = new LinkedList<>();
+    public CCanvasActionBufferPacket(int entityId) {
+        this.entityId = entityId;
+        this.paintingActionBuffers = new ArrayDeque<>();
     }
 
-    public CCanvasActionBufferPacket(Queue<PaintingActionBuffer> paintingActionBuffers) {
+    public CCanvasActionBufferPacket(int entityId, Queue<PaintingActionBuffer> paintingActionBuffers) {
+        this.entityId = entityId;
         this.paintingActionBuffers = paintingActionBuffers;
+    }
+
+    public int getEntityId() {
+        return this.entityId;
     }
 
     public Queue<PaintingActionBuffer> getPaintingActionBuffers() {
@@ -34,9 +43,10 @@ public class CCanvasActionBufferPacket {
      * Seems like buffer is always at least 256 bytes, so we have to process written buffer size
      */
     public static CCanvasActionBufferPacket readPacketData(FriendlyByteBuf buffer) {
+        int entityId = buffer.readInt();
         int actionBuffersCount = buffer.readInt();
 
-        CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket();
+        CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket(entityId);
 
         for (int i = 0; i < actionBuffersCount; i++) {
             packet.paintingActionBuffers.add(PaintingActionBuffer.readPacketData(buffer));
@@ -49,6 +59,7 @@ public class CCanvasActionBufferPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buffer) {
+        buffer.writeInt(this.entityId);
         buffer.writeInt(this.paintingActionBuffers.size());
 
         for (PaintingActionBuffer actionBuffer : this.paintingActionBuffers) {

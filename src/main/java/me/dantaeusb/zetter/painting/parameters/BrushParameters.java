@@ -1,16 +1,16 @@
-package me.dantaeusb.zetter.menu.painting.parameters;
+package me.dantaeusb.zetter.painting.parameters;
 
-import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
-import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 
 import java.security.InvalidParameterException;
 
-public class PencilParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface, DitheringInterface {
-    public PencilParameters() {
-        this(1, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
+public class BrushParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface, DitheringInterface {
+    public BrushParameters() {
+        this(3f, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
     }
 
-    public PencilParameters(int size, float intensity, BlendingPipe.BlendingOption blending, DitheringPipe.DitheringOption dithering) {
+    public BrushParameters(float size, float intensity, BlendingPipe.BlendingOption blending, DitheringPipe.DitheringOption dithering) {
         this.values.put("size", size);
         this.values.put("intensity", intensity);
         this.values.put("blending", blending.name());

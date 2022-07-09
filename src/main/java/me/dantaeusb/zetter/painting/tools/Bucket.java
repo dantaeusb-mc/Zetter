@@ -1,10 +1,7 @@
-package me.dantaeusb.zetter.menu.painting.tools;
+package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.BucketParameters;
-import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
+import me.dantaeusb.zetter.painting.parameters.BucketParameters;
+import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
@@ -19,8 +16,8 @@ public class Bucket extends AbstractTool<BucketParameters> {
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.bucket");
 
-    public Bucket(EaselContainerMenu menu) {
-        super(Bucket.CODE, menu, new LinkedList<Pipe>());
+    public Bucket() {
+        super(new ArrayList<Pipe>());
     }
 
     @Override

@@ -1,4 +1,4 @@
-package me.dantaeusb.zetter.menu.painting.parameters;
+package me.dantaeusb.zetter.painting.parameters;
 
 import java.security.InvalidParameterException;
 

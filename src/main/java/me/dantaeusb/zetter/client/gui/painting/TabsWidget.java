@@ -3,7 +3,6 @@ package me.dantaeusb.zetter.client.gui.painting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.menu.painting.tools.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -11,8 +10,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public class TabsWidget extends AbstractPaintingWidget implements Widget {
@@ -29,13 +28,11 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
         final int TAB_BUTTON_U = 200;
         final int TAB_BUTTON_V = 0;
 
-        this.tabs = new LinkedList<>() {{
-            push(new TabButton(Tab.COLOR, TAB_BUTTON_U, TAB_BUTTON_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
-            push(new TabButton(Tab.PARAMETERS, TAB_BUTTON_U, TAB_BUTTON_V + TAB_BUTTON_HEIGHT, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
-            push(new TabButton(Tab.INVENTORY, TAB_BUTTON_U, TAB_BUTTON_V + TAB_BUTTON_HEIGHT * 2, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+        this.tabs = new ArrayList<>() {{
+            add(new TabButton(Tab.COLOR, TAB_BUTTON_U, TAB_BUTTON_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+            add(new TabButton(Tab.PARAMETERS, TAB_BUTTON_U, TAB_BUTTON_V + TAB_BUTTON_HEIGHT, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+            add(new TabButton(Tab.INVENTORY, TAB_BUTTON_U, TAB_BUTTON_V + TAB_BUTTON_HEIGHT * 2, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
         }};
-
-        Collections.reverse(this.tabs);
     }
 
     @Override

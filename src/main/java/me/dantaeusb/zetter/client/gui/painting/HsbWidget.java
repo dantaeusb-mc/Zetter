@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class HsbWidget extends AbstractPaintingWidget implements Widget {
@@ -26,7 +26,7 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
 
     private final SliderWidget brightnessSlider;
 
-    private final List<SliderWidget> sliders = new LinkedList<>();
+    private final List<SliderWidget> sliders = new ArrayList<>();
 
     public HsbWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.sliders"));

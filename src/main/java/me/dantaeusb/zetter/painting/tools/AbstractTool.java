@@ -1,10 +1,8 @@
-package me.dantaeusb.zetter.menu.painting.tools;
+package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
-import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Tuple;
@@ -15,22 +13,9 @@ import java.util.List;
 import java.util.Stack;
 
 public abstract class AbstractTool<T extends AbstractToolParameters> {
-    /**
-     * Serializable code of the current tool
-     */
-    private final String code;
-
-    /**
-     * Link to the menu (container) for the unusual interactions
-     * and side checks
-     */
-    protected final EaselContainerMenu menu;
-
     protected final List<Pipe> pipes;
 
-    public AbstractTool(String code, EaselContainerMenu menu, List<Pipe> pipes) {
-        this.code = code;
-        this.menu = menu;
+    public AbstractTool(List<Pipe> pipes) {
         this.pipes = pipes;
     }
 
@@ -101,10 +86,6 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      * Get cursor shape
      */
     public abstract ToolShape getShape(T params);
-
-    public String getCode() {
-        return this.code;
-    }
 
     public static class ToolShape {
         // [0, 0], [0, 1], [1, 1], [1, 0] for square

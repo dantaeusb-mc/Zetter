@@ -4,9 +4,6 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
-import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.IntensityInterface;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;

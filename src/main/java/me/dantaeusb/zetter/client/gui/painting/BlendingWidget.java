@@ -4,15 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.BlendingInterface;
-import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.PencilParameters;
-import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
-import me.dantaeusb.zetter.menu.painting.tools.Brush;
-import me.dantaeusb.zetter.menu.painting.tools.Bucket;
-import me.dantaeusb.zetter.menu.painting.tools.Eyedropper;
-import me.dantaeusb.zetter.menu.painting.tools.Pencil;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -20,16 +14,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BlendingWidget extends AbstractPaintingWidget implements Widget {
-    public final static int WIDTH = 58;
+    public final static int WIDTH = 60;
     public final static int HEIGHT = 32;
     public final static int FONT_Y_MARGIN = 12;
 
-    private final static int BLENDING_BUTTON_WIDTH = 19;
+    private final static int BLENDING_BUTTON_WIDTH = 20;
 
     private final static int BLENDING_BUTTON_HEIGHT = 20;
 
@@ -38,16 +31,14 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
     public BlendingWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.blending"));
 
-        final int BLENDING_BUTTON_U = 77;
+        final int BLENDING_BUTTON_U = 80;
         final int BLENDING_BUTTON_V = 32;
 
-        this.buttons = new LinkedList<>() {{
-            push(new BlendingButton(BlendingPipe.BlendingOption.RYB, BLENDING_BUTTON_U, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
-            push(new BlendingButton(BlendingPipe.BlendingOption.RGB, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
-            push(new BlendingButton(BlendingPipe.BlendingOption.RGBC, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH * 2, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
+        this.buttons = new ArrayList<>() {{
+            add(new BlendingButton(BlendingPipe.BlendingOption.RYB, BLENDING_BUTTON_U, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
+            add(new BlendingButton(BlendingPipe.BlendingOption.RGB, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
+            add(new BlendingButton(BlendingPipe.BlendingOption.RGBC, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH * 2, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
         }};
-
-        Collections.reverse(this.buttons);
     }
 
     @Override

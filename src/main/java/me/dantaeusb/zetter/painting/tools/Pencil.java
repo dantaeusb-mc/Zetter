@@ -1,9 +1,9 @@
-package me.dantaeusb.zetter.menu.painting.tools;
+package me.dantaeusb.zetter.painting.tools;
 
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.PencilParameters;
-import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
-import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.painting.parameters.PencilParameters;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
@@ -17,8 +17,8 @@ public class Pencil extends AbstractTool<PencilParameters> {
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.pencil");
 
-    public Pencil(EaselContainerMenu menu) {
-        super(Pencil.CODE, menu, new ArrayList<>() {{
+    public Pencil() {
+        super(new ArrayList<>() {{
             add(new DitheringPipe());
             add(new BlendingPipe());
         }});

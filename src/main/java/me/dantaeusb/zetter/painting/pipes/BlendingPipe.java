@@ -1,12 +1,11 @@
-package me.dantaeusb.zetter.menu.painting.pipes;
+package me.dantaeusb.zetter.painting.pipes;
 
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.BlendingInterface;
-import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.IntensityInterface;
-import me.dantaeusb.zetter.menu.painting.tools.AbstractTool;
-import me.dantaeusb.zetter.menu.painting.tools.Brush;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.painting.parameters.IntensityInterface;
+import me.dantaeusb.zetter.painting.tools.AbstractTool;
+import me.dantaeusb.zetter.painting.tools.Brush;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.apache.commons.lang3.function.TriFunction;

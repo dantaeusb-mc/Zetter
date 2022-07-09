@@ -5,12 +5,11 @@ import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.BlendingWidget;
 import me.dantaeusb.zetter.client.gui.painting.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.painting.SliderWidget;
-import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.BlendingInterface;
-import me.dantaeusb.zetter.menu.painting.parameters.DitheringInterface;
-import me.dantaeusb.zetter.menu.painting.parameters.IntensityInterface;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
+import me.dantaeusb.zetter.painting.parameters.IntensityInterface;
 import net.minecraft.network.chat.TranslatableComponent;
 
 public class ParametersTab extends AbstractTab {

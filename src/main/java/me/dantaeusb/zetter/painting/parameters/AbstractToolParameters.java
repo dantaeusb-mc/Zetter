@@ -1,8 +1,9 @@
-package me.dantaeusb.zetter.menu.painting.parameters;
+package me.dantaeusb.zetter.painting.parameters;
 
-import me.dantaeusb.zetter.menu.painting.tools.Brush;
-import me.dantaeusb.zetter.menu.painting.tools.Bucket;
-import me.dantaeusb.zetter.menu.painting.tools.Pencil;
+import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.tools.Brush;
+import me.dantaeusb.zetter.painting.tools.Bucket;
+import me.dantaeusb.zetter.painting.tools.Pencil;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Tuple;
@@ -45,18 +46,18 @@ public abstract class AbstractToolParameters {
         }
     }
 
-    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer, String toolCode) {
+    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer, Tools tool) {
         // @todo: varies!
         AbstractToolParameters toolParameters;
 
-        switch (toolCode) {
-            case Brush.CODE:
+        switch (tool) {
+            case BRUSH:
                 toolParameters = new BrushParameters();
                 break;
-            case Bucket.CODE:
+            case BUCKET:
                 toolParameters = new BucketParameters();
                 break;
-            case Pencil.CODE:
+            case PENCIL:
             default:
                 toolParameters = new PencilParameters();
                 break;

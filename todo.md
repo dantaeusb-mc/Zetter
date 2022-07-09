@@ -28,7 +28,8 @@
 * \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;
 * \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
-* \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern (`public final`).
+* \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern (`public final`);
+* \[LOW\] TIL LinkedLists are bad actually.
 
 #### Planned features:
 

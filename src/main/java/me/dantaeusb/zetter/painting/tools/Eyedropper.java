@@ -1,13 +1,12 @@
-package me.dantaeusb.zetter.menu.painting.tools;
+package me.dantaeusb.zetter.painting.tools;
 
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.NoParameters;
+import me.dantaeusb.zetter.painting.parameters.NoParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class Eyedropper extends AbstractTool<NoParameters> {
     public static final String CODE = "eyedropper";
@@ -16,9 +15,9 @@ public class Eyedropper extends AbstractTool<NoParameters> {
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.eyedropper");
 
-    public Eyedropper(EaselContainerMenu menu) {
+    public Eyedropper() {
         // Eyedropper has no parameters
-        super(Eyedropper.CODE, menu, new LinkedList<>());
+        super(new ArrayList<>());
     }
 
     @Override
@@ -35,7 +34,7 @@ public class Eyedropper extends AbstractTool<NoParameters> {
     public int apply(CanvasData canvas, NoParameters params, int color, float posX, float posY) {
         int newColor = canvas.getColorAt((int) posX, (int) posY);
 
-        this.menu.setPaletteColor(newColor);
+        //this.menu.setPaletteColor(newColor);
 
         return 0;
     }

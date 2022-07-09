@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.menu.painting;
 
-import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import net.minecraft.network.FriendlyByteBuf;
 
 import javax.annotation.Nullable;
@@ -20,13 +20,13 @@ import java.util.stream.Stream;
  * it's complicated and not yet worth it
  */
 public class PaintingActionBuffer {
-    private static final int MAX_FRAMES = 100;
+    private static final int MAX_ACTIONS_IN_BUFFER = 100;
     private static final long MAX_TIME = 5000L;
     private static final long MAX_INACTIVE_TIME = 1000L;
 
     public final UUID actionId;
     public final UUID authorId;
-    public final String toolCode;
+    public final Tools tool;
 
     public final int color;
 
@@ -40,7 +40,7 @@ public class PaintingActionBuffer {
      * 8 bytes -- extra
      */
     private static final int FRAME_SIZE = 1 + 2 + 8;
-    public static final int BUFFER_SIZE = FRAME_SIZE * MAX_FRAMES;
+    public static final int BUFFER_SIZE = FRAME_SIZE * MAX_ACTIONS_IN_BUFFER;
 
     private ByteBuffer actionBuffer;
 
@@ -53,14 +53,14 @@ public class PaintingActionBuffer {
 
     private boolean canceled = false;
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, int color, AbstractToolParameters parameters) {
-        this(authorId, toolCode, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
+    public PaintingActionBuffer(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+        this(authorId, tool, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public PaintingActionBuffer(UUID authorId, String toolCode, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
+    public PaintingActionBuffer(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
         this.actionId = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
-        this.toolCode = toolCode;
+        this.tool = tool;
         this.color = color;
         this.parameters = parameters;
         this.startTime = startTime;
@@ -68,10 +68,10 @@ public class PaintingActionBuffer {
         this.actionBuffer = actionBuffer;
     }
 
-    private PaintingActionBuffer(UUID actionId, UUID authorId, String toolCode, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
+    private PaintingActionBuffer(UUID actionId, UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
         this.actionId = actionId;
         this.authorId = authorId;
-        this.toolCode = toolCode;
+        this.tool = tool;
         this.color = color;
         this.parameters = parameters;
         this.startTime = startTime;
@@ -88,24 +88,23 @@ public class PaintingActionBuffer {
      * Can we just add frame here
      *
      * @param authorId
-     * @param toolCode
+     * @param tool
      * @param parameters
      * @return
      */
-    public boolean canContinue(UUID authorId, String toolCode, AbstractToolParameters parameters) {
-        return !this.shouldCommit() && this.isActionCompatible(authorId, toolCode, parameters);
+    public boolean canContinue(UUID authorId, Tools tool, AbstractToolParameters parameters) {
+        return !this.shouldCommit() && this.isActionCompatible(authorId, tool, parameters);
     }
 
     /**
      * Is action we're trying to extend compatible with current action
      * @param authorId
-     * @param toolCode
+     * @param tool
      * @param parameters
      * @return
      */
-    public boolean isActionCompatible(UUID authorId, String toolCode, AbstractToolParameters parameters) {
-        return  this.authorId == authorId &&
-                this.toolCode.equals(toolCode);
+    public boolean isActionCompatible(UUID authorId, Tools tool, AbstractToolParameters parameters) {
+        return  this.authorId == authorId && this.tool == tool;
     }
 
     /**
@@ -172,6 +171,14 @@ public class PaintingActionBuffer {
         }
 
         return Stream.generate(() -> PaintingAction.readFromBuffer(this.actionBuffer)).limit(this.actionBuffer.limit() / FRAME_SIZE);
+    }
+
+    public int countActions() {
+        if (this.actionBuffer.isReadOnly()) {
+            return this.actionBuffer.limit();
+        }
+
+        return this.actionBuffer.position();
     }
 
     public void commit() {
@@ -279,7 +286,7 @@ public class PaintingActionBuffer {
     public static void writePacketData(PaintingActionBuffer actionBuffer, FriendlyByteBuf buffer) {
         buffer.writeUUID(actionBuffer.actionId);
         buffer.writeUUID(actionBuffer.authorId);
-        buffer.writeUtf(actionBuffer.toolCode, 32);
+        buffer.writeUtf(actionBuffer.tool.toString(), 32);
         buffer.writeInt(actionBuffer.color);
         buffer.writeLong(actionBuffer.startTime);
         buffer.writeBoolean(actionBuffer.canceled);
@@ -292,11 +299,11 @@ public class PaintingActionBuffer {
     public static PaintingActionBuffer readPacketData(FriendlyByteBuf buffer) {
         UUID actionId = buffer.readUUID();
         UUID authorId = buffer.readUUID();
-        String toolCode = buffer.readUtf(32);
+        Tools tool = Tools.valueOf(buffer.readUtf(32));
         int color = buffer.readInt();
         Long startTime = buffer.readLong();
         boolean canceled = buffer.readBoolean();
-        AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, toolCode);
+        AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, tool);
 
         int bufferSize = buffer.readInt();
         ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
@@ -304,7 +311,7 @@ public class PaintingActionBuffer {
         return new PaintingActionBuffer(
                 actionId,
                 authorId,
-                toolCode,
+                tool,
                 color,
                 parameters,
                 startTime,

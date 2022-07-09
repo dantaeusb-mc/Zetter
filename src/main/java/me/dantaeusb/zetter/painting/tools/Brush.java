@@ -1,11 +1,9 @@
-package me.dantaeusb.zetter.menu.painting.tools;
+package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.parameters.BrushParameters;
-import me.dantaeusb.zetter.menu.painting.pipes.BlendingPipe;
-import me.dantaeusb.zetter.menu.painting.pipes.DitheringPipe;
-import me.dantaeusb.zetter.menu.painting.pipes.Pipe;
-import me.dantaeusb.zetter.menu.painting.tools.brush.Bezier;
+import me.dantaeusb.zetter.painting.parameters.BrushParameters;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.painting.tools.brush.Bezier;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Tuple;
@@ -13,7 +11,6 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,8 +23,8 @@ public class Brush extends AbstractTool<BrushParameters> {
 
     private final Bezier brushBezier = new Bezier(0.455, 0.030, 0.515, 0.955);
 
-    public Brush(EaselContainerMenu menu) {
-        super(Brush.CODE, menu, new ArrayList<>() {{
+    public Brush() {
+        super(new ArrayList<>() {{
             add(new DitheringPipe());
             add(new BlendingPipe());
         }});

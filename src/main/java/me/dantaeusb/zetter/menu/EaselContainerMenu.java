@@ -1,29 +1,27 @@
 package me.dantaeusb.zetter.menu;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
+import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
+import me.dantaeusb.zetter.entity.item.state.EaselState;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
-import me.dantaeusb.zetter.menu.painting.parameters.*;
-import me.dantaeusb.zetter.menu.painting.tools.*;
-import me.dantaeusb.zetter.network.packet.CCanvasActionBufferPacket;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
-import me.dantaeusb.zetter.network.packet.SCanvasNamePacket;
-import me.dantaeusb.zetter.storage.util.CanvasHolder;
+import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
+import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.parameters.*;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.items.SlotItemHandler;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -33,11 +31,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     /*
      * Object references
      */
-
     private final Player player;
-    private final Level world;
-    private EaselEntity entity;
-    private final EaselContainer easelContainer;
+
+    private final ContainerLevelAccess access;
+    private final EaselContainer container;
+    private final EaselState stateHandler;
 
     private static final int HOTBAR_SLOT_COUNT = 9;
 
@@ -47,61 +45,29 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public static final int PLAYER_INVENTORY_XPOS = 38;
     public static final int PLAYER_INVENTORY_YPOS = 156;
 
-    private int tick = 0;
-
-    /*
-     * Canvas
-     */
-    private @Nullable CanvasHolder<CanvasData> canvas;
-
-    /*
-     * State and networking
-     */
-
-    // @todo: actually move to container to share between players?
-    // Only player's buffer on client, all users on server
-    private final Deque<PaintingActionBuffer> actionsQueue = new LinkedList<>();
-
-    // Saved painting states
-    private Queue<int[]> snapshots;
-
     /*
      * Tabs
      */
-
     private TabsWidget.Tab currentTab = TabsWidget.Tab.COLOR;
 
     /*
      * Tools
      */
+    private Tools currentTool = Tools.PENCIL;
 
-    // Client-only I think
-    private HashMap<String, AbstractToolParameters> toolParameters = new HashMap<>(){{
-        put(Pencil.CODE, new PencilParameters());
-        put(Brush.CODE, new BrushParameters());
-        put(Eyedropper.CODE, new NoParameters());
-        put(Bucket.CODE, new BucketParameters());
-    }};
+    // Cached values
+    private boolean canUndo = false;
+    private boolean canRedo = false;
 
-    private String currentTool = Pencil.CODE;
+    private final List<Consumer<AbstractToolParameters>> toolUpdateListeners = new ArrayList<>();
 
-    // Tools available for use
-    private final HashMap<String, AbstractTool> tools = new HashMap<>(){{
-        put(Pencil.CODE, new Pencil(EaselContainerMenu.this));
-        put(Brush.CODE, new Brush(EaselContainerMenu.this));
-        put(Bucket.CODE, new Bucket(EaselContainerMenu.this));
-        put(Eyedropper.CODE, new Eyedropper(EaselContainerMenu.this));
-    }};
-
-    private List<Consumer<AbstractToolParameters>> toolUpdateListeners = new ArrayList<>();
-
-    private List<Consumer<Integer>> colorUpdateListeners = new ArrayList<>();
+    private final List<Consumer<Integer>> colorUpdateListeners = new ArrayList<>();
 
     /*
      * Palette
      */
 
-    public static final int PALETTE_SLOTS = 14;
+    public static final int PALETTE_SLOTS = PaletteItem.PALETTE_SIZE;
 
     private int currentPaletteSlot = 0;
 
@@ -110,15 +76,18 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * Initializing
      *
      */
-    public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer) {
+    public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler, ContainerLevelAccess access) {
         super(ZetterContainerMenus.PAINTING.get(), windowID);
 
         if (ZetterContainerMenus.PAINTING == null)
             throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
 
         this.player = invPlayer.player;
-        this.world = invPlayer.player.level;
-        this.easelContainer = easelContainer;
+
+        this.access = access;
+
+        this.container = easelContainer;
+        this.stateHandler = stateHandler;
 
         final int CANVAS_SLOT_X = 180;
         final int CANVAS_SLOT_Y = 9;
@@ -131,20 +100,20 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         final int HOTBAR_XPOS = 38;
         final int HOTBAR_YPOS = 214;
 
-        this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.CANVAS_SLOT, CANVAS_SLOT_X, CANVAS_SLOT_Y) {
+        this.addSlot(new SlotItemHandler(this.container, EaselContainer.CANVAS_SLOT, CANVAS_SLOT_X, CANVAS_SLOT_Y) {
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ZetterItems.CANVAS.get();
             }
         });
 
-        this.addSlot(new SlotItemHandler(this.easelContainer, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X, PALETTE_SLOT_Y) {
+        this.addSlot(new SlotItemHandler(this.container, EaselContainer.PALETTE_SLOT, PALETTE_SLOT_X, PALETTE_SLOT_Y) {
             public boolean mayPlace(ItemStack stack) {
                 return stack.getItem() == ZetterItems.PALETTE.get();
             }
         });
 
-        if (!this.world.isClientSide()) {
-            ItemStack canvasStack = this.easelContainer.getCanvasStack();
+        if (!invPlayer.player.getLevel().isClientSide()) {
+            ItemStack canvasStack = this.container.getCanvasStack();
             String canvasName = CanvasItem.getCanvasCode(canvasStack);
             this.setCanvas(canvasName);
         }
@@ -185,22 +154,25 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
     }
 
-    public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselEntity entity, EaselContainer easelContainer) {
-        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer);
-        easelContainerMenu.setEntity(entity);
+    public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler, ContainerLevelAccess access) {
+        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler, access);
 
         return easelContainerMenu;
     }
 
     public static EaselContainerMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+        SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
+
+        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.getEaselEntityId());
+        assert easelEntity != null;
+
         // it seems like we have to utilize extraData to pass the canvas data
         // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
-        EaselContainer easelContainer = new EaselContainer();
+        EaselContainer easelContainer = easelEntity.getEaselContainer();
+        EaselState stateHandler = easelEntity.getStateHandler();
 
-        String canvasName = SCanvasNamePacket.readCanvasName(networkBuffer);
-
-        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer);
-        easelContainerMenu.setCanvas(canvasName);
+        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler, ContainerLevelAccess.NULL);
+        easelContainerMenu.setCanvas(createPacket.getCanvasCode());
 
         return easelContainerMenu;
     }
@@ -210,15 +182,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * Getter-setters
      *
      */
-    @Nullable
-    public EaselEntity getEntity() {
-        return this.entity;
-    }
 
-    public void setEntity(EaselEntity entity)
-    {
-        this.entity = entity;
-    }
     public int getCurrentPaletteSlot() {
         return this.currentPaletteSlot;
     }
@@ -231,117 +195,35 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
     }
 
-    public HashMap<String, AbstractTool> getTools() {
-        return this.tools;
+    public Tools getCurrentTool() {
+        return this.currentTool;
     }
 
-    public AbstractTool getCurrentTool() {
-        return this.getTool(this.currentTool);
-    }
-
-    public AbstractTool getTool(String toolCode) {
-        return this.tools.get(toolCode);
-    }
-
-    public void setCurrentTool(String toolCode) {
-        if (!this.tools.containsKey(toolCode)) {
-            throw new IllegalStateException("No such tool: " + toolCode);
-        }
-
-        this.currentTool = toolCode;
+    public void setCurrentTool(Tools tool) {
+        this.currentTool = tool;
 
         for (Consumer<AbstractToolParameters> listener: this.toolUpdateListeners) {
             listener.accept(this.getCurrentToolParameters());
         }
     }
 
+    public void useTool(float posX, float posY) {
+        this.stateHandler.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
+    }
+
     public AbstractToolParameters getCurrentToolParameters() {
-        return this.toolParameters.get(this.currentTool);
+        return ClientPaintingToolParameters.getInstance().getToolParameters(this.currentTool);
     }
 
     public int getCurrentColor() {
         return this.getPaletteColor(this.getCurrentPaletteSlot());
     }
 
+
+
     /*
-     *
-     * Application logic
-     *
+     * Listeners
      */
-
-    /**
-     * Apply current tool at certain position and record action if sucessful
-     * @param posX
-     * @param posY
-     */
-    public void useTool(float posX, float posY) {
-        // No palette or no paints left
-        if (this.easelContainer.getPaletteStack().isEmpty() || this.easelContainer.getPaletteStack().getDamageValue() >= this.easelContainer.getPaletteStack().getMaxDamage() - 1) {
-            return;
-        }
-
-        if (this.getCanvasData() == null) {
-            return;
-        }
-
-        PaintingActionBuffer lastAction = null;
-
-        if (!this.actionsQueue.isEmpty()) {
-             lastAction = this.actionsQueue.getLast();
-        }
-
-        Float lastX = null, lastY = null;
-
-        // @todo: when we will do tick/commit, it will be resetting after .5s allowing to do dot dot dot?
-        if (lastAction != null && lastAction.toolCode.equals(this.currentTool) && !lastAction.isCommitted()) {
-            final PaintingActionBuffer.PaintingAction lastSubAction = lastAction.getLastAction();
-
-            if (lastSubAction != null) {
-                lastX = lastSubAction.posX;
-                lastY = lastSubAction.posY;
-            }
-        }
-
-        if (this.getCurrentTool().shouldAddAction(this.getCanvasData(), this.getCurrentToolParameters(), posX, posY, lastX, lastY)) {
-            int damage = this.getCurrentTool().apply(this.getCanvasData(), this.getCurrentToolParameters(), this.getCurrentColor(), posX, posY);
-
-            if (this.getCurrentTool().publishable()) {
-                this.recordAction(posX, posY);
-            }
-
-            this.easelContainer.damagePalette(damage);
-        }
-    }
-
-    private void recordAction(float posX, float posY) {
-        PaintingActionBuffer lastAction = this.actionsQueue.peekLast();
-
-        if (lastAction == null) {
-            lastAction = this.createAction();
-        } else if (!lastAction.canContinue(this.player.getUUID(), this.currentTool, this.getCurrentToolParameters())) {
-            lastAction.commit();
-            lastAction = this.createAction();
-        }
-
-        lastAction.addFrame(posX, posY);
-    }
-
-    private PaintingActionBuffer createAction() {
-        final PaintingActionBuffer lastAction = this.actionsQueue.peekLast();
-
-        if (!this.getCurrentTool().publishable()) {
-            throw new IllegalStateException("Cannot create non-publishable action");
-        }
-
-        if (lastAction != null && !lastAction.isCommitted()) {
-            lastAction.commit();
-        }
-
-        final PaintingActionBuffer newAction = new PaintingActionBuffer(this.player.getUUID(), this.currentTool, this.getCurrentColor(), this.getCurrentToolParameters());
-        this.actionsQueue.add(newAction);
-
-        return newAction;
-    }
 
     public void addToolUpdateListener(Consumer<AbstractToolParameters> subscriber) {
         this.toolUpdateListeners.add(subscriber);
@@ -361,46 +243,48 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         this.colorUpdateListeners.remove(subscriber);
     }
 
+    /*
+     * History
+     */
+
+    public boolean canUndo() {
+        return this.canUndo;
+    }
+
+    public boolean canRedo() {
+        return this.canRedo;
+    }
+
+    public boolean undo() {
+        return this.stateHandler.undo(this.player.getUUID());
+    }
+
+    public boolean redo() {
+        return this.stateHandler.redo(this.player.getUUID());
+    }
+
+    /*
+     * Networking
+     */
+
+    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long packetTimestamp) {
+        this.stateHandler.processSyncClient(canvasCode, canvasData, packetTimestamp);
+    }
+
     public void handleCanvasChange(ItemStack canvasStack) {
-        if (canvasStack.getItem() == ZetterItems.CANVAS.get()) {
-            this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.world));
+        /*if (canvasStack.getItem() == ZetterItems.CANVAS.get()) {
+            this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.player.getLevel()));
         } else {
             this.canvas = null;
-        }
+        }*/
     }
 
     public void setCanvas(String canvasName) {
-        if (canvasName == null || canvasName.equals(CanvasData.getCanvasCode(0))) {
-            this.canvas = null;
-            return;
-        }
-
-        ICanvasTracker canvasTracker;
-
-        if (this.world.isClientSide()) {
-            canvasTracker = this.world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        } else {
-            canvasTracker = this.world.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        }
-
-        if (canvasTracker == null) {
-            Zetter.LOG.error("Cannot find world canvas capability");
-            this.canvas = null;
-            return;
-        }
-
-        CanvasData canvas = canvasTracker.getCanvasData(canvasName, CanvasData.class);
-
-        if (canvas == null) {
-            this.canvas = null;
-            return;
-        }
-
-        this.canvas = new CanvasHolder<>(canvasName, canvas);
+        this.container.handleCanvasChange(canvasName);
     }
 
     public int getPaletteColor(int paletteSlot) {
-        ItemStack paletteStack = this.easelContainer.getPaletteStack();
+        ItemStack paletteStack = this.container.getPaletteStack();
 
         if (paletteStack.isEmpty()) {
             return 0xFF000000;
@@ -426,7 +310,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public void setPaletteColor(int color, int slot) {
-        ItemStack paletteStack = this.easelContainer.getPaletteStack();
+        ItemStack paletteStack = this.container.getPaletteStack();
 
         if (paletteStack.isEmpty()) {
             return;
@@ -434,11 +318,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         PaletteItem.updatePaletteColor(paletteStack, slot, color);
 
-        if (this.world.isClientSide) {
+        if (this.player.getLevel().isClientSide()) {
             this.sendPaletteUpdatePacket();
         }
 
-        this.easelContainer.changed();
+        this.container.changed();
     }
 
     public void sendPaletteUpdatePacket() {
@@ -452,158 +336,29 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public @Nullable String getCanvasCode() {
-        if (this.canvas == null) {
+        if (this.container.getCanvas() == null) {
             return null;
         }
 
-        return this.canvas.code;
+        return this.container.getCanvas().code;
     }
 
     public @Nullable CanvasData getCanvasData() {
-        if (this.canvas == null) {
+        if (this.container.getCanvas() == null) {
             return null;
         }
 
-        return this.canvas.data;
+        return this.container.getCanvas().data;
     }
 
     public boolean isCanvasAvailable() {
-        return this.canvas != null;
+        return this.container.getCanvas() != null;
     }
 
     public boolean isPaletteAvailable() {
-        ItemStack paletteStack = this.easelContainer.getPaletteStack();
+        ItemStack paletteStack = this.container.getPaletteStack();
 
         return !paletteStack.isEmpty();
-    }
-
-    /**
-     *
-     * @todo: move to entity?
-     */
-    public void tick() {
-        this.tick++;
-
-        if (this.tick % 20 == 0) {
-            this.sendActionsQueueClient(false);
-        }
-    }
-
-    /*
-     *
-     * Networking
-     *
-     */
-
-    /**
-     * @todo: move to entity?
-     * Checks and sends action buffer on client
-     */
-    protected void sendActionsQueueClient(boolean forceCommit) {
-        final Queue<PaintingActionBuffer> unsentActions = new LinkedList<>();
-        Iterator<PaintingActionBuffer> iterator = this.actionsQueue.descendingIterator();
-
-        while(iterator.hasNext()) {
-            PaintingActionBuffer paintingActionBuffer = iterator.next();
-
-            if (!paintingActionBuffer.isCommitted()) {
-                if (forceCommit || paintingActionBuffer.shouldCommit()) {
-                    paintingActionBuffer.commit();
-                } else {
-                    continue;
-                }
-            }
-
-            if (paintingActionBuffer.isSent()) {
-                break;
-            }
-
-            unsentActions.add(paintingActionBuffer);
-        }
-
-        if (!unsentActions.isEmpty()) {
-            CCanvasActionBufferPacket paintingFrameBufferPacket = new CCanvasActionBufferPacket(unsentActions);
-            ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
-
-            for (PaintingActionBuffer unsentAction : unsentActions) {
-                unsentAction.setSent();
-            }
-        }
-    }
-
-    /**
-     * Called from network - process player's work (only on server)
-     * @todo: move to entity?
-     * @param actionBuffer
-     */
-    public void processActionBufferServer(PaintingActionBuffer actionBuffer) {
-        actionBuffer.getActionStream().forEach((PaintingActionBuffer.PaintingAction action) -> {
-            this.getTool(actionBuffer.toolCode).apply(
-                    this.getCanvasData(),
-                    actionBuffer.parameters,
-                    actionBuffer.color,
-                    action.posX,
-                    action.posY
-            );
-        });
-
-        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.world)).markCanvasDesync(this.canvas.code);
-    }
-
-    /**
-     * Add all newest pixels to the canvas when syncing to keep recent player's changesv
-     * @param canvasCode
-     * @param canvasData
-     * @param packetTimestamp
-     */
-    public void processSync(String canvasCode, CanvasData canvasData, long packetTimestamp) {
-        /*long timestamp = System.currentTimeMillis();
-
-        PlayerInfo playerInfo = Minecraft.getInstance().getConnection().getPlayerInfo(this.player.getUUID());
-        int latency = playerInfo.getLatency();
-
-        latency *= 1.1; // 10% jitter
-        latency = Math.max(latency, 50);
-
-        // Ok, so if this value is low - client is pushing pixels, so trusted interval should be shorter
-        // If it's 500, we should use full trusted interval
-        // Maybe track how many pixels sent or check last frame write
-        long timeSinceLastFrameBufferSent = timestamp - this.lastFrameBufferSendClock;
-
-        // Trusted interval should be used for mightDesync
-        // Everything out ot earliest bound of trusted interval should be removed from frames list
-
-        long adjustedTimestamp = System.currentTimeMillis();
-        adjustedTimestamp -= latency * 2L;
-        adjustedTimestamp -= timeSinceLastFrameBufferSent;
-        
-        boolean mightDesync = false;
-
-        // Throw out pixels drawn before start of the interval, ask for resync for interval, cause not sure if
-        // they're sync, just add pixels for newer changes, they'll be pushed anyway
-        Tuple<Long, Long> lowTrustInterval = new Tuple<>(adjustedTimestamp, timestamp - this.lastFrameBufferSendClock);
-
-        Zetter.LOG.debug("Latency: " + latency);
-
-        for (PaintingActionFrame oldFrame: this.lastFrames) {
-            if (oldFrame.getFrameTime() < lowTrustInterval.getA()) {
-                // @todo: reasonable to remove older frames right there
-            } else {
-                if (oldFrame.getFrameTime() < lowTrustInterval.getB()) {
-                    mightDesync = true;
-                }
-
-                canvasData.updateCanvasPixel(oldFrame.getPixelIndex(), oldFrame.getColor());
-            }
-        }
-
-        if (mightDesync) {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasData.getType(), canvasCode);
-        }
-
-        this.canvas = new CanvasHolder<>(canvasCode, canvasData);
-
-        this.lastSyncReceivedClock = System.currentTimeMillis();*/
     }
 
     /*
@@ -616,11 +371,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * Called when the container is closed.
      * Push painting frames so it will be saved
      */
-    public void removed(Player playerIn) {
+    public void removed(@NotNull Player playerIn) {
         super.removed(playerIn);
 
-        if (this.world.isClientSide()) {
-            this.sendActionsQueueClient(true);
+        if (this.player.getLevel().isClientSide()) {
+            this.stateHandler.poolActionsQueueClient(true);
         }
     }
 
@@ -631,7 +386,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(Player playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(@NotNull Player playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -678,7 +433,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(Player player) {
-        return this.easelContainer.stillValid(player);
+    public boolean stillValid(@NotNull Player player) {
+        return this.container.stillValid(player);
     }
 }

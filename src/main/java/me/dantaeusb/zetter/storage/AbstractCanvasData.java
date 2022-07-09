@@ -110,6 +110,10 @@ public abstract class AbstractCanvasData extends SavedData {
 
     abstract public Type getType();
 
+    public byte[] getColorData() {
+        return this.color.clone();
+    }
+
     public ByteBuffer getColorDataBuffer() {
         this.canvasBuffer.rewind();
         return this.canvasBuffer.asReadOnlyBuffer();

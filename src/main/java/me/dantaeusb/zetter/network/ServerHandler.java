@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.network;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
+import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
@@ -26,32 +27,19 @@ public class ServerHandler {
      * @todo: send changes to TE, not container, as it's created per player
      */
     public static void processActionBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu paintingMenu = (EaselContainerMenu)sendingPlayer.containerMenu;
+        EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.getEntityId());
 
+        if (easelEntity != null) {
             for (PaintingActionBuffer actionBuffer : packetIn.getPaintingActionBuffers()) {
                 if (!actionBuffer.authorId.equals(sendingPlayer.getUUID())) {
                     Zetter.LOG.warn("Received action from player claimed another player UUID, ignoring");
                     return;
                 }
 
-                paintingMenu.processActionBufferServer(actionBuffer);
+                easelEntity.getStateHandler().processActionBuffer(actionBuffer);
             }
-
-            /**
-             * Keep it there, but it's not really useful since it's easier to sync whole canvas and keep recent
-             * changes on top
-             */
-
-            /*for (PlayerEntity playerEntity : paintingMenu.getTileEntityReference().getPlayersUsing()) {
-                if (playerEntity.equals(sendingPlayer)) {
-                    // No need to send it back
-                    continue;
-                }
-
-                SPaintingFrameBufferPacket packet = new SPaintingFrameBufferPacket(packetIn.getFrameBuffer());
-                ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) playerEntity), packet);
-            }*/
+        } else {
+            Zetter.LOG.warn("Unable to find entity " + packetIn.getEntityId() + " disregarding canvas changes");
         }
     }
 

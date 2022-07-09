@@ -1,12 +1,10 @@
-package me.dantaeusb.zetter.menu.painting.pipes;
+package me.dantaeusb.zetter.painting.pipes;
 
-import me.dantaeusb.zetter.menu.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.menu.painting.parameters.DitheringInterface;
-import me.dantaeusb.zetter.menu.painting.tools.AbstractTool;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
+import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
-
-import java.util.HashMap;
 
 /**
  * Dithering is a method of mixing colors with limited color
