@@ -31,8 +31,10 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
     public void updateTabs() {
         final int TAB_BUTTONS_U = 200;
         final int TAB_BUTTON_COLOR_V = 0;
-        final int TAB_BUTTON_BRUSH_V = 23;
-        final int TAB_BUTTON_INVENTORY_V = 46;
+        final int TAB_BUTTON_PENCIL_V = 23;
+        final int TAB_BUTTON_BRUSH_V = 46;
+        final int TAB_BUTTON_BUCKET_V = 69;
+        final int TAB_BUTTON_INVENTORY_V = 92;
 
         final ArrayList<TabButton> tabs = new ArrayList<>();
 
@@ -40,13 +42,13 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
 
         switch (this.parentScreen.getMenu().getCurrentTool()) {
             case PENCIL:
-                tabs.add(new TabButton(Tab.PENCIL_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BRUSH_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+                tabs.add(new TabButton(Tab.PENCIL_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_PENCIL_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
                 break;
             case BRUSH:
                 tabs.add(new TabButton(Tab.BRUSH_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BRUSH_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
                 break;
             case BUCKET:
-                tabs.add(new TabButton(Tab.BUCKET_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BRUSH_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+                tabs.add(new TabButton(Tab.BUCKET_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BUCKET_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
                 break;
         }
 

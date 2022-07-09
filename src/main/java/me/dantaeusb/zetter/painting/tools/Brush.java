@@ -68,7 +68,7 @@ public class Brush extends AbstractTool<BrushParameters> {
 
         final float intensity = params.getIntensity();
 
-        final int brushSize = 3;
+        final float brushSize = params.getSize();
         double totalDamage = 0;
 
         List<Tuple<Integer, Integer>> affectedPixels = Brush.getPixelsInDistance(canvasData, posX, posY, brushSize);

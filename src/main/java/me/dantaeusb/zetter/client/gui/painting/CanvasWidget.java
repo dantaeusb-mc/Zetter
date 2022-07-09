@@ -118,6 +118,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         RenderSystem.setShaderTexture(0, PaintingScreen.PAINTING_RESOURCE);
 
         if (!this.parentScreen.getMenu().isCanvasAvailable()) {
+            GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             return;
         }
 

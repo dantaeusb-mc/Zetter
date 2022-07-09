@@ -1,16 +1,14 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
+import me.dantaeusb.zetter.entity.item.state.representation.PaintingActionBuffer;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.ArrayDeque;
-import java.util.LinkedList;
 import java.util.Queue;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 /**

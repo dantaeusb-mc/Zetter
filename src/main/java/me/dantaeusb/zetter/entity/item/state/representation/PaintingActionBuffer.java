@@ -1,4 +1,4 @@
-package me.dantaeusb.zetter.menu.painting;
+package me.dantaeusb.zetter.entity.item.state.representation;
 
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -167,7 +167,7 @@ public class PaintingActionBuffer {
         if (this.actionBuffer.limit() % FRAME_SIZE != 0) {
             throw new IllegalStateException("Incorrect amount of frames in buffer");
         } else if (this.actionBuffer.limit() == 0) {
-            throw new IllegalStateException("Incoming action buffer is empty");
+            throw new IllegalStateException("Applied action buffer is empty");
         }
 
         return Stream.generate(() -> PaintingAction.readFromBuffer(this.actionBuffer)).limit(this.actionBuffer.limit() / FRAME_SIZE);

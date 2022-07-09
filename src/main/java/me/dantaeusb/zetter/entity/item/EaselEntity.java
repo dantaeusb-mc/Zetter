@@ -33,6 +33,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DiodeBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
@@ -251,7 +252,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             this.playersUsing = this.calculatePlayersUsing();
         }
 
-        if (this.checkInterval++ == 100) {
+        if (++this.checkInterval == 100) {
             this.checkInterval = 0;
             if (!this.isRemoved() && !this.survives()) {
                 this.discard();
@@ -306,17 +307,6 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return true;
     }
 
-    public @Nullable
-    CanvasData getCanvasData() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack.isEmpty() || canvasStack.getItem() != ZetterItems.CANVAS.get()) {
-            return null;
-        }
-
-        return  CanvasItem.getCanvasData(canvasStack, this.level);
-    }
-
     public void containerChanged(ItemStackHandler easelContainer) {
         ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
 
@@ -331,21 +321,20 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     // track using players to send packets
 
     /**
-     * @todo: Does not work!
      * @return
      */
     public ArrayList<Player> calculatePlayersUsing() {
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
-        /*for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
+        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
             if (player.containerMenu instanceof EaselContainerMenu) {
-                EaselContainer storage = ((EaselContainerMenu)player.containerMenu).getEaselContainer();
+                EaselContainer storage = ((EaselContainerMenu)player.containerMenu).getContainer();
 
                 if (storage == this.getEaselContainer()) {
                     usingPlayers.add(player);
                 }
             }
-        }*/
+        }
 
         return usingPlayers;
     }

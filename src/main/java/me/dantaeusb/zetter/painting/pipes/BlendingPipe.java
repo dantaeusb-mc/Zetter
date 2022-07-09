@@ -153,6 +153,8 @@ public class BlendingPipe implements Pipe {
     }
 
     /**
+     * @todo: implement!
+     *
      * Blend with
      * http://scottburns.us/fast-rgb-to-spectrum-conversion-for-reflectances/
      * and
@@ -163,7 +165,7 @@ public class BlendingPipe implements Pipe {
      * @return
      */
     public static int blendRGBC(int newColor, int oldColor, float intensity) {
-        return newColor;
+        return BlendingPipe.blendRYB(newColor, oldColor, intensity);
     }
 
     private static float[] protectPitchBlack(float[] rgb) {

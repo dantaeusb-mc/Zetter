@@ -26,7 +26,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
         super(parentScreen, x, y, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT + HISTORY_OFFSET * 3, new TranslatableComponent("container.zetter.painting.history"));
 
         final int TOOL_BUTTON_U = 208;
-        final int TOOL_BUTTON_V = 149;
+        final int TOOL_BUTTON_V = 195;
 
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(

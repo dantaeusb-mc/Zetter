@@ -45,6 +45,8 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public static final int PLAYER_INVENTORY_XPOS = 38;
     public static final int PLAYER_INVENTORY_YPOS = 156;
 
+    public static final int TOTAL_SLOT_COUNT = EaselContainer.STORAGE_SIZE + HOTBAR_SLOT_COUNT + PLAYER_INVENTORY_COLUMN_COUNT * PLAYER_INVENTORY_ROW_COUNT;
+
     /*
      * Tabs
      */
@@ -118,21 +120,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             this.setCanvas(canvasName);
         }
 
-        // Add the players hotbar to the gui - the [xpos, ypos] location of each item
-        for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
-            int slotNumber = x;
-            addSlot(new Slot(invPlayer, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS) {
-                @Override
-                public boolean isActive() {
-                    if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
-                        return super.isActive();
-                    }
-
-                    return false;
-                }
-            });
-        }
-
         // Add the rest of the players inventory to the gui
         for (int y = 0; y < PLAYER_INVENTORY_ROW_COUNT; y++) {
             for (int x = 0; x < PLAYER_INVENTORY_COLUMN_COUNT; x++) {
@@ -141,6 +128,21 @@ public class EaselContainerMenu extends AbstractContainerMenu {
                 int ypos = PLAYER_INVENTORY_YPOS + y * SLOT_Y_SPACING;
 
                 this.addSlot(new Slot(invPlayer, slotNumber,  xpos, ypos) {
+                    @Override
+                    public boolean isActive() {
+                        if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
+                            return super.isActive();
+                        }
+
+                        return false;
+                    }
+                });
+            }
+
+            // Add the players hotbar to the gui - the [xpos, ypos] location of each item
+            for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
+                int slotNumber = x;
+                addSlot(new Slot(invPlayer, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS) {
                     @Override
                     public boolean isActive() {
                         if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
@@ -220,7 +222,9 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         return this.getPaletteColor(this.getCurrentPaletteSlot());
     }
 
-
+    public EaselContainer getContainer() {
+        return this.container;
+    }
 
     /*
      * Listeners
@@ -407,14 +411,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             ItemStack sourceStack = sourceSlot.getItem();
             outStack = sourceStack.copy();
 
-            // Palette
-            if (sourceSlotIndex == 0) {
-                if (!this.moveItemStackTo(sourceStack, 2, 10, true)) {
+            // Canvas or Palette
+            if (sourceSlotIndex <= 1) {
+                if (!this.moveItemStackTo(sourceStack, 2, TOTAL_SLOT_COUNT, true)) {
                     return ItemStack.EMPTY;
                 }
-
-                sourceSlot.onQuickCraft(sourceStack, outStack);
-
             // Inventory
             } else {
                 if (sourceStack.getItem() == ZetterItems.PALETTE.get()) {

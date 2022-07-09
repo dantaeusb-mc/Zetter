@@ -1,4 +1,4 @@
-package me.dantaeusb.zetter.menu.painting;
+package me.dantaeusb.zetter.entity.item.state.representation;
 
 import java.util.UUID;
 

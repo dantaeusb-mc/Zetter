@@ -26,7 +26,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
         super(parentScreen, x, y, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT + TOOLS_OFFSET * 3, new TranslatableComponent("container.zetter.painting.tools"));
 
         final int TOOL_BUTTON_U = 208;
-        final int TOOL_BUTTON_V = 69;
+        final int TOOL_BUTTON_V = 115;
 
         this.buttons = new ArrayList<>() {{
             add(new ToolButton(Tools.PENCIL, TOOL_BUTTON_U, TOOL_BUTTON_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));

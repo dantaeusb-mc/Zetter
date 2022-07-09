@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
+import me.dantaeusb.zetter.entity.item.state.representation.PaintingActionBuffer;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;

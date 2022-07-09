@@ -5,8 +5,8 @@ import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.menu.painting.PaintingActionBuffer;
-import me.dantaeusb.zetter.menu.painting.PaintingSnapshot;
+import me.dantaeusb.zetter.entity.item.state.representation.PaintingActionBuffer;
+import me.dantaeusb.zetter.entity.item.state.representation.PaintingSnapshot;
 import me.dantaeusb.zetter.network.packet.CCanvasActionBufferPacket;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -42,6 +42,15 @@ public class EaselState {
         if (this.getCanvasData() != null) {
             this.snapshots.add(new PaintingSnapshot(this.getCanvasData().getColorData()));
         }
+    }
+
+    /**
+     * Drops all buffers and removes all snapshots,
+     * i.e. when canvas removed
+     */
+    public void reset() {
+        this.actionBuffers.clear();
+        this.snapshots.clear();
     }
 
     /**

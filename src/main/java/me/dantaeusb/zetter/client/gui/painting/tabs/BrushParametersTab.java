@@ -159,6 +159,7 @@ public class BrushParametersTab extends AbstractTab {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.active) {
             this.intensityWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+            this.sizeWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
 
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -168,6 +169,7 @@ public class BrushParametersTab extends AbstractTab {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (this.active) {
             this.intensityWidget.mouseReleased(mouseX, mouseY, button);
+            this.sizeWidget.mouseReleased(mouseX, mouseY, button);
         }
 
         return super.mouseReleased(mouseX, mouseY, button);
