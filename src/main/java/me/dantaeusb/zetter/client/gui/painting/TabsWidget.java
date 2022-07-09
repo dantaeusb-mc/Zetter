@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class TabsWidget extends AbstractPaintingWidget implements Widget {
-    private final List<TabButton> tabs;
+    private List<TabButton> tabs;
     final static int TAB_BUTTON_WIDTH = 28;
     final static int TAB_BUTTON_HEIGHT = 23;
     final static int TAB_BUTTON_OFFSET = TAB_BUTTON_HEIGHT + 3;
@@ -25,14 +25,34 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
     public TabsWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.tabs"));
 
-        final int TAB_BUTTON_U = 200;
-        final int TAB_BUTTON_V = 0;
+        this.updateTabs();
+    }
 
-        this.tabs = new ArrayList<>() {{
-            add(new TabButton(Tab.COLOR, TAB_BUTTON_U, TAB_BUTTON_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
-            add(new TabButton(Tab.PARAMETERS, TAB_BUTTON_U, TAB_BUTTON_V + TAB_BUTTON_HEIGHT, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
-            add(new TabButton(Tab.INVENTORY, TAB_BUTTON_U, TAB_BUTTON_V + TAB_BUTTON_HEIGHT * 2, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
-        }};
+    public void updateTabs() {
+        final int TAB_BUTTONS_U = 200;
+        final int TAB_BUTTON_COLOR_V = 0;
+        final int TAB_BUTTON_BRUSH_V = 23;
+        final int TAB_BUTTON_INVENTORY_V = 46;
+
+        final ArrayList<TabButton> tabs = new ArrayList<>();
+
+        tabs.add(new TabButton(Tab.COLOR, TAB_BUTTONS_U, TAB_BUTTON_COLOR_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+
+        switch (this.parentScreen.getMenu().getCurrentTool()) {
+            case PENCIL:
+                tabs.add(new TabButton(Tab.PENCIL_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BRUSH_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+                break;
+            case BRUSH:
+                tabs.add(new TabButton(Tab.BRUSH_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BRUSH_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+                break;
+            case BUCKET:
+                tabs.add(new TabButton(Tab.BUCKET_PARAMETERS, TAB_BUTTONS_U, TAB_BUTTON_BRUSH_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+                break;
+        }
+
+        tabs.add(new TabButton(Tab.INVENTORY, TAB_BUTTONS_U, TAB_BUTTON_INVENTORY_V, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT));
+
+        this.tabs = tabs;
     }
 
     @Override
@@ -119,7 +139,9 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
 
     public enum Tab {
         COLOR("color", new TranslatableComponent("container.zetter.painting.tabs.color")),
-        PARAMETERS("parameters", new TranslatableComponent("container.zetter.painting.tabs.parameters")),
+        PENCIL_PARAMETERS("pencil_parameters", new TranslatableComponent("container.zetter.painting.tabs.pencil_parameters")),
+        BRUSH_PARAMETERS("brush_parameters", new TranslatableComponent("container.zetter.painting.tabs.brush_parameters")),
+        BUCKET_PARAMETERS("bucket_parameters", new TranslatableComponent("container.zetter.painting.tabs.bucket_parameters")),
         INVENTORY("inventory", new TranslatableComponent("container.zetter.painting.tabs.inventory"));
 
         public final String code;

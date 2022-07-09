@@ -5,12 +5,12 @@ import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 
 import java.security.InvalidParameterException;
 
-public class PencilParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface, DitheringInterface {
+public class PencilParameters extends AbstractToolParameters implements SizeInterface, IntensityInterface, BlendingInterface, DitheringInterface {
     public PencilParameters() {
-        this(1, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
+        this(1f, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
     }
 
-    public PencilParameters(int size, float intensity, BlendingPipe.BlendingOption blending, DitheringPipe.DitheringOption dithering) {
+    public PencilParameters(float size, float intensity, BlendingPipe.BlendingOption blending, DitheringPipe.DitheringOption dithering) {
         this.values.put("size", size);
         this.values.put("intensity", intensity);
         this.values.put("blending", blending.name());
@@ -22,7 +22,7 @@ public class PencilParameters extends AbstractToolParameters implements Intensit
     }
 
     public void setSize(float size) {
-        if (size < 1f || size > 5f) {
+        if (size < 1f || size > 6f) {
             throw new InvalidParameterException("Incorrect size");
         }
 

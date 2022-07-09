@@ -50,7 +50,7 @@ public class DummyCanvasData extends AbstractCanvasData {
         return newCanvas;
     }
 
-    protected void updateColorData(byte[] color) {
+    public void updateColorData(byte[] color) {
         // Don't check size mismatch cause we might use it as combined canvas
 
         this.color = color;

@@ -84,31 +84,61 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
 
     /**
      * Get cursor shape
+     * @todo: do memo! cache shapes!!!
      */
     public abstract ToolShape getShape(T params);
 
     public static class ToolShape {
         // [0, 0], [0, 1], [1, 1], [1, 0] for square
         public final List<Tuple<Integer, Integer>> points;
-        public Stack<ShapeLine> lines;
+        private ArrayList<ShapeLine> lines;
 
         public ToolShape() {
-            this.points = new ArrayList<Tuple<Integer, Integer>>();
-            this.points.add(new Tuple<>(0, 0));
-            this.points.add(new Tuple<>(0, 1));
-            this.points.add(new Tuple<>(1, 1));
-            this.points.add(new Tuple<>(1, 0));
+            this(new ArrayList<Tuple<Integer, Integer>>() {{
+                add(new Tuple<>(0, 0));
+                add(new Tuple<>(0, 1));
+                add(new Tuple<>(1, 1));
+                add(new Tuple<>(1, 0));
+            }});
+        }
+
+        public ToolShape(ArrayList<Tuple<Integer, Integer>> points) {
+            this.points = points;
 
             this.createLines();
         }
 
         private void createLines() {
-            Stack<ShapeLine> lines = new Stack<>();
+            ArrayList<ShapeLine> lines = new ArrayList<>();
+
+            for (int i = 0; i < this.points.size(); i++) {
+                Tuple<Integer, Integer> pointA = this.points.get(i);
+                Tuple<Integer, Integer> pointB = this.points.get(i + 1 != this.points.size() ? i + 1 : 0);
+
+                int lengthX = pointB.getA() - pointA.getA();
+                int lengthY = pointB.getB() - pointA.getB();
+
+                if (lengthX != 0 && lengthY != 0) {
+                    throw new IllegalStateException("Diagonal line cannot be used in brush shape");
+                }
+
+                if (lengthX > 0) {
+                    lines.add(new ShapeLine(ShapeLine.LineDirection.HORIZONTAL, pointA.getA(), pointA.getB(), lengthX));
+                } else if (lengthX < 0) {
+                    lines.add(new ShapeLine(ShapeLine.LineDirection.HORIZONTAL, pointB.getA(), pointB.getB(), Math.abs(lengthX)));
+                }
+
+                if (lengthY > 0) {
+                    lines.add(new ShapeLine(ShapeLine.LineDirection.VERTICAL, pointA.getA(), pointA.getB(), lengthY));
+                } else if (lengthY < 0) {
+                    lines.add(new ShapeLine(ShapeLine.LineDirection.VERTICAL, pointB.getA(), pointB.getB(), Math.abs(lengthY)));
+                }
+            }
 
             this.lines = lines;
         }
 
-        public Stack<ShapeLine> getLines() {
+        public ArrayList<ShapeLine> getLines() {
             return this.lines;
         }
     }

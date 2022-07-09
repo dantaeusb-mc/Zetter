@@ -2,10 +2,11 @@ package me.dantaeusb.zetter.painting.parameters;
 
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
+import org.jline.terminal.Size;
 
 import java.security.InvalidParameterException;
 
-public class BrushParameters extends AbstractToolParameters implements IntensityInterface, BlendingInterface, DitheringInterface {
+public class BrushParameters extends AbstractToolParameters implements SizeInterface, IntensityInterface, BlendingInterface, DitheringInterface {
     public BrushParameters() {
         this(3f, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
     }
@@ -22,7 +23,7 @@ public class BrushParameters extends AbstractToolParameters implements Intensity
     }
 
     public void setSize(float size) {
-        if (size < 1f || size > 5f) {
+        if (size < 1f || size > 6f) {
             throw new InvalidParameterException("Incorrect size");
         }
 

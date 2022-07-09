@@ -59,7 +59,7 @@ public abstract class AbstractCanvasData extends SavedData {
         this.setDirty();
     }
 
-    protected void updateColorData(byte[] color) {
+    public void updateColorData(byte[] color) {
         if (this.color != null) {
             if (color.length != this.color.length) {
                 throw new IllegalArgumentException("Color data size mismatch");

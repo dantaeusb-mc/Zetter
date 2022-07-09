@@ -16,13 +16,15 @@ public class Bucket extends AbstractTool<BucketParameters> {
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.bucket");
 
+    private final ToolShape shape = new ToolShape();
+
     public Bucket() {
         super(new ArrayList<Pipe>());
     }
 
     @Override
     public ToolShape getShape(BucketParameters params) {
-        return null;
+        return this.shape;
     }
 
     @Override

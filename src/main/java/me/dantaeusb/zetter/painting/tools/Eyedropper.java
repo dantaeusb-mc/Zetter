@@ -15,6 +15,8 @@ public class Eyedropper extends AbstractTool<NoParameters> {
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.eyedropper");
 
+    private final ToolShape shape = new ToolShape();
+
     public Eyedropper() {
         // Eyedropper has no parameters
         super(new ArrayList<>());
@@ -22,7 +24,7 @@ public class Eyedropper extends AbstractTool<NoParameters> {
 
     @Override
     public ToolShape getShape(NoParameters params) {
-        return null;
+        return this.shape;
     }
 
     @Override

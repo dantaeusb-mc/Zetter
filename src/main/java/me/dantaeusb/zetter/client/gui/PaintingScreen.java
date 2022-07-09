@@ -1,10 +1,7 @@
 package me.dantaeusb.zetter.client.gui;
 
 import me.dantaeusb.zetter.client.gui.painting.*;
-import me.dantaeusb.zetter.client.gui.painting.tabs.AbstractTab;
-import me.dantaeusb.zetter.client.gui.painting.tabs.ColorTab;
-import me.dantaeusb.zetter.client.gui.painting.tabs.InventoryTab;
-import me.dantaeusb.zetter.client.gui.painting.tabs.ParametersTab;
+import me.dantaeusb.zetter.client.gui.painting.tabs.*;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.google.common.collect.Lists;
@@ -99,11 +96,17 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         // Tabs
 
         final ColorTab colorTab = new ColorTab(this, this.getGuiLeft(), this.getGuiTop());
-        final ParametersTab parametersTab = new ParametersTab(this, this.getGuiLeft(), this.getGuiTop());
+
+        final PencilParametersTab pencilParametersTab = new PencilParametersTab(this, this.getGuiLeft(), this.getGuiTop());
+        final BrushParametersTab brushParametersTab = new BrushParametersTab(this, this.getGuiLeft(), this.getGuiTop());
+        final BucketParametersTab bucketParametersTab = new BucketParametersTab(this, this.getGuiLeft(), this.getGuiTop());
+
         final InventoryTab inventoryTab = new InventoryTab(this, this.getGuiLeft(), this.getGuiTop());
 
         this.tabs.put(TabsWidget.Tab.COLOR, colorTab);
-        this.tabs.put(TabsWidget.Tab.PARAMETERS, parametersTab);
+        this.tabs.put(TabsWidget.Tab.PENCIL_PARAMETERS, pencilParametersTab);
+        this.tabs.put(TabsWidget.Tab.BRUSH_PARAMETERS, brushParametersTab);
+        this.tabs.put(TabsWidget.Tab.BUCKET_PARAMETERS, bucketParametersTab);
         this.tabs.put(TabsWidget.Tab.INVENTORY, inventoryTab);
 
         // Other
@@ -126,7 +129,20 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      * @param parameters
      */
     public void updateCurrentTool(AbstractToolParameters parameters) {
-        ((ParametersTab) this.tabs.get(TabsWidget.Tab.PARAMETERS)).update(parameters);
+        this.tabsWidget.updateTabs();
+        this.getMenu().setCurrentTab(TabsWidget.Tab.COLOR);
+
+        switch (this.getMenu().getCurrentTool()) {
+            case PENCIL:
+                ((PencilParametersTab) this.tabs.get(TabsWidget.Tab.PENCIL_PARAMETERS)).update(parameters);
+                break;
+            case BRUSH:
+                ((BrushParametersTab) this.tabs.get(TabsWidget.Tab.BRUSH_PARAMETERS)).update(parameters);
+                break;
+            case BUCKET:
+                ((BucketParametersTab) this.tabs.get(TabsWidget.Tab.BUCKET_PARAMETERS)).update(parameters);
+                break;
+        }
     }
 
     /**

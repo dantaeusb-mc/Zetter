@@ -38,6 +38,10 @@ public class EaselState {
 
     public EaselState(EaselEntity entity) {
         this.easel = entity;
+
+        if (this.getCanvasData() != null) {
+            this.snapshots.add(new PaintingSnapshot(this.getCanvasData().getColorData()));
+        }
     }
 
     /**
@@ -159,19 +163,62 @@ public class EaselState {
      */
 
     public boolean canUndo(UUID playerId) {
-        return false;
+        return this.getLastNonCanceledAction(playerId) != null;
     }
 
     public boolean canRedo(UUID playerId) {
-        return false;
+        return this.getLastCanceledAction(playerId) != null;
     }
 
     public boolean undo(UUID playerId) {
-        return false;
+        PaintingActionBuffer lastNonCanceledAction = this.getLastNonCanceledAction(playerId);
+
+        if (lastNonCanceledAction == null) {
+            return false;
+        }
+
+        lastNonCanceledAction.setCanceled(true);
+        this.restoreSinceSnapshot();
+
+        return true;
     }
 
     public boolean redo(UUID playerId) {
-        return false;
+        PaintingActionBuffer lastCanceledAction = this.getLastCanceledAction(playerId);
+
+        if (lastCanceledAction == null) {
+            return false;
+        }
+
+        lastCanceledAction.setCanceled(false);
+        this.restoreSinceSnapshot();
+
+        return true;
+    }
+
+    private PaintingActionBuffer getLastNonCanceledAction(UUID playerId) {
+        return this.getLastActionOfCanceledState(playerId, false);
+    }
+
+    private PaintingActionBuffer getLastCanceledAction(UUID playerId) {
+        return this.getLastActionOfCanceledState(playerId, true);
+    }
+    private @Nullable PaintingActionBuffer getLastActionOfCanceledState(UUID playerId, boolean canceled) {
+        Iterator<PaintingActionBuffer> actionsIterator = this.actionBuffers.descendingIterator();
+        PaintingActionBuffer stateActionBuffer = null;
+
+        while(actionsIterator.hasNext()) {
+            PaintingActionBuffer paintingActionBuffer = actionsIterator.next();
+
+            if (paintingActionBuffer.authorId != playerId || paintingActionBuffer.isCanceled() != canceled) {
+                continue;
+            }
+
+            stateActionBuffer = paintingActionBuffer;
+            break;
+        }
+
+        return stateActionBuffer;
     }
 
     /**
@@ -181,6 +228,8 @@ public class EaselState {
      * in order
      *
      * @todo: clear canceled action if new action made
+     * @todo: when several players editing, last action can be non-canceled,
+     * but some previous by another author are
      */
     public void restoreSinceSnapshot() {
         PaintingActionBuffer latestNonCanceledActionBuffer = this.actionBuffers.peekLast();
@@ -208,6 +257,7 @@ public class EaselState {
             return;
         }
 
+        this.applySnapshot(latestSnapshot);
         Iterator<PaintingActionBuffer> actionBufferIterator = this.actionBuffers.descendingIterator();
 
         // @todo: inefficient, but ok for deque
@@ -218,7 +268,13 @@ public class EaselState {
                 continue;
             }
 
+            // @todo: calls client sync too!!!
             this.processActionBuffer(actionBuffer);
+        }
+
+        // @todo: this
+        if (!this.easel.getLevel().isClientSide()) {
+            ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
         }
     }
 
@@ -237,7 +293,7 @@ public class EaselState {
     }
 
     protected void applySnapshot(PaintingSnapshot snapshot) {
-        //this.getCanvasData().
+        this.getCanvasData().updateColorData(snapshot.colors);
     }
 
     /*
@@ -335,7 +391,9 @@ public class EaselState {
         });
 
         // @todo: this
-        ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
+        if (!this.easel.getLevel().isClientSide()) {
+            ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
+        }
     }
 
     /**

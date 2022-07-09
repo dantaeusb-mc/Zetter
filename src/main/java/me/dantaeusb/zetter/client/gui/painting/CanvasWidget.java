@@ -4,6 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.SizeInterface;
+import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -139,8 +142,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
                 && mouseY < this.y + this.height
         ) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-            int canvasX = (int) Math.floor((mouseX - this.x - this.canvasOffsetX) / (double) CANVAS_SCALE_FACTOR);
-            int canvasY = (int) Math.floor((mouseY - this.y - this.canvasOffsetY) / (double) CANVAS_SCALE_FACTOR);
+            double canvasX = (mouseX - this.x - this.canvasOffsetX) / (double) CANVAS_SCALE_FACTOR;
+            double canvasY = (mouseY - this.y - this.canvasOffsetY) / (double) CANVAS_SCALE_FACTOR;
 
             this.renderCursor(matrixStack, canvasX, canvasY);
         } else {
@@ -148,15 +151,67 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         }
     }
 
-    public void renderCursor(PoseStack matrixStack, int canvasX, int canvasY) {
-        int globalX1 = this.x + this.canvasOffsetX + canvasX * CANVAS_SCALE_FACTOR - 1;
-        int globalY1 = this.y + this.canvasOffsetY + canvasY * CANVAS_SCALE_FACTOR - 1;
-        int globalX2 = globalX1 + CANVAS_SCALE_FACTOR + 1;
-        int globalY2 = globalY1 + CANVAS_SCALE_FACTOR + 1;
+    public void renderCursor(PoseStack matrixStack, double canvasX, double canvasY) {
 
-        this.hLine(matrixStack, globalX1, globalX2, globalY1, 0x80808080);
+        AbstractToolParameters toolParameters = this.parentScreen.getMenu().getCurrentToolParameters();
+        AbstractTool.ToolShape shape = this.parentScreen.getMenu().getCurrentTool().getTool().getShape(toolParameters);
+
+        if (shape == null) {
+            int radius = CANVAS_SCALE_FACTOR * 2;
+
+            if (toolParameters instanceof SizeInterface) {
+                radius = Math.round(CANVAS_SCALE_FACTOR * ((SizeInterface) toolParameters).getSize());
+            }
+
+            if (radius < 4) {
+                radius = 4;
+            }
+
+            int globalX = this.x + this.canvasOffsetX + (int) Math.floor(canvasX * CANVAS_SCALE_FACTOR) - 1;
+            int globalY = this.y + this.canvasOffsetY + (int) Math.floor(canvasY * CANVAS_SCALE_FACTOR) - 1;
+
+            this.hLine(matrixStack, globalX - radius, globalX - 2, globalY, 0x80808080);
+            this.hLine(matrixStack, globalX + radius, globalX + 2, globalY, 0x80808080);
+
+            this.vLine(matrixStack, globalX, globalY - radius, globalY - 2, 0x80808080);
+            this.vLine(matrixStack, globalX, globalY + radius, globalY + 2, 0x80808080);
+        } else {
+            int globalX = this.x + this.canvasOffsetX + (int) Math.floor(canvasX) * CANVAS_SCALE_FACTOR - 1;
+            int globalY = this.y + this.canvasOffsetY + (int) Math.floor(canvasY) * CANVAS_SCALE_FACTOR - 1;
+
+            for (AbstractTool.ShapeLine line : shape.getLines()) {
+                int posX = line.posX() * CANVAS_SCALE_FACTOR;
+                int posY = line.posY() * CANVAS_SCALE_FACTOR;
+                int length = line.length() * CANVAS_SCALE_FACTOR;
+
+                // Add + 1 to wrap pixel around
+                if (posX > 0) {
+                    posX++;
+                }
+
+                if (posY > 0) {
+                    posY++;
+                }
+
+                if (line.direction() == AbstractTool.ShapeLine.LineDirection.HORIZONTAL) {
+                    if (posX + length > 0) {
+                        length++;
+                    }
+
+                    this.hLine(matrixStack, globalX + posX, globalX + posX + length, globalY + posY, 0x80808080);
+                } else {
+                    if (posY + length > 0) {
+                        length++;
+                    }
+
+                    this.vLine(matrixStack, globalX + posX, globalY + posY, globalY + posY + length, 0x80808080);
+                }
+            }
+        }
+
+        /*this.hLine(matrixStack, globalX1, globalX2, globalY1, 0x80808080);
         this.hLine(matrixStack, globalX1, globalX2, globalY2, 0x80808080);
         this.vLine(matrixStack, globalX1, globalY1, globalY2, 0x80808080);
-        this.vLine(matrixStack, globalX2, globalY1, globalY2, 0x80808080);
+        this.vLine(matrixStack, globalX2, globalY1, globalY2, 0x80808080);*/
     }
 }

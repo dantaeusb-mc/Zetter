@@ -73,6 +73,8 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
             int fromY = this.y + i * HISTORY_OFFSET;
 
             if (PaintingScreen.isInRect(this.x, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+                historyButton.action.get();
+
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 return true;
             }

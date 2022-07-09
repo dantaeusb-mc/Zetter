@@ -209,6 +209,7 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
     public void useTool(float posX, float posY) {
         this.stateHandler.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
+        this.updateCanHistory();
     }
 
     public AbstractToolParameters getCurrentToolParameters() {
@@ -256,11 +257,22 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public boolean undo() {
-        return this.stateHandler.undo(this.player.getUUID());
+        final boolean result = this.stateHandler.undo(this.player.getUUID());
+        this.updateCanHistory();
+
+        return result;
     }
 
     public boolean redo() {
-        return this.stateHandler.redo(this.player.getUUID());
+        final boolean result = this.stateHandler.redo(this.player.getUUID());
+        this.updateCanHistory();
+
+        return result;
+    }
+
+    private void updateCanHistory() {
+        this.canUndo = this.stateHandler.canUndo(this.player.getUUID());
+        this.canRedo = this.stateHandler.canRedo(this.player.getUUID());
     }
 
     /*
@@ -407,6 +419,10 @@ public class EaselContainerMenu extends AbstractContainerMenu {
             } else {
                 if (sourceStack.getItem() == ZetterItems.PALETTE.get()) {
                     if (!this.moveItemStackTo(sourceStack, 0, 1, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                } else if (sourceStack.getItem() == ZetterItems.CANVAS.get()) {
+                    if (!this.moveItemStackTo(sourceStack, 1, 2, false)) {
                         return ItemStack.EMPTY;
                     }
                 } else {

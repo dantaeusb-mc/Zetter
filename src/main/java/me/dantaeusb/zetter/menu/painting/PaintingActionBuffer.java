@@ -212,6 +212,10 @@ public class PaintingActionBuffer {
         this.canceled = false;
     }
 
+    public void setCanceled(boolean canceled) {
+        this.canceled = canceled;
+    }
+
     public boolean isCanceled() {
         return this.canceled;
     }
