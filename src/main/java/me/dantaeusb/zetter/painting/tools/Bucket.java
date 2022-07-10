@@ -33,7 +33,7 @@ public class Bucket extends AbstractTool<BucketParameters> {
     }
 
     @Override
-    public int apply(CanvasData canvas, BucketParameters params, int color, float posX, float posY) {
+    public int useTool(CanvasData canvas, BucketParameters params, int color, float posX, float posY) {
         int position = canvas.getPixelIndex((int) posX, (int) posY);
         float opacity = params.getIntensity();
 
@@ -42,7 +42,7 @@ public class Bucket extends AbstractTool<BucketParameters> {
         final int length = width * height;
         final int replacedColor = canvas.getColorAt(position);
 
-        LinkedList<Integer> positionsQueue = new LinkedList<>();
+        ArrayDeque<Integer> positionsQueue = new ArrayDeque<>();
         Vector<Integer> checkedQueue = new Vector<>();
         Vector<Integer> paintQueue = new Vector<>();
 

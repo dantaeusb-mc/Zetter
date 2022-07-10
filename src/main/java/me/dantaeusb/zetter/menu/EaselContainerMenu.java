@@ -13,6 +13,8 @@ import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.*;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
+import me.dantaeusb.zetter.painting.tools.AbstractTool;
+import me.dantaeusb.zetter.painting.tools.ActionListener;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -27,13 +29,11 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class EaselContainerMenu extends AbstractContainerMenu {
+public class EaselContainerMenu extends AbstractContainerMenu implements EaselStateListener, ActionListener {
     /*
      * Object references
      */
     private final Player player;
-
-    private final ContainerLevelAccess access;
     private final EaselContainer container;
     private final EaselState stateHandler;
 
@@ -78,15 +78,13 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * Initializing
      *
      */
-    public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler, ContainerLevelAccess access) {
+    public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
         super(ZetterContainerMenus.PAINTING.get(), windowID);
 
         if (ZetterContainerMenus.PAINTING == null)
             throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
 
         this.player = invPlayer.player;
-
-        this.access = access;
 
         this.container = easelContainer;
         this.stateHandler = stateHandler;
@@ -113,12 +111,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
                 return stack.getItem() == ZetterItems.PALETTE.get();
             }
         });
-
-        if (!invPlayer.player.getLevel().isClientSide()) {
-            ItemStack canvasStack = this.container.getCanvasStack();
-            String canvasName = CanvasItem.getCanvasCode(canvasStack);
-            this.setCanvas(canvasName);
-        }
 
         // Add the rest of the players inventory to the gui
         for (int y = 0; y < PLAYER_INVENTORY_ROW_COUNT; y++) {
@@ -154,10 +146,16 @@ public class EaselContainerMenu extends AbstractContainerMenu {
                 });
             }
         }
+
+        this.stateHandler.addListener(this);
+
+        if (this.player.getLevel().isClientSide()) {
+            Tools.EYEDROPPER.getTool().addActionListener(this);
+        }
     }
 
-    public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler, ContainerLevelAccess access) {
-        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler, access);
+    public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
+        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler);
 
         return easelContainerMenu;
     }
@@ -165,18 +163,17 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     public static EaselContainerMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
-        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.getEaselEntityId());
+        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
         assert easelEntity != null;
 
-        // it seems like we have to utilize extraData to pass the canvas data
-        // slots seems to be synchronised, but we would prefer to avoid that to prevent every-pixel sync
         EaselContainer easelContainer = easelEntity.getEaselContainer();
         EaselState stateHandler = easelEntity.getStateHandler();
 
-        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler, ContainerLevelAccess.NULL);
-        easelContainerMenu.setCanvas(createPacket.getCanvasCode());
+        // Manually update canvas on client @todo: [HIGH] Create snapshot
+        easelContainer.handleCanvasChange(createPacket.canvasCode);
+        //stateHandler.processSnapshotSyncClient();
 
-        return easelContainerMenu;
+        return new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler);
     }
 
     /*
@@ -209,9 +206,21 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         }
     }
 
+    /*
+     * Tool
+     */
     public void useTool(float posX, float posY) {
         this.stateHandler.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
-        this.updateCanHistory();
+    }
+
+    public void useToolCallback(CanvasData canvas, AbstractTool tool, AbstractToolParameters parameters, int color, float posX, float posY) {
+        if (tool.equals(Tools.EYEDROPPER.getTool())) {
+            int canvasPosX = (int) Math.min(Math.max(posX, 0), canvas.getWidth());
+            int canvasPosY = (int) Math.min(Math.max(posY, 0), canvas.getHeight());
+
+            final int newColor = canvas.getColorAt(canvasPosX, canvasPosY);
+            this.setPaletteColor(newColor);
+        }
     }
 
     public AbstractToolParameters getCurrentToolParameters() {
@@ -252,6 +261,11 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * History
      */
 
+    @Override
+    public void stateChanged(EaselState state) {
+        this.updateCanHistory();
+    }
+
     public boolean canUndo() {
         return this.canUndo;
     }
@@ -261,15 +275,21 @@ public class EaselContainerMenu extends AbstractContainerMenu {
     }
 
     public boolean undo() {
+        if (!this.canUndo) {
+            return false;
+        }
+
         final boolean result = this.stateHandler.undo(this.player.getUUID());
-        this.updateCanHistory();
 
         return result;
     }
 
     public boolean redo() {
+        if (!this.canRedo) {
+            return false;
+        }
+
         final boolean result = this.stateHandler.redo(this.player.getUUID());
-        this.updateCanHistory();
 
         return result;
     }
@@ -283,8 +303,13 @@ public class EaselContainerMenu extends AbstractContainerMenu {
      * Networking
      */
 
-    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long packetTimestamp) {
-        this.stateHandler.processSyncClient(canvasCode, canvasData, packetTimestamp);
+    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+        // Only update if we don't have canvas initialized or name changed
+        if (this.container.getCanvas() == null || !this.container.getCanvas().code.equals(canvasCode)) {
+            this.container.handleCanvasChange(canvasCode);
+        } else {
+            this.stateHandler.processWeakSnapshotClient(canvasCode, canvasData, timestamp);
+        }
     }
 
     public void handleCanvasChange(ItemStack canvasStack) {
@@ -293,10 +318,6 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         } else {
             this.canvas = null;
         }*/
-    }
-
-    public void setCanvas(String canvasName) {
-        this.container.handleCanvasChange(canvasName);
     }
 
     public int getPaletteColor(int paletteSlot) {
@@ -351,6 +372,21 @@ public class EaselContainerMenu extends AbstractContainerMenu {
         ZetterNetwork.simpleChannel.sendToServer(paletteUpdatePacket);
     }
 
+    /**
+     * Alternative check using item instead of holder,
+     * used for cases when holder is not initialized (canvas not loaded)
+     * @return
+     */
+    public @Nullable String getCanvasItemCode() {
+        ItemStack canvasStack = this.container.getCanvasStack();
+
+        if (canvasStack.isEmpty()) {
+            return null;
+        }
+
+        return CanvasItem.getCanvasCode(canvasStack);
+    }
+
     public @Nullable String getCanvasCode() {
         if (this.container.getCanvas() == null) {
             return null;
@@ -392,6 +428,12 @@ public class EaselContainerMenu extends AbstractContainerMenu {
 
         if (this.player.getLevel().isClientSide()) {
             this.stateHandler.poolActionsQueueClient(true);
+        }
+
+        this.stateHandler.removeListener(this);
+
+        if (this.player.getLevel().isClientSide()) {
+            Tools.EYEDROPPER.getTool().removeActionListener(this);
         }
     }
 

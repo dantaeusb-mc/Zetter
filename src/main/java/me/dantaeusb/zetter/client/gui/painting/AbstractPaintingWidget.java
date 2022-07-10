@@ -30,7 +30,7 @@ abstract public class AbstractPaintingWidget extends AbstractWidget implements G
     public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {}
 
     /**
-     * @todo: Would be nice to make actual narrations, it seems quite easy with widget system
+     * @todo: [MED] Would be nice to make actual narrations, it seems quite easy with widget system
      * @param narratorOutput
      */
     @Override

@@ -259,7 +259,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (compound.contains(NBT_TAG_HAS_PLATE)) {
             this.hasPlate = compound.getBoolean(NBT_TAG_HAS_PLATE);
         } else {
-            // @todo: remove on release?
+            // @todo: [LOW] Remove on release?
             this.hasPlate = false;
         }
 
@@ -328,7 +328,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Called when this entity is broken. Entity parameter may be null.
      */
     public void dropItem(@Nullable Entity brokenEntity) {
-        // @todo: remove item if canvas code is set to fallback code
+        // @todo: [MED] Remove item if canvas code is set to fallback code
         if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
 

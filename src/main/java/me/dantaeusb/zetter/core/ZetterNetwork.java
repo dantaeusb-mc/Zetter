@@ -15,7 +15,7 @@ import java.util.Optional;
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ZetterNetwork {
     public static SimpleChannel simpleChannel;
-    // @todo: rename this on release, it's zetter:zetter_channel 0.1
+    // @todo: [LOW] Rename this on release, it's zetter:zetter_channel 0.1
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
     public static final String MESSAGE_PROTOCOL_VERSION = "0.2";
 
@@ -25,8 +25,9 @@ public class ZetterNetwork {
     public static final byte CANVAS_SYNC = 24;
     public static final byte PALETTE_UPDATE = 25;
     public static final byte PAINTING_RENAME = 26;
-    public static final byte EASEL_CANVAS_CHANGE = 28;
     public static final byte PAINTING_SYNC = 29;
+    public static final byte SNAPSHOT_SYNC = 30;
+    public static final byte HISTORY_UPDATE = 31;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -74,10 +75,15 @@ public class ZetterNetwork {
                 CRenamePaintingPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(EASEL_CANVAS_CHANGE, SEaselCanvasChangePacket.class,
-                SEaselCanvasChangePacket::writePacketData, SEaselCanvasChangePacket::readPacketData,
-                SEaselCanvasChangePacket::handle,
+        simpleChannel.registerMessage(SNAPSHOT_SYNC, SCanvasSnapshotSync.class,
+                SCanvasSnapshotSync::writePacketData, SCanvasSnapshotSync::readPacketData,
+                SCanvasSnapshotSync::handle,
                 Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryPacket.class,
+                CCanvasHistoryPacket::writePacketData, CCanvasHistoryPacket::readPacketData,
+                CCanvasHistoryPacket::handle,
+                Optional.of(PLAY_TO_SERVER));
     }
 
     public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {

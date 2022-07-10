@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.entity.item.state.representation.PaintingActionBuffer;
+import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
@@ -15,25 +15,17 @@ import java.util.function.Supplier;
  * Painting update - get frame buffer from client when they're making changes
  */
 public class CCanvasActionBufferPacket {
-    private int entityId;
-    private Queue<PaintingActionBuffer> paintingActionBuffers;
+    public final int easelEntityId;
+    public final Queue<CanvasAction> paintingActions;
 
     public CCanvasActionBufferPacket(int entityId) {
-        this.entityId = entityId;
-        this.paintingActionBuffers = new ArrayDeque<>();
+        this.easelEntityId = entityId;
+        this.paintingActions = new ArrayDeque<>();
     }
 
-    public CCanvasActionBufferPacket(int entityId, Queue<PaintingActionBuffer> paintingActionBuffers) {
-        this.entityId = entityId;
-        this.paintingActionBuffers = paintingActionBuffers;
-    }
-
-    public int getEntityId() {
-        return this.entityId;
-    }
-
-    public Queue<PaintingActionBuffer> getPaintingActionBuffers() {
-        return this.paintingActionBuffers;
+    public CCanvasActionBufferPacket(int entityId, Queue<CanvasAction> paintingActionBuffers) {
+        this.easelEntityId = entityId;
+        this.paintingActions = paintingActionBuffers;
     }
 
     /**
@@ -47,7 +39,7 @@ public class CCanvasActionBufferPacket {
         CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket(entityId);
 
         for (int i = 0; i < actionBuffersCount; i++) {
-            packet.paintingActionBuffers.add(PaintingActionBuffer.readPacketData(buffer));
+            packet.paintingActions.add(CanvasAction.readPacketData(buffer));
         }
 
         return packet;
@@ -57,11 +49,11 @@ public class CCanvasActionBufferPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buffer) {
-        buffer.writeInt(this.entityId);
-        buffer.writeInt(this.paintingActionBuffers.size());
+        buffer.writeInt(this.easelEntityId);
+        buffer.writeInt(this.paintingActions.size());
 
-        for (PaintingActionBuffer actionBuffer : this.paintingActionBuffers) {
-            PaintingActionBuffer.writePacketData(actionBuffer, buffer);
+        for (CanvasAction actionBuffer : this.paintingActions) {
+            CanvasAction.writePacketData(actionBuffer, buffer);
         }
     }
 

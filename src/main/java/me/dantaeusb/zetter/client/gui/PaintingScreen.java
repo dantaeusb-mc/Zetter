@@ -16,6 +16,7 @@ import me.dantaeusb.zetter.painting.tools.Pencil;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.entity.player.Inventory;
@@ -211,7 +212,6 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.helpWidget.render(matrixStack, x, y, partialTicks);
 
         this.getCurrentTab().render(matrixStack, x, y, partialTicks);
-        // @todo: If color code goes not last, it may stop others from drawing. Is there an exception maybe?
     }
 
     @Override
@@ -277,6 +277,50 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
             case Bucket.HOTKEY:
                 this.getMenu().setCurrentTool(Tools.BUCKET);
                 return true;
+            case PaletteWidget.SWAP_HOTKEY: {
+                final int row = (this.getMenu().getCurrentPaletteSlot() / 2) * 2;
+                final int offset = this.getMenu().getCurrentPaletteSlot() % 2 == 0 ? 1 : 0;
+                this.getMenu().setCurrentPaletteSlot(row + offset);
+                return true;
+            }
+            case GLFW.GLFW_KEY_UP: {
+                final int row = this.getMenu().getCurrentPaletteSlot() / 2;
+                final int offset = this.getMenu().getCurrentPaletteSlot() % 2;
+
+                if (row <= 0) {
+                    return false;
+                }
+
+                this.getMenu().setCurrentPaletteSlot((row - 1) * 2 + offset);
+
+                return true;
+            }
+            case GLFW.GLFW_KEY_DOWN: {
+                final int row = this.getMenu().getCurrentPaletteSlot() / 2;
+                final int offset = this.getMenu().getCurrentPaletteSlot() % 2;
+
+                if (row >= 7) {
+                    return false;
+                }
+
+                this.getMenu().setCurrentPaletteSlot((row + 1) * 2 + offset);
+
+                return true;
+            }
+            case HistoryWidget.UNDO_HOTKEY:
+                if (Screen.hasControlDown()) {
+                    this.getMenu().undo();
+                    return true;
+                }
+
+                return super.keyPressed(keyCode, scanCode, modifiers);
+            case HistoryWidget.REDO_HOTKEY:
+                if (Screen.hasControlDown()) {
+                    this.getMenu().redo();
+                    return true;
+                }
+
+                return super.keyPressed(keyCode, scanCode, modifiers);
             default:
                 return super.keyPressed(keyCode, scanCode, modifiers);
         }
@@ -357,7 +401,7 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      */
 
     /**
-     * @todo: use this.isPointInRegion
+     * @todo: [LOW] Use this.isPointInRegion
      *
      * @param x
      * @param y

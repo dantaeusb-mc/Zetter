@@ -53,7 +53,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         if (easelEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-            CanvasData canvasData = getCanvasData(easelEntity.level, easelEntity.getCanvasCode());
+            CanvasData canvasData = getCanvasData(easelEntity.level, easelEntity.getEntityCanvasCode());
 
             if (canvasData != null) {
                 /**
@@ -69,9 +69,9 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
                 poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
                 poseStack.translate(-16.0D, -16.0D, 0.1D);
 
-                CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getCanvasCode(), canvasData, packedLight);
+                CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getEntityCanvasCode(), canvasData, packedLight);
             } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, easelEntity.getCanvasCode());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, easelEntity.getEntityCanvasCode());
             }
         }
 

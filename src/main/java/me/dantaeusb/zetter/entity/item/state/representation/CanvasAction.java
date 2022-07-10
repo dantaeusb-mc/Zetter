@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.entity.item.state.representation;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import net.minecraft.network.FriendlyByteBuf;
@@ -19,12 +20,12 @@ import java.util.stream.Stream;
  * Theoretically, we also can use relative time of "sub-action" but
  * it's complicated and not yet worth it
  */
-public class PaintingActionBuffer {
+public class CanvasAction {
     private static final int MAX_ACTIONS_IN_BUFFER = 100;
     private static final long MAX_TIME = 5000L;
     private static final long MAX_INACTIVE_TIME = 1000L;
 
-    public final UUID actionId;
+    public final UUID uuid;
     public final UUID authorId;
     public final Tools tool;
 
@@ -42,9 +43,9 @@ public class PaintingActionBuffer {
     private static final int FRAME_SIZE = 1 + 2 + 8;
     public static final int BUFFER_SIZE = FRAME_SIZE * MAX_ACTIONS_IN_BUFFER;
 
-    private ByteBuffer actionBuffer;
+    private ByteBuffer subActionBuffer;
 
-    private PaintingAction lastAction;
+    private CanvasSubAction lastAction;
 
     private boolean committed = false;
 
@@ -53,23 +54,23 @@ public class PaintingActionBuffer {
 
     private boolean canceled = false;
 
-    public PaintingActionBuffer(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+    public CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
         this(authorId, tool, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public PaintingActionBuffer(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
-        this.actionId = UUID.randomUUID(); // is it too much?
+    public CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
+        this.uuid = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
         this.tool = tool;
         this.color = color;
         this.parameters = parameters;
         this.startTime = startTime;
 
-        this.actionBuffer = actionBuffer;
+        this.subActionBuffer = actionBuffer;
     }
 
-    private PaintingActionBuffer(UUID actionId, UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
-        this.actionId = actionId;
+    private CanvasAction(UUID actionId, UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
+        this.uuid = actionId;
         this.authorId = authorId;
         this.tool = tool;
         this.color = color;
@@ -77,7 +78,7 @@ public class PaintingActionBuffer {
         this.startTime = startTime;
 
         // When we create with data, it should be non-editable
-        this.actionBuffer = actionBuffer.asReadOnlyBuffer();
+        this.subActionBuffer = actionBuffer.asReadOnlyBuffer();
 
         this.committed = true;
         this.sent = true;
@@ -92,8 +93,9 @@ public class PaintingActionBuffer {
      * @param parameters
      * @return
      */
-    public boolean canContinue(UUID authorId, Tools tool, AbstractToolParameters parameters) {
-        return !this.shouldCommit() && this.isActionCompatible(authorId, tool, parameters);
+    public boolean canContinue(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+        // Not committed, should not yet be committed, and action is compatible
+        return !this.committed && !this.shouldCommit() && this.isActionCompatible(authorId, tool, color, parameters);
     }
 
     /**
@@ -103,8 +105,8 @@ public class PaintingActionBuffer {
      * @param parameters
      * @return
      */
-    public boolean isActionCompatible(UUID authorId, Tools tool, AbstractToolParameters parameters) {
-        return  this.authorId == authorId && this.tool == tool;
+    public boolean isActionCompatible(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+        return this.authorId == authorId && this.tool == tool && this.color == color;
     }
 
     /**
@@ -124,7 +126,7 @@ public class PaintingActionBuffer {
             return true;
         }
 
-        if (!this.actionBuffer.hasRemaining()) {
+        if (!this.subActionBuffer.hasRemaining()) {
             return true;
         }
 
@@ -153,35 +155,52 @@ public class PaintingActionBuffer {
         final long currentTime = System.currentTimeMillis();
         final int passedTime = (int) (currentTime - this.startTime);
 
-        final PaintingAction action = new PaintingAction(passedTime, posX, posY);
-        PaintingAction.writeToBuffer(action, this.actionBuffer);
+        final CanvasSubAction action = new CanvasSubAction(passedTime, posX, posY);
+        CanvasSubAction.writeToBuffer(action, this.subActionBuffer);
 
         this.lastAction = action;
 
         return true;
     }
 
-    public Stream<PaintingAction> getActionStream() {
-        this.actionBuffer.rewind();
+    public Stream<CanvasSubAction> getSubActionStream() {
+        ByteBuffer subActionBuffer;
 
-        if (this.actionBuffer.limit() % FRAME_SIZE != 0) {
+        if (this.isCommitted()) {
+            subActionBuffer = this.subActionBuffer;
+        } else {
+            subActionBuffer = this.subActionBuffer.duplicate().flip();
+        }
+
+        subActionBuffer.rewind();
+
+        if (subActionBuffer.limit() % FRAME_SIZE != 0) {
             throw new IllegalStateException("Incorrect amount of frames in buffer");
-        } else if (this.actionBuffer.limit() == 0) {
+        } else if (subActionBuffer.limit() == 0) {
             throw new IllegalStateException("Applied action buffer is empty");
         }
 
-        return Stream.generate(() -> PaintingAction.readFromBuffer(this.actionBuffer)).limit(this.actionBuffer.limit() / FRAME_SIZE);
+        return Stream.generate(() -> CanvasSubAction.readFromBuffer(subActionBuffer)).limit(subActionBuffer.limit() / FRAME_SIZE);
     }
 
     public int countActions() {
-        if (this.actionBuffer.isReadOnly()) {
-            return this.actionBuffer.limit();
+        if (this.subActionBuffer.isReadOnly()) {
+            return this.subActionBuffer.limit() / FRAME_SIZE;
         }
 
-        return this.actionBuffer.position();
+        return this.subActionBuffer.position() / FRAME_SIZE;
     }
 
     public void commit() {
+        if (this.committed) {
+            Zetter.LOG.warn("Already committed");
+            return;
+        }
+
+        if (this.subActionBuffer.limit() == 0) {
+            Zetter.LOG.warn("Committing empty action buffer!");
+        }
+
         this.sealBuffer();
         this.committed = true;
     }
@@ -220,7 +239,7 @@ public class PaintingActionBuffer {
         return this.canceled;
     }
 
-    public @Nullable PaintingAction getLastAction() {
+    public @Nullable CanvasSubAction getLastAction() {
         return this.lastAction;
     }
 
@@ -229,18 +248,18 @@ public class PaintingActionBuffer {
      * @return
      */
     public void sealBuffer() {
-        this.actionBuffer.flip();
-        this.actionBuffer = this.actionBuffer.asReadOnlyBuffer();
+        this.subActionBuffer.flip();
+        this.subActionBuffer = this.subActionBuffer.asReadOnlyBuffer();
     }
 
-    public static class PaintingAction {
+    public static class CanvasSubAction {
         public final byte meta;
 
         public final int time;
         public final float posX;
         public final float posY;
 
-        public PaintingAction(int time, float posX, float posY) {
+        public CanvasSubAction(int time, float posX, float posY) {
             this.meta = (byte) 0x1;
 
             if (time > 0xFFFF) {
@@ -252,14 +271,14 @@ public class PaintingActionBuffer {
             this.posY = posY;
         }
 
-        private PaintingAction(byte meta, int time, float posX, float posY) {
+        private CanvasSubAction(byte meta, int time, float posX, float posY) {
             this.meta = meta;
             this.time = time;
             this.posX = posX;
             this.posY = posY;
         }
 
-        public static void writeToBuffer(PaintingAction action, ByteBuffer buffer) {
+        public static void writeToBuffer(CanvasSubAction action, ByteBuffer buffer) {
             // Meta
             buffer.put((byte) 0x1);
 
@@ -272,7 +291,7 @@ public class PaintingActionBuffer {
             buffer.putFloat(action.posY);
         }
 
-        public static PaintingAction readFromBuffer(ByteBuffer buffer) {
+        public static CanvasSubAction readFromBuffer(ByteBuffer buffer) {
             // Meta
             final byte meta = buffer.get();
 
@@ -283,12 +302,12 @@ public class PaintingActionBuffer {
             final float posX = buffer.getFloat();
             final float posY = buffer.getFloat();
 
-            return new PaintingAction(meta, time, posX, posY);
+            return new CanvasSubAction(meta, time, posX, posY);
         }
     }
 
-    public static void writePacketData(PaintingActionBuffer actionBuffer, FriendlyByteBuf buffer) {
-        buffer.writeUUID(actionBuffer.actionId);
+    public static void writePacketData(CanvasAction actionBuffer, FriendlyByteBuf buffer) {
+        buffer.writeUUID(actionBuffer.uuid);
         buffer.writeUUID(actionBuffer.authorId);
         buffer.writeUtf(actionBuffer.tool.toString(), 32);
         buffer.writeInt(actionBuffer.color);
@@ -296,11 +315,11 @@ public class PaintingActionBuffer {
         buffer.writeBoolean(actionBuffer.canceled);
         AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
 
-        buffer.writeInt(actionBuffer.actionBuffer.limit());
-        buffer.writeBytes(actionBuffer.actionBuffer);
+        buffer.writeInt(actionBuffer.subActionBuffer.limit());
+        buffer.writeBytes(actionBuffer.subActionBuffer);
     }
 
-    public static PaintingActionBuffer readPacketData(FriendlyByteBuf buffer) {
+    public static CanvasAction readPacketData(FriendlyByteBuf buffer) {
         UUID actionId = buffer.readUUID();
         UUID authorId = buffer.readUUID();
         Tools tool = Tools.valueOf(buffer.readUtf(32));
@@ -310,17 +329,24 @@ public class PaintingActionBuffer {
         AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, tool);
 
         int bufferSize = buffer.readInt();
-        ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
+        try {
 
-        return new PaintingActionBuffer(
-                actionId,
-                authorId,
-                tool,
-                color,
-                parameters,
-                startTime,
-                actionsBuffer,
-                canceled
-        );
+            ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
+
+            return new CanvasAction(
+                    actionId,
+                    authorId,
+                    tool,
+                    color,
+                    parameters,
+                    startTime,
+                    actionsBuffer,
+                    canceled
+            );
+        } catch (IndexOutOfBoundsException e) {
+            Zetter.LOG.error(e);
+        }
+
+        return null;
     }
 }

@@ -3,21 +3,15 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class SEaselMenuCreatePacket {
-    private final int easelEntityId;
-    private final String canvasCode;
+import javax.annotation.Nullable;
 
-    public SEaselMenuCreatePacket(int easelEntityId, String canvasCode) {
+public class SEaselMenuCreatePacket {
+    public final int easelEntityId;
+    public final @Nullable String canvasCode;
+
+    public SEaselMenuCreatePacket(int easelEntityId, @Nullable String canvasCode) {
         this.easelEntityId = easelEntityId;
         this.canvasCode = canvasCode;
-    }
-
-    public int getEaselEntityId() {
-        return this.easelEntityId;
-    }
-
-    public String getCanvasCode() {
-        return this.canvasCode;
     }
 
     /**
@@ -26,7 +20,12 @@ public class SEaselMenuCreatePacket {
     public static SEaselMenuCreatePacket readPacketData(FriendlyByteBuf networkBuffer) {
         try {
             int easelEntityId = networkBuffer.readInt();
-            String canvasCode = networkBuffer.readUtf(256);
+            boolean hasCanvasCode = networkBuffer.readBoolean();
+            String canvasCode = null;
+
+            if (hasCanvasCode) {
+                canvasCode = networkBuffer.readUtf(256);
+            }
 
             return new SEaselMenuCreatePacket(easelEntityId, canvasCode);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
@@ -40,7 +39,13 @@ public class SEaselMenuCreatePacket {
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
-        networkBuffer.writeUtf(this.canvasCode, 256);
+
+        if (this.canvasCode != null) {
+            networkBuffer.writeBoolean(true);
+            networkBuffer.writeUtf(this.canvasCode, 256);
+        } else {
+            networkBuffer.writeBoolean(false);
+        }
     }
 
     @Override

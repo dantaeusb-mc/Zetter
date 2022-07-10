@@ -24,14 +24,16 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
 
     private boolean canvasDragging = false;
 
-    private int canvasOffsetX;
-    private int canvasOffsetY;
+    private int canvasOffsetX = 0;
+    private int canvasOffsetY = 0;
 
     public CanvasWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, SIZE, SIZE, new TranslatableComponent("container.zetter.painting.canvas"));
 
-        this.canvasOffsetX = (SIZE - (parentScreen.getMenu().getCanvasData().getWidth() * CANVAS_SCALE_FACTOR)) / 2;
-        this.canvasOffsetY = (SIZE - (parentScreen.getMenu().getCanvasData().getHeight() * CANVAS_SCALE_FACTOR)) / 2;
+        if (parentScreen.getMenu().getCanvasData() != null) {
+            this.canvasOffsetX = (SIZE - (parentScreen.getMenu().getCanvasData().getWidth() * CANVAS_SCALE_FACTOR)) / 2;
+            this.canvasOffsetY = (SIZE - (parentScreen.getMenu().getCanvasData().getHeight() * CANVAS_SCALE_FACTOR)) / 2;
+        }
     }
 
     @Override
@@ -41,7 +43,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     }
 
     /**
-     * @todo: You can draw on the left-hand side by clicking outside canvas on the right (rounding error)
      * @param mouseX
      * @param mouseY
      */

@@ -23,6 +23,9 @@ public class EaselContainer extends ItemStackHandler {
 
     /*
      * Canvas
+     * Practically, this holder used to represent canvas
+     * in Menu screen, because there's no data in item
+     * on client side
      */
     private @Nullable CanvasHolder<CanvasData> canvas;
 
@@ -39,6 +42,7 @@ public class EaselContainer extends ItemStackHandler {
         this.easel = easelEntity;
     }
 
+    @Deprecated
     public EaselContainer() {
         super(STORAGE_SIZE);
     }
@@ -76,11 +80,11 @@ public class EaselContainer extends ItemStackHandler {
     }
 
     /**
-     * @todo: just sync item?
-     * @param canvasName
+     * @todo: [MED] Just sync item?
+     * @param canvasCode
      */
-    public void handleCanvasChange(@Nullable String canvasName) {
-        if (canvasName == null || canvasName.equals(CanvasData.getCanvasCode(0))) {
+    public void handleCanvasChange(@Nullable String canvasCode) {
+        if (canvasCode == null || canvasCode.equals(CanvasData.getCanvasCode(0))) {
             this.canvas = null;
             return;
         }
@@ -99,14 +103,14 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        CanvasData canvas = canvasTracker.getCanvasData(canvasName, CanvasData.class);
+        CanvasData canvas = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
 
         if (canvas == null) {
             this.canvas = null;
             return;
         }
 
-        this.canvas = new CanvasHolder<>(canvasName, canvas);
+        this.canvas = new CanvasHolder<>(canvasCode, canvas);
     }
 
     /*
@@ -167,16 +171,22 @@ public class EaselContainer extends ItemStackHandler {
         this.onContentsChanged(0);
     }
 
+    @Override
+    protected void onLoad() {
+        this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
+    }
+
+    @Override
     protected void onContentsChanged(int slot)
     {
-        if (slot == CANVAS_SLOT) {
-            this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
-        }
-
         if (this.listeners != null) {
             for(ItemStackHandlerListener listener : this.listeners) {
                 listener.containerChanged(this);
             }
+        }
+
+        if (slot == CANVAS_SLOT) {
+            this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
         }
     }
 }

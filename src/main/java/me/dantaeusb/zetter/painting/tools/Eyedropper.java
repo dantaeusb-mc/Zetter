@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.painting.parameters.NoParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -9,8 +8,6 @@ import org.lwjgl.glfw.GLFW;
 import java.util.ArrayList;
 
 public class Eyedropper extends AbstractTool<NoParameters> {
-    public static final String CODE = "eyedropper";
-
     public static final int HOTKEY = GLFW.GLFW_KEY_I;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.eyedropper");
@@ -33,11 +30,7 @@ public class Eyedropper extends AbstractTool<NoParameters> {
     }
 
     @Override
-    public int apply(CanvasData canvas, NoParameters params, int color, float posX, float posY) {
-        int newColor = canvas.getColorAt((int) posX, (int) posY);
-
-        //this.menu.setPaletteColor(newColor);
-
+    public int useTool(CanvasData canvas, NoParameters params, int color, float posX, float posY) {
         return 0;
     }
 

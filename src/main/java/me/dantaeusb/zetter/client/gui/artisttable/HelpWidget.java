@@ -10,7 +10,8 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.TranslatableComponent;
 
 /**
- * @todo: combine with another help widget?
+ * @todo: [HIGH] Fix texture!
+ * @todo: [MED] Combine with another help widget?
  */
 public class HelpWidget extends AbstractArtistTableWidget implements Widget {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#combining";

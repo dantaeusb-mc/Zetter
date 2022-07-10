@@ -97,7 +97,7 @@ public class CanvasCombination {
 
                     if (CanvasItem.getCanvasData(currentStack, world) == null) {
                         /**
-                         * @todo: move request out of here, request with data load attempts but avoid loading unavailable canvases
+                         * @todo: [HIGH] Move request out of here, request with data load attempts but avoid loading unavailable canvases
                          */
                         CanvasRenderer.getInstance().queueCanvasTextureUpdate(
                                 AbstractCanvasData.Type.CANVAS,
@@ -167,7 +167,7 @@ public class CanvasCombination {
                     }
                 } else {
                     // Use canvas color as background if canvas data is not initialized
-                    // @todo: maybe there's a better way to do that
+                    // @todo: [LOW] Maybe there's a better way to do that
                     for (int smallY = 0; smallY < Helper.getResolution().getNumeric(); smallY++) {
                         for (int smallX = 0; smallX < Helper.getResolution().getNumeric(); smallX++) {
                             final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;

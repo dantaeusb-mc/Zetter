@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -17,8 +18,10 @@ import java.util.function.Supplier;
 public class HistoryWidget extends AbstractPaintingWidget implements Widget {
     private final List<HistoryButton> buttons;
 
-    final static int HISTORY_BUTTON_WIDTH = 24;
+    public static final int UNDO_HOTKEY = GLFW.GLFW_KEY_Z;
+    public static final int REDO_HOTKEY = GLFW.GLFW_KEY_Y;
 
+    final static int HISTORY_BUTTON_WIDTH = 24;
     final static int HISTORY_BUTTON_HEIGHT = 15;
     final static int HISTORY_OFFSET = HISTORY_BUTTON_HEIGHT - 1; // 1px border between slots
 

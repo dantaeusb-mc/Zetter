@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
@@ -16,9 +17,10 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     final static int PALETTE_OFFSET = PALETTE_SCALE_FACTOR + 1; // 1px border between slots
 
     final static int PALETTE_COLS = 2;
-
     final static int WIDTH = PALETTE_SCALE_FACTOR + PALETTE_OFFSET;
     final static int HEIGHT = PALETTE_SCALE_FACTOR + ((EaselContainerMenu.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET);
+
+    public static final int SWAP_HOTKEY = GLFW.GLFW_KEY_X;
 
     public PaletteWidget(PaintingScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.palette"));

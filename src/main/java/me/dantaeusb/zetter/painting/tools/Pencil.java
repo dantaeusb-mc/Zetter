@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Pencil extends AbstractTool<PencilParameters> {
-    public static final String CODE = "pencil";
-
     public static final int HOTKEY = GLFW.GLFW_KEY_P;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.pencil");
@@ -37,7 +35,7 @@ public class Pencil extends AbstractTool<PencilParameters> {
     }
 
     @Override
-    public int apply(CanvasData canvas, PencilParameters params, int color, float posX, float posY) {
+    public int useTool(CanvasData canvas, PencilParameters params, int color, float posX, float posY) {
         final int width = canvas.getWidth();
         final int height = canvas.getHeight();
 
@@ -48,8 +46,6 @@ public class Pencil extends AbstractTool<PencilParameters> {
         // Only if changed
         return 1;
     }
-
-
 
     private HashMap<Integer, ToolShape> shapes = new HashMap<>() {{
         put(1, new ToolShape());

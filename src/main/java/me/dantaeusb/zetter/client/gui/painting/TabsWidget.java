@@ -148,7 +148,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
 
         public final String code;
 
-        // @todo: remove
+        // @todo: [LOW] Remove?
         public final TranslatableComponent translatableComponent;
 
         Tab(String code, TranslatableComponent translatableComponent) {

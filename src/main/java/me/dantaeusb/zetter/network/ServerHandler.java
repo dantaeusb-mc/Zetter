@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.entity.item.state.representation.PaintingActionBuffer;
+import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -23,23 +23,23 @@ public class ServerHandler {
      * Update canvas on server-side and send update to other tracking players
      * @param packetIn
      * @param sendingPlayer
-     *
-     * @todo: send changes to TE, not container, as it's created per player
      */
     public static void processActionBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
-        EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.getEntityId());
+        EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
+
+        // @todo: [MED] Check if player can access entity
 
         if (easelEntity != null) {
-            for (PaintingActionBuffer actionBuffer : packetIn.getPaintingActionBuffers()) {
+            for (CanvasAction actionBuffer : packetIn.paintingActions) {
                 if (!actionBuffer.authorId.equals(sendingPlayer.getUUID())) {
                     Zetter.LOG.warn("Received action from player claimed another player UUID, ignoring");
                     return;
                 }
 
-                easelEntity.getStateHandler().processActionBuffer(actionBuffer);
+                easelEntity.getStateHandler().processNetworkAction(actionBuffer);
             }
         } else {
-            Zetter.LOG.warn("Unable to find entity " + packetIn.getEntityId() + " disregarding canvas changes");
+            Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
         }
     }
 
@@ -87,7 +87,7 @@ public class ServerHandler {
     }
 
     /**
-     * @todo: Think about removing this
+     * @todo: [MED] Think about removing this
      * Not sure if it's needed, this can cause condition when canvas is unloaded while
      * other players would like to track it. Unloading on back-end should happen
      * by requests timeout and I believe this should work properly already
@@ -122,6 +122,18 @@ public class ServerHandler {
         if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
             ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;
             artistTableMenu.updatePaintingName(packetIn.getPaintingName());
+        }
+    }
+
+    public static void processCanvasHistory(final CCanvasHistoryPacket packetIn, ServerPlayer sendingPlayer) {
+        EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
+
+        // @todo: [MED] Check if player can access entity
+
+        if (easelEntity != null) {
+            easelEntity.getStateHandler().updateActionCanceledState(packetIn.actionId, sendingPlayer.getUUID(), packetIn.canceled);
+        } else {
+            Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
         }
     }
 }

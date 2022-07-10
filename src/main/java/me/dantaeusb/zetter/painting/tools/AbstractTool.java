@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -10,10 +9,11 @@ import net.minecraft.util.Tuple;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 public abstract class AbstractTool<T extends AbstractToolParameters> {
     protected final List<Pipe> pipes;
+
+    protected final List<ActionListener> actionListeners = new ArrayList<>();
 
     public AbstractTool(List<Pipe> pipes) {
         this.pipes = pipes;
@@ -53,7 +53,14 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      *
      * Returns palette damage!
      */
-    public abstract int apply(CanvasData canvas, T params, int color, float posX, float posY);
+    public int apply(CanvasData canvas, T params, int color, float posX, float posY) {
+        int result = this.useTool(canvas, params, color, posX, posY);
+        this.applyListeners(canvas, params, color, posX, posY);
+
+        return result;
+    }
+
+    protected abstract int useTool(CanvasData canvas, T params, int color, float posX, float posY);
 
     /**
      * Do pixel change: apply all pipes and calculate final color
@@ -84,9 +91,22 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
 
     /**
      * Get cursor shape
-     * @todo: do memo! cache shapes!!!
      */
     public abstract ToolShape getShape(T params);
+
+    private void applyListeners(CanvasData canvas, T params, int color, float posX, float posY) {
+        for (ActionListener actionListener : this.actionListeners) {
+            actionListener.useToolCallback(canvas, this, params, color, posX, posY);
+        }
+    }
+
+    public void addActionListener(ActionListener actionListener) {
+        this.actionListeners.add(actionListener);
+    }
+
+    public void removeActionListener(ActionListener actionListener) {
+        this.actionListeners.remove(actionListener);
+    }
 
     public static class ToolShape {
         // [0, 0], [0, 1], [1, 1], [1, 0] for square

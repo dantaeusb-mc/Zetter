@@ -32,7 +32,7 @@ public class ZetterGameEvents {
     }
 
     /**
-     * @todo: do we really need that hook here? It might be called very frequently
+     * @todo: [MED] Do we really need that hook here? It might be called very frequently
      * @param event
      */
     @OnlyIn(Dist.CLIENT)

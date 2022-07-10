@@ -7,9 +7,6 @@ import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 
-/**
- * @todo: Generic for both AbstractArtistTableWidget and AbstractPaintingWidget
- */
 abstract public class AbstractArtistTableWidget extends AbstractWidget implements GuiEventListener {
     protected final ArtistTableScreen parentScreen;
 

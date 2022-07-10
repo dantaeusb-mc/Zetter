@@ -9,7 +9,7 @@ import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 
 /**
- * Todo: get rid of this class, all functions can be moved to the classes with execution context
+ * @todo: [MID] Get rid of this class, all functions can be moved to the classes with execution context
  */
 public class Helper {
     public static int DUMMY_BLACK_COLOR = 0xFF000000;

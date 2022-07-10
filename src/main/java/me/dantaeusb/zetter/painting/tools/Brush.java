@@ -11,12 +11,9 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Brush extends AbstractTool<BrushParameters> {
-    public static final String CODE = "brush";
-
     public static final int HOTKEY = GLFW.GLFW_KEY_B;
 
     private final TranslatableComponent translatableComponent = new TranslatableComponent("container.zetter.painting.tools.brush");
@@ -62,7 +59,7 @@ public class Brush extends AbstractTool<BrushParameters> {
     }
 
     @Override
-    public int apply(CanvasData canvasData, BrushParameters params, int color, float posX, float posY) {
+    public int useTool(CanvasData canvasData, BrushParameters params, int color, float posX, float posY) {
         final int width = canvasData.getWidth();
         final int height = canvasData.getHeight();
 
@@ -101,7 +98,7 @@ public class Brush extends AbstractTool<BrushParameters> {
         int minY = (int) Brush.clamp(Math.floor(posY - radius), 0d, canvasData.getHeight() - 1);
         int maxY = (int) Brush.clamp(Math.ceil(posY + radius), 0d, canvasData.getHeight() - 1);
 
-        List<Tuple<Integer, Integer>> pixels = new LinkedList<>();
+        List<Tuple<Integer, Integer>> pixels = new ArrayList<>();
 
         for (int x = minX; x <= maxX; x++) {
             for (int y = minY; y <= maxY; y++) {

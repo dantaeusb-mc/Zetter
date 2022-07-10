@@ -153,7 +153,7 @@ public class BlendingPipe implements Pipe {
     }
 
     /**
-     * @todo: implement!
+     * @todo: [MED] Implement!
      *
      * Blend with
      * http://scottburns.us/fast-rgb-to-spectrum-conversion-for-reflectances/

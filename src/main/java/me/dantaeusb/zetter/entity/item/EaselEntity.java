@@ -7,7 +7,6 @@ import me.dantaeusb.zetter.entity.item.state.EaselState;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
-import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -62,8 +61,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     /** The list of players currently using this easel */
     private ArrayList<Player> playersUsing = new ArrayList<>();
-    private int ticksSinceSync;
-    private int checkInterval = 0;
+    private int tick;
 
     public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
         super(type, world);
@@ -75,7 +73,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         this.entityData.define(DATA_ID_CANVAS_CODE, "");
     }
 
-    public @Nullable String getCanvasCode() {
+    public @Nullable String getEntityCanvasCode() {
         String canvasCode = this.entityData.get(DATA_ID_CANVAS_CODE);
 
         if (canvasCode.isEmpty()) {
@@ -85,7 +83,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return canvasCode;
     }
 
-    protected void setCanvasCode(@Nullable String canvasCode) {
+    protected void setEntityCanvasCode(@Nullable String canvasCode) {
         if (canvasCode != null) {
             this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
         } else {
@@ -104,10 +102,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         if (
             this.level.isClientSide
             && DATA_ID_CANVAS_CODE.equals(entityDataAccessor)
-            && this.getCanvasCode() != null
+            && this.getEntityCanvasCode() != null
         ) {
             final ItemStack canvasStack = this.easelContainer.getCanvasStack();
-            CanvasItem.setCanvasCode(canvasStack, this.getCanvasCode());
+            CanvasItem.setCanvasCode(canvasStack, this.getEntityCanvasCode());
         }
     }
 
@@ -132,15 +130,15 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
 
         this.easelContainer.addListener(this);
-        this.updateDataFromInventory();
+        //this.updateDataFromInventory();
     }
 
-    protected void updateDataFromInventory() {
-        this.setCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
+    protected void updateEntityDataFromInventory() {
+        this.setEntityCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
     }
 
     public boolean canPlayerAccessInventory(Player player) {
-        // @todo: this
+        // @todo: [HIGH] Implement check
         return true;
     }
 
@@ -169,8 +167,8 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         compoundTag.put(EASEL_STORAGE_TAG, this.easelContainer.serializeNBT());
 
-        if (this.getCanvasCode() != null) {
-            compoundTag.putString(CANVAS_CODE_TAG, this.getCanvasCode());
+        if (this.getEntityCanvasCode() != null) {
+            compoundTag.putString(CANVAS_CODE_TAG, this.getEntityCanvasCode());
         }
     }
 
@@ -182,7 +180,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         final String canvasCode = compoundTag.getString(CANVAS_CODE_TAG);
 
         if (canvasCode != null) {
-            this.setCanvasCode(canvasCode);
+            this.setEntityCanvasCode(canvasCode);
         }
     }
 
@@ -233,7 +231,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public void openInventory(Player player) {
         if (!this.level.isClientSide) {
             NetworkHooks.openGui((ServerPlayer) player, this, (packetBuffer) -> {
-                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getCanvasCode());
+                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
                 packet.writePacketData(packetBuffer);
             });
         }
@@ -241,6 +239,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     public void tick() {
         this.stateHandler.tick();
+        this.tick++;
 
         // No need to track on client side
         if (this.level.isClientSide()) {
@@ -248,12 +247,11 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
 
         this.checkOutOfWorld();
-        if (++this.ticksSinceSync > 200) {
+        if (this.tick % 200 == 0) {
             this.playersUsing = this.calculatePlayersUsing();
         }
 
-        if (++this.checkInterval == 100) {
-            this.checkInterval = 0;
+        if (this.tick % 100 == 0) {
             if (!this.isRemoved() && !this.survives()) {
                 this.discard();
                 this.dropItem(null);
@@ -280,7 +278,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     // specific
 
     public boolean hasCanvas() {
-        return this.getCanvasCode() != null;
+        return this.getEntityCanvasCode() != null;
     }
 
     public @Nullable ItemStack getCanvasStack() {
@@ -298,7 +296,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return false;
         }
 
-        // @todo: seems dumb, lazy load ftw
+        // @todo: [LOW] Seems dumb, lazy load ftw
         // Also could already have canvas, but it's client-only right now so we disregard client data
         // Initialize data if it's not yet
         CanvasItem.getCanvasData(itemStack, this.level);
@@ -309,13 +307,30 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     public void containerChanged(ItemStackHandler easelContainer) {
         ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
+        String newCanvasCode = null;
+        String existingCanvasCode = null;
 
-        if (!canvasStack.isEmpty() && CanvasItem.getCanvasCode(canvasStack) == null) {
-            // Initialize if not yet
-            CanvasItem.getCanvasData(canvasStack, this.level);
+        if (!canvasStack.isEmpty()) {
+            newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+            // Initialize canvas
+            if (newCanvasCode == null) {
+                CanvasItem.getCanvasData(canvasStack, this.level);
+                newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
+            }
+        } //@todo: else
+
+        if (this.getEaselContainer().getCanvas() != null) {
+            existingCanvasCode = this.getEaselContainer().getCanvas().code;
         }
 
-        this.updateDataFromInventory();
+        // @todo: [HIGH] Supposedly won't work on client if new canvas is not yet initialized, because it'll have nullish code
+        // Canvas changed, drop state
+        if (newCanvasCode != null && !newCanvasCode.equals(existingCanvasCode)) {
+            this.stateHandler.reset();
+        }
+
+        this.updateEntityDataFromInventory();
     }
 
     // track using players to send packets
@@ -386,7 +401,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     /**
-     * @todo: rename params
+     * @todo: [LOW] Rename params
      * @param x
      * @param y
      * @param z
@@ -438,7 +453,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
-        return EaselContainerMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler, ContainerLevelAccess.create(this.level, this.blockPosition()));
+        return EaselContainerMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
     }
 
     @Override

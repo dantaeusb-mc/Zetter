@@ -48,7 +48,7 @@ public class ArtistTableContainer extends ItemStackHandler {
             return player.distanceToSqr((double)this.boundTable.getBlockPos().getX() + 0.5D, (double)this.boundTable.getBlockPos().getY() + 0.5D, (double)this.boundTable.getBlockPos().getZ() + 0.5D) <= 64.0D;
         }
 
-        // @todo: false?
+        // @todo: [LOW] False?
         return true;
     }
 

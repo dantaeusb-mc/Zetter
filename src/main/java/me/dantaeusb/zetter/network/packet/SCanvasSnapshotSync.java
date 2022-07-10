@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ClientHandler;
-import me.dantaeusb.zetter.storage.PaintingData;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LogicalSidedProvider;
@@ -12,23 +12,30 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class SPaintingSnapshotMessage {
+public class SCanvasSnapshotSync {
+    private final int easelEntityId;
     private final String canvasCode;
-    private final PaintingData paintingData;
+    private final CanvasData canvasData;
     private final long timestamp;
 
-    public SPaintingSnapshotMessage(String canvasCode, PaintingData paintingData, long timestamp) {
+    // @todo: [HIGH] Probably should pass color array, not canvas data
+    public SCanvasSnapshotSync(int easelEntityId, String canvasCode, CanvasData canvasData, long timestamp) {
+        this.easelEntityId = easelEntityId;
         this.canvasCode = canvasCode;
-        this.paintingData = paintingData;
+        this.canvasData = canvasData;
         this.timestamp = timestamp;
+    }
+
+    public int getEaselEntityId() {
+        return this.easelEntityId;
     }
 
     public String getCanvasCode() {
         return this.canvasCode;
     }
 
-    public PaintingData getPaintingData() {
-        return this.paintingData;
+    public CanvasData getCanvasData() {
+        return this.canvasData;
     }
 
     public long getTimestamp() {
@@ -38,18 +45,14 @@ public class SPaintingSnapshotMessage {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SPaintingSnapshotMessage readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SCanvasSnapshotSync readPacketData(FriendlyByteBuf networkBuffer) {
         try {
+            int easelEntityId = networkBuffer.readInt();
             String canvasCode = networkBuffer.readUtf();
             long timestamp = networkBuffer.readLong();
-            PaintingData readCanvasData = (PaintingData) CanvasContainer.readPacketCanvasData(networkBuffer);
+            CanvasData readCanvasData = (CanvasData) CanvasContainer.readPacketCanvasData(networkBuffer);
 
-            String paintingName = networkBuffer.readUtf();
-            String authorName = networkBuffer.readUtf();
-
-            readCanvasData.setMetaProperties(authorName, paintingName);
-
-            return new SPaintingSnapshotMessage(canvasCode, readCanvasData, timestamp);
+            return new SCanvasSnapshotSync(easelEntityId, canvasCode, readCanvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SPaintingSyncMessage: " + e);
             return null;
@@ -60,32 +63,29 @@ public class SPaintingSnapshotMessage {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
+        networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode);
         networkBuffer.writeLong(this.timestamp);
-        CanvasContainer.writePacketCanvasData(networkBuffer, this.paintingData);
-
-        // @todo: proper length based on game limitations
-        networkBuffer.writeUtf(this.paintingData.getPaintingName(), 64);
-        networkBuffer.writeUtf(this.paintingData.getAuthorName(), 64);
+        CanvasContainer.writePacketCanvasData(networkBuffer, this.canvasData);
     }
 
-    public static void handle(final SPaintingSnapshotMessage packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(final SCanvasSnapshotSync packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
         Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
-            Zetter.LOG.warn("SCanvasSyncMessage context could not provide a ClientWorld.");
+            Zetter.LOG.warn("SCanvasSnapshotSync context could not provide a ClientWorld.");
             return;
         }
 
-        //ctx.enqueueWork(() -> ClientHandler.processPaintingSync(packetIn, clientWorld.get()));
+        ctx.enqueueWork(() -> ClientHandler.processSnapshotSync(packetIn, clientWorld.get()));
     }
 
     @Override
     public String toString()
     {
-        return "SPaintingSyncMessage[painting=" + this.paintingData + ",timestamp=" + this.timestamp + "]";
+        return "SPaintingSnapshotSync[easel=" + this.easelEntityId + "painting=" + this.canvasCode + ",timestamp=" + this.timestamp + "]";
     }
 }

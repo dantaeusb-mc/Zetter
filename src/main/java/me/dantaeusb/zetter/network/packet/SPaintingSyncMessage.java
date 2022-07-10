@@ -11,6 +11,10 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+/**
+ * Same as SCanvasSyncMessage, but only for painting class
+ * @todo: [HIGH] Do we really need different packets?
+ */
 public class SPaintingSyncMessage {
     private final String canvasCode;
     private final PaintingData paintingData;
@@ -79,7 +83,7 @@ public class SPaintingSyncMessage {
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processPaintingSync(packetIn, clientWorld.get()));
+        ctx.enqueueWork(() -> ClientHandler.processPaintingDataSync(packetIn, clientWorld.get()));
     }
 
     @Override
