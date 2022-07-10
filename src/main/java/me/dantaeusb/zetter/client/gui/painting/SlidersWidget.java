@@ -3,13 +3,13 @@ package me.dantaeusb.zetter.client.gui.painting;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.util.Mth;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
-import java.awt.*;
 import java.util.function.BiFunction;
 
 public class SlidersWidget extends AbstractPaintingWidget implements Widget {
