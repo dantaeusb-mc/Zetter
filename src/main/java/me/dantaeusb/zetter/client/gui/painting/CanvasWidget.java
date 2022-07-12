@@ -1,15 +1,18 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.vertex.Tesselator;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.SizeInterface;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
+import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.storage.CanvasData;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
@@ -123,20 +126,18 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             return;
         }
 
-        // A bit dumb but avoiding direct calls
-        for (int i = 0; i < Helper.getResolution().getNumeric() * Helper.getResolution().getNumeric(); i++) {
-            int canvasX = i % 16;
-            int canvasY = i / 16;
+        String canvasCode = this.parentScreen.getMenu().getCanvasCode();
+        CanvasData canvasData = this.parentScreen.getMenu().getCanvasData();
 
-            /**
-             * @todo: better use canvas renderer because there's a texture ready to render
-             */
-            int color = this.parentScreen.getColorAt(i);
-            int globalX = this.x + this.canvasOffsetX + canvasX * CANVAS_SCALE_FACTOR;
-            int globalY = this.y + this.canvasOffsetY + canvasY * CANVAS_SCALE_FACTOR;
+        matrixStack.pushPose();
+        matrixStack.translate(this.x, this.y, 1.0F);
+        matrixStack.scale(CANVAS_SCALE_FACTOR, CANVAS_SCALE_FACTOR, 1.0F);
 
-            fill(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color);
-        }
+        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
+        renderTypeBufferImpl.endBatch();
+
+        matrixStack.popPose();
 
         if (    mouseX >= this.x
                 && mouseY >= this.y
