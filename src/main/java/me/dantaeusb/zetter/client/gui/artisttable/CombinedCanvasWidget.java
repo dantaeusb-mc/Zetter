@@ -26,6 +26,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements W
         super(parentScreen, x, y, size, size, new TranslatableComponent("container.zetter.artist_table.combined_canvas"));
     }
 
+    // @todo: [HIGH] Why double-push?
     public void render(PoseStack matrixStack) {
         matrixStack.pushPose();
         matrixStack.translate(this.x, this.y, 1.0F);

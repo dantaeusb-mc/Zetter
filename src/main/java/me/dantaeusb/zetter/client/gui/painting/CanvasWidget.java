@@ -1,9 +1,13 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
+import com.mojang.blaze3d.vertex.Tesselator;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
 
@@ -78,18 +82,17 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             return;
         }
 
-        for (int i = 0; i < Helper.getResolution().getNumeric() * Helper.getResolution().getNumeric(); i++) {
-            int localX = i % 16;
-            int localY = i / 16;
+        String canvasCode = this.parentScreen.getMenu().getCanvasCode();
+        CanvasData canvasData = this.parentScreen.getMenu().getCanvasData();
 
-            /**
-             * @todo: better use canvas renderer because there's a texture ready to render
-             */
-            int color = this.parentScreen.getColorAt(i);
-            int globalX = this.x + localX * CANVAS_SCALE_FACTOR;
-            int globalY = this.y + localY * CANVAS_SCALE_FACTOR;
+        matrixStack.pushPose();
+        matrixStack.translate(this.x, this.y, 1.0F);
+        matrixStack.scale(CANVAS_SCALE_FACTOR, CANVAS_SCALE_FACTOR, 1.0F);
 
-            this.fillGradient(matrixStack, globalX, globalY, globalX + CANVAS_SCALE_FACTOR, globalY + CANVAS_SCALE_FACTOR, color, color);
-        }
+        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
+        renderTypeBufferImpl.endBatch();
+
+        matrixStack.popPose();
     }
 }

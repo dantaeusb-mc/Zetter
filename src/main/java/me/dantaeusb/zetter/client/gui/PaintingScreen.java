@@ -193,9 +193,10 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
 
         this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+        this.canvasWidget.render(matrixStack);
+        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
 
         this.toolsWidget.render(matrixStack);
-        this.canvasWidget.render(matrixStack);
         this.paletteWidget.render(matrixStack);
         this.slidersWidget.render(matrixStack);
         this.helpWidget.render(matrixStack, x, y, partialTicks);

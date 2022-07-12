@@ -24,7 +24,10 @@ import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.Map;
 
-@OnlyIn(Dist.CLIENT)
+/**
+ * @todo: [MED] It's probably inefficient to check things on every render
+ * Instead, some advanced tracking would be good.
+ */
 public class CanvasRenderer implements AutoCloseable {
     private static CanvasRenderer instance;
     private final TextureManager textureManager;
@@ -66,6 +69,7 @@ public class CanvasRenderer implements AutoCloseable {
         this.createCanvasRendererInstance(canvasCode, canvasData);
     }
 
+    // @todo: Why do we need both code and data?
     public void renderCanvas(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
         // We won't ever render or request 0 canvas, as 0 is a fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
@@ -89,11 +93,10 @@ public class CanvasRenderer implements AutoCloseable {
      */
 
     /**
-     *
+     * @todo: [LOW] Not sure if this timer needed on ClientTick event
      * @param gameTime
      */
     public void update(long gameTime) {
-        // @todo: [LOW] Not sure if this timer needed on ClientTick event
         int partialTicks = this.timer.advanceTime(gameTime);
 
         if (partialTicks > 0) {
@@ -102,6 +105,9 @@ public class CanvasRenderer implements AutoCloseable {
         }
     }
 
+    /**
+     * @param partialTicks
+     */
     private void updateTicksSinceRender(int partialTicks) {
         Iterator<Map.Entry<String, Integer>> iterator = this.ticksSinceRenderRequested.entrySet().iterator();
 
@@ -145,9 +151,12 @@ public class CanvasRenderer implements AutoCloseable {
     public void unloadCanvas(String canvasCode) {
         Zetter.LOG.debug("Unloading canvas " + canvasCode);
 
-        this.canvasRendererInstances.remove(canvasCode);
+        // Free the texture
+        this.canvasRendererInstances.get(canvasCode).close();
 
+        this.canvasRendererInstances.remove(canvasCode);
         this.textureRequestTimeout.remove(canvasCode);
+
         // Not needed cause called from its iterator
         // this.ticksSinceRenderRequested.remove(canvasCode);
 
