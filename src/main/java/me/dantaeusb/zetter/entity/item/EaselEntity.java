@@ -367,11 +367,8 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 if (!this.isRemoved()) {
                     this.kill();
                     this.markHurt();
+                    this.dropItem(damageSource.getEntity());
                     this.dropAllContents(this.level, this.pos);
-                }
-
-                if (!damageSource.isExplosion()) {
-                    this.playSound(this.getRemoveItemSound(), 1.0F, 1.0F);
                 }
             }
             return true;
