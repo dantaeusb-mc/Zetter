@@ -130,7 +130,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         CanvasData canvasData = this.parentScreen.getMenu().getCanvasData();
 
         matrixStack.pushPose();
-        matrixStack.translate(this.x, this.y, 1.0F);
+        matrixStack.translate(this.x + this.canvasOffsetX, this.y + this.canvasOffsetY, 1.0F);
         matrixStack.scale(CANVAS_SCALE_FACTOR, CANVAS_SCALE_FACTOR, 1.0F);
 
         MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());

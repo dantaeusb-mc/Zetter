@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.entity.item.state;
 import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.EaselStateListener;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
@@ -164,6 +165,10 @@ public class EaselState {
 
             if (tool.getTool().publishable()) {
                 this.recordAction(playerId, tool, color, parameters, posX, posY);
+            }
+
+            if (this.easel.getLevel().isClientSide()) {
+                CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
             }
 
             this.easel.getEaselContainer().damagePalette(damage);
