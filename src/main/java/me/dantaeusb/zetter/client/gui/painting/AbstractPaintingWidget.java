@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
 
 abstract public class AbstractPaintingWidget extends AbstractWidget implements GuiEventListener {
     // This is the resource location for the background image
-    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting-widgets.png");
+    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting/widgets.png");
 
     protected final PaintingScreen parentScreen;
 

@@ -10,7 +10,6 @@ import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import me.dantaeusb.zetter.network.packet.SCanvasSnapshotSync;
 import me.dantaeusb.zetter.network.packet.SPaintingSyncMessage;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;

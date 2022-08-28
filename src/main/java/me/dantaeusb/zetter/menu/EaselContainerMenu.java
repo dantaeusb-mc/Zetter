@@ -13,13 +13,10 @@ import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.*;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
-import me.dantaeusb.zetter.painting.tools.AbstractTool;
-import me.dantaeusb.zetter.painting.tools.ActionListener;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.SlotItemHandler;
@@ -29,7 +26,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class EaselContainerMenu extends AbstractContainerMenu implements EaselStateListener, ActionListener {
+public class EaselContainerMenu extends AbstractContainerMenu implements EaselStateListener {
     /*
      * Object references
      */
@@ -148,10 +145,6 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         }
 
         this.stateHandler.addListener(this);
-
-        if (this.player.getLevel().isClientSide()) {
-            Tools.EYEDROPPER.getTool().addActionListener(this);
-        }
     }
 
     public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
@@ -213,16 +206,6 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         this.stateHandler.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
     }
 
-    public void useToolCallback(CanvasData canvas, AbstractTool tool, AbstractToolParameters parameters, int color, float posX, float posY) {
-        if (tool.equals(Tools.EYEDROPPER.getTool())) {
-            int canvasPosX = (int) Math.min(Math.max(posX, 0), canvas.getWidth());
-            int canvasPosY = (int) Math.min(Math.max(posY, 0), canvas.getHeight());
-
-            final int newColor = canvas.getColorAt(canvasPosX, canvasPosY);
-            this.setPaletteColor(newColor);
-        }
-    }
-
     public AbstractToolParameters getCurrentToolParameters() {
         return ClientPaintingToolParameters.getInstance().getToolParameters(this.currentTool);
     }
@@ -240,20 +223,36 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
      */
 
     public void addToolUpdateListener(Consumer<AbstractToolParameters> subscriber) {
+        if (this.toolUpdateListeners.contains(subscriber)) {
+            return;
+        }
+
         this.toolUpdateListeners.add(subscriber);
         subscriber.accept(this.getCurrentToolParameters());
     }
 
     public void removeToolUpdateListener(Consumer<AbstractToolParameters> subscriber) {
+        if (!this.toolUpdateListeners.contains(subscriber)) {
+            return;
+        }
+
         this.toolUpdateListeners.remove(subscriber);
     }
 
     public void addColorUpdateListener(Consumer<Integer> subscriber) {
+        if (this.colorUpdateListeners.contains(subscriber)) {
+            return;
+        }
+
         this.colorUpdateListeners.add(subscriber);
         subscriber.accept(this.getCurrentColor());
     }
 
     public void removeColorUpdateListener(Consumer<Integer> subscriber) {
+        if (!this.colorUpdateListeners.contains(subscriber)) {
+            return;
+        }
+
         this.colorUpdateListeners.remove(subscriber);
     }
 
@@ -420,8 +419,8 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
      */
 
     /**
-     * Called when the container is closed.
-     * Push painting frames so it will be saved
+     * Called when the ONLY when container is closed.
+     * Push painting frames so it will be saved.
      */
     public void removed(@NotNull Player playerIn) {
         super.removed(playerIn);
@@ -431,10 +430,6 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         }
 
         this.stateHandler.removeListener(this);
-
-        if (this.player.getLevel().isClientSide()) {
-            Tools.EYEDROPPER.getTool().removeActionListener(this);
-        }
     }
 
     /**

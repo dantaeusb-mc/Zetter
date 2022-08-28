@@ -16,6 +16,8 @@ import me.dantaeusb.zetter.network.packet.SCanvasSnapshotSync;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -377,9 +379,16 @@ public class EaselState {
         CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(null, true);
         CanvasSnapshot latestSnapshot;
 
+        int latency = 0;
+
+        if (this.easel.getLevel().isClientSide()) {
+            ClientPacketListener connection = Minecraft.getInstance().getConnection();
+            latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency()) * 2;
+        }
+
         if (firstCanceledAction != null) {
             // @todo: [HIGH] Not sure about - 100
-            latestSnapshot = this.getSnapshotBefore(firstCanceledAction.startTime - 100);
+            latestSnapshot = this.getSnapshotBefore(firstCanceledAction.startTime - latency);
         } else {
             // Nothing canceled - just use last snapshot!
             latestSnapshot = this.snapshots.peekLast();
@@ -398,13 +407,15 @@ public class EaselState {
         while(actionBufferIterator.hasNext()) {
             CanvasAction action = actionBufferIterator.next();
 
-            // We apply non-committed always, as server cannot have idea of the new actions that were not pushed
+            // We apply non-committed and non-sent always, as server cannot have idea of the new actions that were not pushed
             // (except if canceled, but it should never happen)
-            if (action.isCommitted() && action.startTime < latestSnapshot.timestamp) {
-                continue;
-            }
-
-            if (!action.isCanceled()) {
+            if (
+                !action.isCanceled() && ( // If not canceled and
+                    !action.isCommitted()  // not committed
+                    || !action.isSent() // or not sent
+                    || action.startTime > latestSnapshot.timestamp - latency // or happened before snapshot was sent
+                )
+            ) {
                 this.applyAction(action);
             }
         }

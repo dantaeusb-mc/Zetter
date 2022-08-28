@@ -36,6 +36,7 @@
 	"container.zetter.painting.tools.bucket": "Bucket Tool",
 	"container.zetter.painting.tools.eyedropper": "Eyedropper",
 	"container.zetter.painting.tools.pencil": "Pencil",
+	"container.zetter.painting.tools.hand": "Hand",
 	"entity.zetter.custom_painting_entity": "Framed Painting",
 	"entity.zetter.easel_entity": "Easel",
 	"item.zetter.acacia_basic_frame": "Acacia Frame",

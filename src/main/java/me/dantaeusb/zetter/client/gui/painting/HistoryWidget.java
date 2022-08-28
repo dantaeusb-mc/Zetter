@@ -21,24 +21,23 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
     public static final int UNDO_HOTKEY = GLFW.GLFW_KEY_Z;
     public static final int REDO_HOTKEY = GLFW.GLFW_KEY_Y;
 
-    final static int HISTORY_BUTTON_WIDTH = 24;
-    final static int HISTORY_BUTTON_HEIGHT = 15;
-    final static int HISTORY_OFFSET = HISTORY_BUTTON_HEIGHT - 1; // 1px border between slots
+    final static int HISTORY_BUTTON_WIDTH = 22;
+    final static int HISTORY_BUTTON_HEIGHT = 13;
 
     public HistoryWidget(PaintingScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT + HISTORY_OFFSET * 3, new TranslatableComponent("container.zetter.painting.history"));
+        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT + 3, new TranslatableComponent("container.zetter.painting.history"));
 
-        final int TOOL_BUTTON_U = 208;
-        final int TOOL_BUTTON_V = 195;
+        final int HISTORY_BUTTON_U = 208;
+        final int HISTORY_BUTTON_V = 209;
 
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(
                     parentScreen.getMenu()::canUndo, parentScreen.getMenu()::undo,
-                    TOOL_BUTTON_U, TOOL_BUTTON_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
+                    HISTORY_BUTTON_U, HISTORY_BUTTON_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
                     new TranslatableComponent("container.zetter.painting.history.undo"))
             );
             add(new HistoryButton(parentScreen.getMenu()::canRedo, parentScreen.getMenu()::redo,
-                    TOOL_BUTTON_U, TOOL_BUTTON_V + HISTORY_BUTTON_HEIGHT, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
+                    HISTORY_BUTTON_U, HISTORY_BUTTON_V + HISTORY_BUTTON_HEIGHT, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
                     new TranslatableComponent("container.zetter.painting.history.redo"))
             );
         }};
@@ -49,9 +48,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
     Component getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.y + i * HISTORY_OFFSET;
+            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (PaintingScreen.isInRect(this.x, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (PaintingScreen.isInRect(this.x + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return historyButton.getTooltip();
             }
 
@@ -73,9 +72,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.y + i * HISTORY_OFFSET;
+            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (PaintingScreen.isInRect(this.x, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (PaintingScreen.isInRect(this.x + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 historyButton.action.get();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -95,10 +94,10 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.y + i * HISTORY_OFFSET;
+            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
             int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : -HISTORY_BUTTON_WIDTH);
 
-            this.blit(matrixStack, this.x, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
+            this.blit(matrixStack, this.x + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
     }

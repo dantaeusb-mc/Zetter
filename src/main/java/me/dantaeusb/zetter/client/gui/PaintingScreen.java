@@ -9,10 +9,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.tools.Brush;
-import me.dantaeusb.zetter.painting.tools.Bucket;
-import me.dantaeusb.zetter.painting.tools.Eyedropper;
-import me.dantaeusb.zetter.painting.tools.Pencil;
+import me.dantaeusb.zetter.painting.tools.*;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -30,13 +28,13 @@ import org.lwjgl.glfw.GLFW;
 import java.util.HashMap;
 import java.util.List;
 
-public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener {
+public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener, ActionListener {
     // This is the resource location for the background image
     public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
 
-    private final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
+    private List<AbstractPaintingWidget> paintingWidgets;
 
-    private final HashMap<TabsWidget.Tab, AbstractTab> tabs = new HashMap<>();
+    private HashMap<TabsWidget.Tab, AbstractTab> tabs;
 
     private ToolsWidget toolsWidget;
     private HistoryWidget historyWidget;
@@ -63,20 +61,22 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         final int CANVAS_POSITION_X = 39;
         final int CANVAS_POSITION_Y = 9;
 
-        final int TOOLS_POSITION_X = 4;
-        final int TOOLS_POSITION_Y = 4;
+        final int TOOLS_POSITION_X = 5;
+        final int TOOLS_POSITION_Y = 5;
 
         final int HISTORY_POSITION_X = 4;
         final int HISTORY_POSITION_Y = 112;
 
         final int TABS_POSITION_X = 4;
-        final int TABS_POSITION_Y = 145;
+        final int TABS_POSITION_Y = 158;
 
         final int PALETTE_POSITION_X = 175;
         final int PALETTE_POSITION_Y = 38;
 
         final int HELP_POSITION_X = 199;
         final int HELP_POSITION_Y = 0;
+
+        this.paintingWidgets = Lists.newArrayList();
 
         // Widgets
 
@@ -95,6 +95,8 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.addPaintingWidget(this.helpWidget);
 
         // Tabs
+
+        this.tabs = new HashMap<>();
 
         final ColorTab colorTab = new ColorTab(this, this.getGuiLeft(), this.getGuiTop());
 
@@ -117,6 +119,9 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.menu.addToolUpdateListener(this::updateCurrentTool);
         this.menu.addColorUpdateListener(this::updateCurrentColor);
         this.menu.addSlotListener(this);
+
+        Tools.EYEDROPPER.getTool().addActionListener(this);
+        Tools.HAND.getTool().addActionListener(this);
     }
 
     public void addPaintingWidget(AbstractPaintingWidget widget) {
@@ -162,11 +167,20 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.addWidget(widget);
     }
 
+    /**
+     * Called only when container is closed
+     *
+     * Does not get called when Screen is re-rendered
+     * i.e. due to resize
+     */
     public void removed() {
         super.removed();
         this.menu.removeToolUpdateListener(this::updateCurrentTool);
         this.menu.removeColorUpdateListener(this::updateCurrentColor);
         this.menu.removeSlotListener(this);
+
+        Tools.EYEDROPPER.getTool().removeActionListener(this);
+        Tools.HAND.getTool().removeActionListener(this);
     }
 
     /**
@@ -255,6 +269,44 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.getCurrentTab().renderLabels(matrixStack, mouseX, mouseY);
     }
 
+    private double[] dragStart;
+    private double[] dragCurrent;
+    private int[] dragStartCanvasOffset;
+
+    /**
+     * For handling client-only interactions (non publishable)
+     * @param canvas
+     * @param tool
+     * @param parameters
+     * @param color
+     * @param posX
+     * @param posY
+     */
+    public void useToolCallback(CanvasData canvas, AbstractTool tool, AbstractToolParameters parameters, int color, float posX, float posY) {
+        if (tool.equals(Tools.EYEDROPPER.getTool())) {
+            int canvasPosX = (int) Math.min(Math.max(posX, 0), canvas.getWidth());
+            int canvasPosY = (int) Math.min(Math.max(posY, 0), canvas.getHeight());
+
+            final int newColor = canvas.getColorAt(canvasPosX, canvasPosY);
+            this.getMenu().setPaletteColor(newColor);
+        } else if (tool.equals(Tools.HAND.getTool())) {
+            if (this.dragStart == null || this.dragCurrent == null || this.dragStartCanvasOffset == null) {
+                return;
+            }
+
+            double dragX = this.dragStart[0] - this.dragCurrent[0];
+            double dragY = this.dragStart[1] - this.dragCurrent[1];
+
+            int offsetX = (int) Math.round(dragX);
+            int offsetY = (int) Math.round(dragY);
+
+            this.canvasWidget.updateCanvasOffset(
+                this.dragStartCanvasOffset[0] - offsetX,
+                this.dragStartCanvasOffset[1] - offsetY
+            );
+        }
+    }
+
     /**
      * Cancel closing screen when pressing "E", handle input properly
      * @param keyCode
@@ -279,6 +331,9 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
                 return true;
             case Bucket.HOTKEY:
                 this.getMenu().setCurrentTool(Tools.BUCKET);
+                return true;
+            case Hand.HOTKEY:
+                this.getMenu().setCurrentTool(Tools.HAND);
                 return true;
             case PaletteWidget.SWAP_HOTKEY: {
                 final int row = (this.getMenu().getCurrentPaletteSlot() / 2) * 2;
@@ -338,6 +393,11 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.dragStart == null) {
+            this.dragStart = new double[]{mouseX, mouseY};
+            this.dragStartCanvasOffset = new int[]{this.canvasWidget.getCanvasOffsetX(), this.canvasWidget.getCanvasOffsetY()};
+        }
+
         super.mouseClicked(mouseX, mouseY, button);
         boolean result;
 
@@ -359,6 +419,8 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        this.dragCurrent = new double[]{mouseX, mouseY};
+
         this.canvasWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
 
         this.getCurrentTab().mouseDragged(mouseX, mouseY, button, dragX, dragY);
@@ -378,6 +440,13 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
         this.canvasWidget.mouseReleased(mouseX, mouseY, button);
 
         this.getCurrentTab().mouseReleased(mouseX, mouseY, button);
+
+        // Reset dragging
+        if (this.dragStart != null || this.dragCurrent != null || this.dragStartCanvasOffset != null) {
+            this.dragStart = null;
+            this.dragStartCanvasOffset = null;
+            this.dragCurrent = null;
+        }
 
         return super.mouseReleased(mouseX, mouseY, button);
     }

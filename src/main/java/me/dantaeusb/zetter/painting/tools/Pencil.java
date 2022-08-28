@@ -39,8 +39,9 @@ public class Pencil extends AbstractTool<PencilParameters> {
         final int width = canvas.getWidth();
         final int height = canvas.getHeight();
 
-        final int index = (int) (Math.floor(posY) * width + Math.floor(posX));
+        final int size = Math.round(params.getSize());
 
+        final int index = (int) (Math.floor(posY) * width + Math.floor(posX));
         this.pixelChange(canvas, params, color, index, 1f);
 
         // Only if changed
@@ -49,51 +50,33 @@ public class Pencil extends AbstractTool<PencilParameters> {
 
     private HashMap<Integer, ToolShape> shapes = new HashMap<>() {{
         put(1, new ToolShape());
-        put(2, new ToolShape(new ArrayList<Tuple<Integer, Integer>>() {{
-            add(new Tuple<>(-1, -1));
-            add(new Tuple<>(1, -1));
-            add(new Tuple<>(1, 1));
-            add(new Tuple<>(-1, 1));
-        }}));
-        put(3, new ToolShape(new ArrayList<>() {{
-            add(new Tuple<>(0, 0));
-            add(new Tuple<>(0, -1));
-            add(new Tuple<>(1, -1));
-            add(new Tuple<>(1, 0));
-            add(new Tuple<>(2, 0));
-            add(new Tuple<>(2, 1));
-            add(new Tuple<>(1, 1));
-            add(new Tuple<>(1, 2));
-            add(new Tuple<>(0, 2));
-            add(new Tuple<>(0, 1));
-            add(new Tuple<>(-1, 1));
-            add(new Tuple<>(-1, 0));
-        }}));
-        put(4, new ToolShape(new ArrayList<Tuple<Integer, Integer>>() {{
-            add(new Tuple<>(-1, -1));
-            add(new Tuple<>(2, -1));
-            add(new Tuple<>(2, 2));
-            add(new Tuple<>(-1, 2));
-        }}));
-        put(5, new ToolShape(new ArrayList<Tuple<Integer, Integer>>() {{
-            add(new Tuple<>(-1, -1));
-            add(new Tuple<>(-1, -2));
-            add(new Tuple<>(2, -2));
-            add(new Tuple<>(2, -1));
-            add(new Tuple<>(3, -1));
-            add(new Tuple<>(3, 2));
-            add(new Tuple<>(2, 2));
-            add(new Tuple<>(2, 3));
-            add(new Tuple<>(-1, 3));
-            add(new Tuple<>(-1, 2));
-            add(new Tuple<>(-2, 2));
-            add(new Tuple<>(-2, -1));
-        }}));
-        put(6, new ToolShape(new ArrayList<Tuple<Integer, Integer>>() {{
-            add(new Tuple<>(0, 0));
-            add(new Tuple<>(0, 1));
-            add(new Tuple<>(1, 1));
-            add(new Tuple<>(1, 0));
-        }}));
+        put(2, new ToolShape(new int[][]{
+            {1, 1},
+            {1, 1}
+        }));
+        put(3, new ToolShape(new int[][]{
+            {0, 1, 0},
+            {1, 1, 1},
+            {0, 1, 0}
+        }));
+        put(4, new ToolShape(new int[][]{
+            {1, 1, 1},
+            {1, 1, 1},
+            {1, 1, 1}
+        }));
+        put(5, new ToolShape(new int[][]{
+            {0, 0, 1, 0, 0},
+            {0, 1, 1, 1, 0},
+            {1, 1, 1, 1, 1},
+            {0, 1, 1, 1, 0},
+            {0, 0, 1, 0, 0},
+        }));
+        put(6, new ToolShape(new int[][]{
+            {0, 1, 1, 1, 0},
+            {1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1},
+            {1, 1, 1, 1, 1},
+            {0, 1, 1, 1, 0},
+        }));
     }};
 }
