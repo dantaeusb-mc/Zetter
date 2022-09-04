@@ -1,17 +1,18 @@
-package me.dantaeusb.zetter.client.gui.painting.tabs;
+package me.dantaeusb.zetter.client.gui.easel.tabs;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.ColorCodeWidget;
-import me.dantaeusb.zetter.client.gui.painting.HsbWidget;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
+import me.dantaeusb.zetter.client.gui.easel.ColorCodeWidget;
+import me.dantaeusb.zetter.client.gui.easel.HsbWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.network.chat.TranslatableComponent;
+import org.lwjgl.glfw.GLFW;
 
 public class ColorTab extends AbstractTab {
     private final ColorCodeWidget colorCodeWidget;
     private final HsbWidget hsbWidget;
 
-    public ColorTab(PaintingScreen parentScreen, int windowX, int windowY) {
+    public ColorTab(EaselScreen parentScreen, int windowX, int windowY) {
         super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.color"));
 
         final int SETTINGS_POSITION_X = 0;
@@ -57,6 +58,17 @@ public class ColorTab extends AbstractTab {
         }
 
         return false;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return this.colorCodeWidget.keyPressed(keyCode, scanCode, modifiers)
+                || super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        return this.colorCodeWidget.charTyped(codePoint, modifiers);
     }
 
     /**

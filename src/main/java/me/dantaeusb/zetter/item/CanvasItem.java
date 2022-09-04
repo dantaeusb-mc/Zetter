@@ -2,13 +2,20 @@ package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.storage.CanvasData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 
@@ -29,7 +36,7 @@ public class CanvasItem extends Item
         super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
     }
 
-
+    @Override
     public Component getName(ItemStack stack) {
         if (stack.hasTag()) {
             String canvasCode = getCanvasCode(stack);
@@ -40,6 +47,26 @@ public class CanvasItem extends Item
         }
 
         return new TranslatableComponent("item.zetter.canvas.blank");
+    }
+
+    // @todo: [HIGH] Canvas data could be null!!!
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+        if (world.isClientSide()) {
+            ItemStack canvas = player.getItemInHand(hand);
+            Minecraft.getInstance().setScreen(
+                    new PaintingScreen(
+                            player,
+                            getCanvasCode(canvas),
+                            getCanvasData(canvas, world)
+                    )
+            );
+        }
+        ItemStack itemstack = player.getItemInHand(hand);
+        player.openItemGui(itemstack, hand);
+
+        player.awardStat(Stats.ITEM_USED.get(this));
+        return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
     }
 
     /**

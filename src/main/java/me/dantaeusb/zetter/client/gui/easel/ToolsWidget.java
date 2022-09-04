@@ -1,7 +1,7 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.painting.Tools;
 import net.minecraft.client.Minecraft;
@@ -23,7 +23,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
     final static int TOOL_BUTTONS_U = 209;
     final static int TOOL_BUTTONS_V = 116;
 
-    public ToolsWidget(PaintingScreen parentScreen, int x, int y) {
+    public ToolsWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
         super(parentScreen, x, y, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * 5 + 2, new TranslatableComponent("container.zetter.painting.tools"));
 
@@ -43,7 +43,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
         for (ToolButton toolButton: this.buttons) {
             int fromY = this.y + 1 + i * TOOL_BUTTON_HEIGHT;
 
-            if (PaintingScreen.isInRect(this.x + 1, fromY, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(this.x + 1, fromY, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return toolButton.getTooltip();
             }
 
@@ -67,7 +67,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
         for (ToolButton toolButton: this.buttons) {
             int fromY = this.y + 1 + i * TOOL_BUTTON_HEIGHT;
 
-            if (PaintingScreen.isInRect(this.x, fromY, toolButton.width, toolButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(this.x, fromY, toolButton.width, toolButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 this.updateCurrentTool(toolButton);
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 return true;

@@ -1,7 +1,7 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
@@ -22,7 +22,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
 
     public static final int SWAP_HOTKEY = GLFW.GLFW_KEY_X;
 
-    public PaletteWidget(PaintingScreen parentScreen, int x, int y) {
+    public PaletteWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.palette"));
     }
 
@@ -48,7 +48,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
             int slotX = this.x + (i % 2) * PALETTE_OFFSET;
             int slotY = this.y + (i / 2) * PALETTE_OFFSET;
 
-            if (PaintingScreen.isInRect(slotX, slotY, PALETTE_SCALE_FACTOR, PALETTE_SCALE_FACTOR, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(slotX, slotY, PALETTE_SCALE_FACTOR, PALETTE_SCALE_FACTOR, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 slotIndex = i;
                 break;
             }

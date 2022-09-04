@@ -63,10 +63,12 @@
 	"item.zetter.painting.size": "%1$dx%2$d",
 	"item.zetter.painting.unknown": "unknown",
 	"item.zetter.painting.unnamed": "Unnamed",
+	"item.zetter.painting.name_field": "Name Field",
 	"item.zetter.paints": "Paints",
 	"item.zetter.palette": "Palette",
 	"item.zetter.spruce_basic_frame": "Spruce Frame",
 	"item.zetter.spruce_plated_frame": "Spruce Frame with Nameplate",
 	"item.zetter.warped_basic_frame": "Warped Frame",
-	"item.zetter.warped_plated_frame": "Warped Frame with Nameplate"
+	"item.zetter.warped_plated_frame": "Warped Frame with Nameplate",
+	"container.zetter.painting": "Painting"
 }

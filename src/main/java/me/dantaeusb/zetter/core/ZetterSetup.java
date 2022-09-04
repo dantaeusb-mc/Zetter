@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.item.FrameItem;
@@ -27,7 +27,9 @@ public class ZetterSetup
     @SuppressWarnings("unused")
     public static void onClientSetupEvent(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            MenuScreens.register(ZetterContainerMenus.PAINTING.get(), PaintingScreen::new);
+            // Not registering PaintingScreen as it's client-side only
+
+            MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
             for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {

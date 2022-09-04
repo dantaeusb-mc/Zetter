@@ -1,9 +1,9 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.painting.tabs.AbstractTab;
+import me.dantaeusb.zetter.client.gui.easel.tabs.AbstractTab;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -28,7 +28,7 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
 
     private final List<SliderWidget> sliders = new ArrayList<>();
 
-    public HsbWidget(PaintingScreen parentScreen, int x, int y) {
+    public HsbWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.sliders"));
 
         final int sliderOffset = WIDTH - SliderWidget.WIDTH;

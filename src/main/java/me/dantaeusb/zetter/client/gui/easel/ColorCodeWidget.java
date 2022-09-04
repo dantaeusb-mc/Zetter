@@ -1,8 +1,8 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.EditBox;
@@ -36,7 +36,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         }
     };
 
-    public ColorCodeWidget(PaintingScreen parentScreen, int x, int y) {
+    public ColorCodeWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslatableComponent("container.zetter.painting.color_code"));
     }
 
@@ -127,7 +127,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         int iMouseY = (int) mouseY;
 
         // Quick check
-        if (PaintingScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, iMouseX, iMouseY)) {
+        if (EaselScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, iMouseX, iMouseY)) {
             this.textField.setFocus(true);
             return super.mouseClicked(mouseX, mouseY, button);
         }
@@ -154,7 +154,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
 
     protected void drawTextbox(PoseStack matrixStack) {
         final int TEXTBOX_POSITION_U = 0;
-        final int TEXTBOX_POSITION_V = 185;
+        final int TEXTBOX_POSITION_V = 0;
 
         int textboxV = TEXTBOX_POSITION_V + (this.textField.isFocused() ? TEXTBOX_HEIGHT : 0);
 

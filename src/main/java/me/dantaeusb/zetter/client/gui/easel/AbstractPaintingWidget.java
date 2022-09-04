@@ -1,8 +1,7 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.core.tools.Color;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -13,11 +12,11 @@ import javax.annotation.Nullable;
 
 abstract public class AbstractPaintingWidget extends AbstractWidget implements GuiEventListener {
     // This is the resource location for the background image
-    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting/widgets.png");
+    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation("zetter", "textures/gui/easel/widgets.png");
 
-    protected final PaintingScreen parentScreen;
+    protected final EaselScreen parentScreen;
 
-    public AbstractPaintingWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
+    public AbstractPaintingWidget(EaselScreen parentScreen, int x, int y, int width, int height, Component title) {
         super(x, y, width, height, title);
 
         this.parentScreen = parentScreen;

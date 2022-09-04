@@ -1,8 +1,8 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -24,20 +24,22 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
     final static int HISTORY_BUTTON_WIDTH = 22;
     final static int HISTORY_BUTTON_HEIGHT = 13;
 
-    public HistoryWidget(PaintingScreen parentScreen, int x, int y) {
+    final static int HISTORY_BUTTONS_U = 209;
+    final static int HISTORY_BUTTONS_V = 210;
+
+    public HistoryWidget(EaselScreen parentScreen, int x, int y) {
+        // Add borders
         super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT + 3, new TranslatableComponent("container.zetter.painting.history"));
 
-        final int HISTORY_BUTTON_U = 208;
-        final int HISTORY_BUTTON_V = 209;
 
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(
                     parentScreen.getMenu()::canUndo, parentScreen.getMenu()::undo,
-                    HISTORY_BUTTON_U, HISTORY_BUTTON_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
+                    HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
                     new TranslatableComponent("container.zetter.painting.history.undo"))
             );
             add(new HistoryButton(parentScreen.getMenu()::canRedo, parentScreen.getMenu()::redo,
-                    HISTORY_BUTTON_U, HISTORY_BUTTON_V + HISTORY_BUTTON_HEIGHT, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
+                    HISTORY_BUTTONS_U, HISTORY_BUTTONS_V + HISTORY_BUTTON_HEIGHT + 1, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
                     new TranslatableComponent("container.zetter.painting.history.redo"))
             );
         }};
@@ -50,7 +52,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (PaintingScreen.isInRect(this.x + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(this.x + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return historyButton.getTooltip();
             }
 
@@ -74,7 +76,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (PaintingScreen.isInRect(this.x + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(this.x + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 historyButton.action.get();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -92,10 +94,12 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
+        this.blit(matrixStack, this.x, this.y, HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
-            int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : -HISTORY_BUTTON_WIDTH);
+            int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : HISTORY_BUTTON_WIDTH + 2);
 
             this.blit(matrixStack, this.x + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;

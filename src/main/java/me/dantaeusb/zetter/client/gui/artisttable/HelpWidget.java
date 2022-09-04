@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
@@ -39,7 +39,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
             int iMouseX = (int) mouseX;
             int iMouseY = (int) mouseY;
 
-            if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
                 ClientHelper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
@@ -64,7 +64,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
 
         if (this.clicked) {
             buttonU += BUTTON_WIDTH * 2;
-        } else if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
+        } else if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
             buttonU += BUTTON_WIDTH;
         }
 

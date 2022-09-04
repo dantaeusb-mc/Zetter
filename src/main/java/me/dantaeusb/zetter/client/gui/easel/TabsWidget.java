@@ -1,8 +1,8 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
@@ -11,7 +11,6 @@ import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class TabsWidget extends AbstractPaintingWidget implements Widget {
@@ -22,7 +21,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
 
     final static int WIDTH = TAB_BUTTON_WIDTH;
     final static int HEIGHT = TAB_BUTTON_HEIGHT + (TAB_BUTTON_OFFSET) * 2;
-    public TabsWidget(PaintingScreen parentScreen, int x, int y) {
+    public TabsWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.tabs"));
 
         this.updateTabs();
@@ -64,7 +63,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
         for (TabButton tab: this.tabs) {
             int fromY = this.y + i * TAB_BUTTON_OFFSET;
 
-            if (PaintingScreen.isInRect(this.x, fromY, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(this.x, fromY, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return tab.getTooltip();
             }
 
@@ -88,7 +87,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
         for (TabButton tabButton: this.tabs) {
             int fromY = this.y + i * TAB_BUTTON_OFFSET;
 
-            if (PaintingScreen.isInRect(this.x, fromY, tabButton.width, tabButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(this.x, fromY, tabButton.width, tabButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 this.parentScreen.getMenu().setCurrentTab(tabButton.tab);
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 return true;

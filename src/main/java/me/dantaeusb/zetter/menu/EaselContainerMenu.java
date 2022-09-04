@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.menu;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.client.gui.painting.TabsWidget;
+import me.dantaeusb.zetter.client.gui.easel.TabsWidget;
 import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
@@ -71,14 +71,22 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     private int currentPaletteSlot = 0;
 
     /*
+     * Client settings
+     */
+
+    private int canvasOffsetX = 0;
+    private int canvasOffsetY = 0;
+    private int canvasScale = 3;
+
+    /*
      *
      * Initializing
      *
      */
     public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
-        super(ZetterContainerMenus.PAINTING.get(), windowID);
+        super(ZetterContainerMenus.EASEL.get(), windowID);
 
-        if (ZetterContainerMenus.PAINTING == null)
+        if (ZetterContainerMenus.EASEL == null)
             throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
 
         this.player = invPlayer.player;
@@ -410,6 +418,36 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         ItemStack paletteStack = this.container.getPaletteStack();
 
         return !paletteStack.isEmpty();
+    }
+
+    /*
+     *
+     * Client things
+     *
+     */
+
+    public int getCanvasScale() {
+        return this.canvasScale;
+    }
+
+    public boolean increaseCanvasScale() {
+        if (this.canvasScale >= 3) {
+            return false;
+        }
+
+        this.canvasScale++;
+
+        return true;
+    }
+
+    public boolean decreaseCanvasScale() {
+        if (this.canvasScale <= 1) {
+            return false;
+        }
+
+        this.canvasScale--;
+
+        return true;
     }
 
     /*

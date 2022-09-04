@@ -1,21 +1,21 @@
-package me.dantaeusb.zetter.client.gui.painting.tabs;
+package me.dantaeusb.zetter.client.gui.easel.tabs;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.BlendingWidget;
-import me.dantaeusb.zetter.client.gui.painting.DitheringWidget;
-import me.dantaeusb.zetter.client.gui.painting.SliderWidget;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
+import me.dantaeusb.zetter.client.gui.easel.BlendingWidget;
+import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
+import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
 import net.minecraft.network.chat.TranslatableComponent;
 
-public class PencilParametersTab extends AbstractTab {
+public class BrushParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
     private final DitheringWidget ditheringWidget;
     private final SliderWidget intensityWidget;
     private final SliderWidget sizeWidget;
 
-    public PencilParametersTab(PaintingScreen parentScreen, int windowX, int windowY) {
+    public BrushParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
         super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;

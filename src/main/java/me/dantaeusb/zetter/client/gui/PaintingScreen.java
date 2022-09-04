@@ -1,310 +1,149 @@
 package me.dantaeusb.zetter.client.gui;
 
-import me.dantaeusb.zetter.client.gui.painting.*;
-import me.dantaeusb.zetter.client.gui.painting.tabs.*;
-import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.painting.Tools;
-import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.tools.*;
-import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerListener;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
-import java.util.HashMap;
-import java.util.List;
 
-public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener, ActionListener {
-    // This is the resource location for the background image
-    public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
+public class PaintingScreen extends Screen {
+    private static final Component DEFAULT_TITLE = new TranslatableComponent("item.zetter.painting.unnamed");
 
-    private List<AbstractPaintingWidget> paintingWidgets;
+    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
+    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
 
-    private HashMap<TabsWidget.Tab, AbstractTab> tabs;
+    private String canvasCode;
+    private AbstractCanvasData canvasData;
 
-    private ToolsWidget toolsWidget;
-    private HistoryWidget historyWidget;
-    private TabsWidget tabsWidget;
-    private CanvasWidget canvasWidget;
-    private PaletteWidget paletteWidget;
-    private HelpWidget helpWidget;
+    private String authorName;
+    private String title = "";
+    private int tick = 0;
+    private boolean editable = true;
 
-    private final Player player;
+    private int paintingOffsetX;
+    private int paintingOffsetY;
+    private int paintingWidth;
+    private int paintingHeight;
 
-    public PaintingScreen(EaselContainerMenu paintingContainer, Inventory playerInventory, Component title) {
-        super(paintingContainer, playerInventory, title);
+    private float paintingScale;
 
-        this.player = playerInventory.player;
+    private int screenOffsetX;
+    private int screenOffsetY;
+    private int screenWidth;
+    private int screenHeight;
 
-        this.imageWidth = 206;
-        this.imageHeight = 238;
+    private Button signButton;
+
+    private final TextFieldHelper titleEdit = new TextFieldHelper(() -> {
+        return this.title;
+    }, (String input) -> {
+        this.title = input;
+    }, this::getClipboard, this::setClipboard, (String input) -> {
+        return input.length() <= 16;
+    });
+
+    // @todo: [HIGH] Canvas data could be null!!!
+    public PaintingScreen(Player player, String canvasCode, AbstractCanvasData canvasData) {
+        super(new TranslatableComponent("container.zetter.painting"));
+
+        this.canvasCode = canvasCode;
+        this.canvasData = canvasData;
+
+        if (canvasData instanceof PaintingData) {
+            this.authorName = ((PaintingData) canvasData).getAuthorName();
+            this.title = ((PaintingData) canvasData).getPaintingName();
+        } else {
+            this.authorName = player.getName().getString();
+            this.title = DEFAULT_TITLE.getString();
+        }
     }
 
+    private static int SCREEN_MARGIN = 10;
+    private static int SCREEN_PADDING = 5;
+    private static int SCREEN_BOTTOM_TEXT = 30;
+
+    private static int TEXT_COLOR_ACTIVE = 0xFF000000;
+    private static int TEXT_COLOR = 0xFF2B200B;
+
+    private static int BUTTON_WIDTH = 98;
+    private static int BUTTON_HEIGHT = 20;
+
     @Override
-    protected void init() {
-        super.init();
-
-        final int CANVAS_POSITION_X = 39;
-        final int CANVAS_POSITION_Y = 9;
-
-        final int TOOLS_POSITION_X = 5;
-        final int TOOLS_POSITION_Y = 5;
-
-        final int HISTORY_POSITION_X = 4;
-        final int HISTORY_POSITION_Y = 112;
-
-        final int TABS_POSITION_X = 4;
-        final int TABS_POSITION_Y = 158;
-
-        final int PALETTE_POSITION_X = 175;
-        final int PALETTE_POSITION_Y = 38;
-
-        final int HELP_POSITION_X = 199;
-        final int HELP_POSITION_Y = 0;
-
-        this.paintingWidgets = Lists.newArrayList();
-
-        // Widgets
-
-        this.canvasWidget = new CanvasWidget(this, this.getGuiLeft() + CANVAS_POSITION_X, this.getGuiTop() + CANVAS_POSITION_Y);
-        this.paletteWidget = new PaletteWidget(this, this.getGuiLeft() + PALETTE_POSITION_X, this.getGuiTop() + PALETTE_POSITION_Y);
-        this.toolsWidget = new ToolsWidget(this, this.getGuiLeft() + TOOLS_POSITION_X, this.getGuiTop() + TOOLS_POSITION_Y);
-        this.historyWidget = new HistoryWidget(this, this.getGuiLeft() + HISTORY_POSITION_X, this.getGuiTop() + HISTORY_POSITION_Y);
-        this.tabsWidget = new TabsWidget(this, this.getGuiLeft() + TABS_POSITION_X, this.getGuiTop() + TABS_POSITION_Y);
-        this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
-
-        this.addPaintingWidget(this.canvasWidget);
-        this.addPaintingWidget(this.paletteWidget);
-        this.addPaintingWidget(this.toolsWidget);
-        this.addPaintingWidget(this.historyWidget);
-        this.addPaintingWidget(this.tabsWidget);
-        this.addPaintingWidget(this.helpWidget);
-
-        // Tabs
-
-        this.tabs = new HashMap<>();
-
-        final ColorTab colorTab = new ColorTab(this, this.getGuiLeft(), this.getGuiTop());
-
-        final PencilParametersTab pencilParametersTab = new PencilParametersTab(this, this.getGuiLeft(), this.getGuiTop());
-        final BrushParametersTab brushParametersTab = new BrushParametersTab(this, this.getGuiLeft(), this.getGuiTop());
-        final BucketParametersTab bucketParametersTab = new BucketParametersTab(this, this.getGuiLeft(), this.getGuiTop());
-
-        final InventoryTab inventoryTab = new InventoryTab(this, this.getGuiLeft(), this.getGuiTop());
-
-        this.tabs.put(TabsWidget.Tab.COLOR, colorTab);
-        this.tabs.put(TabsWidget.Tab.PENCIL_PARAMETERS, pencilParametersTab);
-        this.tabs.put(TabsWidget.Tab.BRUSH_PARAMETERS, brushParametersTab);
-        this.tabs.put(TabsWidget.Tab.BUCKET_PARAMETERS, bucketParametersTab);
-        this.tabs.put(TabsWidget.Tab.INVENTORY, inventoryTab);
-
-        // Other
-
+    public void init() {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
-        this.menu.addToolUpdateListener(this::updateCurrentTool);
-        this.menu.addColorUpdateListener(this::updateCurrentColor);
-        this.menu.addSlotListener(this);
+        this.calculatePaintingOffset();
 
-        Tools.EYEDROPPER.getTool().addActionListener(this);
-        Tools.HAND.getTool().addActionListener(this);
-    }
-
-    public void addPaintingWidget(AbstractPaintingWidget widget) {
-        this.paintingWidgets.add(widget);
-        this.addWidget(widget);
-    }
-
-    /**
-     * We do not do that directly because widget do not control
-     * life cycle. We need to remove reference when screen re-created.
-     * @param parameters
-     */
-    public void updateCurrentTool(AbstractToolParameters parameters) {
-        this.tabsWidget.updateTabs();
-        this.getMenu().setCurrentTab(TabsWidget.Tab.COLOR);
-
-        switch (this.getMenu().getCurrentTool()) {
-            case PENCIL:
-                ((PencilParametersTab) this.tabs.get(TabsWidget.Tab.PENCIL_PARAMETERS)).update(parameters);
-                break;
-            case BRUSH:
-                ((BrushParametersTab) this.tabs.get(TabsWidget.Tab.BRUSH_PARAMETERS)).update(parameters);
-                break;
-            case BUCKET:
-                ((BucketParametersTab) this.tabs.get(TabsWidget.Tab.BUCKET_PARAMETERS)).update(parameters);
-                break;
-        }
-    }
-
-    /**
-     * We do not do that directly because widget do not control
-     * life cycle. We need to remove reference when screen re-created.
-     * @param color
-     */
-    public void updateCurrentColor(Integer color) {
-        ((ColorTab) this.tabs.get(TabsWidget.Tab.COLOR)).update(color);
-    }
-
-    /**
-     * Make add widget "public" so painting widgets can pipe their components to this screen
-     */
-    public <T extends GuiEventListener & NarratableEntry> void pipeWidget(T widget) {
-        this.addWidget(widget);
-    }
-
-    /**
-     * Called only when container is closed
-     *
-     * Does not get called when Screen is re-rendered
-     * i.e. due to resize
-     */
-    public void removed() {
-        super.removed();
-        this.menu.removeToolUpdateListener(this::updateCurrentTool);
-        this.menu.removeColorUpdateListener(this::updateCurrentColor);
-        this.menu.removeSlotListener(this);
-
-        Tools.EYEDROPPER.getTool().removeActionListener(this);
-        Tools.HAND.getTool().removeActionListener(this);
-    }
-
-    /**
-     * Expose some methods for widgets
-     */
-
-    public Font getFont() {
-        return this.font;
-    }
-
-    /**
-     * Get currently selected tab
-     * @return
-     */
-    public AbstractTab getCurrentTab() {
-        return this.tabs.get(this.getMenu().getCurrentTab());
-    }
-
-    public int getColorAt(int pixelIndex) {
-        return this.menu.getCanvasData().getColorAt(pixelIndex);
-    }
-
-    @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(matrixStack, mouseX, mouseY);
-    }
-
-    @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
-
-        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
-
-        this.canvasWidget.render(matrixStack, x, y, partialTicks);
-
-        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
-
-        this.toolsWidget.render(matrixStack);
-        this.tabsWidget.render(matrixStack);
-        this.historyWidget.render(matrixStack);
-        this.paletteWidget.render(matrixStack);
-        this.helpWidget.render(matrixStack, x, y, partialTicks);
-
-        this.getCurrentTab().render(matrixStack, x, y, partialTicks);
-    }
-
-    @Override
-    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
-
-        super.renderTooltip(matrixStack, x, y);
-
-        for (AbstractPaintingWidget widget : this.paintingWidgets) {
-            if (widget.isMouseOver(x, y)) {
-                Component tooltip = widget.getTooltip(x, y);
-
-                if (tooltip != null) {
-                    this.renderTooltip(matrixStack, tooltip, x, y);
+        this.signButton = this.addRenderableWidget(
+            new Button(
+                this.screenOffsetX + this.screenWidth - BUTTON_WIDTH - SCREEN_PADDING,
+                this.paintingOffsetY + this.paintingHeight + SCREEN_PADDING,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                new TranslatableComponent("book.signButton"),
+                (button) -> {
+                    //this.updateButtonVisibility();
                 }
-            }
-        }
+            )
+        );
+
+        this.initFields();
     }
 
-    /**
-     * @param matrixStack
-     * @param mouseX
-     * @param mouseY
-     */
+    protected void initFields() {
+        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
+    }
+
+    private void renameItem(String newName) {
+
+    }
+
+    private void calculatePaintingOffset() {
+        float paintingAspectRatio = this.canvasData.getWidth() / (float) this.canvasData.getHeight();
+        float windowAspectRatio = this.width / (float) this.height;
+
+        // Painting is wider than screen: we're limited by width
+        if (paintingAspectRatio > windowAspectRatio) {
+            paintingWidth = this.width - SCREEN_MARGIN * 2 - SCREEN_PADDING * 2;
+            paintingHeight = (int) (paintingWidth / paintingAspectRatio);
+        // Painting is taller than screen: we're limited by height
+        } else {
+            paintingHeight = this.height - SCREEN_MARGIN * 2 - SCREEN_PADDING * 2 - SCREEN_BOTTOM_TEXT;
+            paintingWidth = (int) (paintingHeight * paintingAspectRatio);
+        }
+
+        this.paintingOffsetX = (this.width - paintingWidth) / 2;
+        this.paintingOffsetY = (this.height - (paintingHeight + SCREEN_BOTTOM_TEXT)) / 2;
+
+        this.paintingScale = (float) paintingWidth / this.canvasData.getWidth();
+
+        final int minWidth = 6 * 16 + BUTTON_WIDTH + 5;
+
+        this.screenWidth = Math.max(minWidth, paintingWidth) + SCREEN_PADDING * 2;
+        this.screenHeight = paintingHeight + SCREEN_BOTTOM_TEXT + SCREEN_PADDING * 2;
+
+        this.screenOffsetX = (this.width - screenWidth) / 2;
+        this.screenOffsetY = (this.height - (paintingHeight + SCREEN_BOTTOM_TEXT + SCREEN_PADDING * 2)) / 2;
+    }
+
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        //final int LABEL_XPOS = 5;
-        //final int LABEL_YPOS = 5;
-        //this.font.draw(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
-
-        final int FONT_Y_SPACING = 12;
-        final int TAB_LABEL_XPOS = EaselContainerMenu.PLAYER_INVENTORY_XPOS - 1;
-        final int TAB_LABEL_YPOS = EaselContainerMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
-
-        // draw the label for the player inventory slots
-        this.font.draw(matrixStack, this.getMenu().getCurrentTab().translatableComponent,
-                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB());
-
-        this.getCurrentTab().renderLabels(matrixStack, mouseX, mouseY);
-    }
-
-    private double[] dragStart;
-    private double[] dragCurrent;
-    private int[] dragStartCanvasOffset;
-
-    /**
-     * For handling client-only interactions (non publishable)
-     * @param canvas
-     * @param tool
-     * @param parameters
-     * @param color
-     * @param posX
-     * @param posY
-     */
-    public void useToolCallback(CanvasData canvas, AbstractTool tool, AbstractToolParameters parameters, int color, float posX, float posY) {
-        if (tool.equals(Tools.EYEDROPPER.getTool())) {
-            int canvasPosX = (int) Math.min(Math.max(posX, 0), canvas.getWidth());
-            int canvasPosY = (int) Math.min(Math.max(posY, 0), canvas.getHeight());
-
-            final int newColor = canvas.getColorAt(canvasPosX, canvasPosY);
-            this.getMenu().setPaletteColor(newColor);
-        } else if (tool.equals(Tools.HAND.getTool())) {
-            if (this.dragStart == null || this.dragCurrent == null || this.dragStartCanvasOffset == null) {
-                return;
-            }
-
-            double dragX = this.dragStart[0] - this.dragCurrent[0];
-            double dragY = this.dragStart[1] - this.dragCurrent[1];
-
-            int offsetX = (int) Math.round(dragX);
-            int offsetY = (int) Math.round(dragY);
-
-            this.canvasWidget.updateCanvasOffset(
-                this.dragStartCanvasOffset[0] - offsetX,
-                this.dragStartCanvasOffset[1] - offsetY
-            );
-        }
+    public void tick() {
+        this.tick++;
     }
 
     /**
@@ -316,175 +155,84 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        switch (keyCode) {
-            case GLFW.GLFW_KEY_ESCAPE:
-                this.minecraft.player.closeContainer();
-                return true;
-            case Pencil.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.PENCIL);
-                return true;
-            case Brush.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.BRUSH);
-                return true;
-            case Eyedropper.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.EYEDROPPER);
-                return true;
-            case Bucket.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.BUCKET);
-                return true;
-            case Hand.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.HAND);
-                return true;
-            case PaletteWidget.SWAP_HOTKEY: {
-                final int row = (this.getMenu().getCurrentPaletteSlot() / 2) * 2;
-                final int offset = this.getMenu().getCurrentPaletteSlot() % 2 == 0 ? 1 : 0;
-                this.getMenu().setCurrentPaletteSlot(row + offset);
-                return true;
-            }
-            case GLFW.GLFW_KEY_UP: {
-                final int row = this.getMenu().getCurrentPaletteSlot() / 2;
-                final int offset = this.getMenu().getCurrentPaletteSlot() % 2;
-
-                if (row <= 0) {
-                    return false;
-                }
-
-                this.getMenu().setCurrentPaletteSlot((row - 1) * 2 + offset);
-
-                return true;
-            }
-            case GLFW.GLFW_KEY_DOWN: {
-                final int row = this.getMenu().getCurrentPaletteSlot() / 2;
-                final int offset = this.getMenu().getCurrentPaletteSlot() % 2;
-
-                if (row >= 7) {
-                    return false;
-                }
-
-                this.getMenu().setCurrentPaletteSlot((row + 1) * 2 + offset);
-
-                return true;
-            }
-            case HistoryWidget.UNDO_HOTKEY:
-                if (Screen.hasControlDown()) {
-                    this.getMenu().undo();
-                    return true;
-                }
-
-                return super.keyPressed(keyCode, scanCode, modifiers);
-            case HistoryWidget.REDO_HOTKEY:
-                if (Screen.hasControlDown()) {
-                    this.getMenu().redo();
-                    return true;
-                }
-
-                return super.keyPressed(keyCode, scanCode, modifiers);
-            default:
-                return super.keyPressed(keyCode, scanCode, modifiers);
-        }
-    }
-
-    /**
-     * We have a little complicated logic with active tabs here
-     * @param mouseX
-     * @param mouseY
-     * @param button
-     * @return
-     */
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.dragStart == null) {
-            this.dragStart = new double[]{mouseX, mouseY};
-            this.dragStartCanvasOffset = new int[]{this.canvasWidget.getCanvasOffsetX(), this.canvasWidget.getCanvasOffsetY()};
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            this.minecraft.player.closeContainer();
+            return true;
         }
 
-        super.mouseClicked(mouseX, mouseY, button);
-        boolean result;
-
-        //if (!result) {
-        result = this.getCurrentTab().mouseClicked(mouseX, mouseY, button);
-        //}
-
-        return result;
+        return this.titleEdit.keyPressed(keyCode) || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    /**
-     * Unfortunately this event is not passed to children
-     * @param mouseX
-     * @param mouseY
-     * @param button
-     * @param dragX
-     * @param dragY
-     * @return
-     */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        this.dragCurrent = new double[]{mouseX, mouseY};
-
-        this.canvasWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-
-        this.getCurrentTab().mouseDragged(mouseX, mouseY, button, dragX, dragY);
-
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public boolean charTyped(char codePoint, int modifiers) {
+        return this.titleEdit.charTyped(codePoint);
     }
 
-    /**
-     * This one not passed when out of widget bounds but we need to track this event to release slider/pencil
-     * @param mouseX
-     * @param mouseY
-     * @param button
-     * @return
-     */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        this.canvasWidget.mouseReleased(mouseX, mouseY, button);
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(matrixStack);
+        this.setFocused((GuiEventListener)null);
 
-        this.getCurrentTab().mouseReleased(mouseX, mouseY, button);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        // Reset dragging
-        if (this.dragStart != null || this.dragCurrent != null || this.dragStartCanvasOffset != null) {
-            this.dragStart = null;
-            this.dragStartCanvasOffset = null;
-            this.dragCurrent = null;
+        // Border
+        fill(
+            matrixStack,
+            this.screenOffsetX,
+            this.screenOffsetY,
+            this.screenOffsetX + this.screenWidth,
+            this.screenOffsetY + this.screenHeight,
+            0xFFCAC3B4
+        );
+
+        fill(
+            matrixStack,
+            this.screenOffsetX + 1,
+            this.screenOffsetY + 1,
+            this.screenOffsetX + this.screenWidth - 1,
+            this.screenOffsetY + this.screenHeight - 1,
+            Helper.CANVAS_COLOR
+        );
+
+        //this.blit(matrixStack, , 2, 0, 0, 192, 192);
+
+        matrixStack.pushPose();
+        matrixStack.translate(this.paintingOffsetX, this.paintingOffsetY, 1.0F);
+        matrixStack.scale(this.paintingScale, this.paintingScale, 1.0F);
+
+        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, this.canvasCode, this.canvasData, 0xF000F0);
+        renderTypeBufferImpl.endBatch();
+
+        matrixStack.popPose();
+
+        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(this.title, Style.EMPTY);
+
+        if (this.editable) {
+            boolean cursorTick = this.tick / 6 % 2 == 0;
+            formattedTitle = FormattedCharSequence.composite(formattedTitle, cursorTick ? BLACK_CURSOR : GRAY_CURSOR);
         }
 
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
+        this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
+        this.font.draw(matrixStack, new TranslatableComponent("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
 
-    public Player getPlayer() {
-        return this.player;
+        super.render(matrixStack, mouseX, mouseY, partialTick);
     }
 
     @Override
-    public void dataChanged(AbstractContainerMenu p_150524_, int p_150525_, int p_150526_) {
+    public void removed() {
+        this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
+    }
+
+    private void setClipboard(String p_98148_) {
+        if (this.minecraft != null) {
+            TextFieldHelper.setClipboardContents(this.minecraft, p_98148_);
+        }
 
     }
 
-    /**
-     * Sends the contents of an inventory slot to the client-side Container. This doesn't have to match the actual
-     * contents of that slot.
-     */
-    public void slotChanged(AbstractContainerMenu containerToSend, int slotInd, ItemStack stack) {
-        this.updateCurrentColor(this.getMenu().getCurrentColor());
-    }
-
-    /**
-     * Helpers
-     */
-
-    /**
-     * @todo: [LOW] Use this.isPointInRegion
-     *
-     * @param x
-     * @param y
-     * @param xSize
-     * @param ySize
-     * @param mouseX
-     * @param mouseY
-     * @return
-     */
-    // Returns true if the given x,y coordinates are within the given rectangle
-    public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY){
-        return ((mouseX >= x && mouseX <= x+xSize) && (mouseY >= y && mouseY <= y+ySize));
+    private String getClipboard() {
+        return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
     }
 }

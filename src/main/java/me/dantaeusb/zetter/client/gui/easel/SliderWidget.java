@@ -1,9 +1,8 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.tabs.AbstractTab;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -30,7 +29,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Widget {
      */
 
     public SliderWidget(
-            PaintingScreen parentScreen, int x, int y, TranslatableComponent translatableComponent,
+            EaselScreen parentScreen, int x, int y, TranslatableComponent translatableComponent,
             Consumer<Float> positionConsumer,
             @Nullable BackgroundConsumer backgroundLambda, @Nullable ForegroundColorFunction foregroundLambda
     ) {

@@ -1,14 +1,11 @@
-package me.dantaeusb.zetter.client.gui.painting.tabs;
+package me.dantaeusb.zetter.client.gui.easel.tabs;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.BlendingWidget;
-import me.dantaeusb.zetter.client.gui.painting.ColorCodeWidget;
-import me.dantaeusb.zetter.client.gui.painting.HsbWidget;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.network.chat.TranslatableComponent;
 
 public class InventoryTab extends AbstractTab {
-    public InventoryTab(PaintingScreen parentScreen, int windowX, int windowY) {
+    public InventoryTab(EaselScreen parentScreen, int windowX, int windowY) {
         super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.inventory"));
     }
 

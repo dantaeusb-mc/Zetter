@@ -1,8 +1,8 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
@@ -28,7 +28,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
 
     private final List<DitheringButton> buttons;
 
-    public DitheringWidget(PaintingScreen parentScreen, int x, int y) {
+    public DitheringWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.dithering"));
 
         final int DITHERING_BUTTON_U = 0;
@@ -59,7 +59,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
         for (DitheringButton ditheringButton: this.buttons) {
             int fromX = this.x + i * DITHERING_BUTTON_WIDTH;
 
-            if (PaintingScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, ditheringButton.width, ditheringButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, ditheringButton.width, ditheringButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
                 if (parameters instanceof DitheringInterface) {

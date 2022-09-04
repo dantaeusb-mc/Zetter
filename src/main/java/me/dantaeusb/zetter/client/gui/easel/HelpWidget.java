@@ -1,7 +1,7 @@
-package me.dantaeusb.zetter.client.gui.painting;
+package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
@@ -22,7 +22,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
 
     boolean clicked = false;
 
-    public HelpWidget(PaintingScreen parentScreen, int x, int y) {
+    public HelpWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslatableComponent("container.zetter.painting.help"));
 
         if (!ClientHelper.openUriAllowed()) {
@@ -42,7 +42,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
             int iMouseX = (int) mouseX;
             int iMouseY = (int) mouseY;
 
-            if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
                 ClientHelper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
@@ -71,7 +71,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
 
         if (this.clicked) {
             buttonU += BUTTON_WIDTH * 2;
-        } else if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
+        } else if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
             buttonU += BUTTON_WIDTH;
         }
 

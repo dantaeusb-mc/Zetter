@@ -37,14 +37,29 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     public ArtistTableScreen(ArtistTableMenu artistTableMenu, Inventory playerInventory, Component title) {
         super(artistTableMenu, playerInventory, title);
 
-        this.imageHeight = 220;
-        this.imageWidth = 176;
+        this.imageHeight = 230;
+        this.imageWidth = 192;
     }
 
-    final int INPUT_XPOS = 7;
-    final int INPUT_YPOS = 107;
-    final int INPUT_WIDTH = 95;
-    final int INPUT_HEIGHT = 12;
+    final int REVERSE_BUTTON_XPOS = 106;
+    final int REVERSE_BUTTON_YPOS = 29;
+    final int REVERSE_BUTTON_WIDTH = 20;
+    final int REVERSE_BUTTON_HEIGHT = 18;
+
+    final int REVERSE_BUTTON_UPOS = 230;
+    final int REVERSE_BUTTON_VPOS = 0;
+
+    final int CRAFT_ARROW_WIDTH = 57;
+    final int CRAFT_ARROW_HEIGHT = 26;
+
+    final int CRAFT_ARROW_UPOS = 250;
+    final int CRAFT_ARROW_VPOS = 0;
+
+    final int COMBO_GRID_WIDTH = 80;
+    final int COMBO_GRID_HEIGHT = 80;
+
+    final int COMBO_GRID_UPOS = 250;
+    final int COMBO_GRID_VPOS = 26;
 
     @Override
     protected void init() {
@@ -61,27 +76,11 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         this.addPaintingWidget(this.combinedCanvasWidget);
         this.addPaintingWidget(this.helpWidget);
-
-        this.initFields();
     }
 
     public void addPaintingWidget(AbstractArtistTableWidget widget) {
         this.artistTableWidgets.add(widget);
         this.addWidget(widget);
-    }
-
-    protected void initFields() {
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
-
-        this.nameField = new EditBox(this.font, this.leftPos + this.INPUT_XPOS + 4, this.topPos + INPUT_YPOS + 4, INPUT_WIDTH, INPUT_HEIGHT, new TranslatableComponent("container.zetter.artist_table"));
-        this.nameField.setCanLoseFocus(false);
-        this.nameField.setTextColor(-1);
-        this.nameField.setTextColorUneditable(-1);
-        this.nameField.setBordered(false);
-        this.nameField.setMaxLength(35);
-        this.nameField.setResponder(this::renameItem);
-        this.addWidget(this.nameField);
-        this.setInitialFocus(this.nameField);
     }
 
     // Listener interface - to track name field availability
@@ -137,15 +136,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
 
-        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
-
-        // Draw input
-        final int INPUT_UPOS = 0;
-        final int INPUT_VPOS = this.imageHeight;
-        final int INPUT_WIDTH = 100;
-        final int INPUT_HEIGHT = 16;
-
-        this.blit(matrixStack, this.leftPos + INPUT_XPOS, this.topPos + INPUT_YPOS, INPUT_UPOS, INPUT_VPOS + (this.allowedToNameItem() && this.nameField.isFocused() ? 0 : INPUT_HEIGHT), INPUT_WIDTH, INPUT_HEIGHT);
+        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
 
         final int LOADING_XPOS = 128;
         final int LOADING_YPOS = 54;
