@@ -70,9 +70,9 @@ public class ZetterNetwork {
                 CPaletteUpdatePacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_RENAME, CRenamePaintingPacket.class,
-                CRenamePaintingPacket::writePacketData, CRenamePaintingPacket::readPacketData,
-                CRenamePaintingPacket::handle,
+        simpleChannel.registerMessage(PAINTING_RENAME, CSignPaintingPacket.class,
+                CSignPaintingPacket::writePacketData, CSignPaintingPacket::readPacketData,
+                CSignPaintingPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(SNAPSHOT_SYNC, SCanvasSnapshotSync.class,

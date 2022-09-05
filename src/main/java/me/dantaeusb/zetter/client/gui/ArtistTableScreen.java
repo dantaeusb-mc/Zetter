@@ -3,15 +3,12 @@ package me.dantaeusb.zetter.client.gui;
 import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
-import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.network.packet.CRenamePaintingPacket;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
@@ -22,7 +19,6 @@ import java.util.List;
 
 public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> {
     protected final Component title = new TranslatableComponent("container.zetter.artistTable");
-    private EditBox nameField;
 
     // This is the resource location for the background image
     private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/gui/artist_table.png");
@@ -85,41 +81,12 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
     // Listener interface - to track name field availability
 
-    /**
-     * Update field on client and _always_ send
-     * rename packet, so even if there's no valid
-     * canvas, it will have name after all requirements
-     * for painting are met -- otherwise it can
-     * dismiss name field if you place canvas after
-     * entering a name
-     * @param name
-     */
-    private void renameItem(String name) {
-        this.menu.updatePaintingName(name);
-        this.sendRenamePacket(name);
-    }
-
-    private void sendRenamePacket(String name) {
-        CRenamePaintingPacket modePacket = new CRenamePaintingPacket(
-                this.menu.containerId,
-                this.nameField.getValue()
-        );
-
-        ZetterNetwork.simpleChannel.sendToServer(modePacket);
-    }
-
     @Override
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
-
-        this.renderNameField(matrixStack, mouseX, mouseY, partialTicks);
         this.renderTooltip(matrixStack, mouseX, mouseY);
-    }
-
-    public void renderNameField(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.nameField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override
@@ -127,7 +94,6 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         super.containerTick();
 
         this.tick++;
-        this.nameField.tick();
     }
 
     @Override
@@ -210,16 +176,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
             return true;
         }
 
-        return this.nameField.keyPressed(keyCode, scanCode, modifiers) || this.nameField.canConsumeInput() || super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    /**
-     * Copy of container method, needed cause conainer for client is just a dummy instance
-     * @see LockTableContainer#allowedToNameItem()
-     * @return
-     */
-    public boolean allowedToNameItem() {
-        return this.menu.isCanvasReady();
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     // Returns true if the given x,y coordinates are within the given rectangle

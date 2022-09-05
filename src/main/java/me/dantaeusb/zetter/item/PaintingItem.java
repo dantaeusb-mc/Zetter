@@ -1,7 +1,15 @@
 package me.dantaeusb.zetter.item;
 
+import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.client.Minecraft;
+import net.minecraft.stats.Stats;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.CreativeModeTab;
@@ -39,11 +47,39 @@ public class PaintingItem extends Item
         super(properties);
     }
 
+    // @todo: [HIGH] Canvas data could be null!!!
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+        ItemStack painting = player.getItemInHand(hand);
+
+        if (world.isClientSide()) {
+            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+            String paintingCode = getPaintingCode(painting);
+
+            if (canvasTracker != null) {
+                PaintingData paintingData = canvasTracker.getCanvasData(paintingCode, PaintingData.class);
+
+                Minecraft.getInstance().setScreen(
+                    PaintingScreen.createScreenForPainting(
+                        player,
+                        paintingCode,
+                        paintingData,
+                        hand
+                    )
+                );
+            }
+        }
+
+        player.awardStat(Stats.ITEM_USED.get(this));
+
+        return InteractionResultHolder.sidedSuccess(painting, world.isClientSide());
+    }
+
     public static void setPaintingData(ItemStack stack, String paintingCode, PaintingData paintingData, int generation) {
         setPaintingCode(stack, paintingCode);
 
         setCachedAuthorName(stack, paintingData.getAuthorName());
-        setCachedPaintingName(stack, paintingData.getPaintingName());
+        setCachedPaintingName(stack, paintingData.getPaintingTitle());
 
         int widthBlocks = paintingData.getWidth() / paintingData.getResolution().getNumeric();
         int heightBlocks = paintingData.getHeight() / paintingData.getResolution().getNumeric();

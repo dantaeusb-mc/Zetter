@@ -58,7 +58,7 @@ public class PaintingData extends AbstractCanvasData {
         this.title = title;
     }
 
-    public String getPaintingName() {
+    public String getPaintingTitle() {
         return this.title;
     }
 

@@ -113,17 +113,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     }
 
     /**
-     * Called from client and from network when player
-     * changes something in the name field
-     * (update painting name)
-     */
-    public void updatePaintingName(String newPaintingName) {
-        this.paintingName = newPaintingName;
-
-        this.updatePaintingOutput();
-    }
-
-    /**
      * Update contents of painting when some
      * of the input parameters changed (i.e. name, canvases)
      */
@@ -159,34 +148,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
 
         this.inventoryOut.setStackInSlot(0, outStack);
-    }
-
-    protected ItemStack takePainting(Player player, ItemStack outStack) {
-        DummyCanvasData combinedCanvasData = this.getCanvasCombination().canvasData;
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(this.world);
-
-        if (combinedCanvasData == null) {
-            Zetter.LOG.error("Cannot find combined canvas data");
-            return ItemStack.EMPTY;
-        }
-
-        /**
-         * Feel like I'm getting ids before getting code always. Maybe make getCanvasCode call
-         * CanvasTracker itself?
-         */
-        final int newId = canvasTracker.getNextPaintingId();
-        final String newCode = PaintingData.getCanvasCode(newId);
-        PaintingData paintingData = PaintingData.createFrom(combinedCanvasData);
-        paintingData.setMetaProperties(player.getName().getString(), this.paintingName);
-        canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
-
-        PaintingItem.setPaintingData(outStack, newCode, paintingData, 0);
-
-        if (!player.isCreative()) {
-            this.artistTableContainer.clear();
-        }
-
-        return outStack;
     }
 
     public void containerChanged(ItemStackHandler container) {
@@ -305,10 +266,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         @Override
         public boolean mayPlace(ItemStack stack) {
             return false;
-        }
-
-        public void onTake(Player player, ItemStack stack) {
-            ArtistTableMenu.this.takePainting(player, stack);
         }
     }
 }

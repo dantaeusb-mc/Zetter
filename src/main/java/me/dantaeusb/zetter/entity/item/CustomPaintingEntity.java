@@ -207,7 +207,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
         PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
 
-        String paintingName = paintingData.getPaintingName();
+        String paintingName = paintingData.getPaintingTitle();
         String authorName = paintingData.getAuthorName();
 
         if (StringUtil.isNullOrEmpty(paintingName)) {

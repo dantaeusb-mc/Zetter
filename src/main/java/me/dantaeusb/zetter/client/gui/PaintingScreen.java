@@ -5,7 +5,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.network.packet.CSignPaintingPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
@@ -18,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
 
@@ -27,10 +31,13 @@ public class PaintingScreen extends Screen {
     private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
     private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
 
-    private String canvasCode;
-    private AbstractCanvasData canvasData;
+    private final Player owner;
+    private final InteractionHand hand;
 
-    private String authorName;
+    private final String canvasCode;
+    private final AbstractCanvasData canvasData;
+
+    private final String authorName;
     private String title = "";
     private int tick = 0;
     private boolean editable = true;
@@ -57,20 +64,27 @@ public class PaintingScreen extends Screen {
         return input.length() <= 16;
     });
 
+    public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
+        return new PaintingScreen(player, canvasCode, canvasData, player.getName().getString(), "", hand);
+    }
+
+    public static PaintingScreen createScreenForPainting(Player player, String canvasCode, PaintingData paintingData, InteractionHand hand) {
+        return new PaintingScreen(player, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingTitle(), hand);
+
+    }
+
     // @todo: [HIGH] Canvas data could be null!!!
-    public PaintingScreen(Player player, String canvasCode, AbstractCanvasData canvasData) {
+    private PaintingScreen(Player player, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, InteractionHand hand) {
         super(new TranslatableComponent("container.zetter.painting"));
+
+        this.owner = player;
+        this.hand = hand;
 
         this.canvasCode = canvasCode;
         this.canvasData = canvasData;
 
-        if (canvasData instanceof PaintingData) {
-            this.authorName = ((PaintingData) canvasData).getAuthorName();
-            this.title = ((PaintingData) canvasData).getPaintingName();
-        } else {
-            this.authorName = player.getName().getString();
-            this.title = DEFAULT_TITLE.getString();
-        }
+        this.authorName = authorName;
+        this.title = paintingTitle;
     }
 
     private static int SCREEN_MARGIN = 10;
@@ -97,7 +111,7 @@ public class PaintingScreen extends Screen {
                 BUTTON_HEIGHT,
                 new TranslatableComponent("book.signButton"),
                 (button) -> {
-                    //this.updateButtonVisibility();
+                    this.signPainting();
                 }
             )
         );
@@ -109,8 +123,14 @@ public class PaintingScreen extends Screen {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
     }
 
-    private void renameItem(String newName) {
+    private void signPainting() {
+        int slot = this.hand == InteractionHand.MAIN_HAND ? this.owner.getInventory().selected : 40;
 
+        CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
+
+        ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
+
+        this.minecraft.player.closeContainer();
     }
 
     private void calculatePaintingOffset() {
@@ -207,7 +227,8 @@ public class PaintingScreen extends Screen {
 
         matrixStack.popPose();
 
-        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(this.title, Style.EMPTY);
+        String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
+        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(title, Style.EMPTY);
 
         if (this.editable) {
             boolean cursorTick = this.tick / 6 % 2 == 0;

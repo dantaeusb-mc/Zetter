@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
@@ -36,6 +37,27 @@ public class CanvasItem extends Item
         super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
     }
 
+    // @todo: [HIGH] Canvas data could be null!!!
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+        if (world.isClientSide()) {
+            ItemStack canvas = player.getItemInHand(hand);
+            Minecraft.getInstance().setScreen(
+                    PaintingScreen.createScreenForCanvas(
+                            player,
+                            getCanvasCode(canvas),
+                            getCanvasData(canvas, world),
+                            hand
+                    )
+            );
+        }
+        ItemStack itemstack = player.getItemInHand(hand);
+        player.openItemGui(itemstack, hand);
+
+        player.awardStat(Stats.ITEM_USED.get(this));
+        return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
+    }
+
     @Override
     public Component getName(ItemStack stack) {
         if (stack.hasTag()) {
@@ -49,29 +71,9 @@ public class CanvasItem extends Item
         return new TranslatableComponent("item.zetter.canvas.blank");
     }
 
-    // @todo: [HIGH] Canvas data could be null!!!
-    @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        if (world.isClientSide()) {
-            ItemStack canvas = player.getItemInHand(hand);
-            Minecraft.getInstance().setScreen(
-                    new PaintingScreen(
-                            player,
-                            getCanvasCode(canvas),
-                            getCanvasData(canvas, world)
-                    )
-            );
-        }
-        ItemStack itemstack = player.getItemInHand(hand);
-        player.openItemGui(itemstack, hand);
-
-        player.awardStat(Stats.ITEM_USED.get(this));
-        return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
-    }
-
     /**
      *
-     * @see {@link FilledMapItem#getMapData(ItemStack, World)}
+     * @see {@link net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
      * @param stack
      * @param world
      * @return
@@ -88,7 +90,7 @@ public class CanvasItem extends Item
     }
 
     /**
-     * @see {@link FilledMapItem#getCustomMapData(ItemStack, World)}
+     * @see {@link net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
      */
     @Nullable
     protected CanvasData getCustomCanvasData(ItemStack stack, Level world) {
@@ -116,7 +118,7 @@ public class CanvasItem extends Item
     }
 
     /**
-     * @see {@link FilledMapItem#getMapId(ItemStack)}
+     * @see {@link net.minecraft.world.item.MapItem#getMapId(ItemStack)}
      * @return
      */
     public static @Nullable String getCanvasCode(@Nullable ItemStack stack) {
@@ -137,7 +139,7 @@ public class CanvasItem extends Item
 
     /**
      *
-     * @see {@link FilledMapItem#getMapName(ItemStack)}
+     * @see {@link net.minecraft.world.item.MapItem#getName(ItemStack)}
      * @param stack
      * @return
      */
@@ -152,9 +154,8 @@ public class CanvasItem extends Item
 
     /**
      *
-     * @see {@link FilledMapItem#createNewSavedData(ItemStack, World, int, int, int, boolean, boolean, RegistryKey)}
-     * @param stack
-     * @param worldIn
+     * @see {@link net.minecraft.world.item.MapItem#createNewSavedData(Level, int, int, int, boolean, boolean, ResourceKey)}
+     * @param world
      * @return
      */
     private static String createNewCanvasData(Level world) {

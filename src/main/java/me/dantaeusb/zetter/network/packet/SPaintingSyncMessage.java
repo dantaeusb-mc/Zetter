@@ -68,7 +68,7 @@ public class SPaintingSyncMessage {
         CanvasContainer.writePacketCanvasData(networkBuffer, this.paintingData);
 
         // @todo: proper length based on game limitations
-        networkBuffer.writeUtf(this.paintingData.getPaintingName(), 64);
+        networkBuffer.writeUtf(this.paintingData.getPaintingTitle(), 64);
         networkBuffer.writeUtf(this.paintingData.getAuthorName(), 64);
     }
 
