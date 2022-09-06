@@ -123,11 +123,8 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int iMouseX = (int) mouseX;
-        int iMouseY = (int) mouseY;
-
         // Quick check
-        if (EaselScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, iMouseX, iMouseY)) {
+        if (EaselScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
             this.textField.setFocus(true);
             return super.mouseClicked(mouseX, mouseY, button);
         }

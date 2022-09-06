@@ -15,6 +15,8 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
+import java.util.ArrayList;
+
 public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackHandlerListener {
     private static final int HOTBAR_SLOT_COUNT = 9;
 
@@ -30,15 +32,32 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
     private ArtistTableContainer artistTableContainer;
 
+    private ArrayList<Slot> combinationSlots = new ArrayList<>(16);
     private CanvasCombination canvasCombination;
+    private Slot combinedSlot;
 
     private Mode mode = Mode.COMBINE;
 
-    protected final ItemStackHandler inventoryOut = new ItemStackHandler(1);
+    protected final ItemStackHandler combinedHandler = new ItemStackHandler(1);
 
     // gui position of the player inventory grid
     public static final int PLAYER_INVENTORY_XPOS = 36;
     public static final int PLAYER_INVENTORY_YPOS = 110;
+
+    public static final int COMBINATION_SLOTS_COMBINE_X = 14;
+    public static final int COMBINATION_SLOTS_COMBINE_Y = 20;
+
+    public static final int COMBINATION_SLOTS_SPLIT_X = 230 - 18 * 4 - 14;
+    public static final int COMBINATION_SLOTS_SPLIT_Y = 20;
+
+    public static final int COMBINED_SLOT_COMBINE_X = 140;
+    public static final int COMBINED_SLOT_COMBINE_Y = 58;
+
+    public static final int COMBINED_SLOT_SPLIT_X = 74;
+    public static final int COMBINED_SLOT_SPLIT_Y = 59;
+
+    final int SLOT_X_SPACING = 18;
+    final int SLOT_Y_SPACING = 18;
 
     public ArtistTableMenu(int windowID, Inventory invPlayer,
                            ArtistTableContainer artistTableContainer) {
@@ -50,8 +69,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         this.artistTableContainer = artistTableContainer;
         this.artistTableContainer.addListener(this);
 
-        final int SLOT_X_SPACING = 18;
-        final int SLOT_Y_SPACING = 18;
         final int HOTBAR_XPOS = 36;
         final int HOTBAR_YPOS = 168;
 
@@ -70,25 +87,24 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             }
         }
 
-        // gui position of the player inventory grid
-        final int CANVAS_INVENTORY_XPOS = 12;
-        final int CANVAS_INVENTORY_YPOS = 24;
-
         // Add canvas sewing slots
         for (int y = 0; y < CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < CANVAS_COLUMN_COUNT; x++) {
                 int slotNumber = y * CANVAS_COLUMN_COUNT + x;
-                int xpos = CANVAS_INVENTORY_XPOS + x * SLOT_X_SPACING;
-                int ypos = CANVAS_INVENTORY_YPOS + y * SLOT_Y_SPACING;
-                this.addSlot(new SlotCombination(this.artistTableContainer, slotNumber,  xpos, ypos));
+                int xpos = COMBINATION_SLOTS_COMBINE_X + x * SLOT_X_SPACING;
+                int ypos = COMBINATION_SLOTS_COMBINE_Y + y * SLOT_Y_SPACING;
+
+                final SlotCombination combinationSlot = new SlotCombination(this.artistTableContainer, slotNumber,  xpos, ypos);
+
+                this.addSlot(combinationSlot);
+                this.combinationSlots.add(combinationSlot);
             }
         }
 
-        // gui position of the player material slots
-        final int OUTPUT_XPOS = 152;
-        final int OUTPUT_YPOS = 107;
+        final SlotCombined combinedSlot = new SlotCombined(this.combinedHandler, 0, COMBINED_SLOT_COMBINE_X, COMBINED_SLOT_COMBINE_Y);
 
-        this.addSlot(new SlotCombined(this.inventoryOut, 0, OUTPUT_XPOS, OUTPUT_YPOS));
+        this.addSlot(combinedSlot);
+        this.combinedSlot = combinedSlot;
 
         this.updateCanvasCombination();
     }
@@ -109,7 +125,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * of the input parameters changed (i.e. name, canvases)
      */
     public void updatePaintingOutput() {
-        ItemStack existingStack = this.inventoryOut.getStackInSlot(0);
+        ItemStack existingStack = this.combinedHandler.getStackInSlot(0);
         ItemStack outStack;
 
         if (this.isCanvasReady()) {
@@ -122,13 +138,38 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             outStack = ItemStack.EMPTY;
         }
 
-        this.inventoryOut.setStackInSlot(0, outStack);
+        this.combinedHandler.setStackInSlot(0, outStack);
     }
 
-    public void updateMode(Mode mode) {
+    public Mode getMode() {
+        return this.mode;
+    }
+
+    public void setMode(Mode mode) {
         this.mode = mode;
-        ((SlotAccessor) this.slots.get(0)).setX(0);
-        ((SlotAccessor) this.slots.get(0)).setY(0);
+
+        this.updateSlotPositions();
+    }
+
+    public void updateSlotPositions() {
+        final int firstIndex = this.combinationSlots.get(0).getSlotIndex();
+
+        final int combinationBaseX = this.mode == Mode.COMBINE ? COMBINATION_SLOTS_COMBINE_X : COMBINATION_SLOTS_SPLIT_X;
+        final int combinationBaseY = this.mode == Mode.COMBINE ? COMBINATION_SLOTS_COMBINE_Y : COMBINATION_SLOTS_SPLIT_Y;
+
+        for (Slot combinationSlot : this.combinationSlots) {
+            int x = (combinationSlot.getSlotIndex() - firstIndex) % CANVAS_ROW_COUNT;
+            int y = (combinationSlot.getSlotIndex() - firstIndex) / CANVAS_COLUMN_COUNT;
+
+            ((SlotAccessor) combinationSlot).setX(combinationBaseX + x * SLOT_X_SPACING);
+            ((SlotAccessor) combinationSlot).setY(combinationBaseY + y * SLOT_Y_SPACING);
+        }
+
+        final int combinedX = this.mode == Mode.COMBINE ? COMBINED_SLOT_COMBINE_X : COMBINED_SLOT_SPLIT_X;
+        final int combinedY = this.mode == Mode.COMBINE ? COMBINED_SLOT_COMBINE_Y : COMBINED_SLOT_SPLIT_Y;
+
+        ((SlotAccessor) this.combinedSlot).setX(combinedX);
+        ((SlotAccessor) this.combinedSlot).setY(combinedY);
     }
 
     public void containerChanged(ItemStackHandler container) {
@@ -166,7 +207,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * null for the initial slot that was double-clicked.
      */
     public boolean canTakeItemForPickAll(ItemStack stack, Slot slotIn) {
-        return slotIn.container != this.inventoryOut && super.canTakeItemForPickAll(stack, slotIn);
+        return slotIn.container != this.combinedHandler && super.canTakeItemForPickAll(stack, slotIn);
     }
 
     /**

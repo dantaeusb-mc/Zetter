@@ -70,5 +70,6 @@
 	"item.zetter.spruce_plated_frame": "Spruce Frame with Nameplate",
 	"item.zetter.warped_basic_frame": "Warped Frame",
 	"item.zetter.warped_plated_frame": "Warped Frame with Nameplate",
-	"container.zetter.painting": "Painting"
+	"container.zetter.painting": "Painting",
+	"container.zetter.artist_table.change_action": "Change Action"
 }

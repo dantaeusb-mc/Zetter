@@ -18,8 +18,8 @@ public class ColorTab extends AbstractTab {
         final int SETTINGS_POSITION_X = 0;
         final int SETTINGS_POSITION_Y = 6;
 
-        final int TEXTBOX_POSITION_X = 30;
-        final int TEXTBOX_POSITION_Y = 0;
+        final int TEXTBOX_POSITION_X = 0;
+        final int TEXTBOX_POSITION_Y = 50;
 
         this.hsbWidget = new HsbWidget(this.parentScreen, this.x + SETTINGS_POSITION_X, this.y + SETTINGS_POSITION_Y);
         this.colorCodeWidget = new ColorCodeWidget(this.parentScreen, this.x + TEXTBOX_POSITION_X, this.y + TEXTBOX_POSITION_Y);
@@ -48,13 +48,12 @@ public class ColorTab extends AbstractTab {
         this.colorCodeWidget.tick();
     }
 
+    @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.active) {
-
-            int iMouseX = (int) mouseX;
-            int iMouseY = (int) mouseY;
-
-            this.hsbWidget.mouseClicked(iMouseX, iMouseY, button);
+            return  this.hsbWidget.mouseClicked(mouseX, mouseY, button) ||
+                    this.colorCodeWidget.mouseClicked(mouseX, mouseY, button) ||
+                    super.mouseClicked(mouseX, mouseY, button);
         }
 
         return false;
@@ -62,13 +61,14 @@ public class ColorTab extends AbstractTab {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return this.colorCodeWidget.keyPressed(keyCode, scanCode, modifiers)
+        return  this.colorCodeWidget.keyPressed(keyCode, scanCode, modifiers)
                 || super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        return this.colorCodeWidget.charTyped(codePoint, modifiers);
+        return  this.colorCodeWidget.charTyped(codePoint, modifiers)
+                || super.charTyped(codePoint, modifiers);
     }
 
     /**

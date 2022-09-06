@@ -316,6 +316,10 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.getCurrentTab().keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+
         switch (keyCode) {
             case GLFW.GLFW_KEY_ESCAPE:
                 this.minecraft.player.closeContainer();
@@ -382,8 +386,6 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
                     return true;
                 }
         }
-
-        this.getCurrentTab().keyPressed(keyCode, scanCode, modifiers);
 
         return super.keyPressed(keyCode, scanCode, modifiers);
     }

@@ -60,6 +60,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Widget {
 
         if (this.isMouseOver(mouseX, mouseY)) {
             this.handleSliderInteraction(iMouseX, iMouseY);
+            return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);

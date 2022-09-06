@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.client.gui;
 
 import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
+import me.dantaeusb.zetter.client.gui.artisttable.ChangeActionWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.core.tools.Color;
@@ -26,57 +27,46 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
     private CombinedCanvasWidget combinedCanvasWidget;
+    private ChangeActionWidget changeActionWidget;
     private HelpWidget helpWidget;
 
     private int tick = 0;
 
+    final int WIDTH = 230;
+    final int HEIGHT = 192;
+
     public ArtistTableScreen(ArtistTableMenu artistTableMenu, Inventory playerInventory, Component title) {
         super(artistTableMenu, playerInventory, title);
 
-        this.imageHeight = 192;
-        this.imageWidth = 230;
+        this.imageWidth = WIDTH;
+        this.imageHeight = HEIGHT;
     }
-
-    final int REVERSE_BUTTON_XPOS = 106;
-    final int REVERSE_BUTTON_YPOS = 29;
-    final int REVERSE_BUTTON_WIDTH = 20;
-    final int REVERSE_BUTTON_HEIGHT = 18;
-
-    final int REVERSE_BUTTON_UPOS = 230;
-    final int REVERSE_BUTTON_VPOS = 0;
-
-    final int CRAFT_ARROW_WIDTH = 57;
-    final int CRAFT_ARROW_HEIGHT = 26;
-
-    final int CRAFT_ARROW_UPOS = 250;
-    final int CRAFT_ARROW_VPOS = 0;
-
-    final int COMBO_GRID_WIDTH = 80;
-    final int COMBO_GRID_HEIGHT = 80;
-
-    final int COMBO_GRID_UPOS = 250;
-    final int COMBO_GRID_VPOS = 26;
 
     @Override
     protected void init() {
         super.init();
 
-        final int COMBINED_CANVAS_POSITION_X = 104;
-        final int COMBINED_CANVAS_POSITION_Y = 26;
+        final int COMBINED_CANVAS_POSITION_X = 156;
+        final int COMBINED_CANVAS_POSITION_Y = 22;
 
-        final int HELP_POSITION_X = 165;
+        final int CHANGE_ACTION_BUTTON_POSITION_X = WIDTH / 2 - 10;
+        final int CHANGE_ACTION_BUTTON_POSITION_Y = 28;
+
+        final int HELP_POSITION_X = 225;
         final int HELP_POSITION_Y = 0;
 
         this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
+        this.changeActionWidget = new ChangeActionWidget(this, this.getGuiLeft() + CHANGE_ACTION_BUTTON_POSITION_X, this.getGuiTop() + CHANGE_ACTION_BUTTON_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
         this.addPaintingWidget(this.combinedCanvasWidget);
+        this.addPaintingWidget(this.changeActionWidget);
         this.addPaintingWidget(this.helpWidget);
     }
 
     public void addPaintingWidget(AbstractArtistTableWidget widget) {
         this.artistTableWidgets.add(widget);
-        this.addWidget(widget);
+        this.addRenderableWidget(widget);
     }
 
     // Listener interface - to track name field availability
@@ -104,6 +94,35 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
 
+        final int GRID_XPOS_COMBINE = ArtistTableMenu.COMBINATION_SLOTS_COMBINE_X - 5;
+        final int GRID_XPOS_SPLIT = ArtistTableMenu.COMBINATION_SLOTS_SPLIT_X - 5;
+        final int GRID_YPOS_COMBINE = ArtistTableMenu.COMBINATION_SLOTS_COMBINE_Y - 5;
+        final int GRID_YPOS_SPLIT = ArtistTableMenu.COMBINATION_SLOTS_SPLIT_Y - 5;
+        final int GRID_UPOS = 250;
+        final int GRID_VPOS = 26;
+        final int GRID_SIZE = 80;
+
+        if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
+            blit(matrixStack, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
+        } else {
+            blit(matrixStack, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
+        }
+
+        final int CRAFT_ARROW_Y = 54;
+
+        final int CRAFT_ARROW_SLOT_SIZE = 26;
+        final int CRAFT_ARROW_WIDTH = 40;
+        final int CRAFT_ARROW_HEIGHT = 26;
+
+        final int CRAFT_ARROW_UPOS = 250;
+        final int CRAFT_ARROW_VPOS = 0;
+
+        if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
+            blit(matrixStack, this.leftPos + this.imageWidth / 2 - CRAFT_ARROW_WIDTH / 2, this.topPos + CRAFT_ARROW_Y, CRAFT_ARROW_UPOS + CRAFT_ARROW_SLOT_SIZE, CRAFT_ARROW_VPOS, CRAFT_ARROW_WIDTH + CRAFT_ARROW_SLOT_SIZE, CRAFT_ARROW_HEIGHT, 512, 256);
+        } else {
+            blit(matrixStack, this.leftPos + this.imageWidth / 2 - CRAFT_ARROW_WIDTH / 2 - CRAFT_ARROW_SLOT_SIZE, this.topPos + CRAFT_ARROW_Y, CRAFT_ARROW_UPOS, CRAFT_ARROW_VPOS, CRAFT_ARROW_WIDTH + CRAFT_ARROW_SLOT_SIZE, CRAFT_ARROW_HEIGHT, 512, 256);
+        }
+
         final int LOADING_XPOS = 128;
         final int LOADING_YPOS = 54;
         final int LOADING_UPOS = 100;
@@ -120,6 +139,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
             this.blit(matrixStack, this.leftPos + LOADING_XPOS, this.topPos + LOADING_YPOS, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT);
         }
 
+        this.changeActionWidget.render(matrixStack, x, y, partialTicks);
         this.helpWidget.render(matrixStack, x, y, partialTicks);
 
         if (this.getMenu().isCanvasReady()) {
@@ -170,8 +190,6 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        this.menu.updateMode(ArtistTableMenu.Mode.SPLIT);
-
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
