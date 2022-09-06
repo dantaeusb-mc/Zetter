@@ -65,16 +65,15 @@ public class PaintingScreen extends Screen {
     });
 
     public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
-        return new PaintingScreen(player, canvasCode, canvasData, player.getName().getString(), "", hand);
+        return new PaintingScreen(player, hand, canvasCode, canvasData, player.getName().getString(), "", true);
     }
 
     public static PaintingScreen createScreenForPainting(Player player, String canvasCode, PaintingData paintingData, InteractionHand hand) {
-        return new PaintingScreen(player, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingTitle(), hand);
-
+        return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingTitle(), false);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
-    private PaintingScreen(Player player, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, InteractionHand hand) {
+    private PaintingScreen(Player player, InteractionHand hand, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, boolean editable) {
         super(new TranslatableComponent("container.zetter.painting"));
 
         this.owner = player;
@@ -85,6 +84,8 @@ public class PaintingScreen extends Screen {
 
         this.authorName = authorName;
         this.title = paintingTitle;
+
+        this.editable = editable;
     }
 
     private static int SCREEN_MARGIN = 10;
@@ -115,6 +116,8 @@ public class PaintingScreen extends Screen {
                 }
             )
         );
+
+        this.signButton.visible = this.editable;
 
         this.initFields();
     }
@@ -152,7 +155,13 @@ public class PaintingScreen extends Screen {
 
         this.paintingScale = (float) paintingWidth / this.canvasData.getWidth();
 
-        final int minWidth = 6 * 16 + BUTTON_WIDTH + 5;
+        int minWidth = this.editable ? 6 * 16 + 5 : 0;
+
+        // If we can edit title, we need to fit title and a button, otherwise
+        // we can use the size of the painting itself
+        if (this.editable) {
+            minWidth += BUTTON_WIDTH;
+        }
 
         this.screenWidth = Math.max(minWidth, paintingWidth) + SCREEN_PADDING * 2;
         this.screenHeight = paintingHeight + SCREEN_BOTTOM_TEXT + SCREEN_PADDING * 2;
@@ -180,12 +189,20 @@ public class PaintingScreen extends Screen {
             return true;
         }
 
-        return this.titleEdit.keyPressed(keyCode) || super.keyPressed(keyCode, scanCode, modifiers);
+        if (this.editable) {
+            return this.titleEdit.keyPressed(keyCode) || super.keyPressed(keyCode, scanCode, modifiers);
+        }
+
+        return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        return this.titleEdit.charTyped(codePoint);
+        if (this.editable) {
+            return this.titleEdit.charTyped(codePoint) || super.charTyped(codePoint, modifiers);
+        }
+
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override

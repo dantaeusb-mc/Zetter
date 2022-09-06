@@ -33,8 +33,8 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     public ArtistTableScreen(ArtistTableMenu artistTableMenu, Inventory playerInventory, Component title) {
         super(artistTableMenu, playerInventory, title);
 
-        this.imageHeight = 230;
-        this.imageWidth = 192;
+        this.imageHeight = 192;
+        this.imageWidth = 230;
     }
 
     final int REVERSE_BUTTON_XPOS = 106;
@@ -102,7 +102,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
 
-        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
+        blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
 
         final int LOADING_XPOS = 128;
         final int LOADING_YPOS = 54;
@@ -160,6 +160,19 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         // draw the label for the player inventory slots
         this.font.draw(matrixStack, this.playerInventoryTitle,
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
+    }
+    /**
+     * We have a little complicated logic with active tabs here
+     * @param mouseX
+     * @param mouseY
+     * @param button
+     * @return
+     */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.menu.updateMode(ArtistTableMenu.Mode.SPLIT);
+
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.dantaeusb.zetter.mixin",
+  "compatibilityLevel": "JAVA_16",
+  "refmap": "mixins.zettergallery.refmap.json",
+  "mixins": [
+    "SlotAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
