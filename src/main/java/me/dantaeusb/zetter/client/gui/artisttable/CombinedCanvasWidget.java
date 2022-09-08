@@ -20,7 +20,7 @@ import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 
 public class CombinedCanvasWidget extends AbstractArtistTableWidget implements Widget, GuiEventListener {
-    private static final int size = Helper.getBasicResolution().getNumeric();
+    private static final int size = 64;
 
     public CombinedCanvasWidget(ArtistTableScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, size, size, new TranslatableComponent("container.zetter.artist_table.combined_canvas"));

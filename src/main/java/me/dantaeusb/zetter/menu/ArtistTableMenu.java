@@ -50,11 +50,8 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     public static final int COMBINATION_SLOTS_SPLIT_X = 230 - 18 * 4 - 14;
     public static final int COMBINATION_SLOTS_SPLIT_Y = 20;
 
-    public static final int COMBINED_SLOT_COMBINE_X = 140;
-    public static final int COMBINED_SLOT_COMBINE_Y = 58;
-
-    public static final int COMBINED_SLOT_SPLIT_X = 74;
-    public static final int COMBINED_SLOT_SPLIT_Y = 59;
+    public static final int COMBINED_SLOT_X = 107;
+    public static final int COMBINED_SLOT_Y = 67;
 
     final int SLOT_X_SPACING = 18;
     final int SLOT_Y_SPACING = 18;
@@ -101,7 +98,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             }
         }
 
-        final SlotCombined combinedSlot = new SlotCombined(this.combinedHandler, 0, COMBINED_SLOT_COMBINE_X, COMBINED_SLOT_COMBINE_Y);
+        final SlotCombined combinedSlot = new SlotCombined(this.combinedHandler, 0, COMBINED_SLOT_X, COMBINED_SLOT_Y);
 
         this.addSlot(combinedSlot);
         this.combinedSlot = combinedSlot;
@@ -164,12 +161,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             ((SlotAccessor) combinationSlot).setX(combinationBaseX + x * SLOT_X_SPACING);
             ((SlotAccessor) combinationSlot).setY(combinationBaseY + y * SLOT_Y_SPACING);
         }
-
-        final int combinedX = this.mode == Mode.COMBINE ? COMBINED_SLOT_COMBINE_X : COMBINED_SLOT_SPLIT_X;
-        final int combinedY = this.mode == Mode.COMBINE ? COMBINED_SLOT_COMBINE_Y : COMBINED_SLOT_SPLIT_Y;
-
-        ((SlotAccessor) this.combinedSlot).setX(combinedX);
-        ((SlotAccessor) this.combinedSlot).setY(combinedY);
     }
 
     public void containerChanged(ItemStackHandler container) {

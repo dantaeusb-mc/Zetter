@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -23,10 +24,17 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (this.parentScreen.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
-            this.parentScreen.getMenu().setMode(ArtistTableMenu.Mode.SPLIT);
-        } else {
-            this.parentScreen.getMenu().setMode(ArtistTableMenu.Mode.COMBINE);
+        if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, (int) mouseX, (int) mouseY)) {
+            if (this.parentScreen.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
+                this.parentScreen.getMenu().setMode(ArtistTableMenu.Mode.SPLIT);
+                this.parentScreen.updateCombinedCanvasPosition();
+            } else {
+                this.parentScreen.getMenu().setMode(ArtistTableMenu.Mode.COMBINE);
+                this.parentScreen.updateCombinedCanvasPosition();
+            }
+
+            this.playDownSound(Minecraft.getInstance().getSoundManager());
+            return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);

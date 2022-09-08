@@ -35,6 +35,12 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     final int WIDTH = 230;
     final int HEIGHT = 192;
 
+    final int COMBINED_CANVAS_POSITION_COMBINE_X = 147;
+    final int COMBINED_CANVAS_POSITION_COMBINE_Y = 23;
+
+    final int COMBINED_CANVAS_POSITION_SPLIT_X = 17;
+    final int COMBINED_CANVAS_POSITION_SPLIT_Y = 23;
+
     public ArtistTableScreen(ArtistTableMenu artistTableMenu, Inventory playerInventory, Component title) {
         super(artistTableMenu, playerInventory, title);
 
@@ -46,16 +52,13 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected void init() {
         super.init();
 
-        final int COMBINED_CANVAS_POSITION_X = 156;
-        final int COMBINED_CANVAS_POSITION_Y = 22;
-
         final int CHANGE_ACTION_BUTTON_POSITION_X = WIDTH / 2 - 10;
         final int CHANGE_ACTION_BUTTON_POSITION_Y = 28;
 
         final int HELP_POSITION_X = 225;
         final int HELP_POSITION_Y = 0;
 
-        this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_Y);
+        this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y);
         this.changeActionWidget = new ChangeActionWidget(this, this.getGuiLeft() + CHANGE_ACTION_BUTTON_POSITION_X, this.getGuiTop() + CHANGE_ACTION_BUTTON_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
@@ -64,9 +67,19 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         this.addPaintingWidget(this.helpWidget);
     }
 
+    public void updateCombinedCanvasPosition() {
+        if (this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
+            this.combinedCanvasWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X;
+            this.combinedCanvasWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y;
+        } else {
+            this.combinedCanvasWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X;
+            this.combinedCanvasWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y;
+        }
+    }
+
     public void addPaintingWidget(AbstractArtistTableWidget widget) {
         this.artistTableWidgets.add(widget);
-        this.addRenderableWidget(widget);
+        this.addWidget(widget);
     }
 
     // Listener interface - to track name field availability
@@ -103,24 +116,38 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         final int GRID_SIZE = 80;
 
         if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
+            // Combination grid
             blit(matrixStack, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
+            // Preview bg
+            blit(matrixStack, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS + GRID_SIZE, GRID_SIZE, GRID_SIZE, 512, 256);
         } else {
+            // Combination grid
             blit(matrixStack, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
+            // Preview bg
+            blit(matrixStack, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS + GRID_SIZE, GRID_SIZE, GRID_SIZE, 512, 256);
         }
 
-        final int CRAFT_ARROW_Y = 54;
+        final int COMBINED_SLOT_YPOS = 62;
 
-        final int CRAFT_ARROW_SLOT_SIZE = 26;
-        final int CRAFT_ARROW_WIDTH = 40;
-        final int CRAFT_ARROW_HEIGHT = 26;
+        final int COMBINED_SLOT_SIZE = 26;
 
-        final int CRAFT_ARROW_UPOS = 250;
-        final int CRAFT_ARROW_VPOS = 0;
+        final int COMBINED_SLOT_UPOS = 250;
+        final int COMBINED_SLOT_VPOS = 0;
+
+        final int ARROWS_YPOS = 34;
+
+        final int ARROWS_WIDTH = 45;
+        final int ARROWS_HEIGHT = 26;
+
+        final int ARROWS_UPOS = 0;
+        final int ARROWS_VPOS = 192;
 
         if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
-            blit(matrixStack, this.leftPos + this.imageWidth / 2 - CRAFT_ARROW_WIDTH / 2, this.topPos + CRAFT_ARROW_Y, CRAFT_ARROW_UPOS + CRAFT_ARROW_SLOT_SIZE, CRAFT_ARROW_VPOS, CRAFT_ARROW_WIDTH + CRAFT_ARROW_SLOT_SIZE, CRAFT_ARROW_HEIGHT, 512, 256);
+            blit(matrixStack, this.leftPos + this.imageWidth / 2 - ARROWS_WIDTH / 2, this.topPos + ARROWS_YPOS, ARROWS_UPOS, ARROWS_VPOS, ARROWS_WIDTH, ARROWS_HEIGHT, 512, 256);
+            blit(matrixStack, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
         } else {
-            blit(matrixStack, this.leftPos + this.imageWidth / 2 - CRAFT_ARROW_WIDTH / 2 - CRAFT_ARROW_SLOT_SIZE, this.topPos + CRAFT_ARROW_Y, CRAFT_ARROW_UPOS, CRAFT_ARROW_VPOS, CRAFT_ARROW_WIDTH + CRAFT_ARROW_SLOT_SIZE, CRAFT_ARROW_HEIGHT, 512, 256);
+            blit(matrixStack, this.leftPos + this.imageWidth / 2 - ARROWS_WIDTH / 2, this.topPos + ARROWS_YPOS, ARROWS_UPOS + ARROWS_WIDTH, ARROWS_VPOS, ARROWS_WIDTH, ARROWS_HEIGHT, 512, 256);
+            blit(matrixStack, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS + COMBINED_SLOT_SIZE, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
         }
 
         final int LOADING_XPOS = 128;
