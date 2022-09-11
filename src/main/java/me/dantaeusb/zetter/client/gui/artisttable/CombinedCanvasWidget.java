@@ -31,7 +31,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements W
         matrixStack.pushPose();
         matrixStack.translate(this.x, this.y, 1.0F);
 
-        DummyCanvasData canvasData = this.parentScreen.getMenu().getCanvasCombination().canvasData;
+        DummyCanvasData canvasData = this.parentScreen.getMenu().getAction().getCanvasData();
 
         this.drawCanvas(matrixStack, canvasData);
 

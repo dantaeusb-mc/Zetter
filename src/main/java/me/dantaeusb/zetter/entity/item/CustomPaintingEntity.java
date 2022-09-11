@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.FrameItem;
+import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
 import com.google.common.collect.Maps;
 import net.minecraft.world.entity.Entity;
@@ -38,13 +39,12 @@ import net.minecraft.world.InteractionResult;
 
 public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
     public static final String NBT_TAG_FACING = "Facing";
-    public static final String NBT_TAG_PAINTING_CODE = "PaintingCode";
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
     public static final String NBT_TAG_MATERIAL = "Material";
     public static final String NBT_TAG_HAS_PLATE = "HasPlate";
     public static final String NBT_TAG_GENERATION = "Generation";
 
-    protected String canvasCode;
+    protected String paintingCode;
 
     /**
      * This data is derivative from canvas data and duplicates width/height attributes
@@ -70,7 +70,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.material = material;
         this.hasPlate = hasPlate;
 
-        this.canvasCode = canvasCode;
+        this.paintingCode = canvasCode;
 
         this.blockWidth = blockSize[0];
         this.blockHeight = blockSize[1];
@@ -80,12 +80,12 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.setDirection(facing);
     }
 
-    public String getCanvasCode() {
-        if (this.canvasCode == null) {
+    public String getPaintingCode() {
+        if (this.paintingCode == null) {
             return Helper.FALLBACK_CANVAS_CODE;
         }
 
-        return this.canvasCode;
+        return this.paintingCode;
     }
 
     public int getBlockWidth() {
@@ -205,7 +205,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             return InteractionResult.CONSUME;
         }
 
-        PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
+        PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode, PaintingData.class);
 
         String paintingName = paintingData.getPaintingTitle();
         String authorName = paintingData.getAuthorName();
@@ -228,7 +228,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         compoundTag.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
-        compoundTag.putString(NBT_TAG_PAINTING_CODE, this.canvasCode);
+        compoundTag.putString(PaintingItem.NBT_TAG_PAINTING_CODE, this.paintingCode);
         compoundTag.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
         compoundTag.putString(NBT_TAG_MATERIAL, this.material.toString());
         compoundTag.putBoolean(NBT_TAG_HAS_PLATE, this.hasPlate);
@@ -242,7 +242,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      */
     public void readAdditionalSaveData(CompoundTag compound) {
         this.direction = Direction.from2DDataValue(compound.getByte(NBT_TAG_FACING));
-        this.canvasCode = compound.getString(NBT_TAG_PAINTING_CODE);
+        this.paintingCode = compound.getString(PaintingItem.NBT_TAG_PAINTING_CODE);
 
         if (compound.contains(NBT_TAG_BLOCK_SIZE)) {
             int[] blockSize = compound.getIntArray(NBT_TAG_BLOCK_SIZE);
@@ -278,7 +278,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         buffer.writeBlockPos(this.pos);
         buffer.writeByte((byte)this.direction.get2DDataValue());
 
-        buffer.writeUtf(this.canvasCode, 64);
+        buffer.writeUtf(this.paintingCode, 64);
 
         buffer.writeInt(this.blockWidth);
         buffer.writeInt(this.blockHeight);
@@ -291,7 +291,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.pos = buffer.readBlockPos();
         this.direction = Direction.from2DDataValue(buffer.readByte());
 
-        this.canvasCode = buffer.readUtf(64);
+        this.paintingCode = buffer.readUtf(64);
 
         this.blockWidth = buffer.readInt();
         this.blockHeight = buffer.readInt();
@@ -334,9 +334,9 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)).get());
 
-            PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.canvasCode, PaintingData.class);
+            PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode, PaintingData.class);
 
-            FrameItem.setPaintingData(canvasStack, this.canvasCode, paintingData, this.generation);
+            FrameItem.setPaintingData(canvasStack, this.paintingCode, paintingData, this.generation);
 
             this.spawnAtLocation(canvasStack);
         }

@@ -28,6 +28,7 @@ public class ZetterNetwork {
     public static final byte PAINTING_SYNC = 29;
     public static final byte SNAPSHOT_SYNC = 30;
     public static final byte HISTORY_UPDATE = 31;
+    public static final byte ARTIST_TABLE_MODE = 32;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -83,6 +84,11 @@ public class ZetterNetwork {
         simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryPacket.class,
                 CCanvasHistoryPacket::writePacketData, CCanvasHistoryPacket::readPacketData,
                 CCanvasHistoryPacket::handle,
+                Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(ARTIST_TABLE_MODE, CArtistTableModeChange.class,
+                CArtistTableModeChange::writePacketData, CArtistTableModeChange::readPacketData,
+                CArtistTableModeChange::handle,
                 Optional.of(PLAY_TO_SERVER));
     }
 

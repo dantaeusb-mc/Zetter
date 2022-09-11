@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.network;
 
-import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
@@ -11,6 +10,7 @@ import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
+import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.packet.*;
@@ -18,23 +18,15 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.TextFilter;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.PacketDistributor;
 
-import java.util.List;
-import java.util.Optional;
+import java.security.InvalidParameterException;
 
 public class ServerHandler {
     /**
@@ -159,14 +151,18 @@ public class ServerHandler {
     }
 
     private static ItemStack createPainting(Player player, String paintingTitle, CanvasData canvasData) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(player.getLevel());
+        if (player.getLevel().isClientSide()) {
+            throw new InvalidParameterException("Create painting called on client");
+        }
+
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
         ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
 
         /**
          * Feel like I'm getting ids before getting code always. Maybe make getCanvasCode call
          * CanvasTracker itself?
          */
-        final int newId = canvasTracker.getNextPaintingId();
+        final int newId = canvasTracker.getFreePaintingId();
         final String newCode = PaintingData.getCanvasCode(newId);
         PaintingData paintingData = PaintingData.createFrom(canvasData);
         paintingData.setMetaProperties(player.getName().getString(), paintingTitle);
@@ -186,6 +182,13 @@ public class ServerHandler {
             easelEntity.getStateHandler().updateActionCanceledState(packetIn.actionId, sendingPlayer.getUUID(), packetIn.canceled);
         } else {
             Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+        }
+    }
+
+    public static void processArtistTableModeChange(final CArtistTableModeChange packetIn, ServerPlayer sendingPlayer) {
+        if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
+            ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;
+            artistTableMenu.setMode(packetIn.getMode());
         }
     }
 }

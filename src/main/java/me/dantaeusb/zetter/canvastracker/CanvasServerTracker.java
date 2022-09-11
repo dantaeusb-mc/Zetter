@@ -7,21 +7,25 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.Vector;
+import java.util.*;
 
 public class CanvasServerTracker extends CanvasDefaultTracker {
+    private static final String NBT_TAG_CANVAS_LAST_ID = "LastCanvasId";
+    private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
+    private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
+
     private final Level world;
-    private int lastCanvasId;
-    private int lastPaintingId;
+
+    protected BitSet canvasIds = new BitSet();
+    protected int lastPaintingId = 0;
 
     private final Map<String, Vector<PlayerTrackingCanvas>> trackedCanvases = new HashMap<>();
     private final Vector<String> desyncCanvases = new Vector<>();
@@ -31,8 +35,6 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
         super();
 
         this.world = world;
-        this.lastCanvasId = 0;
-        this.lastPaintingId = 0;
     }
 
     @Override
@@ -40,22 +42,46 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
         return this.world;
     }
 
-    @Override
-    public int getNextCanvasId() {
-        return ++this.lastCanvasId;
+    /*
+     * Canvas ids tracked as a bit set, with 1 bit
+     * marks ids is used and 0 bit marks id free to use
+     * Every time we look for a new id, we seek for the first
+     * 0 bit. Every time canvas is combined, signed
+     * or removed, we set according bits to 0
+     */
+
+    public BitSet getCanvasIds() {
+        return this.canvasIds;
+    }
+
+    public void setCanvasIds(BitSet canvasIds) {
+        this.canvasIds = canvasIds;
+    }
+
+    public int getFreeCanvasId() {
+        final int freeId = this.canvasIds.nextClearBit(0);
+        this.canvasIds.set(freeId);
+
+        return freeId;
     }
 
     public int getLastCanvasId() {
-        return this.lastCanvasId;
+        return this.canvasIds.length() - 1;
     }
 
-    public void setLastCanvasId(int id) {
-        this.lastCanvasId = id;
+    public void clearCanvasId(int id) {
+        this.canvasIds.clear(id);
     }
 
-    @Override
-    public int getNextPaintingId() {
-        return ++this.lastPaintingId;
+    /*
+     * Paintings are easier, we do not
+     * suppose to remove painting data only rarely
+     * in exceptional cases and for the mose cases
+     * keep data even if the painting is destroyed somehow
+     */
+
+    public int getFreePaintingId() {
+        return ++this.lastPaintingId ;
     }
 
     public int getLastPaintingId() {
@@ -177,6 +203,41 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
         PlayerTrackingCanvas(UUID playerId, String canvasName) {
             this.playerId = playerId;
             this.canvasName = canvasName;
+        }
+    }
+
+    /*
+     * Saving data
+     */
+
+    public Tag serializeNBT() {
+        CompoundTag compound = new CompoundTag();
+
+        compound.putByteArray(NBT_TAG_CANVAS_IDS, this.getCanvasIds().toByteArray());
+        compound.putInt(NBT_TAG_CANVAS_LAST_ID, this.getLastCanvasId());
+        compound.putInt(NBT_TAG_PAINTING_LAST_ID, this.getLastPaintingId());
+
+        return compound;
+    }
+
+    public void deserializeNBT(Tag tag) {
+        if (tag.getType() == CompoundTag.TYPE) {
+            CompoundTag compoundTag = (CompoundTag) tag;
+
+            // Backward compat for pre-16
+            if (compoundTag.contains(NBT_TAG_CANVAS_LAST_ID)) {
+                int lastCanvasId = compoundTag.getInt(NBT_TAG_CANVAS_LAST_ID);
+                BitSet canvasIds = new BitSet(lastCanvasId + 1);
+                canvasIds.flip(0, lastCanvasId + 1);
+
+                this.setCanvasIds(canvasIds);
+            } else {
+                byte[] canvasIds = compoundTag.getByteArray(NBT_TAG_CANVAS_IDS);
+
+                this.setCanvasIds(BitSet.valueOf(canvasIds));
+            }
+
+            this.setLastPaintingId(compoundTag.getInt(NBT_TAG_PAINTING_LAST_ID));
         }
     }
 }

@@ -29,6 +29,8 @@ import java.util.List;
 
 public class PaintingItem extends Item
 {
+    public static final String NBT_TAG_PAINTING_CODE = "PaintingCode";
+
     public static final String NBT_TAG_CACHED_PAINTING_NAME = "CachedPaintingName";
     public static final String NBT_TAG_CACHED_AUTHOR_NAME = "CachedAuthorName";
     public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
@@ -130,7 +132,7 @@ public class PaintingItem extends Item
     }
 
     protected static void setPaintingCode(ItemStack stack, String canvasCode) {
-        stack.getOrCreateTag().putString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE, canvasCode);
+        stack.getOrCreateTag().putString(NBT_TAG_PAINTING_CODE, canvasCode);
     }
 
     @Nullable
@@ -141,7 +143,7 @@ public class PaintingItem extends Item
             return null;
         }
 
-        return compoundNBT.getString(CustomPaintingEntity.NBT_TAG_PAINTING_CODE);
+        return compoundNBT.getString(NBT_TAG_PAINTING_CODE);
     }
 
     /**

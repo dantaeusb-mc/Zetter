@@ -49,7 +49,7 @@ public class ClientHandler {
             // If player's combining canvases
             // @todo: not sure if needed
 
-            ((ArtistTableMenu) player.containerMenu).updateCanvasCombination();
+            //((ArtistTableMenu) player.containerMenu).updateCanvasCombination();
         }
     }
 

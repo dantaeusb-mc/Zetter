@@ -1,7 +1,10 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
+import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -9,14 +12,29 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
-public class CanvasCombination {
+/**
+ * Canvas combination is a helper structure that
+ * checks and verifies data from multiple
+ * canvases located on the artist table, used
+ * to validate the shape of the future painting
+ * and prepare preview for display if the canvas
+ * combination is valid.
+ *
+ * It has a behavior of recipe as well, but as
+ * we're having multi-slot results in split mode,
+ * we're not using recipe model
+ */
+public class CanvasCombinationAction extends AbstractCanvasAction {
     public static final int[][] paintingShapes = new int[][]{
             {1, 1},
             {1, 2},
@@ -33,20 +51,19 @@ public class CanvasCombination {
             {4, 3},
             {4, 4}
     };
-
-    public final State state;
     public final Rectangle rectangle;
 
-    @Nullable
-    public final DummyCanvasData canvasData;
+    public CanvasCombinationAction(ArtistTableMenu menu, Level world) {
+        super(menu);
 
-    public CanvasCombination(ArtistTableContainer artistTableContainer, Level world) {
+        ArtistTableContainer container = menu.getContainer();
+
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                if (artistTableContainer.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
+                if (container.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
                     if (min == null) {
                         min = new Tuple<>(x ,y);
                     }
@@ -66,8 +83,8 @@ public class CanvasCombination {
         }
 
         if (min == null || max == null) {
-            this.state = State.INVALID_SHAPE;
-            this.rectangle = CanvasCombination.getZeroRect();
+            this.state = State.INVALID;
+            this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
         }
@@ -76,21 +93,21 @@ public class CanvasCombination {
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                ItemStack currentStack = artistTableContainer.getStackInSlot(y * 4 + x);
+                ItemStack currentStack = container.getStackInSlot(y * 4 + x);
 
                 if (currentStack == ItemStack.EMPTY) {
                     if (x >= min.getA() && x <= max.getA()) {
                         if (y >= min.getB() && (y <= max.getB())) {
-                            this.state = State.INVALID_SHAPE;
-                            this.rectangle = CanvasCombination.getZeroRect();
+                            this.state = State.INVALID;
+                            this.rectangle = CanvasCombinationAction.getZeroRect();
                             this.canvasData = null;
                             return;
                         }
                     }
                 } else if (currentStack.getItem() == ZetterItems.CANVAS.get()) {
                     if ((x < min.getA() || x > max.getA()) || (y < min.getB() || y > max.getB())) {
-                        this.state = State.INVALID_SHAPE;
-                        this.rectangle = CanvasCombination.getZeroRect();
+                        this.state = State.INVALID;
+                        this.rectangle = CanvasCombinationAction.getZeroRect();
                         this.canvasData = null;
                         return;
                     }
@@ -112,30 +129,31 @@ public class CanvasCombination {
 
         if (!canvasesReady) {
             this.state = State.NOT_LOADED;
-            this.rectangle = CanvasCombination.getZeroRect();
+            this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
         }
 
-        Rectangle rectangle = CanvasCombination.getRect(min, max);
+        Rectangle rectangle = CanvasCombinationAction.getRect(min, max);
 
         boolean shapeAvailable = false;
-        for (int[] shape: CanvasCombination.paintingShapes) {
+        for (int[] shape: CanvasCombinationAction.paintingShapes) {
             if (rectangle.width == shape[0] && rectangle.height == shape[1]) {
                 shapeAvailable = true;
+                break;
             }
         }
 
         if (!shapeAvailable) {
-            this.state = State.INVALID_SHAPE;
-            this.rectangle = CanvasCombination.getZeroRect();
+            this.state = State.INVALID;
+            this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
         }
 
         this.state = State.READY;
         this.rectangle = rectangle;
-        this.canvasData = CanvasCombination.createCanvasData(artistTableContainer, rectangle, world);
+        this.canvasData = CanvasCombinationAction.createCanvasData(container, rectangle, world);
     }
 
     public static DummyCanvasData createCanvasData(ArtistTableContainer artistTableContainer, Rectangle rectangle, Level world) {
@@ -196,6 +214,60 @@ public class CanvasCombination {
         return combinedCanvasData;
     }
 
+    @Override
+    public void containerChanged(ItemStackHandler container) {
+        ItemStack outStack;
+
+        // @todo: Can combine?
+        /*if (this.isReady()) {
+            if (combinedSlot.isEmpty()) {
+                outStack = new ItemStack(ZetterItems.CANVAS.get());
+            } else {
+                outStack = combinedSlot;
+            }
+        } else {
+            outStack = ItemStack.EMPTY;
+        }
+
+        this.combinedHandler.setStackInSlot(0, outStack);*/
+    }
+
+    @Override
+    public ItemStack onTake(Player player, ItemStack stack) {
+        if (this.canvasData == null) {
+            Zetter.LOG.error("Cannot find combined canvas data");
+            return ItemStack.EMPTY;
+        }
+
+        if (player.getLevel().isClientSide()) {
+            // @todo: not sure
+            return stack;
+        }
+
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+        assert canvasTracker != null;
+
+        final int newId = canvasTracker.getFreeCanvasId();
+        final String newCode = CanvasData.getCanvasCode(newId);
+
+        canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), this.canvasData);
+        CanvasItem.setCanvasCode(stack, newCode);
+
+        for (int i = 0; i < this.menu.getContainer().getSlots(); i++) {
+            ItemStack combinationStack = this.menu.getContainer().getStackInSlot(i);
+
+            int canvasId = CanvasItem.getCanvasId(combinationStack);
+            canvasTracker.clearCanvasId(canvasId);
+            this.menu.getContainer().setStackInSlot(i, ItemStack.EMPTY);
+        }
+
+        return stack;
+    }
+
+    public boolean isReady() {
+        return this.state == State.READY;
+    }
+
     public static Rectangle getRect(Tuple<Integer, Integer> min, Tuple<Integer, Integer> max) {
         int width = max.getA() + 1 - min.getA();
         int height = max.getB() + 1 - min.getB();
@@ -205,12 +277,6 @@ public class CanvasCombination {
 
     public static Rectangle getZeroRect() {
         return new Rectangle(0, 0, 0, 0);
-    }
-
-    public enum State {
-        INVALID_SHAPE,
-        NOT_LOADED,
-        READY
     }
 
     private static class Rectangle {

@@ -53,28 +53,28 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
      * We need to save data only for Server Implementation of the capability
      */
     public CompoundTag serializeNBT() {
-        CompoundTag nbt = new CompoundTag();
+        CompoundTag compoundTag = new CompoundTag();
 
         if (this.canvasTrackerCapability.getWorld() == null || this.canvasTrackerCapability.getWorld().isClientSide()) {
-            return nbt;
+            return compoundTag;
         }
 
-        Tag canvasTrackerNBT = this.canvasTrackerCapability.serializeNBT();
-        nbt.put(TAG_NAME_CANVAS_TRACKER, canvasTrackerNBT);
+        Tag canvasTrackerTag = ((CanvasServerTracker) this.canvasTrackerCapability).serializeNBT();
+        compoundTag.put(TAG_NAME_CANVAS_TRACKER, canvasTrackerTag);
 
-        return nbt;
+        return compoundTag;
     }
 
     /**
      * Read the capability state information out of NBT
      * We need to get the data only for Server Implementation of the capability
      */
-    public void deserializeNBT(CompoundTag nbt) {
+    public void deserializeNBT(CompoundTag compoundTag) {
         if (this.canvasTrackerCapability.getWorld() == null || this.canvasTrackerCapability.getWorld().isClientSide()) {
             return;
         }
 
-        Tag canvasTrackerTag = nbt.get(TAG_NAME_CANVAS_TRACKER);
-        this.canvasTrackerCapability.deserializeNBT(canvasTrackerTag);
+        Tag canvasTrackerTag = compoundTag.get(TAG_NAME_CANVAS_TRACKER);
+        ((CanvasServerTracker) this.canvasTrackerCapability).deserializeNBT(canvasTrackerTag);
     }
 }

@@ -25,6 +25,10 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, (int) mouseX, (int) mouseY)) {
+            if (!this.parentScreen.getMenu().canChangeMode()) {
+                return true;
+            }
+
             if (this.parentScreen.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
                 this.parentScreen.getMenu().setMode(ArtistTableMenu.Mode.SPLIT);
                 this.parentScreen.updateCombinedCanvasPosition();
@@ -45,9 +49,11 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
             return;
         }
 
-        int buttonV = this.parentScreen.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE ? BUTTON_POSITION_V : BUTTON_POSITION_V + BUTTON_HEIGHT * 2;
+        int buttonV = this.parentScreen.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE ? BUTTON_POSITION_V : BUTTON_POSITION_V + BUTTON_HEIGHT * 3;
 
-        if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, mouseX, mouseY)) {
+        if (!this.parentScreen.getMenu().canChangeMode()) {
+            buttonV += BUTTON_HEIGHT * 2;
+        } else if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, mouseX, mouseY)) {
             buttonV += BUTTON_HEIGHT;
         }
 

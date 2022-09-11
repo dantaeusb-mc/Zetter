@@ -202,7 +202,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         }
 
         // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-        AbstractCanvasData canvasData = getCanvasData(world, entity.getCanvasCode());
+        AbstractCanvasData canvasData = getCanvasData(world, entity.getPaintingCode());
 
         // @todo: Has painting - render fallback, no painting - disable canvas render
         if (canvasData != null) {
@@ -220,10 +220,10 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
             matrixStack.translate(-16.0D, -16.0D, 0D);
 
-            CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getCanvasCode(), canvasData, combinedLight);
+            CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getPaintingCode(), canvasData, combinedLight);
             matrixStack.popPose();
         } else {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getCanvasCode());
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getPaintingCode());
         }
 
         // Render plate

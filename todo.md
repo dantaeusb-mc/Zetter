@@ -1,5 +1,6 @@
 #### Pre-release tasks:
 
+* \[HIGH\] Check carefully that CanvasServerTracker#deserializeNBT data migration works fine, and canvas id is not reset!
 * \[HIGH\] Not saving current palette selection and pixel buffer in Easel Entity;
 * \[HIGH\] Requested non-existent canvas errors because of synceddata desync;
 * \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;

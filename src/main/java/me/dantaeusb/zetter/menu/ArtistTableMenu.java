@@ -3,9 +3,13 @@ package me.dantaeusb.zetter.menu;
 import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterContainerMenus;
-import me.dantaeusb.zetter.menu.artisttable.CanvasCombination;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.menu.artisttable.AbstractCanvasAction;
+import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
 import me.dantaeusb.zetter.mixin.SlotAccessor;
+import me.dantaeusb.zetter.network.packet.CArtistTableModeChange;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -15,6 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 
 public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackHandlerListener {
@@ -28,12 +33,12 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
     private final Player player;
-    private final Level world;
+    private final Level level;
 
-    private ArtistTableContainer artistTableContainer;
+    private ArtistTableContainer container;
 
+    private AbstractCanvasAction action;
     private ArrayList<Slot> combinationSlots = new ArrayList<>(16);
-    private CanvasCombination canvasCombination;
     private Slot combinedSlot;
 
     private Mode mode = Mode.COMBINE;
@@ -61,10 +66,10 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
 
         this.player = invPlayer.player;
-        this.world = invPlayer.player.level;
+        this.level = invPlayer.player.level;
 
-        this.artistTableContainer = artistTableContainer;
-        this.artistTableContainer.addListener(this);
+        this.container = artistTableContainer;
+        this.container.addListener(this);
 
         final int HOTBAR_XPOS = 36;
         final int HOTBAR_YPOS = 168;
@@ -91,7 +96,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
                 int xpos = COMBINATION_SLOTS_COMBINE_X + x * SLOT_X_SPACING;
                 int ypos = COMBINATION_SLOTS_COMBINE_Y + y * SLOT_Y_SPACING;
 
-                final SlotCombination combinationSlot = new SlotCombination(this.artistTableContainer, slotNumber,  xpos, ypos);
+                final SlotCombination combinationSlot = new SlotCombination(this.container, slotNumber,  xpos, ypos);
 
                 this.addSlot(combinationSlot);
                 this.combinationSlots.add(combinationSlot);
@@ -103,7 +108,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         this.addSlot(combinedSlot);
         this.combinedSlot = combinedSlot;
 
-        this.updateCanvasCombination();
+        this.containerChanged(this.container);
     }
 
     public static ArtistTableMenu createMenuServerSide(int windowID, Inventory playerInventory,
@@ -117,25 +122,8 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         return new ArtistTableMenu(windowID, playerInventory, artistTableContainer);
     }
 
-    /**
-     * Update contents of painting when some
-     * of the input parameters changed (i.e. name, canvases)
-     */
-    public void updatePaintingOutput() {
-        ItemStack existingStack = this.combinedHandler.getStackInSlot(0);
-        ItemStack outStack;
-
-        if (this.isCanvasReady()) {
-            if (existingStack.isEmpty()) {
-                outStack = new ItemStack(ZetterItems.CANVAS.get());
-            } else {
-                outStack = existingStack;
-            }
-        } else {
-            outStack = ItemStack.EMPTY;
-        }
-
-        this.combinedHandler.setStackInSlot(0, outStack);
+    public ArtistTableContainer getContainer() {
+        return this.container;
     }
 
     public Mode getMode() {
@@ -143,9 +131,26 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     }
 
     public void setMode(Mode mode) {
+        if (!this.canChangeMode()) {
+            return;
+        }
+
         this.mode = mode;
 
+        if (this.player.getLevel().isClientSide()) {
+            CArtistTableModeChange unloadPacket = new CArtistTableModeChange(this.containerId, mode);
+            ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
+        }
+
         this.updateSlotPositions();
+    }
+
+    public boolean canChangeMode() {
+        if (this.getMode() == Mode.COMBINE) {
+            return this.isCombinationGridEmpty();
+        } else {
+            return this.isCombinedSlotEmpty();
+        }
     }
 
     public void updateSlotPositions() {
@@ -163,25 +168,54 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
     }
 
+    public boolean isCombinationGridEmpty() {
+        for (Slot combinationSlot : this.combinationSlots) {
+            if (combinationSlot.hasItem()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean isCombinedSlotEmpty() {
+        return !this.combinedSlot.hasItem();
+    }
+
+    /**
+     * Update contents of painting when some
+     * of the input parameters changed (i.e. name, canvases)
+     *
+     * In combination mode, we have the result
+     * ONLY when player picks canvas up
+     * from the combination slot
+     *
+     * But in split mode, we could have had complex
+     * canvas in the slot already, so we should not
+     * remove or overwrite it
+     */
     public void containerChanged(ItemStackHandler container) {
-        this.updateCanvasCombination();
+        this.action.containerChanged(container);
     }
 
-    public void updateCanvasCombination() {
-        this.canvasCombination = new CanvasCombination(this.artistTableContainer, this.world);
-        this.updatePaintingOutput();
+    public ItemStack onTakeFromCombinationGrid(Player player, ItemStack stack) {
+        return stack;
     }
 
-    public CanvasCombination getCanvasCombination() {
-        return this.canvasCombination;
+    public ItemStack onTakeFromCombinedSlot(Player player, ItemStack stack) {
+        return stack;
+    }
+
+    public AbstractCanvasAction getAction() {
+        return this.action;
     }
 
     public boolean isCanvasReady() {
-        return this.canvasCombination.state == CanvasCombination.State.READY;
+        return this.action.state == CanvasCombinationAction.State.READY;
     }
 
     public boolean canvasLoading() {
-        return this.canvasCombination.state == CanvasCombination.State.NOT_LOADED;
+        return this.action.state == CanvasCombinationAction.State.NOT_LOADED;
     }
 
     /*
@@ -190,7 +224,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
     public void removed(Player player) {
         super.removed(player);
-        this.artistTableContainer.removeListener(this);
+        this.container.removeListener(this);
     }
 
     /**
@@ -256,7 +290,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * Determines whether supplied player can use this container
      */
     public boolean stillValid(Player player) {
-        return this.artistTableContainer.stillValid(player);
+        return this.container.stillValid(player);
     }
 
     public class SlotCombination extends SlotItemHandler {
@@ -267,7 +301,12 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         // if this function returns false, the player won't be able to insert the given item into this slot
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return ArtistTableMenu.this.mode == Mode.COMBINE && ArtistTableMenu.this.artistTableContainer.isItemValid(this.getSlotIndex(), stack);
+            return ArtistTableMenu.this.mode == Mode.COMBINE && ArtistTableMenu.this.container.isItemValid(this.getSlotIndex(), stack);
+        }
+
+        @Override
+        public void onTake(Player player, ItemStack stack) {
+            ArtistTableMenu.this.onTakeFromCombinationGrid(player, stack);
         }
     }
 
@@ -280,10 +319,36 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         public boolean mayPlace(ItemStack stack) {
             return ArtistTableMenu.this.mode == Mode.SPLIT;
         }
+
+        @Override
+        public void onTake(Player player, ItemStack stack) {
+            ArtistTableMenu.this.onTakeFromCombinedSlot(player, stack);
+        }
     }
 
     public enum Mode {
-        COMBINE,
-        SPLIT
+        COMBINE(0),
+        SPLIT(1);
+
+        private final byte id;
+
+        Mode(int id)
+        {
+            this.id = (byte) id;
+        }
+
+        public byte getId() {
+            return this.id;
+        }
+
+        public static @Nullable ArtistTableMenu.Mode getById(byte id) {
+            for (ArtistTableMenu.Mode mode : ArtistTableMenu.Mode.values()) {
+                if (mode.id == id) {
+                    return mode;
+                }
+            }
+
+            return null;
+        }
     }
 }
