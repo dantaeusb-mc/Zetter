@@ -1,10 +1,8 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -19,7 +17,6 @@ import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 /**
@@ -51,12 +48,17 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             {4, 3},
             {4, 4}
     };
-    public final Rectangle rectangle;
 
-    public CanvasCombinationAction(ArtistTableMenu menu, Level world) {
-        super(menu);
+    public Rectangle rectangle;
 
-        ArtistTableContainer container = menu.getContainer();
+    public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
+        super(menu, level);
+
+        this.update();
+    }
+
+    public void update() {
+        ItemStackHandler container = menu.getGridContainer();
 
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
@@ -112,7 +114,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                         return;
                     }
 
-                    if (CanvasItem.getCanvasData(currentStack, world) == null) {
+                    if (CanvasItem.getCanvasData(currentStack, this.level) == null) {
                         /**
                          * @todo: [HIGH] Move request out of here, request with data load attempts but avoid loading unavailable canvases
                          */
@@ -153,10 +155,10 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         this.state = State.READY;
         this.rectangle = rectangle;
-        this.canvasData = CanvasCombinationAction.createCanvasData(container, rectangle, world);
+        this.canvasData = CanvasCombinationAction.createCanvasData(container, rectangle, this.level);
     }
 
-    public static DummyCanvasData createCanvasData(ArtistTableContainer artistTableContainer, Rectangle rectangle, Level world) {
+    public static DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
         final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
         final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
 
@@ -215,53 +217,63 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     }
 
     @Override
-    public void containerChanged(ItemStackHandler container) {
-        ItemStack outStack;
-
-        // @todo: Can combine?
-        /*if (this.isReady()) {
-            if (combinedSlot.isEmpty()) {
-                outStack = new ItemStack(ZetterItems.CANVAS.get());
-            } else {
-                outStack = combinedSlot;
-            }
-        } else {
-            outStack = ItemStack.EMPTY;
-        }
-
-        this.combinedHandler.setStackInSlot(0, outStack);*/
+    public boolean mayPlaceGrid(int slot, ItemStack stack) {
+        return this.menu.getGridContainer().isItemValid(slot, stack);
     }
 
     @Override
-    public ItemStack onTake(Player player, ItemStack stack) {
+    public void onChangeGrid(ItemStackHandler container) {
+        this.update();
+
+        ItemStack combinedStack = this.menu.getCombinedContainer().getStackInSlot(0);
+
+        // @todo: Can combine?
+        if (this.isReady()) {
+            if (combinedStack.isEmpty()) {
+                combinedStack = new ItemStack(ZetterItems.CANVAS.get());
+            }
+        } else {
+            combinedStack = ItemStack.EMPTY;
+        }
+
+        this.menu.getCombinedContainer().setStackInSlot(0, combinedStack);
+    }
+
+    @Override
+    public void onChangedCombined(ItemStackHandler slotHandler) {
+
+    }
+
+    @Override
+    public void onTakeCombined(Player player, ItemStack stack) {
         if (this.canvasData == null) {
             Zetter.LOG.error("Cannot find combined canvas data");
-            return ItemStack.EMPTY;
+            return;
         }
 
         if (player.getLevel().isClientSide()) {
             // @todo: not sure
-            return stack;
+            return;
         }
 
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
-        assert canvasTracker != null;
 
         final int newId = canvasTracker.getFreeCanvasId();
         final String newCode = CanvasData.getCanvasCode(newId);
 
-        canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), this.canvasData);
-        CanvasItem.setCanvasCode(stack, newCode);
+        canvasTracker.registerCanvasData(newCode, this.canvasData);
+        CanvasData combinedCanvasData = canvasTracker.getCanvasData(newCode, CanvasData.class);
 
-        for (int i = 0; i < this.menu.getContainer().getSlots(); i++) {
-            ItemStack combinationStack = this.menu.getContainer().getStackInSlot(i);
+        CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
 
+        for (int i = 0; i < this.menu.getGridContainer().getSlots(); i++) {
+            ItemStack combinationStack = this.menu.getGridContainer().getStackInSlot(i);
+
+            // Cleanup IDs and grid
             int canvasId = CanvasItem.getCanvasId(combinationStack);
             canvasTracker.clearCanvasId(canvasId);
-            this.menu.getContainer().setStackInSlot(i, ItemStack.EMPTY);
+            this.menu.getGridContainer().setStackInSlot(i, ItemStack.EMPTY);
         }
-
-        return stack;
     }
 
     public boolean isReady() {

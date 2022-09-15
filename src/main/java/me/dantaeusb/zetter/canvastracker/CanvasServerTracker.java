@@ -225,16 +225,18 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
             CompoundTag compoundTag = (CompoundTag) tag;
 
             // Backward compat for pre-16
-            if (compoundTag.contains(NBT_TAG_CANVAS_LAST_ID)) {
+            if (compoundTag.contains(NBT_TAG_CANVAS_IDS)) {
+                byte[] canvasIds = compoundTag.getByteArray(NBT_TAG_CANVAS_IDS);
+
+                this.setCanvasIds(BitSet.valueOf(canvasIds));
+            } else if (compoundTag.contains(NBT_TAG_CANVAS_LAST_ID)) {
                 int lastCanvasId = compoundTag.getInt(NBT_TAG_CANVAS_LAST_ID);
                 BitSet canvasIds = new BitSet(lastCanvasId + 1);
                 canvasIds.flip(0, lastCanvasId + 1);
 
                 this.setCanvasIds(canvasIds);
             } else {
-                byte[] canvasIds = compoundTag.getByteArray(NBT_TAG_CANVAS_IDS);
-
-                this.setCanvasIds(BitSet.valueOf(canvasIds));
+                this.setCanvasIds(new BitSet());
             }
 
             this.setLastPaintingId(compoundTag.getInt(NBT_TAG_PAINTING_LAST_ID));

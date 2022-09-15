@@ -31,7 +31,7 @@ public class Helper {
         return AbstractCanvasData.Resolution.x16;
     }
 
-    public static @Nullable ICanvasTracker getWorldCanvasTracker(Level world) {
+    public static ICanvasTracker getWorldCanvasTracker(Level world) {
         ICanvasTracker canvasTracker;
 
         if (!world.isClientSide()) {
@@ -39,11 +39,6 @@ public class Helper {
             canvasTracker = world.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         } else {
             canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        }
-
-        if (canvasTracker == null) {
-            Zetter.LOG.error("Cannot find world canvas capability");
-            return null;
         }
 
         return canvasTracker;

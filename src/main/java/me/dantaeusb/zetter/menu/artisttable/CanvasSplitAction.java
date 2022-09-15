@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
-import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.world.entity.player.Player;
@@ -10,11 +9,20 @@ import net.minecraftforge.items.ItemStackHandler;
 
 public class CanvasSplitAction extends AbstractCanvasAction {
     public CanvasSplitAction(ArtistTableMenu artistTableMenu, Level level) {
-        super(artistTableMenu);
+        super(artistTableMenu, level);
+    }
+
+    public boolean mayPlaceCombined(ItemStack stack) {
+        if (stack.is(ZetterItems.CANVAS.get())) {
+            // Check if not empty, not 1x1
+            return true;
+        }
+
+        return false;
     }
 
     @Override
-    public void containerChanged(ItemStackHandler container) {
+    public void onChangeGrid(ItemStackHandler container) {
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                 int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
@@ -25,6 +33,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
     }
 
     @Override
+    public void onChangedCombined(ItemStackHandler container) {
+
+    }
+
     public ItemStack onTake(Player player, ItemStack stack) {
         return stack;
     }

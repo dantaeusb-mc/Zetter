@@ -72,26 +72,54 @@ public class CanvasItem extends Item
     }
 
     /**
+     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
+     */
+    public static void createEmpty(ItemStack stack, Level world) {
+        if (world.isClientSide()) {
+            throw new InvalidParameterException("Create canvas called on client");
+        }
+
+        String canvasCode = createNewCanvasData(world);
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+
+        CanvasData canvasData = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+        assert canvasData != null;
+
+        storeCanvasData(stack, canvasCode, canvasData);
+    }
+
+    public static void storeCanvasData(ItemStack stack, String canvasCode, CanvasData canvasData) {
+        setCanvasCode(stack, canvasCode);
+
+        int widthBlocks = canvasData.getWidth() / canvasData.getResolution().getNumeric();
+        int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
+
+        final int[] size = new int[]{widthBlocks, heightBlocks};
+        TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+
+        stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
+        stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
+    }
+
+    /**
      * Is this canvas consists of several combined canvases
      * (larger than 1x1 canvas)
      * @param stack
      * @param world
      * @return
      */
-    public boolean isCompound(ItemStack stack, Level world) {
-        CanvasData canvasData = getCanvasData(stack, world);
+    public static boolean isCompound(ItemStack stack) {
+        int[] size = getBlockSize(stack);
 
-        if (canvasData != null) {
-            final int w = canvasData.getWidth() / canvasData.getResolution().getNumeric();
-            final int h = canvasData.getHeight() / canvasData.getResolution().getNumeric();
-
-            return w != 1 || h != 1;
+        // No NBT data
+        if (size != null && size.length != 0) {
+            return size[0] != 1 || size[1] != 1;
         }
 
         return false;
     }
 
-    public boolean isEmpty(ItemStack stack, Level world) {
+    public static boolean isEmpty(ItemStack stack, Level world) {
         CanvasData canvasData = getCanvasData(stack, world);
 
         return canvasData == null;
@@ -105,50 +133,31 @@ public class CanvasItem extends Item
      * @return
      */
     @Nullable
-    public static CanvasData getCanvasData(ItemStack stack, @Nullable Level world) {
+    public static CanvasData getCanvasData(ItemStack stack, Level world) {
         Item canvas = stack.getItem();
 
         if (canvas instanceof CanvasItem) {
-            return ((CanvasItem)canvas).getCustomCanvasData(stack, world);
+            String canvasCode = getCanvasCode(stack);
+
+            if (canvasCode == null && world instanceof ServerLevel) {
+                createEmpty(stack, world);
+                canvasCode = getCanvasCode(stack);
+            }
+
+            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+
+            return canvasTracker.getCanvasData(canvasCode, CanvasData.class);
         }
 
         return null;
     }
 
     /**
-     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
-     */
-    @Nullable
-    protected CanvasData getCustomCanvasData(ItemStack stack, Level world) {
-        CanvasData canvasData = null;
-        String canvasCode = getCanvasCode(stack);
-
-        if (canvasCode == null && world instanceof ServerLevel) {
-            canvasCode = createNewCanvasData(world);
-            setCanvasCode(stack, canvasCode);
-        }
-
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
-
-        if (canvasTracker != null) {
-            canvasData = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
-        } else {
-            Zetter.LOG.error("Unable to find CanvasTracker capability");
-        }
-
-        if (canvasData == null && world instanceof ServerLevel) {
-            Zetter.LOG.error("Unable to find canvas data after creation");
-        }
-
-        return canvasData;
-    }
-
-    /**
      * @see {@link net.minecraft.world.item.MapItem#getMapId(ItemStack)}
      * @return
      */
-    public static @Nullable String getCanvasCode(@Nullable ItemStack stack) {
-        if (stack == null || !stack.is(ZetterItems.CANVAS.get())) {
+    public static @Nullable String getCanvasCode(ItemStack stack) {
+        if (!stack.is(ZetterItems.CANVAS.get())) {
             return null;
         }
 
@@ -161,6 +170,19 @@ public class CanvasItem extends Item
         }
 
         return canvasCode;
+    }
+
+    /**
+     * In one case, when we loaded only easel entity,
+     * we would like to sync only canvas code for that
+     * entity, and nothing more. This way, we're setting
+     * only canvas code directly, instead of setting all
+     * data from CanvasData
+     *
+     * @param stack
+     */
+    public static void setCanvasCode(ItemStack stack, String canvasCode) {
+        stack.getOrCreateTag().putString(NBT_TAG_CANVAS_CODE, canvasCode);
     }
 
     /**
@@ -178,19 +200,26 @@ public class CanvasItem extends Item
         return Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
     }
 
-    /**
-     *
-     * @see {@link net.minecraft.world.item.MapItem#getName(ItemStack)}
-     * @param stack
-     * @return
-     */
-    public static void setCanvasCode(ItemStack stack, String canvasCode) {
-        stack.getOrCreateTag().putString(NBT_TAG_CANVAS_CODE, canvasCode);
+    @Nullable
+    public static int[] getBlockSize(ItemStack stack) {
+        CompoundTag compoundNBT = stack.getTag();
+
+        if (compoundNBT == null) {
+            return null;
+        }
+
+        return compoundNBT.getIntArray(NBT_TAG_CACHED_BLOCK_SIZE);
     }
 
-    private static void createAndStoreCanvasData(ItemStack stack, Level world) {
-        String canvasCode = createNewCanvasData(world);
-        setCanvasCode(stack, canvasCode);
+    @Nullable
+    public static String getCachedStringSize(ItemStack stack) {
+        CompoundTag compoundNBT = stack.getTag();
+
+        if (compoundNBT == null) {
+            return null;
+        }
+
+        return compoundNBT.getString(NBT_TAG_CACHED_STRING_SIZE);
     }
 
     /**
@@ -214,7 +243,9 @@ public class CanvasItem extends Item
         return canvasCode;
     }
 
-    /*@Override
+    /*
+    Alternative renderer
+    @Override
     public void initializeClient(Consumer<IItemRenderProperties> consumer)
     {
         if (Minecraft.getInstance() == null) return;

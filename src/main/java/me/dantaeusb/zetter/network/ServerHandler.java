@@ -2,7 +2,6 @@ package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -168,7 +167,7 @@ public class ServerHandler {
         paintingData.setMetaProperties(player.getName().getString(), paintingTitle);
         canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
 
-        PaintingItem.setPaintingData(outStack, newCode, paintingData, 0);
+        PaintingItem.storePaintingData(outStack, newCode, paintingData, 0);
 
         return outStack;
     }

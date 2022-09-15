@@ -1,9 +1,7 @@
 package me.dantaeusb.zetter.block.entity;
 
-import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
+import me.dantaeusb.zetter.block.entity.container.ArtistTableGridContainer;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
-import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
 import net.minecraft.core.Direction;
@@ -33,7 +31,7 @@ import javax.annotation.Nullable;
 public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHandlerListener, MenuProvider {
     private static final String ARTIST_TABLE_CANVAS_STORAGE_TAG = "canvas_storage";
 
-    protected ArtistTableContainer artistTableContainer;
+    protected ArtistTableGridContainer artistTableContainer;
     protected final LazyOptional<ItemStackHandler> artistTableContainerOptional = LazyOptional.of(() -> this.artistTableContainer);
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
@@ -42,8 +40,8 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     }
 
     protected void createInventory() {
-        ArtistTableContainer currentArtistTableContainer = this.artistTableContainer;
-        this.artistTableContainer = new ArtistTableContainer(this);
+        ArtistTableGridContainer currentArtistTableContainer = this.artistTableContainer;
+        this.artistTableContainer = new ArtistTableGridContainer(this);
 
         if (currentArtistTableContainer != null) {
             int i = Math.min(currentArtistTableContainer.getSlots(), this.artistTableContainer.getSlots());
@@ -92,7 +90,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
         CompoundTag canvasNbt = parentNBTTagCompound.getCompound(ARTIST_TABLE_CANVAS_STORAGE_TAG);
         this.artistTableContainer.deserializeNBT(canvasNbt);
 
-        if (this.artistTableContainer.getSlots() != ArtistTableContainer.STORAGE_SIZE)
+        if (this.artistTableContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
     }
 

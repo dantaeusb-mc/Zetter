@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -11,20 +12,20 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.List;
 
-public class ArtistTableContainer extends ItemStackHandler {
+public class ArtistTableGridContainer extends ItemStackHandler {
     public static final int STORAGE_SIZE = ArtistTableMenu.CANVAS_SLOT_COUNT;
 
     private ArtistTableBlockEntity boundTable;
 
     private List<ItemStackHandlerListener> listeners;
 
-    public ArtistTableContainer(ArtistTableBlockEntity artistTable) {
+    public ArtistTableGridContainer(ArtistTableBlockEntity artistTable) {
         super(STORAGE_SIZE);
 
         this.boundTable = artistTable;
     }
 
-    public ArtistTableContainer() {
+    public ArtistTableGridContainer() {
         super(STORAGE_SIZE);
     }
 
@@ -52,8 +53,19 @@ public class ArtistTableContainer extends ItemStackHandler {
         return true;
     }
 
+    /**
+     * All non-compound canvases are valid.
+     * Compound canvases are invalid for grid,
+     * they can be only split.
+     *
+     * @param index    Slot to query for validity
+     * @param stack   Stack to test with for validity
+     *
+     * @return
+     */
     public boolean isItemValid(int index, ItemStack stack) {
-        return stack.getItem().equals(ZetterItems.CANVAS.get());
+        return  stack.getItem().equals(ZetterItems.CANVAS.get()) &&
+                !CanvasItem.isCompound(stack);
     }
 
     @Override
