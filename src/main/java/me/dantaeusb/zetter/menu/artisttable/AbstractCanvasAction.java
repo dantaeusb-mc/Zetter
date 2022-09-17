@@ -1,5 +1,7 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
+import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
@@ -41,6 +43,24 @@ public abstract class AbstractCanvasAction {
     public void onChangedCombined(ItemStackHandler container) { }
 
     public void onTakeCombined(Player player, ItemStack stack) { }
+
+    public void forEveryGridSlot(GridSlotCallback callback) {
+        ItemStackHandler gridContainer = this.menu.getGridContainer();
+
+        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
+                int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+                ItemStack stack = gridContainer.getStackInSlot(slotNumber);
+
+                callback.call(gridContainer, x, y, stack, slotNumber);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface GridSlotCallback {
+        void call(ItemStackHandler container, int x, int y, ItemStack stack, int slotFinder);
+    }
 
     public enum State {
         EMPTY,

@@ -130,8 +130,14 @@ public class EaselContainer extends ItemStackHandler {
     }
 
     public boolean isItemValid(int index, ItemStack stack) {
-        return (index == 0 && stack.getItem() == ZetterItems.CANVAS.get())
-                || (index == 1 && stack.getItem() == ZetterItems.PALETTE.get());
+        if (index == 0 && stack.getItem() == ZetterItems.CANVAS.get()) {
+            int[] canvasSize = CanvasItem.getBlockSize(stack);
+            assert canvasSize != null;
+
+            return canvasSize[0] <= 2 && canvasSize[1] <= 2;
+        }
+
+        return index == 1 && stack.getItem() == ZetterItems.PALETTE.get();
     }
 
     /*

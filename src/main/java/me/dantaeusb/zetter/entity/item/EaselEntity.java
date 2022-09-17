@@ -210,7 +210,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         final boolean isPalette = heldItem.is(ZetterItems.PALETTE.get());
 
         if (isCanvas) {
-            if (this.easelContainer.getCanvasStack().isEmpty()) {
+            if (this.easelContainer.getCanvasStack().isEmpty() && this.easelContainer.isItemValid(EaselContainer.CANVAS_SLOT, heldItem)) {
                 this.easelContainer.setCanvasStack(heldItem);
                 player.setItemInHand(hand, ItemStack.EMPTY);
 

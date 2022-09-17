@@ -169,17 +169,55 @@ public abstract class AbstractCanvasData extends SavedData {
     }
 
     public enum Type {
-        DUMMY,
-        CANVAS,
-        PAINTING
+        DUMMY(0),
+        CANVAS(1),
+        PAINTING(2);
+
+        private static final Map<Integer, Type> lookup = new HashMap<>();
+
+        static {
+            for (Type type : Type.values()) {
+                lookup.put(type.getId(), type);
+            }
+        }
+
+        private final int id;
+
+        Type(int id) {
+            this.id = id;
+        }
+
+        public int getId() {
+            return this.id;
+        }
+
+        public static @Nullable Type getTypeByCanvas(AbstractCanvasData abstractCanvasData) {
+            if (abstractCanvasData instanceof CanvasData) {
+                return Type.CANVAS;
+            } else if (abstractCanvasData instanceof PaintingData) {
+                return Type.PAINTING;
+            } else if (abstractCanvasData instanceof DummyCanvasData) {
+                return Type.DUMMY;
+            }
+
+            Zetter.LOG.warn("Cannot get type of the canvas!");
+            return null;
+        }
+
+        @Nullable
+        public static Type getTypeById(int id) {
+            if (!lookup.containsKey(id)) {
+                return null;
+            }
+
+            return lookup.get(id);
+        }
     }
 
     public enum Resolution {
         x16(16),
         x32(32),
         x64(64);
-
-        private final int numeric;
         private static final Map<Integer, Resolution> lookup = new HashMap<>();
 
         static {
@@ -188,12 +226,14 @@ public abstract class AbstractCanvasData extends SavedData {
             }
         }
 
+        private final int numeric;
+
         Resolution(int numeric) {
             this.numeric = numeric;
         }
 
         public int getNumeric() {
-            return numeric;
+            return this.numeric;
         }
 
         @Nullable

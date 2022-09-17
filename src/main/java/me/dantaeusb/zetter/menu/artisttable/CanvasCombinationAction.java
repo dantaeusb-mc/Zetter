@@ -240,11 +240,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     }
 
     @Override
-    public void onChangedCombined(ItemStackHandler slotHandler) {
-
-    }
-
-    @Override
     public void onTakeCombined(Player player, ItemStack stack) {
         if (this.canvasData == null) {
             Zetter.LOG.error("Cannot find combined canvas data");
@@ -257,13 +252,17 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
 
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+        CanvasData combinedCanvasData = CanvasData.createWrap(
+                this.canvasData.getResolution(),
+                this.canvasData.getWidth(),
+                this.canvasData.getHeight(),
+                this.canvasData.getColorData()
+        );
 
         final int newId = canvasTracker.getFreeCanvasId();
         final String newCode = CanvasData.getCanvasCode(newId);
 
-        canvasTracker.registerCanvasData(newCode, this.canvasData);
-        CanvasData combinedCanvasData = canvasTracker.getCanvasData(newCode, CanvasData.class);
-
+        canvasTracker.registerCanvasData(newCode, combinedCanvasData);
         CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
 
         for (int i = 0; i < this.menu.getGridContainer().getSlots(); i++) {

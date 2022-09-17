@@ -25,6 +25,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.PacketDistributor;
 
+import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 
 public class ServerHandler {
@@ -52,18 +53,23 @@ public class ServerHandler {
         }
     }
 
-    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
-        // Get overworld world instance
+    /**
+     * When client requests a canvas, we need to load data
+     * about that canvas, and send according type of canvas in
+     * sync packet
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
         final Level world = server.overworld();
         final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         final String canvasName = packetIn.getCanvasName();
 
-        Zetter.LOG.debug("Got request to sync canvas " + packetIn.getCanvasName());
-
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
-            return;
+            return null;
         }
 
         // Notify canvas manager that player is tracking canvas from no ow
@@ -81,18 +87,38 @@ public class ServerHandler {
 
         if (canvasData == null) {
             Zetter.LOG.error("Player " + sendingPlayer + " requested non-existent canvas: " + canvasName);
+            return null;
+        }
+
+        return canvasData;
+    }
+
+    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
+        AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
+        final String canvasName = packetIn.getCanvasName();
+
+        if (canvasData == null) {
+            Zetter.LOG.warn("No canvas data found, not answering request for " + canvasName);
             return;
         }
 
-        if (canvasData instanceof PaintingData) {
-            SPaintingSyncMessage paintingSyncMessage = new SPaintingSyncMessage(canvasName, (PaintingData) canvasData, System.currentTimeMillis());
+        SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasName, canvasData, System.currentTimeMillis());
 
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), paintingSyncMessage);
-        } else {
-            SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasName, canvasData, System.currentTimeMillis());
+        ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
+    }
 
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
+    public static void processCanvasViewRequest(final CCanvasRequestViewPacket packetIn, ServerPlayer sendingPlayer) {
+        AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
+        final String canvasName = packetIn.getCanvasName();
+
+        if (canvasData == null) {
+            Zetter.LOG.warn("No canvas data found, not answering view request for " + canvasName);
+            return;
         }
+
+        SCanvasSyncViewMessage canvasSyncViewMessage = new SCanvasSyncViewMessage(canvasName, canvasData, System.currentTimeMillis(), packetIn.getHand());
+
+        ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncViewMessage);
     }
 
     /**

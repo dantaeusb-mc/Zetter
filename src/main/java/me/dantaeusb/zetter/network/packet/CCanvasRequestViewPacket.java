@@ -3,29 +3,34 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ServerHandler;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraftforge.network.NetworkEvent;
+
 import java.util.function.Supplier;
 
-public class CCanvasRequestPacket {
-    protected String canvasName;
-    protected AbstractCanvasData.Type type;
+public class CCanvasRequestViewPacket extends CCanvasRequestPacket {
+    private final InteractionHand hand;
 
-    public CCanvasRequestPacket(AbstractCanvasData.Type type, String canvasName) {
-        this.type = type;
-        this.canvasName = canvasName;
+    public CCanvasRequestViewPacket(AbstractCanvasData.Type type, String canvasName, InteractionHand hand) {
+        super(type, canvasName);
+
+        this.hand = hand;
     }
 
     /**
      * Reads the raw packet data from the data stream.
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CCanvasRequestPacket readPacketData(FriendlyByteBuf buf) {
+    public static CCanvasRequestViewPacket readPacketData(FriendlyByteBuf buf) {
         AbstractCanvasData.Type type = AbstractCanvasData.Type.getTypeById(buf.readInt());
         String canvasName = buf.readUtf(64);
+        byte handCode = buf.readByte();
 
-        return new CCanvasRequestPacket(type, canvasName);
+        InteractionHand hand = InteractionHand.values()[handCode];
+
+        return new CCanvasRequestViewPacket(type, canvasName, hand);
     }
 
     /**
@@ -34,6 +39,7 @@ public class CCanvasRequestPacket {
     public void writePacketData(FriendlyByteBuf buf) {
         buf.writeInt(this.type.getId());
         buf.writeUtf(this.canvasName);
+        buf.writeByte(this.hand.ordinal());
     }
 
     public String getCanvasName() {
@@ -44,7 +50,11 @@ public class CCanvasRequestPacket {
         return this.type;
     }
 
-    public static void handle(final CCanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public InteractionHand getHand() {
+        return this.hand;
+    }
+
+    public static void handle(final CCanvasRequestViewPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
@@ -53,6 +63,6 @@ public class CCanvasRequestPacket {
             Zetter.LOG.warn("EntityPlayerMP was null when CRequestSyncPacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processCanvasRequest(packetIn, sendingPlayer));
+        ctx.enqueueWork(() -> ServerHandler.processCanvasViewRequest(packetIn, sendingPlayer));
     }
 }

@@ -18,20 +18,17 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
     public static final ModelLayerLocation EASEL_BODY_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "easel"), "body_layer");
 
     private static final String RACK = "rack";
-    private static final String CANVAS = "canvas";
     private static final String TOP_PLANK = "top";
     private static final String BACK_LEG = "base";
     private static final String FRONT_LEGS = "lid";
 
     private final ModelPart rack;
-    private final ModelPart canvas;
     private final ModelPart topPlank;
     private final ModelPart backLeg;
     private final ModelPart frontLegs;
 
     public EaselModel(ModelPart part) {
         this.rack = part.getChild(RACK);
-        this.canvas = part.getChild(CANVAS);
         this.topPlank = part.getChild(TOP_PLANK);
         this.backLeg = part.getChild(BACK_LEG);
         this.frontLegs = part.getChild(FRONT_LEGS);
@@ -47,14 +44,6 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
                         .texOffs(0, 0)
                         .addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F),
                 PartPose.offset(-8.0F, 0.0F, -8.0F)
-        );
-
-        partdefinition.addOrReplaceChild(
-                CANVAS,
-                CubeListBuilder.create()
-                        .texOffs(6, 5)
-                        .addBox(0.0F, 12.0F, 3.0F, 16.0F, 18.0F, 1.0F),
-                PartPose.offsetAndRotation(-8.0F, 0.0F, -8.0F, 0.1745F, 0.0F, 0.0F)
         );
 
         partdefinition.addOrReplaceChild(
@@ -86,7 +75,7 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
     }
 
     public Iterable<ModelPart> parts() {
-        return ImmutableList.of(this.rack, this.canvas, this.topPlank, this.backLeg, this.frontLegs);
+        return ImmutableList.of(this.rack, this.topPlank, this.backLeg, this.frontLegs);
     }
 
     @Override

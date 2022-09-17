@@ -20,12 +20,13 @@ public class ZetterNetwork {
     public static final String MESSAGE_PROTOCOL_VERSION = "0.2";
 
     public static final byte PAINTING_FRAME = 21;
-    public static final byte PAINTING_REQUEST_CANVAS = 22;
+    public static final byte CANVAS_REQUEST = 22;
     public static final byte PAINTING_UNLOAD_CANVAS = 23;
     public static final byte CANVAS_SYNC = 24;
     public static final byte PALETTE_UPDATE = 25;
     public static final byte PAINTING_RENAME = 26;
-    public static final byte PAINTING_SYNC = 29;
+    public static final byte CANVAS_SYNC_VIEW = 27;
+    public static final byte CANVAS_REQUEST_VIEW = 29;
     public static final byte SNAPSHOT_SYNC = 30;
     public static final byte HISTORY_UPDATE = 31;
     public static final byte ARTIST_TABLE_MODE = 32;
@@ -45,7 +46,7 @@ public class ZetterNetwork {
                 CCanvasActionBufferPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(PAINTING_REQUEST_CANVAS, CCanvasRequestPacket.class,
+        simpleChannel.registerMessage(CANVAS_REQUEST, CCanvasRequestPacket.class,
                 CCanvasRequestPacket::writePacketData, CCanvasRequestPacket::readPacketData,
                 CCanvasRequestPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
@@ -60,12 +61,6 @@ public class ZetterNetwork {
                 SCanvasSyncMessage::handle,
                 Optional.of(PLAY_TO_CLIENT));
 
-        // Transfers extra data
-        simpleChannel.registerMessage(PAINTING_SYNC, SPaintingSyncMessage.class,
-                SPaintingSyncMessage::writePacketData, SPaintingSyncMessage::readPacketData,
-                SPaintingSyncMessage::handle,
-                Optional.of(PLAY_TO_CLIENT));
-
         simpleChannel.registerMessage(PALETTE_UPDATE, CPaletteUpdatePacket.class,
                 CPaletteUpdatePacket::writePacketData, CPaletteUpdatePacket::readPacketData,
                 CPaletteUpdatePacket::handle,
@@ -74,6 +69,16 @@ public class ZetterNetwork {
         simpleChannel.registerMessage(PAINTING_RENAME, CSignPaintingPacket.class,
                 CSignPaintingPacket::writePacketData, CSignPaintingPacket::readPacketData,
                 CSignPaintingPacket::handle,
+                Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(CANVAS_SYNC_VIEW, SCanvasSyncViewMessage.class,
+                SCanvasSyncViewMessage::writePacketData, SCanvasSyncViewMessage::readPacketData,
+                SCanvasSyncViewMessage::handle,
+                Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(CANVAS_REQUEST_VIEW, CCanvasRequestViewPacket.class,
+                CCanvasRequestViewPacket::writePacketData, CCanvasRequestViewPacket::readPacketData,
+                CCanvasRequestViewPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(SNAPSHOT_SYNC, SCanvasSnapshotSync.class,

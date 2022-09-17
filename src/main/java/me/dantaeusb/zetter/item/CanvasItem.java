@@ -6,6 +6,10 @@ import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.network.packet.CCanvasHistoryPacket;
+import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -42,20 +46,37 @@ public class CanvasItem extends Item
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
         if (world.isClientSide()) {
             ItemStack canvas = player.getItemInHand(hand);
-            Minecraft.getInstance().setScreen(
-                    PaintingScreen.createScreenForCanvas(
-                            player,
-                            getCanvasCode(canvas),
-                            getCanvasData(canvas, world),
-                            hand
-                    )
-            );
+
+            String canvasCode = getCanvasCode(canvas);
+            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
+
+            if (canvasData != null) {
+                // If data is loaded, just show screen
+                openScreen(player, canvasCode, canvasData, hand);
+            } else {
+                // If data is not loaded, request and show screen after
+                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.CANVAS, canvasCode, hand);
+                Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
+                ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
+            }
+
         }
         ItemStack itemstack = player.getItemInHand(hand);
         player.openItemGui(itemstack, hand);
 
         player.awardStat(Stats.ITEM_USED.get(this));
         return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
+    }
+
+    public static void openScreen(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
+        Minecraft.getInstance().setScreen(
+                PaintingScreen.createScreenForCanvas(
+                        player,
+                        canvasCode,
+                        canvasData,
+                        hand
+                )
+        );
     }
 
     @Override
@@ -102,10 +123,9 @@ public class CanvasItem extends Item
     }
 
     /**
-     * Is this canvas consists of several combined canvases
-     * (larger than 1x1 canvas)
+     * Compound means that this canvas consists of
+     * several combined canvases (larger than 1x1 canvas)
      * @param stack
-     * @param world
      * @return
      */
     public static boolean isCompound(ItemStack stack) {
@@ -202,10 +222,14 @@ public class CanvasItem extends Item
 
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
+        if (!stack.is(ZetterItems.CANVAS.get())) {
+            return null;
+        }
+
         CompoundTag compoundNBT = stack.getTag();
 
-        if (compoundNBT == null) {
-            return null;
+        if (compoundNBT == null || !compoundNBT.contains(NBT_TAG_CACHED_BLOCK_SIZE)) {
+            return new int[]{1, 1};
         }
 
         return compoundNBT.getIntArray(NBT_TAG_CACHED_BLOCK_SIZE);

@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.menu.artisttable.AbstractCanvasAction;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
 import me.dantaeusb.zetter.mixin.SlotAccessor;
 import me.dantaeusb.zetter.network.packet.CArtistTableModeChange;
 import net.minecraft.world.entity.player.Player;
@@ -147,7 +148,15 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             return;
         }
 
+        // @todo: [HIGH]: Eject all slots
+
         this.mode = mode;
+
+        if (this.getMode() == Mode.COMBINE) {
+            this.action = new CanvasCombinationAction(this, this.level);
+        } else {
+            this.action = new CanvasSplitAction(this, this.level);
+        }
 
         if (this.player.getLevel().isClientSide()) {
             CArtistTableModeChange unloadPacket = new CArtistTableModeChange(this.containerId, mode);

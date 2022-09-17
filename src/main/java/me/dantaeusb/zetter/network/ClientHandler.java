@@ -3,20 +3,29 @@ package me.dantaeusb.zetter.network;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
+import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselContainerMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import me.dantaeusb.zetter.network.packet.SCanvasSnapshotSync;
-import me.dantaeusb.zetter.network.packet.SPaintingSyncMessage;
+import me.dantaeusb.zetter.network.packet.SCanvasSyncViewMessage;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
 
 public class ClientHandler {
+    /**
+     * When canvas sent from sever, update client's canvas
+     * and process update on container screens
+     *
+     * @param packetIn
+     * @param world
+     */
     public static void processCanvasSync(final SCanvasSyncMessage packetIn, Level world) {
         final LocalPlayer player = Minecraft.getInstance().player;
         final String canvasCode = packetIn.getCanvasCode();
@@ -53,11 +62,29 @@ public class ClientHandler {
         }
     }
 
-    public static void processPaintingDataSync(final SPaintingSyncMessage packetIn, Level world) {
+    public static void processCanvasSyncView(final SCanvasSyncViewMessage packetIn, Level world) {
+        final LocalPlayer player = Minecraft.getInstance().player;
+        final String canvasCode = packetIn.getCanvasCode();
+        final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
+
+        processCanvasSync(packetIn, world);
+
+        CanvasItem.openScreen(player, canvasCode, canvasData, packetIn.getHand());
+    }
+
+    /**
+     * Painting data needs lesser amount of check
+     * after being received, just update textue on
+     * client's side
+     *
+     * @param packetIn
+     * @param world
+     */
+    public static void processPaintingDataSync(final SCanvasSyncMessage packetIn, Level world) {
         final LocalPlayer player = Minecraft.getInstance().player;
 
         String canvasCode = packetIn.getCanvasCode();
-        PaintingData canvasData = packetIn.getPaintingData();
+        PaintingData canvasData = (PaintingData) packetIn.getCanvasData();
 
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
