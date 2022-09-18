@@ -88,15 +88,15 @@ public class PaintingScreen extends Screen {
         this.editable = editable;
     }
 
-    private static int SCREEN_MARGIN = 10;
-    private static int SCREEN_PADDING = 5;
-    private static int SCREEN_BOTTOM_TEXT = 30;
+    private static final int SCREEN_MARGIN = 10;
+    private static final int SCREEN_PADDING = 5;
+    private static final int SCREEN_BOTTOM_TEXT = 30;
 
-    private static int TEXT_COLOR_ACTIVE = 0xFF000000;
-    private static int TEXT_COLOR = 0xFF2B200B;
+    private static final int TEXT_COLOR_ACTIVE = 0xFF000000;
+    private static final int TEXT_COLOR = 0xFF2B200B;
 
-    private static int BUTTON_WIDTH = 98;
-    private static int BUTTON_HEIGHT = 20;
+    private static final int BUTTON_WIDTH = 98;
+    private static final int BUTTON_HEIGHT = 20;
 
     @Override
     public void init() {

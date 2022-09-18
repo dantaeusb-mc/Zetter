@@ -17,12 +17,17 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * @todo: [LOW] Disable if no palette
+ */
 public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
+    private static final int INACTIVE_COLOR = 0xFF6D634D;
+
     final static int TEXTBOX_WIDTH = 82;
     final static int TEXTBOX_HEIGHT = 16;
     final static int TEXTBOX_TITLE_HEIGHT = 11;
 
-    final static int TEXTBOX_TEXT_OFFSET = 8;
+    final static int TEXTBOX_TEXT_OFFSET = 10;
 
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("\\p{XDigit}{1,6}");
     private static final Pattern HEX_COLOR_STRICT_PATTERN = Pattern.compile("(\\p{XDigit}{3}|\\p{XDigit}{6})");
@@ -59,10 +64,10 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         );
 
         this.textField.setCanLoseFocus(false);
-        this.textField.setTextColor(-1);
-        this.textField.setTextColorUneditable(-1);
+        this.textField.setTextColor(INACTIVE_COLOR);
+        this.textField.setTextColorUneditable(INACTIVE_COLOR);
         this.textField.setBordered(false);
-        this.textField.setMaxLength(32);
+        this.textField.setMaxLength(6);
         this.textField.setResponder(this::applyColor);
 
         this.textField.setFilter(this.hexColorValidator);
@@ -77,10 +82,14 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     public void updateColorValue(int color) {
         // Drop alpha channel
         color = color & 0x00FFFFFF;
-        this.textField.setValue(Integer.toHexString(color));
+        this.textField.setValue(String.format("%1$06X", color));
     }
 
     private void applyColor(String text) {
+        if (!this.textField.isFocused()) {
+            return;
+        }
+
         Matcher matcher = HEX_COLOR_STRICT_PATTERN.matcher(text);
         if (!matcher.matches()) {
             return;
@@ -127,11 +136,15 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Quick check
         if (EaselScreen.isInRect(this.x, this.y + TEXTBOX_TITLE_HEIGHT, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
+            this.setFocused(true);
             this.textField.setFocus(true);
+            this.textField.setTextColor(Color.WHITE.getRGB());
             return true;
         }
 
+        this.setFocused(false);
         this.textField.setFocus(false);
+        this.textField.setTextColor(INACTIVE_COLOR);
         return false;
     }
 

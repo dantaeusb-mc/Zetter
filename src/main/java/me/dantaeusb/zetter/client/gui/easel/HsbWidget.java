@@ -72,10 +72,13 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return  this.hueSlider.mouseClicked(mouseX, mouseY, button) ||
-                this.saturationSlider.mouseClicked(mouseX, mouseY, button) ||
-                this.brightnessSlider.mouseClicked(mouseX, mouseY, button) ||
-                super.mouseClicked(mouseX, mouseY, button);
+        boolean result = this.hueSlider.mouseClicked(mouseX, mouseY, button) ||
+                         this.saturationSlider.mouseClicked(mouseX, mouseY, button) ||
+                         this.brightnessSlider.mouseClicked(mouseX, mouseY, button);
+
+        this.setFocused(result);
+
+        return result;
     }
 
     @Override

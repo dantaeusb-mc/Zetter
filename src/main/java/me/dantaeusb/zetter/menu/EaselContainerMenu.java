@@ -362,6 +362,10 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
 
         PaletteItem.updatePaletteColor(paletteStack, slot, color);
 
+        for (Consumer<Integer> listener: this.colorUpdateListeners) {
+            listener.accept(this.getCurrentColor());
+        }
+
         if (this.player.getLevel().isClientSide()) {
             this.sendPaletteUpdatePacket();
         }

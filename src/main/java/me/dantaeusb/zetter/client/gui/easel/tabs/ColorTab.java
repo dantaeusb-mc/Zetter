@@ -9,6 +9,7 @@ import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 public class ColorTab extends AbstractTab {
+
     private final ColorCodeWidget colorCodeWidget;
     private final HsbWidget hsbWidget;
 
@@ -31,7 +32,18 @@ public class ColorTab extends AbstractTab {
     }
 
     public void update(int color) {
+        if (!this.hsbWidget.isFocused()) {
+            this.hsbWidget.updateColor(color);
+        }
+
+        if (!this.colorCodeWidget.isFocused()) {
+            this.colorCodeWidget.updateColorValue(color);
+        }
+    }
+
+    public void update(int color, boolean triggerHsbUpdate) {
         this.hsbWidget.updateColor(color);
+        this.colorCodeWidget.updateColorValue(color);
     }
 
     @Override
@@ -52,8 +64,7 @@ public class ColorTab extends AbstractTab {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.active) {
             return  this.hsbWidget.mouseClicked(mouseX, mouseY, button) ||
-                    this.colorCodeWidget.mouseClicked(mouseX, mouseY, button) ||
-                    super.mouseClicked(mouseX, mouseY, button);
+                    this.colorCodeWidget.mouseClicked(mouseX, mouseY, button);
         }
 
         return false;
@@ -61,14 +72,12 @@ public class ColorTab extends AbstractTab {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return  this.colorCodeWidget.keyPressed(keyCode, scanCode, modifiers)
-                || super.keyPressed(keyCode, scanCode, modifiers);
+        return this.colorCodeWidget.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        return  this.colorCodeWidget.charTyped(codePoint, modifiers)
-                || super.charTyped(codePoint, modifiers);
+        return this.colorCodeWidget.charTyped(codePoint, modifiers);
     }
 
     /**
@@ -86,7 +95,7 @@ public class ColorTab extends AbstractTab {
             this.hsbWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
 
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return false;
     }
 
     @Override
@@ -95,6 +104,6 @@ public class ColorTab extends AbstractTab {
             this.hsbWidget.mouseReleased(mouseX, mouseY, button);
         }
 
-        return super.mouseReleased(mouseX, mouseY, button);
+        return false;
     }
 }
