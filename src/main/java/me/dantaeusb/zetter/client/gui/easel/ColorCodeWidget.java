@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.renderer.GameRenderer;
@@ -19,6 +20,7 @@ import java.util.regex.Pattern;
 public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     final static int TEXTBOX_WIDTH = 82;
     final static int TEXTBOX_HEIGHT = 16;
+    final static int TEXTBOX_TITLE_HEIGHT = 11;
 
     final static int TEXTBOX_TEXT_OFFSET = 8;
 
@@ -37,7 +39,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     };
 
     public ColorCodeWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, new TranslatableComponent("container.zetter.painting.color_code"));
+        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT + TEXTBOX_TITLE_HEIGHT, new TranslatableComponent("container.zetter.painting.color_code"));
     }
 
     @Override
@@ -50,7 +52,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         this.textField = new EditBox(
                 this.parentScreen.getFont(),
                 this.x + TEXTBOX_TEXT_OFFSET + 4,
-                this.y + 4,
+                this.y + TEXTBOX_TITLE_HEIGHT + 4,
                 TEXTBOX_WIDTH - 7,
                 12,
                 new TranslatableComponent("container.zetter.easel")
@@ -124,13 +126,13 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Quick check
-        if (EaselScreen.isInRect(this.x, this.y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
+        if (EaselScreen.isInRect(this.x, this.y + TEXTBOX_TITLE_HEIGHT, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
             this.textField.setFocus(true);
-            return super.mouseClicked(mouseX, mouseY, button);
+            return true;
         }
 
         this.textField.setFocus(false);
-        return super.mouseClicked(mouseX, mouseY, button);
+        return false;
     }
 
     @Override
@@ -138,6 +140,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         return this.textField.charTyped(codePoint, modifiers);
     }
 
+    @Override
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
@@ -149,12 +152,23 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
+    @Override
+    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+        this.parentScreen.getFont().draw(
+                matrixStack,
+                this.getMessage(),
+                (float) this.x - this.parentScreen.getGuiLeft(),
+                (float) this.y - this.parentScreen.getGuiTop(),
+                Color.darkGray.getRGB()
+        );
+    }
+
     protected void drawTextbox(PoseStack matrixStack) {
         final int TEXTBOX_POSITION_U = 0;
         final int TEXTBOX_POSITION_V = 0;
 
         int textboxV = TEXTBOX_POSITION_V + (this.textField.isFocused() ? TEXTBOX_HEIGHT : 0);
 
-        this.blit(matrixStack, this.x, this.y, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
+        this.blit(matrixStack, this.x, this.y + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
     }
 }
