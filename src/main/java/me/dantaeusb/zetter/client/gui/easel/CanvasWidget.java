@@ -255,7 +255,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     }
 
     private void renderCursor(PoseStack matrixStack, double canvasX, double canvasY) {
-
         AbstractToolParameters toolParameters = this.parentScreen.getMenu().getCurrentToolParameters();
         AbstractTool.ToolShape shape = this.parentScreen.getMenu().getCurrentTool().getTool().getShape(toolParameters);
 
@@ -279,35 +278,51 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             this.vLine(matrixStack, globalX, globalY - radius, globalY - 2, 0x80808080);
             this.vLine(matrixStack, globalX, globalY + radius, globalY + 2, 0x80808080);
         } else {
-            int globalX = this.x + this.canvasOffsetX + (int) Math.floor(canvasX) * this.getCanvasScale() - 1;
-            int globalY = this.y + this.canvasOffsetY + (int) Math.floor(canvasY) * this.getCanvasScale() - 1;
+            // Offset for the current shape, in canvas pixels
+            final int offset = -(shape.getSize() / 2);
+
+            int globalX = this.x + this.canvasOffsetX + (int) Math.floor(canvasX) * this.getCanvasScale();
+            int globalY = this.y + this.canvasOffsetY + (int) Math.floor(canvasY) * this.getCanvasScale();
 
             for (AbstractTool.ShapeLine line : shape.getLines()) {
-                int posX = line.posX() * this.getCanvasScale();
-                int posY = line.posY() * this.getCanvasScale();
+                // Relative positions from the cursor "center" in canvas pixels
+                // Center is
+                int posX = (line.posX() + offset) * this.getCanvasScale();
+                int posY = (line.posY() + offset) * this.getCanvasScale();
                 int length = line.length() * this.getCanvasScale();
 
-                // Add + 1 to wrap pixel around
-                if (posX > 0) {
-                    posX++;
-                }
-
-                if (posY > 0) {
-                    posY++;
-                }
-
                 if (line.direction() == AbstractTool.ShapeLine.LineDirection.HORIZONTAL) {
-                    if (posX + length > 0) {
-                        length++;
+                    // Wrap around top-left
+                    if (posX <= 0) {
+                        posX--;
+
+                        if (posX + length > 0) {
+                            length++;
+                        }
                     }
 
-                    this.hLine(matrixStack, globalX + posX, globalX + posX + length, globalY + posY, 0x80808080);
+                    if (posY <= 0) {
+                        posY--;
+                    }
+
+                    final int minX = globalX + posX;
+                    this.hLine(matrixStack, minX, minX + length, globalY + posY, 0x80808080);
                 } else {
-                    if (posY + length > 0) {
-                        length++;
+                    // Wrap around bottom-right
+                    if (posX <= 0) {
+                        posX--;
                     }
 
-                    this.vLine(matrixStack, globalX + posX, globalY + posY, globalY + posY + length, 0x80808080);
+                    if (posY <= 0) {
+                        posY--;
+
+                        if (posY + length > 0) {
+                            length++;
+                        }
+                    }
+
+                    final int minY = globalY + posY;
+                    this.vLine(matrixStack, globalX + posX, minY, minY + length, 0x80808080);
                 }
             }
         }

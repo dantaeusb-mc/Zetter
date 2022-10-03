@@ -1,10 +1,16 @@
 package me.dantaeusb.zetter.item;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -26,14 +32,12 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import javax.annotation.Nullable;
 import java.util.List;
 
-public class PaintingItem extends Item
+public class PaintingItem extends CanvasItem
 {
     public static final String NBT_TAG_PAINTING_CODE = "PaintingCode";
 
     public static final String NBT_TAG_CACHED_PAINTING_TITLE = "CachedPaintingName";
     public static final String NBT_TAG_CACHED_AUTHOR_NAME = "CachedAuthorName";
-    public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
-    public static final String NBT_TAG_CACHED_BLOCK_SIZE = "CachedBlockSize";
     public static final String NBT_TAG_GENERATION = "Generation";
 
     public static final int GENERATION_ORIGINAL = 0;
@@ -41,11 +45,7 @@ public class PaintingItem extends Item
     public static final int GENERATION_COPY_OF_COPY = 2;
 
     public PaintingItem() {
-        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
-    }
-
-    public PaintingItem(Item.Properties properties) {
-        super(properties);
+        super();
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
@@ -56,18 +56,16 @@ public class PaintingItem extends Item
         if (world.isClientSide()) {
             ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
             String paintingCode = getPaintingCode(painting);
+            PaintingData canvasData = getPaintingData(painting, player.getLevel());
 
-            if (canvasTracker != null) {
-                PaintingData paintingData = canvasTracker.getCanvasData(paintingCode, PaintingData.class);
-
-                Minecraft.getInstance().setScreen(
-                    PaintingScreen.createScreenForPainting(
-                        player,
-                        paintingCode,
-                        paintingData,
-                        hand
-                    )
-                );
+            if (canvasData != null) {
+                // If data is loaded, just show screen
+                openScreen(player, paintingCode, canvasData, hand);
+            } else {
+                // If data is not loaded, request and show screen after
+                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.PAINTING, paintingCode, hand);
+                Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
+                ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
             }
         }
 
@@ -121,6 +119,7 @@ public class PaintingItem extends Item
         }
     }
 
+    @Override
     public Component getName(ItemStack stack) {
         if (stack.hasTag()) {
             String paintingName = getCachedPaintingName(stack);
@@ -155,6 +154,32 @@ public class PaintingItem extends Item
         }
 
         return compoundNBT.getString(NBT_TAG_PAINTING_CODE);
+    }
+
+    /**
+     *
+     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
+     * @param stack
+     * @param world
+     * @return
+     */
+    @Nullable
+    public static PaintingData getPaintingData(ItemStack stack, Level world) {
+        Item painting = stack.getItem();
+
+        if (painting instanceof PaintingItem || painting instanceof FrameItem) {
+            String paintingCode = getPaintingCode(stack);
+
+            if (paintingCode == null) {
+                return null;
+            }
+
+            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+
+            return canvasTracker.getCanvasData(paintingCode, PaintingData.class);
+        }
+
+        return null;
     }
 
     @Nullable

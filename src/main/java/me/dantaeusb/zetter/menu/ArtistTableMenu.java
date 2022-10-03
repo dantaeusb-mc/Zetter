@@ -1,28 +1,38 @@
 package me.dantaeusb.zetter.menu;
 
+import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.block.entity.container.ArtistTableGridContainer;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterContainerMenus;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.artisttable.AbstractCanvasAction;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
-import me.dantaeusb.zetter.mixin.SlotAccessor;
 import me.dantaeusb.zetter.network.packet.CArtistTableModeChange;
+import me.dantaeusb.zetter.network.packet.SArtistTableMenuCreatePacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 
-public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackHandlerListener {
+import static me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity.DATA_MODE;
+
+/**
+ * @todo: [MID] This whole thing with ContainerData is not very smart
+ * but at least we have single source of truth and transparent sync
+ * with data slots
+ */
+public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackHandlerListener, ContainerListener {
     private static final int HOTBAR_SLOT_COUNT = 9;
 
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
@@ -35,15 +45,27 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     private final Player player;
     private final Level level;
 
-    private final ArrayList<Slot> gridSlots = new ArrayList<>(16);
+    /**
+     * Three containers:
+     * a. Combination - saved in the world, shown only in combination mode,
+     *  for the purpose of making larger canvases from small (1x1) ones
+     * b. Split - only in menu, shown only in split mode, for the
+     * purpose of showing and handling small canvases when
+     * player splits large canvas. If menu closed, dropped
+     * or given to the player
+     * c. Combined - always shown, in combination mode shows result,
+     * in split mode used as a resource
+     */
+
+    private final ArrayList<Slot> gridSlots = new ArrayList<>(ArtistTableMenu.CANVAS_SLOT_COUNT);
+    private final ArrayList<Slot> splitSlots = new ArrayList<>(ArtistTableMenu.CANVAS_SLOT_COUNT);
     private final Slot combinedSlot;
 
     private AbstractCanvasAction action;
+    private final ContainerLevelAccess access;
 
-    private Mode mode = Mode.COMBINE;
-
-    private final ArtistTableGridContainer gridContainer;
-    protected final ItemStackHandler combinedContainer = new ItemStackHandler(1) {
+    private final ArtistTableGridContainer combinationContainer;
+    private final ItemStackHandler combinedHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
             ArtistTableMenu.this.combinedSlotChanged(this);
@@ -51,6 +73,24 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             //super.onContentsChanged(slot);
         }
     };
+    private final ItemStackHandler splitHandler = new ItemStackHandler(ArtistTableMenu.CANVAS_SLOT_COUNT) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            ArtistTableMenu.this.splitSlotChanged(this);
+            super.onContentsChanged(slot);
+        }
+
+        @Override
+        public void setStackInSlot(int slot, @Nonnull ItemStack stack)
+        {
+            validateSlotIndex(slot);
+            this.stacks.set(slot, stack);
+            onContentsChanged(slot);
+        }
+    };
+
+    // Mode
+    private final ContainerData containerData;
 
     // gui position of the player inventory grid
     public static final int PLAYER_INVENTORY_XPOS = 36;
@@ -69,14 +109,19 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     final int SLOT_Y_SPACING = 18;
 
     public ArtistTableMenu(int windowID, Inventory invPlayer,
-                           ArtistTableGridContainer artistTableContainer) {
+                           ArtistTableGridContainer artistTableContainer, ContainerData containerData,
+                           final ContainerLevelAccess access) {
         super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
 
         this.player = invPlayer.player;
         this.level = invPlayer.player.getLevel();
 
-        this.gridContainer = artistTableContainer;
-        this.gridContainer.addListener(this);
+        this.access = access;
+
+        this.combinationContainer = artistTableContainer;
+        this.combinationContainer.addListener(this);
+
+        this.containerData = containerData;
 
         final int HOTBAR_XPOS = 36;
         final int HOTBAR_YPOS = 168;
@@ -103,67 +148,99 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
                 int xpos = COMBINATION_SLOTS_COMBINE_X + x * SLOT_X_SPACING;
                 int ypos = COMBINATION_SLOTS_COMBINE_Y + y * SLOT_Y_SPACING;
 
-                final SlotCombinationGrid combinationSlot = new SlotCombinationGrid(this.gridContainer, slotNumber,  xpos, ypos);
+                final SlotCombinationGrid combinationSlot = new SlotCombinationGrid(this.combinationContainer, slotNumber,  xpos, ypos);
 
                 this.addSlot(combinationSlot);
                 this.gridSlots.add(combinationSlot);
             }
         }
 
-        final SlotCombined combinedSlot = new SlotCombined(this.combinedContainer, 0, COMBINED_SLOT_X, COMBINED_SLOT_Y);
+        // Add canvas splitting slots
+        for (int y = 0; y < CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < CANVAS_COLUMN_COUNT; x++) {
+                int slotNumber = y * CANVAS_COLUMN_COUNT + x;
+                int xpos = COMBINATION_SLOTS_SPLIT_X + x * SLOT_X_SPACING;
+                int ypos = COMBINATION_SLOTS_SPLIT_Y + y * SLOT_Y_SPACING;
+
+                final SlotSplitGrid splitSlot = new SlotSplitGrid(this.splitHandler, slotNumber,  xpos, ypos);
+
+                this.addSlot(splitSlot);
+                this.splitSlots.add(splitSlot);
+            }
+        }
+
+        final SlotCombined combinedSlot = new SlotCombined(this.combinedHandler, 0, COMBINED_SLOT_X, COMBINED_SLOT_Y);
 
         this.addSlot(combinedSlot);
         this.combinedSlot = combinedSlot;
 
-        this.action = new CanvasCombinationAction(this, level);
+        this.addDataSlots(this.containerData);
+        this.addSlotListener(this);
 
-        this.containerChanged(this.gridContainer);
+        if (this.getMode() == Mode.COMBINE) {
+            this.action = new CanvasCombinationAction(this, this.level);
+        } else if (this.getMode() == Mode.SPLIT) {
+            this.action = new CanvasSplitAction(this, this.level);
+        }
+
+        this.containerChanged(this.combinationContainer);
     }
 
     public static ArtistTableMenu createMenuServerSide(int windowID, Inventory playerInventory,
-                                                       ArtistTableGridContainer artistTableContainer) {
-        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer);
+                                                       ArtistTableGridContainer artistTableContainer,
+                                                       ContainerData containerData,
+                                                       ContainerLevelAccess access) {
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, containerData, access);
     }
 
     public static ArtistTableMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+        SArtistTableMenuCreatePacket packet = SArtistTableMenuCreatePacket.readPacketData(networkBuffer);
         ArtistTableGridContainer artistTableContainer = new ArtistTableGridContainer();
 
-        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer);
+        ContainerData clientData = new SimpleContainerData(1);
+        clientData.set(ArtistTableBlockEntity.DATA_MODE, packet.getMode().getId());
+
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, new SimpleContainerData(1), ContainerLevelAccess.NULL);
     }
 
-    public ItemStackHandler getGridContainer() {
-        return this.gridContainer;
+    public ItemStackHandler getCombinationContainer() {
+        return this.combinationContainer;
     }
 
-    public ItemStackHandler getCombinedContainer() {
-        return this.combinedContainer;
+    public ItemStackHandler getCombinedHandler() {
+        return this.combinedHandler;
     }
 
+    public ItemStackHandler getSplitHandler() {
+        return this.splitHandler;
+    }
+
+
+    /**
+     * Get mode from ContainerData
+     * @return
+     */
     public Mode getMode() {
-        return this.mode;
+        return Mode.getById((byte) this.containerData.get(ArtistTableBlockEntity.DATA_MODE));
     }
 
+    /**
+     * Set mode directly, on server send update
+     * to the Entity's ContainerData
+     * @param mode
+     */
     public void setMode(Mode mode) {
         if (!this.canChangeMode()) {
             return;
         }
 
         // @todo: [HIGH]: Eject all slots
-
-        this.mode = mode;
-
-        if (this.getMode() == Mode.COMBINE) {
-            this.action = new CanvasCombinationAction(this, this.level);
-        } else {
-            this.action = new CanvasSplitAction(this, this.level);
-        }
+        this.setData(ArtistTableBlockEntity.DATA_MODE, mode.getId());
 
         if (this.player.getLevel().isClientSide()) {
             CArtistTableModeChange unloadPacket = new CArtistTableModeChange(this.containerId, mode);
             ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
         }
-
-        this.updateSlotPositions();
     }
 
     public boolean canChangeMode() {
@@ -174,23 +251,18 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
     }
 
-    public void updateSlotPositions() {
-        final int firstIndex = this.gridSlots.get(0).getSlotIndex();
-
-        final int combinationBaseX = this.mode == Mode.COMBINE ? COMBINATION_SLOTS_COMBINE_X : COMBINATION_SLOTS_SPLIT_X;
-        final int combinationBaseY = this.mode == Mode.COMBINE ? COMBINATION_SLOTS_COMBINE_Y : COMBINATION_SLOTS_SPLIT_Y;
-
-        for (Slot combinationSlot : this.gridSlots) {
-            int x = (combinationSlot.getSlotIndex() - firstIndex) % CANVAS_ROW_COUNT;
-            int y = (combinationSlot.getSlotIndex() - firstIndex) / CANVAS_COLUMN_COUNT;
-
-            ((SlotAccessor) combinationSlot).setX(combinationBaseX + x * SLOT_X_SPACING);
-            ((SlotAccessor) combinationSlot).setY(combinationBaseY + y * SLOT_Y_SPACING);
-        }
-    }
-
     public boolean isCombinationGridEmpty() {
         for (Slot combinationSlot : this.gridSlots) {
+            if (combinationSlot.hasItem()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean isSplitGridEmpty() {
+        for (Slot combinationSlot : this.splitSlots) {
             if (combinationSlot.hasItem()) {
                 return false;
             }
@@ -216,21 +288,29 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * remove or overwrite it
      */
     public void containerChanged(ItemStackHandler container) {
-        this.action.onChangeGrid(container);
+        this.getAction().onChangedCombination(container);
     }
 
     public void combinedSlotChanged(ItemStackHandler combinedHandler) {
-        this.action.onChangedCombined(combinedHandler);
+        this.getAction().onChangedCombined(combinedHandler);
     }
 
-    public ItemStack onTakeFromGrid(Player player, ItemStack stack) {
-        return stack;
+    public void splitSlotChanged(ItemStackHandler combinedHandler) {
+        this.getAction().onChangedSplit(combinedHandler);
     }
 
-    public ItemStack onTakeFromCombinedSlot(Player player, ItemStack stack) {
-        return stack;
-    }
-
+    /**
+     * Check that action model corresponds to
+     * the current mode in ContainerData,
+     * change action model if it's not,
+     * return correct action model
+     *
+     * It's weird but with ContainerData
+     * as single source of truth I'm not sure
+     * there's another way to do that
+     *
+     * @return
+     */
     public AbstractCanvasAction getAction() {
         return this.action;
     }
@@ -243,24 +323,65 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         return this.action.state == CanvasCombinationAction.State.NOT_LOADED;
     }
 
+    @Override
+    public void slotChanged(AbstractContainerMenu containerMenu, int slotInd, ItemStack stack) {
+
+    }
+
+    @Override
+    public void dataChanged(AbstractContainerMenu containerMenu, int dataSlotIndex, int value) {
+        if (dataSlotIndex == DATA_MODE) {
+            if (this.getMode() == Mode.COMBINE && !(this.action instanceof CanvasCombinationAction)) {
+                this.action = new CanvasCombinationAction(this, this.level);
+            }
+
+            if (this.getMode() == Mode.SPLIT && !(this.action instanceof CanvasSplitAction)) {
+                this.action = new CanvasSplitAction(this, this.level);
+            }
+
+            this.discardSplitGrid(this.player);
+        }
+    }
+
+    public void setData(int pId, int pData) {
+        super.setData(pId, pData);
+        this.broadcastChanges();
+    }
+
     /*
       Common handlers
      */
 
+    /**
+     *
+     * @param player
+     */
     public void removed(Player player) {
         super.removed(player);
-        this.gridContainer.removeListener(this);
+        this.combinationContainer.removeListener(this);
+
+        // In split mode
+        if (this.getMode().equals(Mode.SPLIT)) {
+            this.access.execute((level, pos) -> {
+                this.clearHandler(player, this.combinedHandler);
+            });
+
+            this.discardSplitGrid(player);
+        }
     }
 
     /**
      * Called to determine if the current slot is valid for the stack merging (double-click) code. The stack passed in is
      * null for the initial slot that was double-clicked.
+     *
+     * @todo: this
      */
     public boolean canTakeItemForPickAll(ItemStack stack, Slot slotIn) {
-        return slotIn.container != this.combinedContainer && super.canTakeItemForPickAll(stack, slotIn);
+        return super.canTakeItemForPickAll(stack, slotIn);
     }
 
     /**
+     * @todo: this
      *
      * @param playerIn
      * @param sourceSlotIndex
@@ -315,23 +436,109 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * Determines whether supplied player can use this container
      */
     public boolean stillValid(Player player) {
-        return this.gridContainer.stillValid(player);
+        return this.combinationContainer.stillValid(player);
     }
+
+    /**
+     * Helper
+     */
+
+    protected void discardSplitGrid(Player player) {
+        if (!player.isAlive() || player instanceof ServerPlayer && ((ServerPlayer)player).hasDisconnected()) {
+            for(int i = 0; i < this.splitHandler.getSlots(); ++i) {
+                ItemStack extractedStack = this.splitHandler.extractItem(i, this.splitHandler.getSlotLimit(i), false);
+
+                if (!extractedStack.isEmpty() && !CanvasItem.isEmpty(extractedStack)) {
+                    player.drop(extractedStack, false);
+                }
+            }
+
+        } else {
+            for(int i = 0; i < this.splitHandler.getSlots(); ++i) {
+                Inventory inventory = player.getInventory();
+
+                if (inventory.player instanceof ServerPlayer) {
+                    ItemStack extractedStack = this.splitHandler.extractItem(i, this.splitHandler.getSlotLimit(i), false);
+
+                    if (!extractedStack.isEmpty() && !CanvasItem.isEmpty(extractedStack)) {
+                        inventory.placeItemBackInInventory(extractedStack);
+                    }
+                }
+            }
+        }
+    }
+
+    protected void clearHandler(Player player, ItemStackHandler stackHandler) {
+        if (!player.isAlive() || player instanceof ServerPlayer && ((ServerPlayer)player).hasDisconnected()) {
+            for(int i = 0; i < stackHandler.getSlots(); ++i) {
+                player.drop(stackHandler.extractItem(i, stackHandler.getSlotLimit(i), false), false);
+            }
+        } else {
+            for(int i = 0; i < stackHandler.getSlots(); ++i) {
+                Inventory inventory = player.getInventory();
+                if (inventory.player instanceof ServerPlayer) {
+                    inventory.placeItemBackInInventory(stackHandler.extractItem(i, stackHandler.getSlotLimit(i), false));
+                }
+            }
+
+        }
+    }
+
+    /**
+     * Slots
+     */
 
     public class SlotCombinationGrid extends SlotItemHandler {
         public SlotCombinationGrid(ItemStackHandler stackHandler, int index, int xPosition, int yPosition) {
             super(stackHandler, index, xPosition, yPosition);
         }
 
-        // if this function returns false, the player won't be able to insert the given item into this slot
+        /**
+         * We can only use combination grid in combine mode
+         * and if container can accept item
+         * @param stack
+         * @return
+         */
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return ArtistTableMenu.this.action.mayPlaceGrid(this.getSlotIndex(), stack);
+            return  ArtistTableMenu.this.getMode().equals(Mode.COMBINE) &&
+                    ArtistTableMenu.this.combinationContainer.isItemValid(this.getSlotIndex(), stack);
+        }
+
+        @Override
+        public boolean isActive() {
+            return ArtistTableMenu.this.getMode().equals(Mode.COMBINE);
         }
 
         @Override
         public void onTake(Player player, ItemStack stack) {
-            ArtistTableMenu.this.action.onTakeGrid(player, stack);
+            ArtistTableMenu.this.getAction().onTakeCombination(player, stack);
+        }
+    }
+
+    public class SlotSplitGrid extends SlotItemHandler {
+        public SlotSplitGrid(ItemStackHandler stackHandler, int index, int xPosition, int yPosition) {
+            super(stackHandler, index, xPosition, yPosition);
+        }
+
+        /**
+         * Can only take from split grid
+         * @param stack
+         * @return
+         */
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return false;
+        }
+
+        @Override
+        public boolean isActive() {
+            return ArtistTableMenu.this.getMode().equals(Mode.SPLIT);
+        }
+
+        @Override
+        public void onTake(Player player, ItemStack stack) {
+            ArtistTableMenu.this.getAction().onTakeSplit(player, stack);
         }
     }
 
@@ -342,12 +549,12 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return ArtistTableMenu.this.action.mayPlaceCombined(stack);
+            return ArtistTableMenu.this.getAction().mayPlaceCombined(stack);
         }
 
         @Override
         public void onTake(Player player, ItemStack stack) {
-            ArtistTableMenu.this.action.onTakeCombined(player, stack);
+            ArtistTableMenu.this.getAction().onTakeCombined(player, stack);
         }
     }
 

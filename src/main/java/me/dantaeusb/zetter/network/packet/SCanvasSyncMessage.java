@@ -34,7 +34,11 @@ public class SCanvasSyncMessage {
     }
 
     public long getTimestamp() {
-        return timestamp;
+        return this.timestamp;
+    }
+
+    public AbstractCanvasData.Type getType() {
+        return this.type;
     }
 
     /**
@@ -93,7 +97,7 @@ public class SCanvasSyncMessage {
         if (packetIn.type == AbstractCanvasData.Type.CANVAS) {
             ctx.enqueueWork(() -> ClientHandler.processCanvasSync(packetIn, clientWorld.get()));
         } else if (packetIn.type == AbstractCanvasData.Type.PAINTING) {
-            ctx.enqueueWork(() -> ClientHandler.processPaintingDataSync(packetIn, clientWorld.get()));
+            ctx.enqueueWork(() -> ClientHandler.processPaintingSync(packetIn, clientWorld.get()));
         } else {
             Zetter.LOG.error("SCanvasSyncMessage has wrong type.");
         }

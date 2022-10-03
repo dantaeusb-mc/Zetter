@@ -7,19 +7,22 @@ import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.network.packet.CCanvasHistoryPacket;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 
@@ -28,8 +31,11 @@ import javax.annotation.Nullable;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.security.InvalidParameterException;
+import java.util.List;
 
 public class CanvasItem extends Item
 {
@@ -46,6 +52,10 @@ public class CanvasItem extends Item
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
         if (world.isClientSide()) {
             ItemStack canvas = player.getItemInHand(hand);
+
+            if (isEmpty(canvas)) {
+                return InteractionResultHolder.consume(canvas);
+            }
 
             String canvasCode = getCanvasCode(canvas);
             CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
@@ -79,6 +89,17 @@ public class CanvasItem extends Item
         );
     }
 
+    public static void openScreen(Player player, String canvasCode, PaintingData canvasData, InteractionHand hand) {
+        Minecraft.getInstance().setScreen(
+                PaintingScreen.createScreenForPainting(
+                        player,
+                        canvasCode,
+                        canvasData,
+                        hand
+                )
+        );
+    }
+
     @Override
     public Component getName(ItemStack stack) {
         if (stack.hasTag()) {
@@ -90,6 +111,17 @@ public class CanvasItem extends Item
         }
 
         return new TranslatableComponent("item.zetter.canvas.blank");
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+        if (stack.hasTag()) {
+            String stringSize = getCachedStringSize(stack);
+
+            if (!StringUtil.isNullOrEmpty(stringSize)) {
+                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
+            }
+        }
     }
 
     /**
@@ -139,10 +171,18 @@ public class CanvasItem extends Item
         return false;
     }
 
-    public static boolean isEmpty(ItemStack stack, Level world) {
-        CanvasData canvasData = getCanvasData(stack, world);
+    /**
+     * Check if canvas has data
+     * As all canvases initialized with id,
+     * no id means canvas was not initialized
+     *
+     * @param stack
+     * @return
+     */
+    public static boolean isEmpty(ItemStack stack) {
+        String canvasSize = getCanvasCode(stack);
 
-        return canvasData == null;
+        return canvasSize == null;
     }
 
     /**

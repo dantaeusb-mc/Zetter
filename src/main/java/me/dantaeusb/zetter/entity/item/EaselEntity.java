@@ -26,7 +26,6 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
@@ -45,8 +44,8 @@ import java.util.ArrayList;
 import java.util.function.Predicate;
 
 public class   EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
-    private static final String EASEL_STORAGE_TAG = "storage";
-    private static final String CANVAS_CODE_TAG = "CanvasCode";
+    private static final String NBT_TAG_EASEL_STORAGE = "storage";
+    private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
     protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> {
         return entity instanceof EaselEntity;
@@ -165,19 +164,19 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     public void addAdditionalSaveData(CompoundTag compoundTag) {
-        compoundTag.put(EASEL_STORAGE_TAG, this.easelContainer.serializeNBT());
+        compoundTag.put(NBT_TAG_EASEL_STORAGE, this.easelContainer.serializeNBT());
 
         if (this.getEntityCanvasCode() != null) {
-            compoundTag.putString(CANVAS_CODE_TAG, this.getEntityCanvasCode());
+            compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getEntityCanvasCode());
         }
     }
 
     public void readAdditionalSaveData(CompoundTag compoundTag) {
         this.createInventory();
 
-        this.easelContainer.deserializeNBT(compoundTag.getCompound(EASEL_STORAGE_TAG));
+        this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_EASEL_STORAGE));
 
-        final String canvasCode = compoundTag.getString(CANVAS_CODE_TAG);
+        final String canvasCode = compoundTag.getString(NBT_TAG_CANVAS_CODE);
 
         if (canvasCode != null) {
             this.setEntityCanvasCode(canvasCode);

@@ -11,11 +11,11 @@ import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import me.dantaeusb.zetter.network.packet.SCanvasSnapshotSync;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncViewMessage;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
 
 public class ClientHandler {
@@ -29,6 +29,9 @@ public class ClientHandler {
     public static void processCanvasSync(final SCanvasSyncMessage packetIn, Level world) {
         final LocalPlayer player = Minecraft.getInstance().player;
         final String canvasCode = packetIn.getCanvasCode();
+
+        assert packetIn.getType().equals(AbstractCanvasData.Type.CANVAS);
+
         final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
         final long timestamp = packetIn.getTimestamp();
 
@@ -62,14 +65,27 @@ public class ClientHandler {
         }
     }
 
+    /**
+     * Process SCanvasSyncViewMessage, open screen depending on
+     * the type of canvas (basic or painting)
+     * @param packetIn
+     * @param world
+     */
     public static void processCanvasSyncView(final SCanvasSyncViewMessage packetIn, Level world) {
         final LocalPlayer player = Minecraft.getInstance().player;
         final String canvasCode = packetIn.getCanvasCode();
-        final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
 
-        processCanvasSync(packetIn, world);
+        if (packetIn.getType().equals(AbstractCanvasData.Type.CANVAS)) {
+            final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
 
-        CanvasItem.openScreen(player, canvasCode, canvasData, packetIn.getHand());
+            CanvasItem.openScreen(player, canvasCode, canvasData, packetIn.getHand());
+            processCanvasSync(packetIn, world);
+        } else if (packetIn.getType().equals(AbstractCanvasData.Type.PAINTING)) {
+            final PaintingData canvasData = (PaintingData) packetIn.getCanvasData();
+
+            CanvasItem.openScreen(player, canvasCode, canvasData, packetIn.getHand());
+            processPaintingSync(packetIn, world);
+        }
     }
 
     /**
@@ -77,11 +93,15 @@ public class ClientHandler {
      * after being received, just update textue on
      * client's side
      *
+     * @todo: better add switch for type in handler
+     *
      * @param packetIn
      * @param world
      */
-    public static void processPaintingDataSync(final SCanvasSyncMessage packetIn, Level world) {
+    public static void processPaintingSync(final SCanvasSyncMessage packetIn, Level world) {
         final LocalPlayer player = Minecraft.getInstance().player;
+
+        assert packetIn.getType().equals(AbstractCanvasData.Type.PAINTING);
 
         String canvasCode = packetIn.getCanvasCode();
         PaintingData canvasData = (PaintingData) packetIn.getCanvasData();

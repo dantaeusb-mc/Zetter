@@ -4,7 +4,9 @@
 * \[HIGH\] Not saving current palette selection and pixel buffer in Easel Entity;
 * \[HIGH\] Requested non-existent canvas errors because of synceddata desync;
 * \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;
-* \[HIGH\] Central piece of iron frame actually has no model (except back which it lacks for some reason)
+* \[HIGH\] Central piece of iron frame actually has no model (except back which it lacks for some reason);
+* \[HIGH\] When you change shape quickly after drawing, packet is send with new shape;
+* \[HIGH\] No drop when easel damaged;
 * \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
 * \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
 * \[MED\] If painting has some problems, just remove it instead of crashing;

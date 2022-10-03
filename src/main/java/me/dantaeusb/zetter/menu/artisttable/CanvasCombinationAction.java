@@ -10,7 +10,6 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Tuple;
@@ -58,14 +57,14 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     }
 
     public void update() {
-        ItemStackHandler container = menu.getGridContainer();
+        ItemStackHandler combinationContainer = menu.getCombinationContainer();
 
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                if (container.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
+                if (combinationContainer.getStackInSlot(y * 4 + x) != ItemStack.EMPTY) {
                     if (min == null) {
                         min = new Tuple<>(x ,y);
                     }
@@ -95,7 +94,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                ItemStack currentStack = container.getStackInSlot(y * 4 + x);
+                ItemStack currentStack = combinationContainer.getStackInSlot(y * 4 + x);
 
                 if (currentStack == ItemStack.EMPTY) {
                     if (x >= min.getA() && x <= max.getA()) {
@@ -155,7 +154,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         this.state = State.READY;
         this.rectangle = rectangle;
-        this.canvasData = CanvasCombinationAction.createCanvasData(container, rectangle, this.level);
+        this.canvasData = CanvasCombinationAction.createCanvasData(combinationContainer, rectangle, this.level);
     }
 
     public static DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
@@ -217,15 +216,10 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     }
 
     @Override
-    public boolean mayPlaceGrid(int slot, ItemStack stack) {
-        return this.menu.getGridContainer().isItemValid(slot, stack);
-    }
-
-    @Override
-    public void onChangeGrid(ItemStackHandler container) {
+    public void onChangedCombination(ItemStackHandler container) {
         this.update();
 
-        ItemStack combinedStack = this.menu.getCombinedContainer().getStackInSlot(0);
+        ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
         // @todo: Can combine?
         if (this.isReady()) {
@@ -236,7 +230,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             combinedStack = ItemStack.EMPTY;
         }
 
-        this.menu.getCombinedContainer().setStackInSlot(0, combinedStack);
+        this.menu.getCombinedHandler().setStackInSlot(0, combinedStack);
     }
 
     @Override
@@ -265,13 +259,17 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         canvasTracker.registerCanvasData(newCode, combinedCanvasData);
         CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
 
-        for (int i = 0; i < this.menu.getGridContainer().getSlots(); i++) {
-            ItemStack combinationStack = this.menu.getGridContainer().getStackInSlot(i);
+        for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
+            ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+
+            if (combinationStack.isEmpty()) {
+                continue;
+            }
 
             // Cleanup IDs and grid
             int canvasId = CanvasItem.getCanvasId(combinationStack);
             canvasTracker.clearCanvasId(canvasId);
-            this.menu.getGridContainer().setStackInSlot(i, ItemStack.EMPTY);
+            this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
         }
     }
 

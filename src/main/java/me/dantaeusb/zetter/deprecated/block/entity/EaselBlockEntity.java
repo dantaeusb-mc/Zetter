@@ -24,7 +24,8 @@ import javax.annotation.Nullable;
 public class EaselBlockEntity extends BlockEntity {
     private final EaselContainer easelContainer; // two items: canvas and palette
 
-    private static final String EASEL_STORAGE_TAG = "storage";
+    // @todo: [LOW] Normalize: CapitalCase for tags
+    private static final String NBT_TAG_EASEL_STORAGE = "storage";
 
     public EaselBlockEntity(BlockPos pos, BlockState state) {
         super(ZetterBlockEntities.EASEL_BLOCK_ENTITY.get(), pos, state);
@@ -79,7 +80,7 @@ public class EaselBlockEntity extends BlockEntity {
     public void saveAdditional(CompoundTag compoundTag)
     {
         CompoundTag easelStorage = this.easelContainer.serializeNBT();
-        compoundTag.put(EASEL_STORAGE_TAG, easelStorage);
+        compoundTag.put(NBT_TAG_EASEL_STORAGE, easelStorage);
     }
 
     @Override
@@ -87,7 +88,7 @@ public class EaselBlockEntity extends BlockEntity {
     {
         super.load(compoundTag);
 
-        CompoundTag easelStorage = compoundTag.getCompound(EASEL_STORAGE_TAG);
+        CompoundTag easelStorage = compoundTag.getCompound(NBT_TAG_EASEL_STORAGE);
         this.easelContainer.deserializeNBT(easelStorage);
     }
 

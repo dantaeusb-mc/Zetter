@@ -23,7 +23,7 @@ public class FrameItem extends PaintingItem {
     private boolean hasPlate;
 
     public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
+        super();
 
         this.material = material;
         this.hasPlate = plated;

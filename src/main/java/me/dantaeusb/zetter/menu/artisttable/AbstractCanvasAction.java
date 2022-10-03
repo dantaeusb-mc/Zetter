@@ -1,7 +1,5 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
-import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
@@ -28,13 +26,9 @@ public abstract class AbstractCanvasAction {
         return this.canvasData;
     }
 
-    public boolean mayPlaceGrid(int slot, ItemStack stack) {
-        return false;
-    }
+    public void onChangedCombination(ItemStackHandler container) { }
 
-    public void onChangeGrid(ItemStackHandler container) { }
-
-    public void onTakeGrid(Player player, ItemStack stack) { }
+    public void onTakeCombination(Player player, ItemStack stack) { }
 
     public boolean mayPlaceCombined(ItemStack stack) {
         return false;
@@ -44,23 +38,9 @@ public abstract class AbstractCanvasAction {
 
     public void onTakeCombined(Player player, ItemStack stack) { }
 
-    public void forEveryGridSlot(GridSlotCallback callback) {
-        ItemStackHandler gridContainer = this.menu.getGridContainer();
+    public void onChangedSplit(ItemStackHandler container) { }
 
-        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
-            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
-                ItemStack stack = gridContainer.getStackInSlot(slotNumber);
-
-                callback.call(gridContainer, x, y, stack, slotNumber);
-            }
-        }
-    }
-
-    @FunctionalInterface
-    public interface GridSlotCallback {
-        void call(ItemStackHandler container, int x, int y, ItemStack stack, int slotFinder);
-    }
+    public void onTakeSplit(Player player, ItemStack stack) { }
 
     public enum State {
         EMPTY,

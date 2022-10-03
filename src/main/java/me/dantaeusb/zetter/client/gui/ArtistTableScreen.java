@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.client.gui;
 
+import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.ChangeActionWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
@@ -15,10 +16,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerListener;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> {
+public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> implements ContainerListener {
     protected final Component title = new TranslatableComponent("container.zetter.artistTable");
 
     // This is the resource location for the background image
@@ -65,6 +69,8 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         this.addPaintingWidget(this.combinedCanvasWidget);
         this.addPaintingWidget(this.changeActionWidget);
         this.addPaintingWidget(this.helpWidget);
+
+        this.getMenu().addSlotListener(this);
     }
 
     public void updateCombinedCanvasPosition() {
@@ -208,6 +214,32 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         this.font.draw(matrixStack, this.playerInventoryTitle,
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
     }
+
+    @Override
+    public void slotChanged(AbstractContainerMenu menu, int slotId, ItemStack stack) {
+
+    }
+
+    /**
+     * Update widget position on mode change
+     * @param menu
+     * @param dataSlotIndex
+     * @param value
+     */
+    @Override
+    public void dataChanged(AbstractContainerMenu menu, int dataSlotIndex, int value) {
+        if (dataSlotIndex == ArtistTableBlockEntity.DATA_MODE) {
+            this.updateCombinedCanvasPosition();
+        }
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+
+        this.getMenu().removeSlotListener(this);
+    }
+
     /**
      * We have a little complicated logic with active tabs here
      * @param mouseX

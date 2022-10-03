@@ -61,7 +61,7 @@ public class PaintingScreen extends Screen {
     }, (String input) -> {
         this.title = input;
     }, this::getClipboard, this::setClipboard, (String input) -> {
-        return input.length() <= 16;
+        return input.length() <= 32;
     });
 
     public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
@@ -130,7 +130,6 @@ public class PaintingScreen extends Screen {
         int slot = this.hand == InteractionHand.MAIN_HAND ? this.owner.getInventory().selected : 40;
 
         CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
-
         ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
 
         this.minecraft.player.closeContainer();
@@ -155,12 +154,12 @@ public class PaintingScreen extends Screen {
 
         this.paintingScale = (float) paintingWidth / this.canvasData.getWidth();
 
-        int minWidth = this.editable ? 6 * 16 + 5 : 0;
+        int minWidth = 6 * 32;
 
         // If we can edit title, we need to fit title and a button, otherwise
         // we can use the size of the painting itself
         if (this.editable) {
-            minWidth += BUTTON_WIDTH;
+            minWidth += BUTTON_WIDTH + 5;
         }
 
         this.screenWidth = Math.max(minWidth, paintingWidth) + SCREEN_PADDING * 2;
