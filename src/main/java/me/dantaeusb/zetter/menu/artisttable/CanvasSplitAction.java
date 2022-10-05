@@ -1,7 +1,9 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.canvastracker.CanvasDefaultTracker;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -61,12 +63,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         if (combinedStack.isEmpty() || !combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
 
             for (int i = 0; i < this.menu.getSplitHandler().getSlots(); i++) {
-                for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                    ItemStack extractedStack = this.menu.getSplitHandler().extractItem(i, this.menu.getSplitHandler().getSlotLimit(i), false);
+                ItemStack stackInSlot = this.menu.getSplitHandler().getStackInSlot(i);
 
-                    if (!extractedStack.isEmpty() && CanvasItem.isEmpty(extractedStack)) {
-                        this.menu.getSplitHandler().setStackInSlot(i, ItemStack.EMPTY);
-                    }
+                if (!stackInSlot.isEmpty() && CanvasItem.isEmpty(stackInSlot)) {
+                    this.menu.getSplitHandler().setStackInSlot(i, ItemStack.EMPTY);
                 }
             }
 
@@ -125,6 +125,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
     @Override
     public void onTakeSplit(Player player, ItemStack takenStack) {
         if (this.level.isClientSide()) {
+            // Nothing to do on client
             return;
         }
 
@@ -135,9 +136,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Get data from split canvas
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(player.getLevel());
         final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
+        // Don't need that data for client, it'll request if needed
         if (combinedCanvasData == null) {
             Zetter.LOG.error("No canvas data found for item in combined slot");
             return;
@@ -180,7 +182,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                             )
                     );
 
-                    String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
+                    String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
                     CanvasItem.storeCanvasData(splitStack, canvasCode, itemData);
                 }
             }
@@ -201,7 +203,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 )
         );
 
-        String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
+        String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
         CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
 
         // Remove split canvas item

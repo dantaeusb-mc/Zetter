@@ -210,6 +210,9 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         if (world.isClientSide()) {
             Helper.getWorldCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
+        } else {
+            // @todo: drop texture
+
         }
 
         return combinedCanvasData;
@@ -241,7 +244,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
 
         if (player.getLevel().isClientSide()) {
-            // @todo: not sure
+            // @todo: remove texture from client too
             return;
         }
 
@@ -268,6 +271,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
             // Cleanup IDs and grid
             int canvasId = CanvasItem.getCanvasId(combinationStack);
+            // @todo: remove texture from client too
             canvasTracker.clearCanvasId(canvasId);
             this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
         }
