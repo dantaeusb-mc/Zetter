@@ -6,7 +6,6 @@ buildscript {
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1+', changing: true
-        classpath 'org.spongepowered:mixingradle:0.7.+'
     }
 }
 
@@ -19,11 +18,10 @@ plugins {
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply from: "https://moddingtutorials.org/applesilicon.gradle"
-apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'maven-publish'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.16.1-1.18.2-beta'
+version = '0.17.0-1.18.2-alpha'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
@@ -36,8 +34,6 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
-
-            arg "-mixin.config=mixins.zetter.json"
 
             // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
@@ -54,8 +50,6 @@ minecraft {
 
         server {
             workingDirectory project.file('run')
-
-            arg "-mixin.config=mixins.zetter.json"
 
             // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
@@ -96,16 +90,15 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.1.60'
-    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
-mixin {
+/*mixin {
     add sourceSets.main, 'mixins.zetter.refmap.json'
     config 'mixins.zetter.json'
 
     debug.verbose = true
     debug.export = true
-}
+}*/
 
 // Example for how to get properties into the manifest for reading by the runtime..
 jar {
@@ -113,12 +106,11 @@ jar {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.16.1-beta",
+            "Specification-Version": "0.17.0-alpha",
             "Implementation-Title": project.name,
             "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-            "MixinConfigs" : "mixins.zetter.json"
         ])
     }
 }

@@ -5,16 +5,16 @@
 * \[HIGH\] Requested non-existent canvas errors because of synceddata desync;
 * \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;
 * \[HIGH\] Central piece of iron frame actually has no model (except back which it lacks for some reason);
-* \[HIGH\] When you change shape quickly after drawing, packet is send with new shape;
+* \[HIGH\] When you change shape quickly after drawing, packet is sent with new shape;
 * \[HIGH\] No drop when easel damaged;
+* \[HIGH\] Combined canvas unloaded on server somehow;
 * \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
 * \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
-* \[MED\] If painting has some problems, just remove it instead of crashing;
+* \[MED\] If painting has some problems, just remove it instead of crashing or throwing errors (i.e. requesting non-existent canvas);
 
 #### Release tasks:
 
-* \[HIGH\] Labels are weird after screen resize;
-* \[HIGH\] Remove awt usage;
+* \[HIGH\] (Check) Remove awt usage;
 * \[HIGH\] When dropping painting, if cannot be loaded, just drop frame (gallery workaround);
 * \[HIGH\] Configuration file for texture size;
 * \[MED\] Reduce saving and sending format to write RGB data instead of RGBA;
@@ -37,10 +37,7 @@
 #### Planned features:
 
 * Moderation table;
-* Pencil size with more palette "damage";
-* Pencil cursor;
 * Pencil color jitter;
-* Pencil transparency;
 * Show canvas in hands like map;
 * Texture dispatcher which will prevent not only client request canvases too quick but server to sync canvases too frequent;
 * Think about creating own atlas map with loaded paintings.
