@@ -144,11 +144,20 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     /**
+     * Method for public access: also removes tracking
+     * @param canvasCode
+     */
+    public void unregisterCanvas(String canvasCode) {
+        this.ticksSinceRenderRequested.remove(canvasCode);
+        this.unloadCanvas(canvasCode);
+    }
+
+    /**
      * Saying to the server that we no longer want to recieve updates
      * on this canvas since we're not using it
      * @param canvasCode
      */
-    public void unloadCanvas(String canvasCode) {
+    private void unloadCanvas(String canvasCode) {
         Zetter.LOG.debug("Unloading canvas " + canvasCode);
 
         // Free the texture
@@ -161,7 +170,7 @@ public class CanvasRenderer implements AutoCloseable {
         // this.ticksSinceRenderRequested.remove(canvasCode);
 
         // Notifying server that we're no longer tracking it
-        // @todo [LOW] better just check tile entity who's around
+        // @todo: [LOW] better just check tile entity who's around
         CCanvasUnloadRequestPacket unloadPacket = new CCanvasUnloadRequestPacket(canvasCode);
         ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
     }

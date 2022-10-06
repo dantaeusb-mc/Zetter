@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -238,42 +239,53 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     @Override
     public void onTakeCombined(Player player, ItemStack stack) {
-        if (this.canvasData == null) {
+        if (this.canvasData == null || !this.isReady()) {
             Zetter.LOG.error("Cannot find combined canvas data");
             return;
         }
 
-        if (player.getLevel().isClientSide()) {
-            // @todo: remove texture from client too
-            return;
-        }
+        if (!player.getLevel().isClientSide()) {
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+            CanvasData combinedCanvasData = CanvasData.createWrap(
+                    this.canvasData.getResolution(),
+                    this.canvasData.getWidth(),
+                    this.canvasData.getHeight(),
+                    this.canvasData.getColorData()
+            );
 
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
-        CanvasData combinedCanvasData = CanvasData.createWrap(
-                this.canvasData.getResolution(),
-                this.canvasData.getWidth(),
-                this.canvasData.getHeight(),
-                this.canvasData.getColorData()
-        );
+            final int newId = canvasTracker.getFreeCanvasId();
+            final String newCode = CanvasData.getCanvasCode(newId);
 
-        final int newId = canvasTracker.getFreeCanvasId();
-        final String newCode = CanvasData.getCanvasCode(newId);
+            canvasTracker.registerCanvasData(newCode, combinedCanvasData);
+            CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
 
-        canvasTracker.registerCanvasData(newCode, combinedCanvasData);
-        CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
+            for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
+                ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
 
-        for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-            ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+                if (combinationStack.isEmpty()) {
+                    continue;
+                }
 
-            if (combinationStack.isEmpty()) {
-                continue;
+                // Cleanup IDs and grid
+                int canvasId = CanvasItem.getCanvasId(combinationStack);
+                // @todo: remove texture from client too
+                canvasTracker.clearCanvasId(canvasId);
+                this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
+        } else {
+            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getWorldCanvasTracker(player.getLevel());
 
-            // Cleanup IDs and grid
-            int canvasId = CanvasItem.getCanvasId(combinationStack);
-            // @todo: remove texture from client too
-            canvasTracker.clearCanvasId(canvasId);
-            this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
+            for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
+                ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+
+                if (combinationStack.isEmpty()) {
+                    continue;
+                }
+
+                // @todo: Force client to invalidate paintings maybe?
+                String canvasCode = CanvasItem.getCanvasCode(combinationStack);
+                canvasTracker.unregisterCanvasData(canvasCode);
+            }
         }
     }
 

@@ -53,7 +53,7 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
         // Remove existing entry if we have one to replace with a new one
         this.canvases.remove(newCanvasCode);
 
-        CanvasRenderer.getInstance().unloadCanvas(newCanvasCode);
+        CanvasRenderer.getInstance().unregisterCanvas(newCanvasCode);
     }
 
     @Override

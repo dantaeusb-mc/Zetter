@@ -47,7 +47,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * should populate the grid with preview
      * of the result, empty non-compound canvases
      * without data
-     * <p>
+     *
      * When canvas removed, if we see canvases
      * without data (empty), that means we had
      * preview here in place before, so it's safe
@@ -61,7 +61,6 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         // No item - clean the contents of split grid
         if (combinedStack.isEmpty() || !combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
-
             for (int i = 0; i < this.menu.getSplitHandler().getSlots(); i++) {
                 ItemStack stackInSlot = this.menu.getSplitHandler().getStackInSlot(i);
 
@@ -183,6 +182,8 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                     );
 
                     String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
+                    canvasTracker.registerCanvasData(canvasCode, itemData);
+
                     CanvasItem.storeCanvasData(splitStack, canvasCode, itemData);
                 }
             }
@@ -204,6 +205,8 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         );
 
         String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
+        canvasTracker.registerCanvasData(canvasCode, itemData);
+
         CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
 
         // Remove split canvas item
