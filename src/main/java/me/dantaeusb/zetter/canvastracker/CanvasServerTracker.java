@@ -59,7 +59,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     }
 
     public int getFreeCanvasId() {
-        final int freeId = this.canvasIds.nextClearBit(0);
+        final int freeId = this.canvasIds.nextClearBit(1);
         this.canvasIds.set(freeId);
 
         return freeId;

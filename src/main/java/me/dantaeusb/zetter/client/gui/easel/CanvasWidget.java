@@ -249,6 +249,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         bufferBuilder.vertex(matrix, x2, y1, this.getBlitOffset()).uv(u2, v1).endVertex();
         bufferBuilder.vertex(matrix, x1, y1, this.getBlitOffset()).uv(u1, v1).endVertex();
         bufferBuilder.end();
+        // @todo: needed?
         BufferUploader.end(bufferBuilder);
 
         matrixStack.popPose();

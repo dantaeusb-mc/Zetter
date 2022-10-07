@@ -101,8 +101,4 @@ public abstract class AbstractToolParameters {
             throw new SerializationException("Incorrect or forbidden type for parameter " + key);
         }
     }
-
-    public void serialize() {
-
-    }
 }
