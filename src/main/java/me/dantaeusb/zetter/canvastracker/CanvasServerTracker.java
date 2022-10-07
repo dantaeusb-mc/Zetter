@@ -24,7 +24,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
 
     private final Level world;
 
-    protected BitSet canvasIds = new BitSet();
+    protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
 
     private final Map<String, Vector<PlayerTrackingCanvas>> trackedCanvases = new HashMap<>();
