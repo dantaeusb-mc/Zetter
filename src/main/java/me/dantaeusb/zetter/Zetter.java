@@ -36,5 +36,6 @@ public class Zetter
         ZetterBlockEntities.init(MOD_EVENT_BUS);
         ZetterContainerMenus.init(MOD_EVENT_BUS);
         ZetterEntities.init(MOD_EVENT_BUS);
+        ZetterCraftingRecipes.init(MOD_EVENT_BUS);
     }
 }

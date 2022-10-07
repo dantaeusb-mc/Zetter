@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.item.crafting;
 import me.dantaeusb.zetter.Zetter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
@@ -11,7 +12,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -21,9 +21,6 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
  * Only for frames, toggle
  */
 public class FramingRecipe extends CustomRecipe {
-    public static final Serializer SERIALIZER = new Serializer();
-    public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "framing");
-
     private final Ingredient inputFrame;
     private final Ingredient inputPainting;
 
@@ -110,7 +107,7 @@ public class FramingRecipe extends CustomRecipe {
      * @return
      */
     public RecipeSerializer<?> getSerializer() {
-        return SERIALIZER;
+        return ZetterCraftingRecipes.FRAMING.get();
     }
 
     /**
@@ -120,12 +117,7 @@ public class FramingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<FramingRecipe> {
-
-        Serializer() {
-            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "framing"));
-        }
-
+    public static class Serializer implements RecipeSerializer<FramingRecipe> {
         @Override
         public FramingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");
