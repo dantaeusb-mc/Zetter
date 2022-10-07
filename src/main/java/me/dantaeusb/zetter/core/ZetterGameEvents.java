@@ -19,10 +19,10 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerDisconnected(PlayerEvent.PlayerLoggedOutEvent event) {
-        Player player = event.getPlayer();
+        Player player = event.getEntity();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.level);
 
-        canvasTracker.stopTrackingAllCanvases(player.m_142081_());
+        canvasTracker.stopTrackingAllCanvases(player.getUUID());
     }
 
     @SubscribeEvent

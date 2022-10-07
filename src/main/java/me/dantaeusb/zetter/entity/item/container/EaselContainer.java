@@ -91,10 +91,10 @@ public class EaselContainer extends ItemStackHandler {
 
         ICanvasTracker canvasTracker;
 
-        if (this.easel.m_183503_().isClientSide()) {
-            canvasTracker = this.easel.m_183503_().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+        if (this.easel.getLevel().isClientSide()) {
+            canvasTracker = this.easel.getLevel().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         } else {
-            canvasTracker = this.easel.m_183503_().m_142572_().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = this.easel.getLevel().m_142572_().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         }
 
         if (canvasTracker == null) {

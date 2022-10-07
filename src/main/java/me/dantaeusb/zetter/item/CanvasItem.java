@@ -58,7 +58,7 @@ public class CanvasItem extends Item
             }
 
             String canvasCode = getCanvasCode(canvas);
-            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.m_183503_());
+            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -148,7 +148,7 @@ public class CanvasItem extends Item
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        TranslatableComponent blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());

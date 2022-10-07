@@ -54,7 +54,7 @@ public class PaintingItem extends CanvasItem
         if (world.isClientSide()) {
             ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
             String paintingCode = getPaintingCode(painting);
-            PaintingData canvasData = getPaintingData(painting, player.m_183503_());
+            PaintingData canvasData = getPaintingData(painting, player.getLevel());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -131,7 +131,7 @@ public class PaintingItem extends CanvasItem
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
-                return new TextComponent(paintingName);
+                return Component.literal(paintingName);
             }
         }
 

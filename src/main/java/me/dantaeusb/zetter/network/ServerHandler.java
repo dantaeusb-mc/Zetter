@@ -35,13 +35,13 @@ public class ServerHandler {
      * @param sendingPlayer
      */
     public static void processActionBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
-        EaselEntity easelEntity = (EaselEntity) sendingPlayer.m_183503_().getEntity(packetIn.easelEntityId);
+        EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
         // @todo: [MED] Check if player can access entity
 
         if (easelEntity != null) {
             for (CanvasAction actionBuffer : packetIn.paintingActions) {
-                if (!actionBuffer.authorId.equals(sendingPlayer.m_142081_())) {
+                if (!actionBuffer.authorId.equals(sendingPlayer.getUUID())) {
                     Zetter.LOG.warn("Received action from player claimed another player UUID, ignoring");
                     return;
                 }
@@ -62,7 +62,7 @@ public class ServerHandler {
      * @param sendingPlayer
      */
     private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
-        final MinecraftServer server = sendingPlayer.m_183503_().m_142572_();
+        final MinecraftServer server = sendingPlayer.getLevel().getServer();
         final Level world = server.overworld();
         final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         final String canvasName = packetIn.getCanvasName();
@@ -73,7 +73,7 @@ public class ServerHandler {
         }
 
         // Notify canvas manager that player is tracking canvas from no ow
-        canvasTracker.trackCanvas(sendingPlayer.m_142081_(), canvasName);
+        canvasTracker.trackCanvas(sendingPlayer.getUUID(), canvasName);
 
         AbstractCanvasData canvasData;
 
@@ -132,7 +132,7 @@ public class ServerHandler {
      */
     public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayer sendingPlayer) {
         // Get overworld world instance
-        MinecraftServer server = sendingPlayer.m_183503_().m_142572_();
+        MinecraftServer server = sendingPlayer.getLevel().getServer();
         Level world = server.overworld();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
 
@@ -143,7 +143,7 @@ public class ServerHandler {
             return;
         }
 
-        canvasTracker.stopTrackingCanvas(sendingPlayer.m_142081_(), packetIn.getCanvasName());
+        canvasTracker.stopTrackingCanvas(sendingPlayer.getUUID(), packetIn.getCanvasName());
     }
 
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
@@ -163,7 +163,7 @@ public class ServerHandler {
                 return;
             }
 
-            CanvasData canvasData = CanvasItem.getCanvasData(canvasStack, sendingPlayer.m_183503_());
+            CanvasData canvasData = CanvasItem.getCanvasData(canvasStack, sendingPlayer.getLevel());
 
             if (canvasData == null) {
                 Zetter.LOG.error("Unable to process painting signature - canvas data is empty");
@@ -176,11 +176,11 @@ public class ServerHandler {
     }
 
     private static ItemStack createPainting(Player player, String paintingTitle, CanvasData canvasData) {
-        if (player.m_183503_().isClientSide()) {
+        if (player.getLevel().isClientSide()) {
             throw new InvalidParameterException("Create painting called on client");
         }
 
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.m_183503_());
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
         ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
 
         /**
@@ -199,12 +199,12 @@ public class ServerHandler {
     }
 
     public static void processCanvasHistory(final CCanvasHistoryPacket packetIn, ServerPlayer sendingPlayer) {
-        EaselEntity easelEntity = (EaselEntity) sendingPlayer.m_183503_().getEntity(packetIn.easelEntityId);
+        EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
         // @todo: [MED] Check if player can access entity
 
         if (easelEntity != null) {
-            easelEntity.getStateHandler().updateActionCanceledState(packetIn.actionId, sendingPlayer.m_142081_(), packetIn.canceled);
+            easelEntity.getStateHandler().updateActionCanceledState(packetIn.actionId, sendingPlayer.getUUID(), packetIn.canceled);
         } else {
             Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
         }

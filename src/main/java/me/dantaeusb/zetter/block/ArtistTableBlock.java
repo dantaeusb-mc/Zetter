@@ -57,7 +57,7 @@ public class ArtistTableBlock extends BaseEntityBlock {
 
         if (currentTileEntity instanceof ArtistTableBlockEntity) {
             if (!level.isClientSide()) {
-                NetworkHooks.openGui((ServerPlayer) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
+                NetworkHooks.openScreen((ServerPlayer) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
                     SArtistTableMenuCreatePacket packet = new SArtistTableMenuCreatePacket(currentTileEntity.getBlockPos(), ((ArtistTableBlockEntity) currentTileEntity).getMode());
                     packet.writePacketData(packetBuffer);
                 });

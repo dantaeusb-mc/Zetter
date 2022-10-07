@@ -114,7 +114,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
 
         this.player = invPlayer.player;
-        this.level = invPlayer.player.m_183503_();
+        this.level = invPlayer.player.getLevel();
 
         this.access = access;
 
@@ -237,7 +237,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         // @todo: [HIGH]: Eject all slots
         this.setData(ArtistTableBlockEntity.DATA_MODE, mode.getId());
 
-        if (this.player.m_183503_().isClientSide()) {
+        if (this.player.getLevel().isClientSide()) {
             CArtistTableModeChange unloadPacket = new CArtistTableModeChange(this.containerId, mode);
             ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
         }

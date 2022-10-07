@@ -66,7 +66,7 @@ public class EaselBlockEntity extends BlockEntity {
     @Override
     public AABB getRenderBoundingBox()
     {
-        return new AABB(this.getBlockPos(), this.getBlockPos().m_142082_(1, 2, 1));
+        return new AABB(this.getBlockPos(), this.getBlockPos().offset(1, 2, 1));
     }
 
     // NBT stack

@@ -229,8 +229,8 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     public void openInventory(Player player) {
         if (!this.level.isClientSide) {
-            NetworkHooks.openGui((ServerPlayer) player, this, (packetBuffer) -> {
-                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.m_142049_(), this.getEntityCanvasCode());
+            NetworkHooks.openScreen((ServerPlayer) player, this, (packetBuffer) -> {
+                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
                 packet.writePacketData(packetBuffer);
             });
         }
@@ -340,7 +340,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public ArrayList<Player> calculatePlayersUsing() {
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
-        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.m_142082_(-5, -5, -5), this.pos.m_142082_(5, 5, 5)))) {
+        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
             if (player.containerMenu instanceof EaselContainerMenu) {
                 EaselContainer storage = ((EaselContainerMenu)player.containerMenu).getContainer();
 

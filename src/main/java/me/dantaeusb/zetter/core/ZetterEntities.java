@@ -5,9 +5,7 @@ import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -15,7 +13,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ZetterEntities {
-    private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, Zetter.MOD_ID);
+    private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Zetter.MOD_ID);
 
     public static RegistryObject<EntityType<CustomPaintingEntity>> CUSTOM_PAINTING_ENTITY = ENTITIES.register("custom_painting_entity", () -> EntityType.Builder.<CustomPaintingEntity>of(CustomPaintingEntity::new, MobCategory.MISC)
             .sized(1.0F, 1.0F)
