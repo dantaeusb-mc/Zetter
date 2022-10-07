@@ -36,7 +36,7 @@ public class Helper {
 
         if (!world.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = world.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = world.m_142572_().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         } else {
             canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         }

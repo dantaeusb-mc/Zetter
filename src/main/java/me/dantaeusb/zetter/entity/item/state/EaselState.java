@@ -90,11 +90,11 @@ public class EaselState {
     public void tick() {
         this.tick++;
 
-        if (this.tick % 20 == 0 && this.easel.getLevel().isClientSide()) {
+        if (this.tick % 20 == 0 && this.easel.m_183503_().isClientSide()) {
             this.poolActionsQueueClient(false);
         }
 
-        if (this.tick % 200 == 0 && !this.easel.getLevel().isClientSide()) {
+        if (this.tick % 200 == 0 && !this.easel.m_183503_().isClientSide()) {
             this.poolSnapshotsServer();
         }
     }
@@ -169,7 +169,7 @@ public class EaselState {
                 this.recordAction(playerId, tool, color, parameters, posX, posY);
             }
 
-            if (this.easel.getLevel().isClientSide()) {
+            if (this.easel.m_183503_().isClientSide()) {
                 CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
             }
 
@@ -317,8 +317,8 @@ public class EaselState {
         this.onStateChanged();
 
         // If action is not sent, just checking flag will be enough, it will be sent with proper canceled status
-        if (this.easel.getLevel().isClientSide() && action.isSent()) {
-            CCanvasHistoryPacket historyPacket = new CCanvasHistoryPacket(this.easel.getId(), action.uuid, canceled);
+        if (this.easel.m_183503_().isClientSide() && action.isSent()) {
+            CCanvasHistoryPacket historyPacket = new CCanvasHistoryPacket(this.easel.m_142049_(), action.uuid, canceled);
             Zetter.LOG.debug("Sending History Update: " + historyPacket);
             ZetterNetwork.simpleChannel.sendToServer(historyPacket);
         }
@@ -381,9 +381,9 @@ public class EaselState {
 
         int latency = 0;
 
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.m_183503_().isClientSide()) {
             ClientPacketListener connection = Minecraft.getInstance().getConnection();
-            latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency()) * 2;
+            latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.m_142081_()).getLatency()) * 2;
         }
 
         if (firstCanceledAction != null) {
@@ -483,7 +483,7 @@ public class EaselState {
         }
 
         if (!unsentActions.isEmpty()) {
-            CCanvasActionBufferPacket paintingFrameBufferPacket = new CCanvasActionBufferPacket(this.easel.getId(), unsentActions);
+            CCanvasActionBufferPacket paintingFrameBufferPacket = new CCanvasActionBufferPacket(this.easel.m_142049_(), unsentActions);
             ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
 
             for (CanvasAction unsentAction : unsentActions) {
@@ -549,7 +549,7 @@ public class EaselState {
         this.snapshots.add(snapshot);
 
         SCanvasSnapshotSync syncMessage = new SCanvasSnapshotSync(
-                this.easel.getId(), this.getCanvasCode(), this.getCanvasData(), snapshot.timestamp
+                this.easel.m_142049_(), this.getCanvasCode(), this.getCanvasData(), snapshot.timestamp
         );
 
         for (Player usingPlayer : this.easel.getPlayersUsing()) {
@@ -607,8 +607,8 @@ public class EaselState {
     }
 
     private void markDesync() {
-        if (!this.easel.getLevel().isClientSide()) {
-            ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
+        if (!this.easel.m_183503_().isClientSide()) {
+            ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.easel.m_183503_())).markCanvasDesync(this.getCanvasCode());
         }
     }
 

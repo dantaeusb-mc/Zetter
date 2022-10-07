@@ -22,9 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.StringUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -56,7 +54,7 @@ public class PaintingItem extends CanvasItem
         if (world.isClientSide()) {
             ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
             String paintingCode = getPaintingCode(painting);
-            PaintingData canvasData = getPaintingData(painting, player.getLevel());
+            PaintingData canvasData = getPaintingData(painting, player.m_183503_());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -93,7 +91,7 @@ public class PaintingItem extends CanvasItem
         int heightBlocks = paintingData.getHeight() / paintingData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
@@ -106,15 +104,15 @@ public class PaintingItem extends CanvasItem
             String authorName = getCachedAuthorName(stack);
 
             if (StringUtil.isNullOrEmpty(authorName)) {
-                authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
+                authorName = Component.translatable("item.zetter.painting.unknown").getString();
             }
 
-            tooltip.add((new TranslatableComponent("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
+            tooltip.add((Component.translatable("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
 
             String stringSize = getCachedStringSize(stack);
 
             if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
+                tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -129,7 +127,7 @@ public class PaintingItem extends CanvasItem
                     return super.getName(stack);
                 }
 
-                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
+                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {

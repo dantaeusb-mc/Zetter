@@ -15,7 +15,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
@@ -34,7 +33,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     private int canvasOffsetY = 0;
 
     public CanvasWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, SIZE, SIZE, new TranslatableComponent("container.zetter.painting.canvas"));
+        super(parentScreen, x, y, SIZE, SIZE, Component.translatable("container.zetter.painting.canvas"));
 
         if (parentScreen.getMenu().getCanvasData() != null) {
             this.canvasOffsetX = (SIZE - (parentScreen.getMenu().getCanvasData().getWidth() * this.getCanvasScale())) / 2;
@@ -248,8 +247,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         bufferBuilder.vertex(matrix, x2, y2, this.getBlitOffset()).uv(u2, v2).endVertex();
         bufferBuilder.vertex(matrix, x2, y1, this.getBlitOffset()).uv(u2, v1).endVertex();
         bufferBuilder.vertex(matrix, x1, y1, this.getBlitOffset()).uv(u1, v1).endVertex();
-        bufferBuilder.end();
-        BufferUploader.end(bufferBuilder);
+        bufferBuilder.m_85721_();
+        BufferUploader.m_85761_(bufferBuilder);
 
         matrixStack.popPose();
     }

@@ -15,7 +15,6 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +22,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 
 public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> implements ContainerListener {
-    protected final Component title = new TranslatableComponent("container.zetter.artistTable");
+    protected final Component title = Component.translatable("container.zetter.artistTable");
 
     // This is the resource location for the background image
     private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/gui/artist_table.png");

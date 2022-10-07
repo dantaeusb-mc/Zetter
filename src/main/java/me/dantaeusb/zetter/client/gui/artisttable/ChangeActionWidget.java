@@ -9,7 +9,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 public class ChangeActionWidget extends AbstractArtistTableWidget implements Widget {
     final static int BUTTON_WIDTH = 20;
@@ -19,7 +19,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
     final static int BUTTON_POSITION_V = 0;
 
     public ChangeActionWidget(ArtistTableScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslatableComponent("container.zetter.artist_table.change_action"));
+        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.artist_table.change_action"));
     }
 
     @Override

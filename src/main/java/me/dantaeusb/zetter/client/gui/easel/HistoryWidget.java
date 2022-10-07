@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -29,18 +28,18 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
 
     public HistoryWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT + 3, new TranslatableComponent("container.zetter.painting.history"));
+        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT + 3, Component.translatable("container.zetter.painting.history"));
 
 
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(
                     parentScreen.getMenu()::canUndo, parentScreen.getMenu()::undo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
-                    new TranslatableComponent("container.zetter.painting.history.undo"))
+                    Component.translatable("container.zetter.painting.history.undo"))
             );
             add(new HistoryButton(parentScreen.getMenu()::canRedo, parentScreen.getMenu()::redo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V + HISTORY_BUTTON_HEIGHT + 1, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
-                    new TranslatableComponent("container.zetter.painting.history.redo"))
+                    Component.translatable("container.zetter.painting.history.redo"))
             );
         }};
     }
@@ -121,9 +120,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
         public final int vPosition;
         public final int height;
         public final int width;
-        public final TranslatableComponent label;
+        public final Component label;
 
-        HistoryButton(Supplier<Boolean> active, Supplier<Boolean> action, int uPosition, int vPosition, int width, int height, TranslatableComponent label) {
+        HistoryButton(Supplier<Boolean> active, Supplier<Boolean> action, int uPosition, int vPosition, int width, int height, Component label) {
             this.active = active;
             this.action = action;
             this.uPosition = uPosition;
@@ -133,7 +132,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
             this.label = label;
         }
 
-        public TranslatableComponent getTooltip() {
+        public Component getTooltip() {
             return this.label;
         }
     }

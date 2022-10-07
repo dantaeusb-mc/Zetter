@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.painting.parameters.IntensityInterface;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.painting.tools.Brush;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.function.TriFunction;
 
 
@@ -185,16 +185,16 @@ public class BlendingPipe implements Pipe {
     }
 
     public enum BlendingOption {
-        RGB(BlendingPipe::blendRGB, new TranslatableComponent("container.zetter.painting.blending.additive")),
-        RYB(BlendingPipe::blendRYB, new TranslatableComponent("container.zetter.painting.blending.subtractive")),
-        RGBC(BlendingPipe::blendRGBC, new TranslatableComponent("container.zetter.painting.blending.realistic"));
+        RGB(BlendingPipe::blendRGB, Component.translatable("container.zetter.painting.blending.additive")),
+        RYB(BlendingPipe::blendRYB, Component.translatable("container.zetter.painting.blending.subtractive")),
+        RGBC(BlendingPipe::blendRGBC, Component.translatable("container.zetter.painting.blending.realistic"));
 
         public static final BlendingOption DEFAULT = RYB;
         public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;
 
-        public final TranslatableComponent translatableComponent;
+        public final Component translatableComponent;
 
-        BlendingOption(TriFunction<Integer, Integer, Float, Integer> blendingFunction, TranslatableComponent translatableComponent) {
+        BlendingOption(TriFunction<Integer, Integer, Float, Integer> blendingFunction, Component translatableComponent) {
             this.blendingFunction = blendingFunction;
             this.translatableComponent = translatableComponent;
         }

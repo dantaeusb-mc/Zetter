@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
 import com.google.common.collect.Maps;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -20,7 +21,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.*;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
@@ -211,15 +211,15 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         String authorName = paintingData.getAuthorName();
 
         if (StringUtil.isNullOrEmpty(paintingName)) {
-            paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
+            paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
         }
 
         if (StringUtil.isNullOrEmpty(authorName)) {
-            authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
+            authorName = Component.translatable("item.zetter.painting.unknown").getString();
         }
 
         player.displayClientMessage(
-            new TranslatableComponent("item.zetter.customPaintingByAuthor", paintingName, authorName),
+            Component.translatable("item.zetter.customPaintingByAuthor", paintingName, authorName),
             true
         );
 
@@ -356,7 +356,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Copied from PaintingEntity
      */
     public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
-        BlockPos blockpos = this.pos.offset(x - this.getX(), y - this.getY(), z - this.getZ());
+        BlockPos blockpos = this.pos.m_142022_(x - this.getX(), y - this.getY(), z - this.getZ());
         this.setPos(blockpos.getX(), blockpos.getY(), blockpos.getZ());
     }
 

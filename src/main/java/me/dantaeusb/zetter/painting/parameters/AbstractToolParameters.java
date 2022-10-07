@@ -17,7 +17,7 @@ public abstract class AbstractToolParameters {
     protected HashMap<String, Object> values = new HashMap<>();
 
     public static void writePacketData(AbstractToolParameters toolParameters, FriendlyByteBuf buffer) {
-        buffer.writeCollection(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
+        buffer.m_178352_(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
     }
 
     /**
@@ -63,7 +63,7 @@ public abstract class AbstractToolParameters {
                 break;
         }
 
-        final List<Tuple<String, Object>> rawParameters = buffer.readCollection(
+        final List<Tuple<String, Object>> rawParameters = buffer.m_178371_(
                 NonNullList::createWithCapacity,
                 AbstractToolParameters::readEntry
         );

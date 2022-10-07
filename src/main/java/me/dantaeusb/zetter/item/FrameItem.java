@@ -65,7 +65,7 @@ public class FrameItem extends PaintingItem {
     public InteractionResult useOn(UseOnContext context) {
         BlockPos blockPos = context.getClickedPos();
         Direction direction = context.getClickedFace();
-        BlockPos facePos = blockPos.relative(direction);
+        BlockPos facePos = blockPos.m_142300_(direction);
         Player player = context.getPlayer();
         ItemStack stack = context.getItemInHand();
 

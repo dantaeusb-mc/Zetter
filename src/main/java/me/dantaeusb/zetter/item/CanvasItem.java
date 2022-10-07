@@ -15,8 +15,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
@@ -36,6 +34,8 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.security.InvalidParameterException;
 import java.util.List;
+
+import net.minecraft.world.item.Item.Properties;
 
 public class CanvasItem extends Item
 {
@@ -58,7 +58,7 @@ public class CanvasItem extends Item
             }
 
             String canvasCode = getCanvasCode(canvas);
-            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
+            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.m_183503_());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -106,11 +106,11 @@ public class CanvasItem extends Item
             String canvasCode = getCanvasCode(stack);
 
             if (!StringUtil.isNullOrEmpty(canvasCode)) {
-                return new TranslatableComponent("item.zetter.canvas.painted");
+                return Component.translatable("item.zetter.canvas.painted");
             }
         }
 
-        return new TranslatableComponent("item.zetter.canvas.blank");
+        return Component.translatable("item.zetter.canvas.blank");
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -119,7 +119,7 @@ public class CanvasItem extends Item
             String stringSize = getCachedStringSize(stack);
 
             if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
+                tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -148,7 +148,7 @@ public class CanvasItem extends Item
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        TranslatableComponent blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());

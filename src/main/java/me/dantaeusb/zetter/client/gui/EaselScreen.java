@@ -469,7 +469,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
     }
 
     @Override
-    public void dataChanged(AbstractContainerMenu p_150524_, int p_150525_, int p_150526_) {
+    public void dataChanged(AbstractContainerMenu pContainerMenu, int pDataSlotIndex, int pValue) {
 
     }
 

@@ -264,7 +264,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         int xOffset = ((entity.getBlockWidth() + 1) / 2) - 1;
         int yOffset = ((entity.getBlockHeight() + 1) / 2) - 1;
 
-        return entity.getPos().offset(
+        return entity.getPos().m_142082_(
                 (xOffset + h) * facingDirection.getStepX(),
                 yOffset + v,
                 (xOffset + h) * facingDirection.getStepZ()

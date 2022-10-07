@@ -5,8 +5,7 @@ import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.ColorCodeWidget;
 import me.dantaeusb.zetter.client.gui.easel.HsbWidget;
 import me.dantaeusb.zetter.core.tools.Color;
-import net.minecraft.network.chat.TranslatableComponent;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.network.chat.Component;
 
 public class ColorTab extends AbstractTab {
 
@@ -14,7 +13,7 @@ public class ColorTab extends AbstractTab {
     private final HsbWidget hsbWidget;
 
     public ColorTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.color"));
+        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.color"));
 
         final int SETTINGS_POSITION_X = 0;
         final int SETTINGS_POSITION_Y = 6;

@@ -8,7 +8,6 @@ import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -29,25 +28,25 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
     private final List<SliderWidget> sliders = new ArrayList<>();
 
     public HsbWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.sliders"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.sliders"));
 
         final int sliderOffset = WIDTH - SliderWidget.WIDTH;
 
         this.hueSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y,
-                new TranslatableComponent("container.zetter.painting.sliders.hue"),
+                Component.translatable("container.zetter.painting.sliders.hue"),
                 this::updateHue, null, this::renderHueForeground
         );
 
         this.saturationSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + SliderWidget.HEIGHT + SLIDER_DISTANCE,
-                new TranslatableComponent("container.zetter.painting.sliders.saturation"),
+                Component.translatable("container.zetter.painting.sliders.saturation"),
                 this::updateSaturation, null, this::renderSaturationForeground
         );
 
         this.brightnessSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * 2,
-                new TranslatableComponent("container.zetter.painting.sliders.brightness"),
+                Component.translatable("container.zetter.painting.sliders.brightness"),
                 this::updateBrightness, null, this::renderBrightnessForeground
         );
 

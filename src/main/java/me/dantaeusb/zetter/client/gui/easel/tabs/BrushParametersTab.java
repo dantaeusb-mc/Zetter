@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 public class BrushParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
@@ -16,7 +16,7 @@ public class BrushParametersTab extends AbstractTab {
     private final SliderWidget sizeWidget;
 
     public BrushParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.parameters"));
+        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;
         final int BLENDING_POSITION_Y = 1;
@@ -34,13 +34,13 @@ public class BrushParametersTab extends AbstractTab {
         this.ditheringWidget = new DitheringWidget(this.parentScreen, this.x + DITHERING_POSITION_X, this.y + DITHERING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
                 parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
-                new TranslatableComponent("container.zetter.painting.sliders.intensity"),
+                Component.translatable("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
         this.sizeWidget = new SliderWidget(
                 parentScreen, this.x + SIZE_POSITION_X, this.y + SIZE_POSITION_Y,
-                new TranslatableComponent("container.zetter.painting.sliders.size"),
+                Component.translatable("container.zetter.painting.sliders.size"),
                 this::updateSize, this::renderIntensityBackground, this::renderIntensityForeground
         );
 

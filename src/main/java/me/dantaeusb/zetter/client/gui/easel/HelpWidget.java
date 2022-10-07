@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 
@@ -23,7 +22,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
     boolean clicked = false;
 
     public HelpWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslatableComponent("container.zetter.painting.help"));
+        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.painting.help"));
 
         if (!ClientHelper.openUriAllowed()) {
             this.active = false;
@@ -33,7 +32,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
 
     @Override
     public @Nullable Component getTooltip(int mouseX, int mouseY) {
-        return new TranslatableComponent("container.zetter.painting.help");
+        return Component.translatable("container.zetter.painting.help");
     }
 
     @Override

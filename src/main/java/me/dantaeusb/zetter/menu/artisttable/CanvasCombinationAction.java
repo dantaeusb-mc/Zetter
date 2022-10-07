@@ -244,8 +244,8 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             return;
         }
 
-        if (!player.getLevel().isClientSide()) {
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+        if (!player.m_183503_().isClientSide()) {
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.m_183503_());
             CanvasData combinedCanvasData = CanvasData.createWrap(
                     this.canvasData.getResolution(),
                     this.canvasData.getWidth(),
@@ -273,7 +273,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
         } else {
-            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getWorldCanvasTracker(player.getLevel());
+            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getWorldCanvasTracker(player.m_183503_());
 
             for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
                 ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);

@@ -6,14 +6,14 @@ import me.dantaeusb.zetter.client.gui.easel.BlendingWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 public class BucketParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
     private final SliderWidget intensityWidget;
 
     public BucketParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.parameters"));
+        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;
         final int BLENDING_POSITION_Y = 1;
@@ -24,7 +24,7 @@ public class BucketParametersTab extends AbstractTab {
         this.blendingWidget = new BlendingWidget(this.parentScreen, this.x + BLENDING_POSITION_X, this.y + BLENDING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
                 parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
-                new TranslatableComponent("container.zetter.painting.sliders.intensity"),
+                Component.translatable("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 

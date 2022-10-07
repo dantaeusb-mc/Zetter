@@ -22,7 +22,7 @@ public class ZetterGameEvents {
         Player player = event.getPlayer();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.level);
 
-        canvasTracker.stopTrackingAllCanvases(player.getUUID());
+        canvasTracker.stopTrackingAllCanvases(player.m_142081_());
     }
 
     @SubscribeEvent

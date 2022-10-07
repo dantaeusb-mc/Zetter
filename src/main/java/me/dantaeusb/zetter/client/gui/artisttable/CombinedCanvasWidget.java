@@ -13,8 +13,8 @@ import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.MultiBufferSource;
 import com.mojang.blaze3d.vertex.Tesselator;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Tuple;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
@@ -23,7 +23,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements W
     private static final int size = 64;
 
     public CombinedCanvasWidget(ArtistTableScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, size, size, new TranslatableComponent("container.zetter.artist_table.combined_canvas"));
+        super(parentScreen, x, y, size, size, Component.translatable("container.zetter.artist_table.combined_canvas"));
     }
 
     // @todo: [HIGH] Why double-push?
@@ -92,7 +92,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements W
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput p_169152_) {
+    public void updateNarration(NarrationElementOutput pNarrationElementOutput) {
 
     }
 }

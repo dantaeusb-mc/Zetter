@@ -164,7 +164,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     public static EaselContainerMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
-        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
+        EaselEntity easelEntity = (EaselEntity) playerInventory.player.m_183503_().getEntity(createPacket.easelEntityId);
         assert easelEntity != null;
 
         EaselContainer easelContainer = easelEntity.getEaselContainer();
@@ -211,7 +211,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
      * Tool
      */
     public void useTool(float posX, float posY) {
-        this.stateHandler.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
+        this.stateHandler.useTool(this.player.m_142081_(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
     }
 
     public AbstractToolParameters getCurrentToolParameters() {
@@ -286,7 +286,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             return false;
         }
 
-        final boolean result = this.stateHandler.undo(this.player.getUUID());
+        final boolean result = this.stateHandler.undo(this.player.m_142081_());
 
         return result;
     }
@@ -296,14 +296,14 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             return false;
         }
 
-        final boolean result = this.stateHandler.redo(this.player.getUUID());
+        final boolean result = this.stateHandler.redo(this.player.m_142081_());
 
         return result;
     }
 
     private void updateCanHistory() {
-        this.canUndo = this.stateHandler.canUndo(this.player.getUUID());
-        this.canRedo = this.stateHandler.canRedo(this.player.getUUID());
+        this.canUndo = this.stateHandler.canUndo(this.player.m_142081_());
+        this.canRedo = this.stateHandler.canRedo(this.player.m_142081_());
     }
 
     /*
@@ -366,7 +366,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             listener.accept(this.getCurrentColor());
         }
 
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.m_183503_().isClientSide()) {
             this.sendPaletteUpdatePacket();
         }
 
@@ -467,7 +467,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     public void removed(@NotNull Player playerIn) {
         super.removed(playerIn);
 
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.m_183503_().isClientSide()) {
             this.stateHandler.poolActionsQueueClient(true);
         }
 

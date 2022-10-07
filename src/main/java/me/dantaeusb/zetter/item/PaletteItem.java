@@ -5,6 +5,8 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 
+import net.minecraft.world.item.Item.Properties;
+
 public class PaletteItem extends Item
 {
     public static final String NBT_TAG_NAME_PALETTE_COLORS = "paletteColors";
