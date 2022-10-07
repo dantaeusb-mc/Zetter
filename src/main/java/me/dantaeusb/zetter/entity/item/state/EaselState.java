@@ -169,7 +169,7 @@ public class EaselState {
                 this.recordAction(playerId, tool, color, parameters, posX, posY);
             }
 
-            if (this.easel.m_183503_().isClientSide()) {
+            if (this.easel.getLevel().isClientSide()) {
                 CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
             }
 
@@ -383,7 +383,7 @@ public class EaselState {
 
         if (this.easel.getLevel().isClientSide()) {
             ClientPacketListener connection = Minecraft.getInstance().getConnection();
-            latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.m_142081_()).getLatency()) * 2;
+            latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency()) * 2;
         }
 
         if (firstCanceledAction != null) {

@@ -59,7 +59,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     }
 
     public int getFreeCanvasId() {
-        final int freeId = this.canvasIds.nextClearBit(0);
+        final int freeId = this.canvasIds.nextClearBit(1);
         this.canvasIds.set(freeId);
 
         return freeId;
@@ -99,7 +99,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     @Override
     @Nullable
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
-        return (T) this.world.m_142572_().overworld().getDataStorage().get(
+        return (T) this.world.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
                 if (type.equals(CanvasData.class)) {
                     return CanvasData.createLoaded(compoundTag);
@@ -127,7 +127,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
             return;
         }
 
-        this.world.m_142572_().overworld().getDataStorage().set(canvasCode, canvasData);
+        this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
     }
 
     @Override
@@ -149,7 +149,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
         /**
          * Send canvas sync message to every tracking player entity
          */
-        MinecraftServer server = this.world.m_142572_();
+        MinecraftServer server = this.world.getServer();
 
         for (String canvasCode : this.desyncCanvases) {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {

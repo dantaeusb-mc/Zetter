@@ -188,7 +188,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @return
      */
     public boolean isPickable() {
-        return !this.m_146910_();
+        return !this.isRemoved();
     }
 
     public boolean isPushable() {
@@ -251,7 +251,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
 
         if (this.tick % 100 == 0) {
-            if (!this.m_146910_() && !this.survives()) {
+            if (!this.isRemoved() && !this.survives()) {
                 this.discard();
                 this.dropItem(null);
                 this.dropAllContents(this.level, this.getPos());
@@ -270,7 +270,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 return false;
             }
 
-            return this.level.getEntities(this, this.m_142469_(), IS_EASEL_ENTITY).isEmpty();
+            return this.level.getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
         }
     }
 
@@ -377,7 +377,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return false;
         } else {
             if (!this.level.isClientSide) {
-                if (!this.m_146910_()) {
+                if (!this.isRemoved()) {
                     this.kill();
                     this.markHurt();
                     this.dropItem(damageSource.getEntity());
@@ -389,7 +389,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     public void move(MoverType mover, Vec3 move) {
-        if (!this.level.isClientSide && !this.m_146910_() && move.lengthSqr() > 0.0D) {
+        if (!this.level.isClientSide && !this.isRemoved() && move.lengthSqr() > 0.0D) {
             this.kill();
             this.dropItem(null);
             this.dropAllContents(this.level, this.pos);
@@ -403,7 +403,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @param z
      */
     public void push(double x, double y, double z) {
-        if (!this.level.isClientSide && !this.m_146910_() && x * x + y * y + z * z > 0.0D) {
+        if (!this.level.isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
             this.kill();
             this.dropItem(null);
             this.dropAllContents(this.level, this.pos);

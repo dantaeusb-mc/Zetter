@@ -32,7 +32,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.math.Vector3f;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.model.data.EmptyModelData;
+import net.minecraftforge.client.model.data.ModelData;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -253,8 +253,12 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         BakedModel frameModel = Minecraft.getInstance().getModelManager().getModel(modelResourceLocation);
 
         BlockRenderDispatcher rendererDispatcher = Minecraft.getInstance().getBlockRenderer();
-        rendererDispatcher.getModelRenderer().renderModel(currentMatrix, vertexBuffer, null, frameModel,
-                1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
+        rendererDispatcher.getModelRenderer().renderModel(
+                currentMatrix, vertexBuffer, null, frameModel,
+                1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY,
+                net.minecraftforge.client.model.data.ModelData.EMPTY,
+                RenderType.cutout()
+        );
     }
 
     public static BlockPos getOffsetBlockPos(CustomPaintingEntity entity, int h, int v) {
@@ -264,7 +268,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         int xOffset = ((entity.getBlockWidth() + 1) / 2) - 1;
         int yOffset = ((entity.getBlockHeight() + 1) / 2) - 1;
 
-        return entity.getPos().m_142082_(
+        return entity.getPos().offset(
                 (xOffset + h) * facingDirection.getStepX(),
                 yOffset + v,
                 (xOffset + h) * facingDirection.getStepZ()

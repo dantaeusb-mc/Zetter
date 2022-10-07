@@ -148,7 +148,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
 
     @Override
     @Nullable
-    public ClientboundBlockEntityDataPacket m_183216_()
+    public ClientboundBlockEntityDataPacket getUpdatePacket()
     {
         return ClientboundBlockEntityDataPacket.create(this);
     }

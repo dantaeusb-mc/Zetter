@@ -356,7 +356,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * Copied from PaintingEntity
      */
     public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
-        BlockPos blockpos = this.pos.m_142022_(x - this.getX(), y - this.getY(), z - this.getZ());
+        BlockPos blockpos = this.pos.offset(x - this.getX(), y - this.getY(), z - this.getZ());
         this.setPos(blockpos.getX(), blockpos.getY(), blockpos.getZ());
     }
 

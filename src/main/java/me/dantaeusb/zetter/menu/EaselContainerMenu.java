@@ -164,7 +164,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     public static EaselContainerMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
-        EaselEntity easelEntity = (EaselEntity) playerInventory.player.m_183503_().getEntity(createPacket.easelEntityId);
+        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
         assert easelEntity != null;
 
         EaselContainer easelContainer = easelEntity.getEaselContainer();

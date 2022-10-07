@@ -135,7 +135,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Get data from split canvas
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(player.m_183503_());
+        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(player.getLevel());
         final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         // Don't need that data for client, it'll request if needed

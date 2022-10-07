@@ -17,7 +17,7 @@ public abstract class AbstractToolParameters {
     protected HashMap<String, Object> values = new HashMap<>();
 
     public static void writePacketData(AbstractToolParameters toolParameters, FriendlyByteBuf buffer) {
-        buffer.m_178352_(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
+        buffer.writeCollection(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
     }
 
     /**
@@ -63,7 +63,7 @@ public abstract class AbstractToolParameters {
                 break;
         }
 
-        final List<Tuple<String, Object>> rawParameters = buffer.m_178371_(
+        final List<Tuple<String, Object>> rawParameters = buffer.readCollection(
                 NonNullList::createWithCapacity,
                 AbstractToolParameters::readEntry
         );
@@ -100,9 +100,5 @@ public abstract class AbstractToolParameters {
         } catch (ClassNotFoundException e) {
             throw new SerializationException("Incorrect or forbidden type for parameter " + key);
         }
-    }
-
-    public void serialize() {
-
     }
 }

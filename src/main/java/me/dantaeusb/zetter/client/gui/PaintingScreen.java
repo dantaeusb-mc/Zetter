@@ -169,7 +169,7 @@ public class PaintingScreen extends Screen {
     }
 
     @Override
-    public void m_96624_() {
+    public void tick() {
         this.tick++;
     }
 

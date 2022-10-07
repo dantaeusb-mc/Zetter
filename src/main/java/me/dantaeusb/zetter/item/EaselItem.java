@@ -31,7 +31,7 @@ public class EaselItem extends Item
     public InteractionResult useOn(UseOnContext context) {
         BlockPos blockPos = context.getClickedPos();
         Direction direction = context.getClickedFace();
-        BlockPos facePos = blockPos.m_142300_(direction);
+        BlockPos facePos = blockPos.relative(direction);
         ItemStack easelItem = context.getItemInHand();
         Player player = context.getPlayer();
 
@@ -68,7 +68,7 @@ public class EaselItem extends Item
                     world.addFreshEntity(easel);
 
                     world.playSound(null, easel.getX(), easel.getY(), easel.getZ(), SoundEvents.ARMOR_STAND_PLACE, SoundSource.BLOCKS, 0.75F, 0.8F);
-                    world.m_151545_(context.getPlayer(), GameEvent.ENTITY_PLACE, easel);
+                    easel.gameEvent(GameEvent.ENTITY_PLACE, context.getPlayer());
                 }
 
                 easelItem.shrink(1);

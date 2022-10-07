@@ -96,7 +96,7 @@ public class EaselBlockEntity extends BlockEntity {
 
     @Override
     @Nullable
-    public ClientboundBlockEntityDataPacket m_183216_()
+    public ClientboundBlockEntityDataPacket getUpdatePacket()
     {
         return ClientboundBlockEntityDataPacket.create(this);
     }
