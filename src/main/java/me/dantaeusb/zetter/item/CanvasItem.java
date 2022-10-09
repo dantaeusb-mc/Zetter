@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
@@ -62,7 +63,12 @@ public class CanvasItem extends Item
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
-                openScreen(player, canvasCode, canvasData, hand);
+                ClientHelper.openCanvasScreen(
+                        player,
+                        canvasCode,
+                        canvasData,
+                        hand
+                );
             } else {
                 // If data is not loaded, request and show screen after
                 CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.CANVAS, canvasCode, hand);
@@ -76,28 +82,6 @@ public class CanvasItem extends Item
 
         player.awardStat(Stats.ITEM_USED.get(this));
         return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
-    }
-
-    public static void openScreen(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
-        Minecraft.getInstance().setScreen(
-                PaintingScreen.createScreenForCanvas(
-                        player,
-                        canvasCode,
-                        canvasData,
-                        hand
-                )
-        );
-    }
-
-    public static void openScreen(Player player, String canvasCode, PaintingData canvasData, InteractionHand hand) {
-        Minecraft.getInstance().setScreen(
-                PaintingScreen.createScreenForPainting(
-                        player,
-                        canvasCode,
-                        canvasData,
-                        hand
-                )
-        );
     }
 
     @Override
