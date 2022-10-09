@@ -5,12 +5,13 @@ import me.dantaeusb.zetter.client.model.EaselModel;
 import me.dantaeusb.zetter.client.renderer.entity.CustomPaintingRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ZetterModels
 {
     @SubscribeEvent

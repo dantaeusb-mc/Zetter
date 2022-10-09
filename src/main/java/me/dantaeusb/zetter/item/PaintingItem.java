@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.item;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
@@ -58,7 +59,12 @@ public class PaintingItem extends CanvasItem
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
-                openScreen(player, paintingCode, canvasData, hand);
+                ClientHelper.openPaintingScreen(
+                        player,
+                        paintingCode,
+                        canvasData,
+                        hand
+                );
             } else {
                 // If data is not loaded, request and show screen after
                 CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.PAINTING, paintingCode, hand);

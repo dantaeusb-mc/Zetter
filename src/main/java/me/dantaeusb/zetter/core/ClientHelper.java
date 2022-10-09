@@ -2,10 +2,15 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import com.google.common.collect.Sets;
+import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.Util;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -63,6 +68,44 @@ public class ClientHelper {
         {
             Zetter.LOG.error("Can't open url {}", href, e);
         }
+    }
+
+    /**
+     * Show signing screen for canvases
+     *
+     * @param player
+     * @param canvasCode
+     * @param canvasData
+     * @param hand
+     */
+    public static void openCanvasScreen(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
+        Minecraft.getInstance().setScreen(
+                PaintingScreen.createScreenForCanvas(
+                        player,
+                        canvasCode,
+                        canvasData,
+                        hand
+                )
+        );
+    }
+
+    /**
+     * Show view screen for paintings
+     *
+     * @param player
+     * @param canvasCode
+     * @param canvasData
+     * @param hand
+     */
+    public static void openPaintingScreen(Player player, String canvasCode, PaintingData canvasData, InteractionHand hand) {
+        Minecraft.getInstance().setScreen(
+                PaintingScreen.createScreenForPainting(
+                        player,
+                        canvasCode,
+                        canvasData,
+                        hand
+                )
+        );
     }
 
     private static void openUri(URI uri)
