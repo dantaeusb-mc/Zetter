@@ -54,12 +54,10 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
         super(menu, level);
 
-        this.update();
+        this.updateCanvasData(menu.getCombinationContainer());
     }
 
-    public void update() {
-        ItemStackHandler combinationContainer = menu.getCombinationContainer();
-
+    public void updateCanvasData(ItemStackHandler combinationContainer) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
@@ -158,7 +156,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         this.canvasData = CanvasCombinationAction.createCanvasData(combinationContainer, rectangle, this.level);
     }
 
-    public static DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
+    private static DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
         final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
         final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
 
@@ -221,7 +219,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     @Override
     public void onChangedCombination(ItemStackHandler container) {
-        this.update();
+        this.updateCanvasData(container);
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
@@ -287,6 +285,11 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 canvasTracker.unregisterCanvasData(canvasCode);
             }
         }
+    }
+
+    @Override
+    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+        this.updateCanvasData(this.menu.getCombinationContainer());
     }
 
     public boolean isReady() {

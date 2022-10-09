@@ -59,9 +59,8 @@ public class ClientHandler {
 
         if  (player.containerMenu instanceof ArtistTableMenu) {
             // If player's combining canvases
-            // @todo: not sure if needed
 
-            //((ArtistTableMenu) player.containerMenu).updateCanvasCombination();
+            ((ArtistTableMenu) player.containerMenu).handleCanvasSync(canvasCode, canvasData, timestamp);
         }
     }
 
