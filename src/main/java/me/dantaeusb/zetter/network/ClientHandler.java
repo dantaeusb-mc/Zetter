@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -77,12 +78,12 @@ public class ClientHandler {
         if (packetIn.getType().equals(AbstractCanvasData.Type.CANVAS)) {
             final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
 
-            CanvasItem.openScreen(player, canvasCode, canvasData, packetIn.getHand());
+            ClientHelper.openCanvasScreen(player, canvasCode, canvasData, packetIn.getHand());
             processCanvasSync(packetIn, world);
         } else if (packetIn.getType().equals(AbstractCanvasData.Type.PAINTING)) {
             final PaintingData canvasData = (PaintingData) packetIn.getCanvasData();
 
-            CanvasItem.openScreen(player, canvasCode, canvasData, packetIn.getHand());
+            ClientHelper.openPaintingScreen(player, canvasCode, canvasData, packetIn.getHand());
             processPaintingSync(packetIn, world);
         }
     }
