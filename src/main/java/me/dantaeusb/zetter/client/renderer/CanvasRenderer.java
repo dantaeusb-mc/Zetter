@@ -149,7 +149,12 @@ public class CanvasRenderer implements AutoCloseable {
      */
     public void unregisterCanvas(String canvasCode) {
         this.ticksSinceRenderRequested.remove(canvasCode);
-        this.unloadCanvas(canvasCode);
+
+        if (this.canvasRendererInstances.containsKey(canvasCode)) {
+            this.unloadCanvas(canvasCode);
+        } else {
+            Zetter.LOG.debug("Canvas " + canvasCode + " is not loaded, so can't unregister");
+        }
     }
 
     /**

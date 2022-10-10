@@ -61,7 +61,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     private ArtistTableGridContainer artistTableGridContainer;
     private final LazyOptional<ItemStackHandler> artistTableContainerOptional = LazyOptional.of(() -> this.artistTableGridContainer);
 
-    private ArtistTableMenu.Mode mode;
+    private ArtistTableMenu.Mode mode = ArtistTableMenu.Mode.COMBINE;
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
         super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(), pos, state);
@@ -140,8 +140,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
         if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE)
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
 
-        byte modeId = compoundTag.getByte(NBT_TAG_ARTIST_TABLE_MODE);
-        this.mode = ArtistTableMenu.Mode.getById(modeId);
+        if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_MODE)) {
+            byte modeId = compoundTag.getByte(NBT_TAG_ARTIST_TABLE_MODE);
+            this.mode = ArtistTableMenu.Mode.getById(modeId);
+        } else {
+            this.mode = ArtistTableMenu.Mode.COMBINE;
+        }
     }
 
     // network stack
