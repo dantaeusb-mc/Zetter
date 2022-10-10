@@ -123,8 +123,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
+    public void load(CompoundTag compoundTag) {
         super.load(compoundTag);
 
         CompoundTag canvasStorageTag;
@@ -137,11 +136,16 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
 
         this.artistTableGridContainer.deserializeNBT(canvasStorageTag);
 
-        if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE)
+        if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE) {
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
+        }
 
-        byte modeId = compoundTag.getByte(NBT_TAG_ARTIST_TABLE_MODE);
-        this.mode = ArtistTableMenu.Mode.getById(modeId);
+        if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_MODE)) {
+            byte modeId = compoundTag.getByte(NBT_TAG_ARTIST_TABLE_MODE);
+            this.mode = ArtistTableMenu.Mode.getById(modeId);
+        } else {
+            this.mode = ArtistTableMenu.Mode.COMBINE;
+        }
     }
 
     // network stack

@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -29,6 +30,32 @@ public class FrameItem extends PaintingItem {
         this.hasPlate = plated;
     }
 
+    /**
+     * Use fallback to default behavior for frame
+     * @param stack
+     * @return
+     */
+    @Override
+    public Component getName(ItemStack stack) {
+        if (stack.hasTag()) {
+            String paintingName = getCachedPaintingName(stack);
+
+            if (StringUtil.isNullOrEmpty(paintingName)) {
+                if (StringUtil.isNullOrEmpty(getPaintingCode(stack))) {
+                    return Component.translatable(this.getDescriptionId(stack));
+                }
+
+                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+            }
+
+            if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
+                return Component.translatable(paintingName);
+            }
+        }
+
+        return Component.translatable(this.getDescriptionId(stack));
+    }
+
     public CustomPaintingEntity.Materials getMaterial() {
         return this.material;
     }
@@ -38,6 +65,7 @@ public class FrameItem extends PaintingItem {
     }
 
     /**
+     * @todo: [LOW] Wtf is this?
      * gets the fullness property override, used in mbe11_item_variants_registry_name.json to select which model should
      *   be rendered
      * @param stack
