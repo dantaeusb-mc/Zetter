@@ -310,21 +310,23 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
      * Networking
      */
 
-    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+    /**
+     * Returns true if event is consumed and canvas data don't have to be registered with canvasTracker.registerCanvasData
+     *
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     * @return consumed
+     */
+    public boolean handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
         // Only update if we don't have canvas initialized or name changed
         if (this.container.getCanvas() == null || !this.container.getCanvas().code.equals(canvasCode)) {
             this.container.handleCanvasChange(canvasCode);
+            return false;
         } else {
             this.stateHandler.processWeakSnapshotClient(canvasCode, canvasData, timestamp);
+            return true;
         }
-    }
-
-    public void handleCanvasChange(ItemStack canvasStack) {
-        /*if (canvasStack.getItem() == ZetterItems.CANVAS.get()) {
-            this.canvas = new CanvasHolder(CanvasItem.getCanvasCode(canvasStack), CanvasItem.getCanvasData(canvasStack, this.player.getLevel()));
-        } else {
-            this.canvas = null;
-        }*/
     }
 
     public int getPaletteColor(int paletteSlot) {

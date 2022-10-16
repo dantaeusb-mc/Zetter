@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 
+import javax.annotation.Nullable;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.function.Supplier;
@@ -39,7 +40,15 @@ public class CCanvasActionBufferPacket {
         CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket(entityId);
 
         for (int i = 0; i < actionBuffersCount; i++) {
-            packet.paintingActions.add(CanvasAction.readPacketData(buffer));
+            @Nullable CanvasAction action = CanvasAction.readPacketData(buffer);
+
+            if (action != null) {
+                packet.paintingActions.add(action);
+            } else {
+                // @todo: [MED] Figure out why this happens. Guaranteed to happen after debugger pause!
+                // But also happens randomly when drawing a lot
+                Zetter.LOG.error("Cannot retrieve actions from buffer");
+            }
         }
 
         return packet;

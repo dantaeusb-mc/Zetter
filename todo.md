@@ -6,10 +6,8 @@
 * \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;
 * \[HIGH\] Central piece of iron frame actually has no model (except back which it lacks for some reason);
 * \[HIGH\] When you change shape quickly after drawing, packet is sent with new shape;
-* \[HIGH\] No drop when easel damaged;
 * \[HIGH\] Combined canvas unloaded on server somehow;
 * \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
-* \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
 * \[MED\] If painting has some problems, just remove it instead of crashing or throwing errors (i.e. requesting non-existent canvas);
 
 #### Release tasks:

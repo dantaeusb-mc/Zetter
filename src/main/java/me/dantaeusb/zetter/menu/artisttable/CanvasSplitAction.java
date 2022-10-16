@@ -4,10 +4,12 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasDefaultTracker;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
@@ -80,7 +82,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         final int compoundCanvasWidth = compoundCanvasSize[0];
         final int compoundCanvasHeight = compoundCanvasSize[1];
 
-        // Create preview with canvases with no data
+        // Create canvas items for the slots according to split canvas size
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                 int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
@@ -89,14 +91,20 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                     this.menu.getSplitHandler().setStackInSlot(slotNumber, new ItemStack(ZetterItems.CANVAS.get()));
                 } else {
                     if (
-                        !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
-                        !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
+                            !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
+                                    !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
                     ) {
                         this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
                     }
                 }
             }
         }
+
+        this.updateCanvasData(combinedHandler);
+    }
+
+    public void updateCanvasData(ItemStackHandler combinedHandler) {
+        ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
         CanvasData combinedStackCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
@@ -110,6 +118,11 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
             this.state = State.READY;
         } else {
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(
+                    AbstractCanvasData.Type.CANVAS,
+                    CanvasItem.getCanvasCode(combinedStack)
+            );
+
             this.state = State.NOT_LOADED;
         }
     }
@@ -211,6 +224,11 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         // Remove split canvas item
         this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
+    }
+
+    @Override
+    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+        this.updateCanvasData(this.menu.getSplitHandler());
     }
 
     private static byte[] getPartialColorData(byte[] colorData, int resolution, int blockX, int blockY, int blockWidth, int blockHeight) {

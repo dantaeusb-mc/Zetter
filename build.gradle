@@ -21,7 +21,7 @@ apply from: "https://moddingtutorials.org/applesilicon.gradle"
 apply plugin: 'maven-publish'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.17.1-1.19.2-alpha'
+version = '0.17.3-1.19.2-alpha'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
@@ -106,7 +106,7 @@ jar {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.17.1-alpha",
+            "Specification-Version": "0.17.3-alpha",
             "Implementation-Title": project.name,
             "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",

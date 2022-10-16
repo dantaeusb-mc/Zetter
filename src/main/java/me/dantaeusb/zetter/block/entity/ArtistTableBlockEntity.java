@@ -61,7 +61,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     private ArtistTableGridContainer artistTableGridContainer;
     private final LazyOptional<ItemStackHandler> artistTableContainerOptional = LazyOptional.of(() -> this.artistTableGridContainer);
 
-    private ArtistTableMenu.Mode mode;
+    private ArtistTableMenu.Mode mode = ArtistTableMenu.Mode.COMBINE;
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
         super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(), pos, state);

@@ -38,9 +38,15 @@ public class CanvasRenderer implements AutoCloseable {
     /**
      * Canvasses marked as managed will be unloaded after some time
      * If canvas is not managed, it should not be added to this map
+     * @todo: [MED] It is possible that Race Condition happens here
      */
     private final Map<String, Integer> ticksSinceRenderRequested = Maps.newHashMap();
 
+    /**
+     * To avoid request thrashing, textures are requested from server
+     * with some timeout/request limiter. Texture will be requested
+     * again if it's not loaded yet and this timeout reaches 0 or below
+     */
     private final  Map<String, TextureRequest> textureRequestTimeout = Maps.newHashMap();
 
     public CanvasRenderer(TextureManager textureManager) {
@@ -148,6 +154,10 @@ public class CanvasRenderer implements AutoCloseable {
      * @param canvasCode
      */
     public void unregisterCanvas(String canvasCode) {
+        // To keep it from reloading if for some reason it was not received from server yet
+        this.textureRequestTimeout.remove(canvasCode);
+
+        // To disable tracking so it won't be removed twice
         this.ticksSinceRenderRequested.remove(canvasCode);
 
         if (this.canvasRendererInstances.containsKey(canvasCode)) {
@@ -165,17 +175,19 @@ public class CanvasRenderer implements AutoCloseable {
     private void unloadCanvas(String canvasCode) {
         Zetter.LOG.debug("Unloading canvas " + canvasCode);
 
-        // Free the texture
-        this.canvasRendererInstances.get(canvasCode).close();
-
-        this.canvasRendererInstances.remove(canvasCode);
         this.textureRequestTimeout.remove(canvasCode);
 
-        // Not needed cause called from its iterator
-        // this.ticksSinceRenderRequested.remove(canvasCode);
+        if (!this.canvasRendererInstances.containsKey(canvasCode)) {
+            Zetter.LOG.error("Cannot unload canvas " + canvasCode + ", it's not loaded!");
+            return;
+        }
+
+        // Free the texture
+        this.canvasRendererInstances.get(canvasCode).close();
+        this.canvasRendererInstances.remove(canvasCode);
 
         // Notifying server that we're no longer tracking it
-        // @todo: [LOW] better just check tile entity who's around
+        // @todo: [LOW] Better just check tile entity who's around
         CCanvasUnloadRequestPacket unloadPacket = new CCanvasUnloadRequestPacket(canvasCode);
         ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
     }
@@ -250,6 +262,7 @@ public class CanvasRenderer implements AutoCloseable {
 
     public void close() {
         this.clearLoadedCanvases();
+        this.textureRequestTimeout.clear();
     }
 
     @OnlyIn(Dist.CLIENT)

@@ -54,12 +54,10 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
         super(menu, level);
 
-        this.update();
+        this.updateCanvasData(menu.getCombinationContainer());
     }
 
-    public void update() {
-        ItemStackHandler combinationContainer = menu.getCombinationContainer();
-
+    public void updateCanvasData(ItemStackHandler combinationContainer) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
@@ -221,7 +219,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     @Override
     public void onChangedCombination(ItemStackHandler container) {
-        this.update();
+        this.updateCanvasData(container);
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
@@ -268,7 +266,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
                 // Cleanup IDs and grid
                 int canvasId = CanvasItem.getCanvasId(combinationStack);
-                // @todo: remove texture from client too
+                // @todo: [MED] Remove texture from other clients too
                 canvasTracker.clearCanvasId(canvasId);
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
@@ -282,11 +280,15 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                     continue;
                 }
 
-                // @todo: Force client to invalidate paintings maybe?
                 String canvasCode = CanvasItem.getCanvasCode(combinationStack);
                 canvasTracker.unregisterCanvasData(canvasCode);
             }
         }
+    }
+
+    @Override
+    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+        this.updateCanvasData(this.menu.getCombinationContainer());
     }
 
     public boolean isReady() {

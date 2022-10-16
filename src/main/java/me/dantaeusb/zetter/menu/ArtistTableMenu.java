@@ -12,6 +12,7 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
 import me.dantaeusb.zetter.network.packet.CArtistTableModeChange;
 import me.dantaeusb.zetter.network.packet.SArtistTableMenuCreatePacket;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -321,6 +322,21 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
     public boolean canvasLoading() {
         return this.action.state == CanvasCombinationAction.State.NOT_LOADED;
+    }
+
+    /**
+     * If we requested partial canvas
+     *
+     * @todo: [MED] Check that handled canvas is in this table!
+     *
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     * @return
+     */
+    public boolean handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+        this.action.handleCanvasSync(canvasCode, canvasData, timestamp);
+        return false;
     }
 
     @Override

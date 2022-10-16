@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
+import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -41,6 +42,8 @@ public abstract class AbstractCanvasAction {
     public void onChangedSplit(ItemStackHandler container) { }
 
     public void onTakeSplit(Player player, ItemStack stack) { }
+
+    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) { }
 
     public enum State {
         EMPTY,

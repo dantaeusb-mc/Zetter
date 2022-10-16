@@ -44,9 +44,16 @@ public class ClientHandler {
             return;
         }
 
-        canvasTracker.registerCanvasData(canvasCode, canvasData);
+        /**
+         * First, we check if player is using some menus and try to update
+         * canvas through those menus. This is needed to avoid flashing
+         * texture on client, when client still draws.
+         *
+         * Then, if no containers used, we do update canvas
+         * directly in canvas manager.
+         */
 
-        // Do extra things
+        boolean consumed = false;
 
         // Initialize canvas if client had no canvas loaded when it was updated
         if (player.containerMenu instanceof EaselContainerMenu) {
@@ -54,16 +61,23 @@ public class ClientHandler {
             // If it's the same canvas player is editing
             if (canvasItemCode != null && canvasItemCode.equals(canvasCode)) {
                 // Pushing changes that were added after sync packet was created
-                ((EaselContainerMenu) player.containerMenu).handleCanvasSync(canvasCode, canvasData, timestamp);
+                consumed = ((EaselContainerMenu) player.containerMenu).handleCanvasSync(canvasCode, canvasData, timestamp);
             }
         }
 
-        if  (player.containerMenu instanceof ArtistTableMenu) {
-            // If player's combining canvases
-            // @todo: not sure if needed
-
-            //((ArtistTableMenu) player.containerMenu).updateCanvasCombination();
+        if (consumed) {
+            return;
         }
+
+        if  (player.containerMenu instanceof ArtistTableMenu) {
+            consumed = ((ArtistTableMenu) player.containerMenu).handleCanvasSync(canvasCode, canvasData, timestamp);
+        }
+
+        if (consumed) {
+            return;
+        }
+
+        canvasTracker.registerCanvasData(canvasCode, canvasData);
     }
 
     /**

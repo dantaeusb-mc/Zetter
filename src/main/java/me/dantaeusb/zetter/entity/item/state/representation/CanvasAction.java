@@ -140,16 +140,14 @@ public class CanvasAction {
      *
      * @param posX
      * @param posY
-     * @return
      */
-    public boolean addFrame(float posX, float posY) {
+    public void addFrame(float posX, float posY) {
         if (this.committed) {
-            return false;
+            throw new IllegalStateException("Cannot add frame to committed action buffer");
         }
 
         if (this.shouldCommit()) {
-            this.commit();
-            return false;
+            throw new IllegalStateException("Cannot add frame to action buffer that should be committed");
         }
 
         final long currentTime = System.currentTimeMillis();
@@ -159,8 +157,6 @@ public class CanvasAction {
         CanvasSubAction.writeToBuffer(action, this.subActionBuffer);
 
         this.lastAction = action;
-
-        return true;
     }
 
     public Stream<CanvasSubAction> getSubActionStream() {
@@ -210,7 +206,9 @@ public class CanvasAction {
     }
 
     public void setSent() {
-        this.commit();
+        if (!this.committed) {
+            this.commit();
+        }
 
         this.sent = true;
     }
@@ -220,13 +218,17 @@ public class CanvasAction {
     }
 
     public void undo() {
-        this.commit();
+        if (!this.committed) {
+            this.commit();
+        }
 
         this.canceled = true;
     }
 
     public void redo() {
-        this.commit();
+        if (!this.committed) {
+            this.commit();
+        }
 
         this.canceled = false;
     }
@@ -330,7 +332,6 @@ public class CanvasAction {
 
         int bufferSize = buffer.readInt();
         try {
-
             ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
 
             return new CanvasAction(
