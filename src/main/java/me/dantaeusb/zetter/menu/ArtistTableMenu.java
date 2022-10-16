@@ -324,8 +324,19 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         return this.action.state == CanvasCombinationAction.State.NOT_LOADED;
     }
 
-    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+    /**
+     * If we requested partial canvas
+     *
+     * @todo: [MED] Check that handled canvas is in this table!
+     *
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     * @return
+     */
+    public boolean handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
         this.action.handleCanvasSync(canvasCode, canvasData, timestamp);
+        return false;
     }
 
     @Override

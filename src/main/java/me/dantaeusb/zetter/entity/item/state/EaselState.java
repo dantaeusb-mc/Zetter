@@ -604,6 +604,8 @@ public class EaselState {
     public void processWeakSnapshotClient(String canvasCode, CanvasData canvasData, long packetTimestamp) {
         this.snapshots.add(CanvasSnapshot.createWeakSnapshot(canvasData.getColorData(), packetTimestamp));
         this.restoreSinceSnapshot();
+
+        CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
     }
 
     private void markDesync() {
