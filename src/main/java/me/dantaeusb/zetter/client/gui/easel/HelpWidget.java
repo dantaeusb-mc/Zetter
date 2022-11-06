@@ -16,8 +16,8 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
     final static int BUTTON_WIDTH = 11;
     final static int BUTTON_HEIGHT = 11;
 
-    final static int BUTTON_POSITION_U = 176;
-    final static int BUTTON_POSITION_V = 174;
+    final static int BUTTON_POSITION_U = 98;
+    final static int BUTTON_POSITION_V = 0;
 
     boolean clicked = false;
 

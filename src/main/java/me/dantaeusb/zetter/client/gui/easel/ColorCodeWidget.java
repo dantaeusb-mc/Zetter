@@ -5,8 +5,10 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.core.tools.Color;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.StringUtil;
 import net.minecraft.network.chat.Component;
@@ -60,7 +62,13 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
                 TEXTBOX_WIDTH - 7,
                 12,
                 Component.translatable("container.zetter.easel")
-        );
+        ) {
+            public void insertText(String text) {
+                text = text.replaceAll("[^\\p{XDigit}]", "");
+
+                super.insertText(text);
+            }
+        };
 
         this.textField.setCanLoseFocus(false);
         this.textField.setTextColor(INACTIVE_COLOR);
@@ -125,6 +133,11 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.textField.isFocused()) {
+            // When pasting, just reset field first. It's never combined.
+            if (Screen.isPaste(keyCode)) {
+                this.textField.setValue("");
+            }
+
             return this.textField.keyPressed(keyCode, scanCode, modifiers) || this.textField.canConsumeInput();
         }
 

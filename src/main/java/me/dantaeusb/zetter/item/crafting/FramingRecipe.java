@@ -38,7 +38,6 @@ public class FramingRecipe extends CustomRecipe {
 
     /**
      * Used to check if a recipe matches current crafting inventory
-     * @todo: [LOW] Maybe we can just extend ShapelessRecipe
      */
     public boolean matches(CraftingContainer craftingInventory, Level world) {
         ItemStack frameStack = ItemStack.EMPTY;

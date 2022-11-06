@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.client.gui.easel;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Matrix4f;
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.painting.Tools;
@@ -20,6 +21,7 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
+import static com.mojang.blaze3d.platform.GlConst.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class CanvasWidget extends AbstractPaintingWidget implements Widget {
@@ -31,6 +33,9 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
 
     private int canvasOffsetX = 0;
     private int canvasOffsetY = 0;
+
+    private double scrollDistance = 0d;
+    private long scrollTimestamp = 0;
 
     public CanvasWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, SIZE, SIZE, Component.translatable("container.zetter.painting.canvas"));
@@ -136,6 +141,41 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     }
 
     /**
+     * Zoom zoom
+     * @param mouseX
+     * @param mouseY
+     * @param delta
+     * @return
+     */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (this.isMouseOver(mouseX, mouseY)) {
+            this.scrollDistance += delta;
+            this.scrollTimestamp = System.currentTimeMillis();
+
+            if (this.scrollDistance <= -1.5d) {
+                this.parentScreen.getMenu().decreaseCanvasScale();
+                this.scrollDistance = 0d;
+            } else if (this.scrollDistance >= 1.5d) {
+                this.parentScreen.getMenu().increaseCanvasScale();
+                this.scrollDistance = 0d;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public void tick() {
+        if (this.scrollDistance != 0d) {
+            if (System.currentTimeMillis() - this.scrollTimestamp > 1500) {
+                this.scrollDistance = 0;
+            }
+        }
+    }
+
+    /**
      * Apply used tool. Could apply outside the canvas!
      * It is for tool to decide if it's going to apply interaction
      *
@@ -196,7 +236,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             if (this.parentScreen.getMenu().getCurrentTool().getTool() == Tools.HAND.getTool()) {
                 GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             } else {
-                GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
                 double canvasX = (mouseX - this.x - this.canvasOffsetX) / (double) this.getCanvasScale();
                 double canvasY = (mouseY - this.y - this.canvasOffsetY) / (double) this.getCanvasScale();
 
@@ -256,7 +295,11 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         AbstractToolParameters toolParameters = this.parentScreen.getMenu().getCurrentToolParameters();
         AbstractTool.ToolShape shape = this.parentScreen.getMenu().getCurrentTool().getTool().getShape(toolParameters);
 
+        RenderSystem.blendEquation(GL_FUNC_SUBTRACT);
+
         if (shape == null) {
+            GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
             int radius = this.getCanvasScale() * 2;
 
             if (toolParameters instanceof SizeInterface) {
@@ -276,6 +319,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             this.vLine(matrixStack, globalX, globalY - radius, globalY - 2, 0x80808080);
             this.vLine(matrixStack, globalX, globalY + radius, globalY + 2, 0x80808080);
         } else {
+            GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
             // Offset for the current shape, in canvas pixels
             final int offset = -(shape.getSize() / 2);
 
@@ -324,6 +369,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
                 }
             }
         }
+
+        RenderSystem.blendEquation(GL_FUNC_ADD);
 
         /*this.hLine(matrixStack, globalX1, globalX2, globalY1, 0x80808080);
         this.hLine(matrixStack, globalX1, globalX2, globalY2, 0x80808080);

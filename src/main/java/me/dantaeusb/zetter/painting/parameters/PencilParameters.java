@@ -6,6 +6,9 @@ import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import java.security.InvalidParameterException;
 
 public class PencilParameters extends AbstractToolParameters implements SizeInterface, IntensityInterface, BlendingInterface, DitheringInterface {
+    public static final float MIN_SIZE = 1f;
+    public static final float MAX_SIZE = 6f;
+
     public PencilParameters() {
         this(1f, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
     }

@@ -25,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
-
 public class EaselContainerMenu extends AbstractContainerMenu implements EaselStateListener {
     /*
      * Object references
@@ -436,8 +435,16 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         return this.canvasScale;
     }
 
+    public boolean canIncreaseCanvasScale() {
+        return this.canvasScale < 3;
+    }
+
+    public boolean canDecreaseCanvasScale() {
+        return this.canvasScale > 1;
+    }
+
     public boolean increaseCanvasScale() {
-        if (this.canvasScale >= 3) {
+        if (!this.canIncreaseCanvasScale()) {
             return false;
         }
 
@@ -447,7 +454,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     }
 
     public boolean decreaseCanvasScale() {
-        if (this.canvasScale <= 1) {
+        if (!this.canDecreaseCanvasScale()) {
             return false;
         }
 

@@ -9,6 +9,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.BrushParameters;
+import me.dantaeusb.zetter.painting.parameters.PencilParameters;
+import me.dantaeusb.zetter.painting.parameters.SizeInterface;
 import me.dantaeusb.zetter.painting.tools.*;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.gui.Font;
@@ -17,6 +20,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -25,6 +29,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
+
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,12 +44,15 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
 
     private ToolsWidget toolsWidget;
     private HistoryWidget historyWidget;
+    private ZoomWidget zoomWidget;
     private TabsWidget tabsWidget;
     private CanvasWidget canvasWidget;
     private PaletteWidget paletteWidget;
     private HelpWidget helpWidget;
 
     private final Player player;
+
+    private int tick = 0;
 
     public EaselScreen(EaselContainerMenu paintingContainer, Inventory playerInventory, Component title) {
         super(paintingContainer, playerInventory, title);
@@ -67,15 +76,19 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         final int HISTORY_POSITION_X = 4;
         final int HISTORY_POSITION_Y = 112;
 
+        final int ZOOM_POSITION_X = 4;
+        final int ZOOM_POSITION_Y = 142;
+
         final int TABS_POSITION_X = 4;
         final int TABS_POSITION_Y = 158;
 
         final int PALETTE_POSITION_X = 175;
         final int PALETTE_POSITION_Y = 38;
 
-        final int HELP_POSITION_X = 199;
+        final int HELP_POSITION_X = 197;
         final int HELP_POSITION_Y = 0;
 
+        // @todo: [LOW] Use rebuildWidgets in Screen
         this.paintingWidgets = Lists.newArrayList();
 
         // Widgets
@@ -84,6 +97,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         this.paletteWidget = new PaletteWidget(this, this.getGuiLeft() + PALETTE_POSITION_X, this.getGuiTop() + PALETTE_POSITION_Y);
         this.toolsWidget = new ToolsWidget(this, this.getGuiLeft() + TOOLS_POSITION_X, this.getGuiTop() + TOOLS_POSITION_Y);
         this.historyWidget = new HistoryWidget(this, this.getGuiLeft() + HISTORY_POSITION_X, this.getGuiTop() + HISTORY_POSITION_Y);
+        this.zoomWidget = new ZoomWidget(this, this.getGuiLeft() + ZOOM_POSITION_X, this.getGuiTop() + ZOOM_POSITION_Y);
         this.tabsWidget = new TabsWidget(this, this.getGuiLeft() + TABS_POSITION_X, this.getGuiTop() + TABS_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
@@ -91,6 +105,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         this.addPaintingWidget(this.paletteWidget);
         this.addPaintingWidget(this.toolsWidget);
         this.addPaintingWidget(this.historyWidget);
+        this.addPaintingWidget(this.zoomWidget);
         this.addPaintingWidget(this.tabsWidget);
         this.addPaintingWidget(this.helpWidget);
 
@@ -225,6 +240,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         this.toolsWidget.render(matrixStack);
         this.tabsWidget.render(matrixStack);
         this.historyWidget.render(matrixStack);
+        this.zoomWidget.render(matrixStack);
         this.paletteWidget.render(matrixStack);
         this.helpWidget.render(matrixStack, x, y, partialTicks);
 
@@ -267,6 +283,15 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
                 TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB());
 
         this.getCurrentTab().renderLabels(matrixStack, mouseX, mouseY);
+    }
+
+    @Override
+    public void containerTick() {
+        super.containerTick();
+
+        this.canvasWidget.tick();
+
+        this.tick++;
     }
 
     private double[] dragStart;
@@ -333,11 +358,17 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
             case Eyedropper.HOTKEY:
                 this.getMenu().setCurrentTool(Tools.EYEDROPPER);
                 return true;
+            case Eyedropper.QUICK_TOOL_KEY:
+                this.activateQuickTool(Tools.EYEDROPPER);
+                return true;
             case Bucket.HOTKEY:
                 this.getMenu().setCurrentTool(Tools.BUCKET);
                 return true;
             case Hand.HOTKEY:
                 this.getMenu().setCurrentTool(Tools.HAND);
+                return true;
+            case Hand.QUICK_TOOL_KEY:
+                this.activateQuickTool(Tools.HAND);
                 return true;
             case PaletteWidget.SWAP_HOTKEY: {
                 final int row = (this.getMenu().getCurrentPaletteSlot() / 2) * 2;
@@ -357,10 +388,10 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
 
                 return true;
             }
-            case GLFW.GLFW_KEY_MINUS:
+            case ZoomWidget.ZOOM_OUT_HOTKEY:
                 this.getMenu().decreaseCanvasScale();
                 return true;
-            case GLFW.GLFW_KEY_EQUAL:
+            case ZoomWidget.ZOOM_IN_HOTKEY:
                 this.getMenu().increaseCanvasScale();
                 return true;
             case GLFW.GLFW_KEY_DOWN: {
@@ -388,6 +419,29 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    /**
+     * Handle quick tool key release
+     * @param keyCode
+     * @param scanCode
+     * @param modifiers
+     * @return
+     */
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (this.getCurrentTab().keyReleased(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+
+        switch (keyCode) {
+            case Hand.QUICK_TOOL_KEY:
+            case Eyedropper.QUICK_TOOL_KEY:
+                this.deactivateQuickTool();
+                return true;
+        }
+
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
     @Override
@@ -464,6 +518,39 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (hasControlDown()) {
+            if (this.getMenu().getCurrentTool() == Tools.BRUSH) {
+                AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
+
+                if (parameters instanceof SizeInterface) {
+                    float newSize = ((SizeInterface) parameters).getSize() + (float) delta;
+                    newSize = Math.min(Math.max(newSize, BrushParameters.MIN_SIZE), BrushParameters.MAX_SIZE);
+
+                    ((SizeInterface) parameters).setSize(newSize);
+                    return true;
+                }
+            } else if (this.getMenu().getCurrentTool() == Tools.PENCIL) {
+                AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
+
+                if (parameters instanceof SizeInterface) {
+                    float newSize = ((SizeInterface) parameters).getSize() + (delta > 0 ? 1 : -1);
+                    newSize = Math.min(Math.max(newSize, PencilParameters.MIN_SIZE), PencilParameters.MAX_SIZE);
+
+                    ((SizeInterface) parameters).setSize(newSize);
+                    return true;
+                }
+            }
+        }
+
+        if (this.canvasWidget.mouseScrolled(mouseX, mouseY, delta)) {
+            return true;
+        }
+
+        return false;
+    }
+
     public Player getPlayer() {
         return this.player;
     }
@@ -479,6 +566,27 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
      */
     public void slotChanged(AbstractContainerMenu containerToSend, int slotInd, ItemStack stack) {
         this.updateCurrentColor(this.getMenu().getCurrentColor());
+    }
+
+    /*
+     * Quick tool feature: for accessing tools like color
+     * picker with alt hotkey or hand with space
+     */
+
+    private @Nullable Tools quickToolCache;
+
+    public void activateQuickTool(Tools tool) {
+        if (this.getMenu().getCurrentTool() != tool) {
+            this.quickToolCache = this.getMenu().getCurrentTool();
+            this.getMenu().setCurrentTool(tool);
+        }
+    }
+
+    public void deactivateQuickTool() {
+        if (this.quickToolCache != null) {
+            this.getMenu().setCurrentTool(this.quickToolCache);
+            this.quickToolCache = null;
+        }
     }
 
     /**

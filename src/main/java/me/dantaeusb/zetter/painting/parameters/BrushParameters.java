@@ -7,6 +7,9 @@ import org.jline.terminal.Size;
 import java.security.InvalidParameterException;
 
 public class BrushParameters extends AbstractToolParameters implements SizeInterface, IntensityInterface, BlendingInterface, DitheringInterface {
+    public static final float MIN_SIZE = 1f;
+    public static final float MAX_SIZE = 6f;
+
     public BrushParameters() {
         this(3f, 1f, BlendingPipe.BlendingOption.DEFAULT, DitheringPipe.DitheringOption.DEFAULT);
     }
@@ -23,7 +26,7 @@ public class BrushParameters extends AbstractToolParameters implements SizeInter
     }
 
     public void setSize(float size) {
-        if (size < 1f || size > 6f) {
+        if (size < MIN_SIZE || size > MAX_SIZE) {
             throw new InvalidParameterException("Incorrect size");
         }
 

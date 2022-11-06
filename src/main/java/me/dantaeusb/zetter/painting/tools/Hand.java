@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 public class Hand extends AbstractTool<NoParameters> {
     public static final int HOTKEY = GLFW.GLFW_KEY_H;
+    public static final int QUICK_TOOL_KEY = GLFW.GLFW_KEY_SPACE;
 
     private final Component translatableComponent = Component.translatable("container.zetter.painting.tools.hand");
 

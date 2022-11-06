@@ -16,6 +16,16 @@ public class PaletteItem extends Item
         super(new Properties().durability(4096).tab(CreativeModeTab.TAB_TOOLS));
     }
 
+    /**
+     * For custom repairs with color saving
+     * @param stack
+     * @return
+     */
+    @Override
+    public boolean isRepairable(ItemStack stack) {
+        return false;
+    }
+
     public static int[] getPaletteColors(ItemStack stack)
     {
         CompoundTag compoundNBT = stack.getTag();

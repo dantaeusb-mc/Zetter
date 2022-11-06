@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 public class Eyedropper extends AbstractTool<NoParameters> {
     public static final int HOTKEY = GLFW.GLFW_KEY_I;
+    public static final int QUICK_TOOL_KEY = GLFW.GLFW_KEY_LEFT_ALT;
 
     private final Component translatableComponent = Component.translatable("container.zetter.painting.tools.eyedropper");
 

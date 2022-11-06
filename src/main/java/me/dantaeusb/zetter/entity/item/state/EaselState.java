@@ -169,10 +169,7 @@ public class EaselState {
                 this.recordAction(playerId, tool, color, parameters, posX, posY);
             }
 
-            if (this.easel.getLevel().isClientSide()) {
-                CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
-            }
-
+            CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
             this.easel.getEaselContainer().damagePalette(damage);
         }
     }
@@ -583,13 +580,15 @@ public class EaselState {
     public void applyAction(CanvasAction action) {
         action.getSubActionStream().forEach((CanvasAction.CanvasSubAction subAction) -> {
             // Apply subAction directly
-            action.tool.getTool().apply(
+            int damage = action.tool.getTool().apply(
                     this.getCanvasData(),
                     action.parameters,
                     action.color,
                     subAction.posX,
                     subAction.posY
             );
+
+            this.easel.getEaselContainer().damagePalette(damage);
         });
     }
 
