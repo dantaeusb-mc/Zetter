@@ -13,8 +13,8 @@ import java.util.function.Supplier;
 public class CCanvasRequestViewPacket extends CCanvasRequestPacket {
     private final InteractionHand hand;
 
-    public CCanvasRequestViewPacket(AbstractCanvasData.Type type, String canvasName, InteractionHand hand) {
-        super(type, canvasName);
+    public CCanvasRequestViewPacket(String canvasName, InteractionHand hand) {
+        super(canvasName);
 
         this.hand = hand;
     }
@@ -24,30 +24,24 @@ public class CCanvasRequestViewPacket extends CCanvasRequestPacket {
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
     public static CCanvasRequestViewPacket readPacketData(FriendlyByteBuf buf) {
-        AbstractCanvasData.Type type = AbstractCanvasData.Type.getTypeById(buf.readInt());
         String canvasName = buf.readUtf(64);
         byte handCode = buf.readByte();
 
         InteractionHand hand = InteractionHand.values()[handCode];
 
-        return new CCanvasRequestViewPacket(type, canvasName, hand);
+        return new CCanvasRequestViewPacket(canvasName, hand);
     }
 
     /**
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeInt(this.type.getId());
         buf.writeUtf(this.canvasName);
         buf.writeByte(this.hand.ordinal());
     }
 
     public String getCanvasName() {
         return this.canvasName;
-    }
-
-    public AbstractCanvasData.Type getCanvasType() {
-        return this.type;
     }
 
     public InteractionHand getHand() {

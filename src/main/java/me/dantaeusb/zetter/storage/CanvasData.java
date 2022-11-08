@@ -3,7 +3,10 @@ package me.dantaeusb.zetter.storage;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.core.ZetterRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 
 import java.nio.ByteBuffer;
 
@@ -12,14 +15,23 @@ import java.nio.ByteBuffer;
  * @see CanvasServerTracker ::registerCanvasData();
  */
 public class CanvasData extends AbstractCanvasData {
-    public static final String CODE_PREFIX = Zetter.MOD_ID + "_canvas_";
+    public static final String TYPE = "canvas";
+    public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
 
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
     }
 
     protected CanvasData() {
-        super();
+        super(TYPE);
+    }
+
+    public boolean isRenderable() {
+        return true;
+    }
+
+    public boolean isEditable() {
+        return true;
     }
 
     /**
@@ -58,19 +70,58 @@ public class CanvasData extends AbstractCanvasData {
         return newCanvas;
     }
 
-    public static CanvasData createLoaded(CompoundTag compoundTag) {
+    public static CanvasData load(CompoundTag compoundTag) {
         final CanvasData newCanvas = new CanvasData();
-        newCanvas.load(compoundTag);
+
+        newCanvas.width = compoundTag.getInt(NBT_TAG_WIDTH);
+        newCanvas.height = compoundTag.getInt(NBT_TAG_HEIGHT);
+
+        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
+            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
+            newCanvas.resolution = Resolution.values()[resolutionOrdinal];
+        } else {
+            newCanvas.resolution = Helper.getResolution();
+        }
+
+        newCanvas.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
 
         return newCanvas;
     }
 
-    public boolean isEditable() {
-        return true;
+    /*
+     * Networking
+     */
+
+    public static CanvasData readPacketData(FriendlyByteBuf networkBuffer) {
+        final CanvasData newCanvas = new CanvasData();
+
+        final byte resolutionOrdinal = networkBuffer.readByte();
+        AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
+
+        final int width = networkBuffer.readInt();
+        final int height = networkBuffer.readInt();
+
+        final int colorDataSize = networkBuffer.readInt();
+        ByteBuffer colorData = networkBuffer.readBytes(colorDataSize).nioBuffer();
+        byte[] unwrappedColorData = new byte[width * height * 4];
+        colorData.get(unwrappedColorData);
+
+        newCanvas.wrapData(
+                resolution,
+                width,
+                height,
+                unwrappedColorData
+        );
+
+        return newCanvas;
     }
 
-    public Type getType() {
-        return Type.CANVAS;
+    public static void writePacketData(CanvasData canvasData, FriendlyByteBuf networkBuffer) {
+        networkBuffer.writeByte(canvasData.resolution.ordinal());
+        networkBuffer.writeInt(canvasData.width);
+        networkBuffer.writeInt(canvasData.height);
+        networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());
+        networkBuffer.writeBytes(canvasData.getColorDataBuffer());
     }
 }
 

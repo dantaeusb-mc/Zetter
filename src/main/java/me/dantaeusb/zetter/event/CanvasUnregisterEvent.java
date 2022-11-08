@@ -3,12 +3,10 @@ package me.dantaeusb.zetter.event;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraftforge.eventbus.api.Event;
 
-public class CanvasRegisterEvent extends Event {
+public class CanvasUnregisterEvent extends Event {
     public final String canvasCode;
-    public final AbstractCanvasData canvasData;
 
-    public CanvasRegisterEvent(String canvasCode, AbstractCanvasData canvasData) {
+    public CanvasUnregisterEvent(String canvasCode) {
         this.canvasCode = canvasCode;
-        this.canvasData = canvasData;
     }
 }

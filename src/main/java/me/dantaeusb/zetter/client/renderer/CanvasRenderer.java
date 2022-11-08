@@ -87,7 +87,7 @@ public class CanvasRenderer implements AutoCloseable {
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvasCode, canvas, false);
 
         if (rendererInstance == null) {
-            this.queueCanvasTextureUpdate(canvas.getType(), canvasCode);
+            this.queueCanvasTextureUpdate(canvasCode);
             return;
         }
 
@@ -196,14 +196,9 @@ public class CanvasRenderer implements AutoCloseable {
      * @todo: Still makes double-request on first load, markDirty called before update
      * @param canvasCode
      */
-    public void queueCanvasTextureUpdate(AbstractCanvasData.Type type, String canvasCode) {
+    public void queueCanvasTextureUpdate(String canvasCode) {
         if (canvasCode == null) {
             Zetter.LOG.debug("Tried to queue null canvas");
-            return;
-        }
-
-        if (type == AbstractCanvasData.Type.DUMMY) {
-            Zetter.LOG.debug("Tried to queue dummy canvas");
             return;
         }
 
@@ -215,12 +210,12 @@ public class CanvasRenderer implements AutoCloseable {
 
             textureRequest.markDirty();
         } else {
-            this.textureRequestTimeout.put(canvasCode, new TextureRequest(type, canvasCode));
+            this.textureRequestTimeout.put(canvasCode, new TextureRequest(canvasCode));
         }
     }
 
     protected void requestCanvasTexture(TextureRequest request) {
-        CCanvasRequestPacket requestSyncPacket = new CCanvasRequestPacket(request.getCanvasType(), request.getCanvasCode());
+        CCanvasRequestPacket requestSyncPacket = new CCanvasRequestPacket(request.getCanvasCode());
         ZetterNetwork.simpleChannel.sendToServer(requestSyncPacket);
 
         request.update();
@@ -334,13 +329,11 @@ public class CanvasRenderer implements AutoCloseable {
     static class TextureRequest {
         private final int TEXTURE_REQUEST_TIMEOUT = 20; // Not often than once in a second
 
-        private final AbstractCanvasData.Type type;
         private final String code;
         private boolean needUpdate = true;
         private int timeout = 0;
 
-        TextureRequest(AbstractCanvasData.Type type, String canvasCode) {
-            this.type = type;
+        TextureRequest(String canvasCode) {
             this.code = canvasCode;
         }
 
@@ -359,10 +352,6 @@ public class CanvasRenderer implements AutoCloseable {
 
         public String getCanvasCode() {
             return this.code;
-        }
-
-        public AbstractCanvasData.Type getCanvasType() {
-            return this.type;
         }
 
         public void tick(int ticks) {

@@ -67,7 +67,7 @@ public class PaintingItem extends CanvasItem
                 );
             } else {
                 // If data is not loaded, request and show screen after
-                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.PAINTING, paintingCode, hand);
+                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(paintingCode, hand);
                 Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
                 ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
             }
@@ -180,7 +180,7 @@ public class PaintingItem extends CanvasItem
 
             ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
-            return canvasTracker.getCanvasData(paintingCode, PaintingData.class);
+            return canvasTracker.getCanvasData(paintingCode);
         }
 
         return null;

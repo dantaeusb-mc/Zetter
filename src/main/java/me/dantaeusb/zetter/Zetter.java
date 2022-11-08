@@ -37,5 +37,9 @@ public class Zetter
         ZetterContainerMenus.init(MOD_EVENT_BUS);
         ZetterEntities.init(MOD_EVENT_BUS);
         ZetterCraftingRecipes.init(MOD_EVENT_BUS);
+
+        // Custom types and registries
+        ZetterRegistries.init(MOD_EVENT_BUS);
+        ZetterCanvasTypes.init(MOD_EVENT_BUS);
     }
 }

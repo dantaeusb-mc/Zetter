@@ -88,7 +88,7 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements W
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName, CanvasData.class);
+        return canvasTracker.getCanvasData(canvasName);
     }
 
     @Override

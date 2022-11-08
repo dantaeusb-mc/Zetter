@@ -2,11 +2,8 @@ package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.core.ZetterCapabilities;
-import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -75,15 +72,7 @@ public class ServerHandler {
         // Notify canvas manager that player is tracking canvas from no ow
         canvasTracker.trackCanvas(sendingPlayer.getUUID(), canvasName);
 
-        AbstractCanvasData canvasData;
-
-        if (packetIn.getCanvasType() == AbstractCanvasData.Type.CANVAS) {
-            canvasData = canvasTracker.getCanvasData(canvasName, CanvasData.class);
-        } else if (packetIn.getCanvasType() == AbstractCanvasData.Type.PAINTING) {
-            canvasData = canvasTracker.getCanvasData(canvasName, PaintingData.class);
-        } else {
-            canvasData = canvasTracker.getCanvasData(canvasName, DummyCanvasData.class);
-        }
+        AbstractCanvasData canvasData = canvasTracker.getCanvasData(canvasName);
 
         if (canvasData == null) {
             Zetter.LOG.error("Player " + sendingPlayer + " requested non-existent canvas: " + canvasName);
@@ -189,7 +178,13 @@ public class ServerHandler {
          */
         final int newId = canvasTracker.getFreePaintingId();
         final String newCode = PaintingData.getCanvasCode(newId);
-        PaintingData paintingData = PaintingData.createFrom(canvasData);
+        PaintingData paintingData = ZetterCanvasTypes.PAINTING.get().createWrap(
+                canvasData.getResolution(),
+                canvasData.getWidth(),
+                canvasData.getHeight(),
+                canvasData.getColorData()
+        );
+
         paintingData.setMetaProperties(player.getName().getString(), paintingTitle);
         canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
 

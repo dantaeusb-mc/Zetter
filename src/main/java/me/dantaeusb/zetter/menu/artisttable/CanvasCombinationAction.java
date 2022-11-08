@@ -117,7 +117,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                          * @todo: [HIGH] Move request out of here, request with data load attempts but avoid loading unavailable canvases
                          */
                         CanvasRenderer.getInstance().queueCanvasTextureUpdate(
-                                AbstractCanvasData.Type.CANVAS,
                                 CanvasItem.getCanvasCode(currentStack)
                         );
 

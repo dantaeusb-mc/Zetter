@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -11,10 +12,15 @@ import java.nio.ByteOrder;
 /**
  * It's not enough to just init data, we need to register it with
  * @see CanvasServerTracker ::registerCanvasData();
+ *
+ * It has Dummy type without prefix, it should not be saved
  */
 public class DummyCanvasData extends AbstractCanvasData {
+    public static final String TYPE = "dummy";
+    public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
+
     protected DummyCanvasData() {
-        super();
+        super(TYPE);
     }
 
     public static DummyCanvasData createDummy() {
@@ -22,10 +28,10 @@ public class DummyCanvasData extends AbstractCanvasData {
         int height = Helper.getResolution().getNumeric();
         Resolution resolution = Helper.getResolution();
 
-        return DummyCanvasData.createDummy(width, height, resolution);
+        return DummyCanvasData.createDummy(resolution, width, height);
     }
 
-    public static DummyCanvasData createDummy(int width, int height, Resolution resolution) {
+    public static DummyCanvasData createDummy(Resolution resolution, int width, int height) {
 
         byte[] color = new byte[width * height * 4];
         ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
@@ -58,22 +64,41 @@ public class DummyCanvasData extends AbstractCanvasData {
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
     }
 
+    public boolean isRenderable() {
+        return true;
+    }
+
     public boolean isEditable() {
         return false;
     }
 
-    public Type getType() {
-        return Type.DUMMY;
-    }
+    /*
+     * Serialization
+     */
 
-    public void load(CompoundTag compoundTag) {
+    public static DummyCanvasData load(CompoundTag compoundTag) {
         Zetter.LOG.error("Trying to read into dummy canvas!");
+
+        return DummyCanvasData.createDummy();
     }
 
     public CompoundTag save(CompoundTag compoundTag) {
         Zetter.LOG.error("Trying to save dummy canvas!");
 
         return compoundTag;
+    }
+
+    /*
+     * Networking
+     */
+
+
+    public static DummyCanvasData readPacketData(FriendlyByteBuf networkBuffer) {
+        throw new IllegalStateException("Trying to read Dummy Canvas from network!");
+    }
+
+    public static void writePacketData(DummyCanvasData canvasData, FriendlyByteBuf networkBuffer) {
+        throw new IllegalStateException("Trying to write Dummy Canvas to network!");
     }
 }
 

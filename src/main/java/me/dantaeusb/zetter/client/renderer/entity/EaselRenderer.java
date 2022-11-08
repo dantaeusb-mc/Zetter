@@ -62,7 +62,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
             if (canvasData != null) {
                 this.renderCanvas(easelEntity, canvasData, partialTicks, poseStack, buffer, packedLight);
             } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, easelEntity.getEntityCanvasCode());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(easelEntity.getEntityCanvasCode());
             }
         }
 
@@ -267,7 +267,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName, CanvasData.class);
+        return canvasTracker.getCanvasData(canvasName);
     }
 
     /**

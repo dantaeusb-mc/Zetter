@@ -223,7 +223,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getPaintingCode(), canvasData, combinedLight);
             matrixStack.popPose();
         } else {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getPaintingCode());
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(entity.getPaintingCode());
         }
 
         // Render plate
@@ -283,7 +283,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName, PaintingData.class);
+        return canvasTracker.getCanvasData(canvasName);
     }
 
     /**

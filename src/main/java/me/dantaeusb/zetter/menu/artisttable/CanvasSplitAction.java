@@ -6,6 +6,7 @@ import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -109,7 +110,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         CanvasData combinedStackCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         if (combinedStackCanvasData != null) {
-            this.canvasData = DummyCanvasData.createWrap(
+            this.canvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
                     combinedStackCanvasData.getResolution(),
                     combinedStackCanvasData.getWidth(),
                     combinedStackCanvasData.getHeight(),
@@ -119,7 +120,6 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             this.state = State.READY;
         } else {
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(
-                    AbstractCanvasData.Type.CANVAS,
                     CanvasItem.getCanvasCode(combinedStack)
             );
 

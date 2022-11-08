@@ -205,7 +205,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
             return InteractionResult.CONSUME;
         }
 
-        PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode, PaintingData.class);
+        PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode);
 
         String paintingName = paintingData.getPaintingTitle();
         String authorName = paintingData.getAuthorName();
@@ -334,7 +334,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
             ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)).get());
 
-            PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode, PaintingData.class);
+            PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode);
 
             FrameItem.storePaintingData(canvasStack, this.paintingCode, paintingData, this.generation);
 

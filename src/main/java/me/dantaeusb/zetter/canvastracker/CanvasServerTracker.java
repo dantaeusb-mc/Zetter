@@ -2,13 +2,12 @@ package me.dantaeusb.zetter.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
-import me.dantaeusb.zetter.storage.PaintingData;
+import me.dantaeusb.zetter.storage.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
@@ -98,16 +97,23 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
 
     @Override
     @Nullable
-    public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
-        return (T) this.world.getServer().overworld().getDataStorage().get(
+    public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
+        return this.world.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
-                if (type.equals(CanvasData.class)) {
-                    return CanvasData.createLoaded(compoundTag);
-                } else if (type.equals(PaintingData.class)) {
-                    return PaintingData.createLoaded(compoundTag);
+                String canvasType = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
+
+                if (canvasType.isEmpty()) {
+                    throw new IllegalStateException("Cannot find canvas type");
                 }
 
-                return DummyCanvasData.createDummy();
+                CanvasDataType<T> type = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(canvasType));
+
+                // @todo: [HIGH]
+                if (type == null) {
+                    throw new IllegalStateException("No type of canvas " + canvasType + " is registered");
+                }
+
+                return type.loadFromNbt(compoundTag);
             },
             canvasCode
         );
@@ -155,7 +161,7 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
                 ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
-                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasCode, this.getCanvasData(canvasCode, DummyCanvasData.class), System.currentTimeMillis());
+                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }

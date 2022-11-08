@@ -3,7 +3,9 @@ package me.dantaeusb.zetter.storage;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -18,15 +20,19 @@ import java.util.Map;
  * @see CanvasServerTracker ::registerCanvasData();
  */
 public abstract class AbstractCanvasData extends SavedData {
-    protected static final String NBT_TAG_TYPE = "type";
+    public static final String NBT_TAG_TYPE = "CanvasDataType";
+
     protected static final String NBT_TAG_WIDTH = "width";
     protected static final String NBT_TAG_HEIGHT = "height";
     protected static final String NBT_TAG_RESOLUTION = "resolution";
     protected static final String NBT_TAG_COLOR = "color";
 
+    public final String type;
+
+    // Maybe final?
+
     protected byte[] color;
     protected ByteBuffer canvasBuffer;
-
     protected Resolution resolution;
     protected int width;
     protected int height;
@@ -39,6 +45,10 @@ public abstract class AbstractCanvasData extends SavedData {
      * this data will have to be collected manually.
      */
     protected boolean managed = true;
+
+    protected AbstractCanvasData(String type) {
+        this.type = type;
+    }
 
     /**
      *
@@ -106,9 +116,22 @@ public abstract class AbstractCanvasData extends SavedData {
         return this.resolution;
     }
 
-    abstract public boolean isEditable();
+    /**
+     * Sometimes painting could be disabled for some specific client types
+     * or for other reasons, i.e. banned. We're keeping the data but marking
+     * those paintings as non-renderable.
+     *
+     * If painting is not renderable, use placeholder.
+     * @return
+     */
+    abstract public boolean isRenderable();
 
-    abstract public Type getType();
+    /**
+     * If painting can be edited, altered by user. Signed paintings should not
+     * be editable.
+     * @return
+     */
+    abstract public boolean isEditable();
 
     public byte[] getColorData() {
         return this.color.clone();
@@ -141,77 +164,18 @@ public abstract class AbstractCanvasData extends SavedData {
         return pixelY * this.width + pixelX;
     }
 
-    /**
-     * reads in data from the NBTTagCompound into this MapDataBase
+    /*
+     * Loading and syncing
      */
-    public void load(CompoundTag compoundTag) {
-        this.width = compoundTag.getInt(NBT_TAG_WIDTH);
-        this.height = compoundTag.getInt(NBT_TAG_HEIGHT);
-
-        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
-            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
-            this.resolution = Resolution.values()[resolutionOrdinal];
-        } else {
-            this.resolution = Helper.getResolution();
-        }
-
-        this.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
-    }
 
     public CompoundTag save(CompoundTag compoundTag) {
-        compoundTag.putInt(NBT_TAG_TYPE, this.getType().ordinal());
+        compoundTag.putString(NBT_TAG_TYPE, this.type);
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);
         compoundTag.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());
         compoundTag.putByteArray(NBT_TAG_COLOR, this.color);
 
         return compoundTag;
-    }
-
-    public enum Type {
-        DUMMY(0),
-        CANVAS(1),
-        PAINTING(2);
-
-        private static final Map<Integer, Type> lookup = new HashMap<>();
-
-        static {
-            for (Type type : Type.values()) {
-                lookup.put(type.getId(), type);
-            }
-        }
-
-        private final int id;
-
-        Type(int id) {
-            this.id = id;
-        }
-
-        public int getId() {
-            return this.id;
-        }
-
-        public static @Nullable Type getTypeByCanvas(AbstractCanvasData abstractCanvasData) {
-            if (abstractCanvasData instanceof CanvasData) {
-                return Type.CANVAS;
-            } else if (abstractCanvasData instanceof PaintingData) {
-                return Type.PAINTING;
-            } else if (abstractCanvasData instanceof DummyCanvasData) {
-                return Type.DUMMY;
-            }
-
-            Zetter.LOG.warn("Cannot get type of the canvas!");
-            return null;
-        }
-
-        @Nullable
-        public static Type getTypeById(int id) {
-            if (!lookup.containsKey(id)) {
-                return null;
-            }
-
-            return lookup.get(id);
-        }
     }
 
     public enum Resolution {

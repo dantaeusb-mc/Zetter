@@ -70,7 +70,7 @@ public class CanvasItem extends Item
                 );
             } else {
                 // If data is not loaded, request and show screen after
-                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.CANVAS, canvasCode, hand);
+                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(canvasCode, hand);
                 Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
                 ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
             }
@@ -118,7 +118,7 @@ public class CanvasItem extends Item
         String canvasCode = createNewCanvasData(world);
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
-        CanvasData canvasData = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+        CanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
         assert canvasData != null;
 
         storeCanvasData(stack, canvasCode, canvasData);
@@ -189,7 +189,7 @@ public class CanvasItem extends Item
 
             ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
-            return canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+            return canvasTracker.getCanvasData(canvasCode);
         }
 
         return null;

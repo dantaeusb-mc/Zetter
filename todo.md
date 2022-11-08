@@ -1,3 +1,11 @@
+## Reminder list:
+
+* Do not use AWT. It is not supported on all platforms;
+* Nbt tags are UpperCamelCase; when creating new tags follow that rule;
+* Getters-setters, are, in fact, rarely needed; think about avoiding them when creating.
+
+## To-do list:
+
 #### Pre-release tasks:
 
 * \[HIGH\] Check carefully that CanvasServerTracker#deserializeNBT data migration works fine, and canvas id is not reset!
@@ -12,7 +20,6 @@
 
 #### Release tasks:
 
-* \[HIGH\] (Check) Remove awt usage;
 * \[HIGH\] When dropping painting, if cannot be loaded, just drop frame (gallery workaround);
 * \[HIGH\] Configuration file for texture size;
 * \[MED\] Reduce saving and sending format to write RGB data instead of RGBA;

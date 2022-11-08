@@ -6,11 +6,12 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.BitSet;
+import java.util.function.Supplier;
 
 public interface ICanvasTracker {
     Level getWorld();
 
-    <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type);
+    <T extends AbstractCanvasData> T getCanvasData(String canvasCode);
 
     void registerCanvasData(String canvasCode, AbstractCanvasData canvasData);
 

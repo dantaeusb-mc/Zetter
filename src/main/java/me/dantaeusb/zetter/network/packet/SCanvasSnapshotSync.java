@@ -12,6 +12,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+/**
+ * Send snapshot of a canvas, used only for easel when drawing, a bit more specific
+ * object that is sent more frequently than default canvases when
+ * multiple players are drawing
+ */
 public class SCanvasSnapshotSync {
     private final int easelEntityId;
     private final String canvasCode;
@@ -50,7 +55,7 @@ public class SCanvasSnapshotSync {
             int easelEntityId = networkBuffer.readInt();
             String canvasCode = networkBuffer.readUtf();
             long timestamp = networkBuffer.readLong();
-            CanvasData readCanvasData = (CanvasData) CanvasContainer.readPacketCanvasData(networkBuffer);
+            CanvasData readCanvasData = CanvasData.readPacketData(networkBuffer);
 
             return new SCanvasSnapshotSync(easelEntityId, canvasCode, readCanvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
@@ -66,7 +71,7 @@ public class SCanvasSnapshotSync {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode);
         networkBuffer.writeLong(this.timestamp);
-        CanvasContainer.writePacketCanvasData(networkBuffer, this.canvasData);
+        CanvasData.writePacketData(this.canvasData, networkBuffer);
     }
 
     public static void handle(final SCanvasSnapshotSync packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

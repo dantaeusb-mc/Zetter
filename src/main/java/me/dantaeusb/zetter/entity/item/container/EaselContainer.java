@@ -103,7 +103,7 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        CanvasData canvas = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+        CanvasData canvas = canvasTracker.getCanvasData(canvasCode);
 
         if (canvas == null) {
             this.canvas = null;

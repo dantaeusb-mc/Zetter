@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.canvastracker;
 
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.google.common.collect.Maps;
 import net.minecraft.world.level.Level;
@@ -22,7 +23,7 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
 
     @Override
     @Nullable
-    public <T extends AbstractCanvasData> T getCanvasData(String canvasCode, @Nullable Class<T> type) {
+    public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
         return (T) this.canvases.get(canvasCode);
     }
 
@@ -49,11 +50,15 @@ public class CanvasClientTracker extends CanvasDefaultTracker  {
     }
 
     @Override
-    public void unregisterCanvasData(String newCanvasCode) {
+    public void unregisterCanvasData(String removedCanvasCode) {
         // Remove existing entry if we have one to replace with a new one
-        this.canvases.remove(newCanvasCode);
+        this.canvases.remove(removedCanvasCode);
 
-        CanvasRenderer.getInstance().unregisterCanvas(newCanvasCode);
+        CanvasUnregisterEvent event = new CanvasUnregisterEvent(removedCanvasCode);
+
+        MinecraftForge.EVENT_BUS.post(event);
+
+        CanvasRenderer.getInstance().unregisterCanvas(removedCanvasCode);
     }
 
     @Override

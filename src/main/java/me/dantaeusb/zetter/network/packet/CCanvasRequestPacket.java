@@ -10,10 +10,8 @@ import java.util.function.Supplier;
 
 public class CCanvasRequestPacket {
     protected String canvasName;
-    protected AbstractCanvasData.Type type;
 
-    public CCanvasRequestPacket(AbstractCanvasData.Type type, String canvasName) {
-        this.type = type;
+    public CCanvasRequestPacket(String canvasName) {
         this.canvasName = canvasName;
     }
 
@@ -22,26 +20,20 @@ public class CCanvasRequestPacket {
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
     public static CCanvasRequestPacket readPacketData(FriendlyByteBuf buf) {
-        AbstractCanvasData.Type type = AbstractCanvasData.Type.getTypeById(buf.readInt());
         String canvasName = buf.readUtf(64);
 
-        return new CCanvasRequestPacket(type, canvasName);
+        return new CCanvasRequestPacket(canvasName);
     }
 
     /**
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeInt(this.type.getId());
         buf.writeUtf(this.canvasName);
     }
 
     public String getCanvasName() {
         return this.canvasName;
-    }
-
-    public AbstractCanvasData.Type getCanvasType() {
-        return this.type;
     }
 
     public static void handle(final CCanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
