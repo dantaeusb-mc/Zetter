@@ -24,6 +24,10 @@ import net.minecraftforge.network.PacketDistributor;
 import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 
+/**
+ * For some reason, network executor suppresses exceptions,
+ * so we catch all of those manually
+ */
 public class ServerHandler {
     /**
      * Update canvas on server-side and send update to other tracking players
@@ -192,6 +196,11 @@ public class ServerHandler {
         return outStack;
     }
 
+    /**
+     * Undo and redo packets
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
         EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 

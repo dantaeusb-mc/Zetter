@@ -12,6 +12,7 @@ import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
 import me.dantaeusb.zetter.network.packet.CCanvasActionPacket;
 import me.dantaeusb.zetter.network.packet.CCanvasHistoryActionPacket;
+import me.dantaeusb.zetter.network.packet.SCanvasHistoryActionPacket;
 import me.dantaeusb.zetter.network.packet.SEaselStateSync;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -401,13 +402,19 @@ public class EaselState {
      * @return
      */
     private boolean applyHistoryTraversing(CanvasAction tillAction, boolean cancel) {
+        boolean changedState = false;
+
         // Cancel all after, un-cancel all before
         if (cancel) {
             ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
 
             while(actionsIterator.hasPrevious()) {
                 CanvasAction currentAction = actionsIterator.previous();
-                currentAction.setCanceled(true);
+
+                if (!currentAction.isCanceled()) {
+                    currentAction.setCanceled(true);
+                    changedState = true;
+                }
 
                 if (currentAction.uuid.equals(tillAction.uuid)) {
                     break;
@@ -418,7 +425,11 @@ public class EaselState {
 
             while(actionsIterator.hasNext()) {
                 CanvasAction currentAction = actionsIterator.next();
-                currentAction.setCanceled(false);
+
+                if (currentAction.isCanceled()) {
+                    currentAction.setCanceled(false);
+                    changedState = true;
+                }
 
                 if (currentAction.uuid.equals(tillAction.uuid)) {
                     break;
@@ -426,13 +437,47 @@ public class EaselState {
             }
         }
 
+        if (!changedState) {
+            return false;
+        }
+
         this.restoreSinceSnapshot();
         this.onStateChanged();
 
         // If tillAction is not sent, just checking flag will be enough, it will be sent with proper canceled status
-        if (this.easel.getLevel().isClientSide() && tillAction.isSent()) {
-            CCanvasHistoryActionPacket historyPacket = new CCanvasHistoryActionPacket(this.easel.getId(), tillAction.uuid, cancel);
-            ZetterNetwork.simpleChannel.sendToServer(historyPacket);
+        if (this.easel.getLevel().isClientSide()) {
+            if (tillAction.isSent()) {
+                CCanvasHistoryActionPacket historyPacket = new CCanvasHistoryActionPacket(this.easel.getId(), tillAction.uuid, cancel);
+                ZetterNetwork.simpleChannel.sendToServer(historyPacket);
+            }
+        } else {
+            for (Player player : this.players) {
+                // If not sent any actions, it will send canceled already
+                if (this.playerLastSyncedAction.containsKey(player.getUUID())) {
+                    UUID lastSyncedActionUuid = this.playerLastSyncedAction.get(player.getUUID());
+                    ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
+                    boolean found = false;
+
+                    // If we sent action (found last sent action before tillAction), then we need to send history packet
+                    while(actionsIterator.hasPrevious()) {
+                        CanvasAction action = actionsIterator.previous();
+
+                        if (lastSyncedActionUuid.equals(tillAction.uuid)) {
+                            found = true;
+                            break;
+                        }
+
+                        if (action.uuid.equals(tillAction.uuid)) {
+                            break;
+                        }
+                    }
+
+                    if (found) {
+                        SCanvasHistoryActionPacket historyPacket = new SCanvasHistoryActionPacket(this.easel.getId(), tillAction.uuid, cancel);
+                        ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), historyPacket);
+                    }
+                }
+            }
         }
 
         this.historyDirty = true;

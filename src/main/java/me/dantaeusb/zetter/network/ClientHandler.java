@@ -5,12 +5,11 @@ import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
-import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
-import me.dantaeusb.zetter.network.packet.SEaselStateSync;
-import me.dantaeusb.zetter.network.packet.SCanvasSyncViewMessage;
+import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -84,6 +83,26 @@ public class ClientHandler {
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
             throw e;
+        }
+    }
+
+    /**
+     * Undo and redo packets from other players
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, Level world) {
+        EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+        // @todo: [MED] Check if player can access entity
+
+        if (easel != null) {
+            if (packetIn.canceled) {
+                easel.getStateHandler().undo(packetIn.actionId);
+            } else {
+                easel.getStateHandler().redo(packetIn.actionId);
+            }
+        } else {
+            Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
         }
     }
 }
