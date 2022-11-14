@@ -43,13 +43,13 @@ public class CanvasClientTracker implements ICanvasTracker {
             return;
         }
 
-        this.canvases.put(canvasCode, canvasData);
-        this.timestamps.put(canvasCode, timestamp);
-
         CanvasPreRegisterEvent preEvent = new CanvasPreRegisterEvent(canvasCode, canvasData, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
         if (!preEvent.isCanceled()) {
+            this.canvases.put(canvasCode, canvasData);
+            this.timestamps.put(canvasCode, timestamp);
+
             CanvasRenderer.getInstance().addCanvas(canvasCode, canvasData);
         }
 
@@ -65,7 +65,7 @@ public class CanvasClientTracker implements ICanvasTracker {
         // Remove existing entry if we have one to replace with a new one
         this.canvases.remove(removedCanvasCode);
 
-        CanvasRenderer.getInstance().unregisterCanvas(removedCanvasCode);
+        CanvasRenderer.getInstance().removeCanvas(removedCanvasCode);
 
         CanvasPostUnregisterEvent postEvent = new CanvasPostUnregisterEvent(removedCanvasCode);
         MinecraftForge.EVENT_BUS.post(postEvent);

@@ -14,6 +14,8 @@ public class Zetter
 {
     public static final String MOD_ID = "zetter";
     public static boolean DEBUG_MODE = true;
+    public static boolean DEBUG_SERVER = false;
+    public static boolean DEBUG_CLIENT = true;
 
     // get a reference to the event bus for this mod;  Registration events are fired on this bus.
     public static IEventBus MOD_EVENT_BUS;

@@ -10,7 +10,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 
 /**
- * @todo: [HIGH] Fix texture!
  * @todo: [MED] Combine with another help widget?
  */
 public class HelpWidget extends AbstractArtistTableWidget implements Widget {

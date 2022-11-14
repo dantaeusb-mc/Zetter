@@ -282,6 +282,7 @@ public class EaselState {
             }
 
             CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
+
             this.easel.getEaselContainer().damagePalette(damage);
         }
     }
@@ -299,7 +300,7 @@ public class EaselState {
 
         boolean foundCanceled = false;
 
-        ListIterator<CanvasAction> actionsIterator = this.actions.listIterator();
+        ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
         long lastCanceled = System.currentTimeMillis();
 
         while(actionsIterator.hasPrevious()) {
@@ -307,7 +308,7 @@ public class EaselState {
 
             if (paintingActionBuffer.isCanceled()) {
                 foundCanceled = true;
-                lastCanceled = paintingActionBuffer.startTime;
+                lastCanceled = paintingActionBuffer.getStartTime();
                 actionsIterator.remove();
             }
         }
@@ -390,6 +391,7 @@ public class EaselState {
     /*
      * Action state
      */
+
     /**
      * Update "canceled" state of an action and all actions before or after (depends on state)
      * notify network and history about that change and update textures.
@@ -611,7 +613,7 @@ public class EaselState {
 
         if (firstCanceledAction != null) {
             // =
-            latestSnapshot = this.getSnapshotBefore(firstCanceledAction.startTime - latency);
+            latestSnapshot = this.getSnapshotBefore(firstCanceledAction.getStartTime() - latency);
         } else {
             // Nothing canceled - just use last snapshot!
             latestSnapshot = this.getLastSnapshot();
@@ -625,22 +627,43 @@ public class EaselState {
         this.applySnapshot(latestSnapshot);
         ListIterator<CanvasAction> actionBufferIterator = this.getActionsEndIterator();
 
+        boolean foundCanceled = firstCanceledAction == null;
+        boolean foundLastBeforeSnapshot = false;
+
         // Go back, find first canceled, then reverse iterator, then continue applying action
         while(actionBufferIterator.hasPrevious()) {
-            if (firstCanceledAction == null || actionBufferIterator.previous().uuid.equals(firstCanceledAction.uuid)) {
+            CanvasAction action = actionBufferIterator.previous();
+
+            // Start looking when found first canceled action if any
+            if (!foundCanceled) {
+                foundCanceled = action.uuid.equals(firstCanceledAction.uuid);
+            }
+
+            // And first action committed before snapshot
+            if (!foundLastBeforeSnapshot) {
+                foundLastBeforeSnapshot = action.isCommitted() && action.getCommitTime() < latestSnapshot.timestamp;
+            }
+
+            // When found or reached the end
+            if (
+                (foundCanceled && foundLastBeforeSnapshot) || !actionBufferIterator.hasPrevious()
+            ) {
+                // Turn around and start applying
                 while(actionBufferIterator.hasNext()) {
-                    CanvasAction action = actionBufferIterator.next();
+                    action = actionBufferIterator.next();
 
                     // We apply non-committed and non-sent always, as server cannot have idea of the new actions that were not pushed
                     // (except if canceled, but it should never happen)
                     if (
                         !action.isCanceled() && ( // If not canceled and
                             !action.isCommitted()  // not committed
-                                || !action.isSent() // or not sent
-                                || action.startTime > latestSnapshot.timestamp - latency // or happened before snapshot was sent
+                            || !action.isSent() // or not sent
+                            || action.getCommitTime() > latestSnapshot.timestamp - latency // or committed before snapshot was created
                         )
                     ) {
                         this.applyAction(action, false);
+                    } else {
+                        Zetter.LOG.debug("Ignoring action " + action.uuid);
                     }
                 }
 
@@ -650,6 +673,10 @@ public class EaselState {
 
         if (this.easel.getLevel().isClientSide()) {
             CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
+        }
+
+        if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug("Restored since snapshot");
         }
 
         this.markDesync();
@@ -720,7 +747,7 @@ public class EaselState {
         while(actionsIterator.hasPrevious()) {
             CanvasAction paintingActionBuffer = actionsIterator.previous();
 
-            if (paintingActionBuffer.startTime < lastSnapshot.timestamp) {
+            if (paintingActionBuffer.getStartTime() < lastSnapshot.timestamp) {
                 break;
             }
 
@@ -841,7 +868,7 @@ public class EaselState {
         CanvasSnapshot lastSnapshot;
 
         if (lastCanceledAction != null) {
-            lastSnapshot = this.getSnapshotBefore(lastCanceledAction.startTime);
+            lastSnapshot = this.getSnapshotBefore(lastCanceledAction.getStartTime());
         } else {
             lastSnapshot = this.getLastSnapshot();
         }
@@ -851,6 +878,10 @@ public class EaselState {
         );
 
         ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), syncMessage);
+
+        if (Zetter.DEBUG_MODE && Zetter.DEBUG_SERVER) {
+            Zetter.LOG.debug("Sent history to player " + player.getUUID());
+        }
     }
 
     /**
@@ -909,6 +940,10 @@ public class EaselState {
         this.actions.add(action);
 
         this.markDesync();
+
+        if (Zetter.DEBUG_MODE && Zetter.DEBUG_SERVER) {
+            //Zetter.LOG.debug("Processed actions from player " + action.authorId.toString());
+        }
     }
 
     /**
@@ -957,40 +992,49 @@ public class EaselState {
             }
 
             this.snapshots.add(snapshot);
+
+            if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
+                Zetter.LOG.debug("Processed server snapshot");
+            }
         }
 
         if (actions == null || actions.isEmpty()) {
             this.restoreSinceSnapshot();
+
+            if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
+                Zetter.LOG.debug("Processed actions sync from server");
+            }
+
             return;
         }
 
         Iterator<CanvasAction> unsyncedIterator = actions.iterator();
         ListIterator<CanvasAction> actionsIterator = this.actions.listIterator();
 
-        CanvasAction unsyncedAction = unsyncedIterator.next();
         @Nullable CanvasAction clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
 
         int fastForwards = 0;
 
         do {
+            CanvasAction unsyncedAction = unsyncedIterator.next();
+
             // If there's no client actions saved found after synced action, just
             // add all unsynced
             if (clientAction == null) {
                 this.actions.add(unsyncedAction);
-                unsyncedAction = unsyncedIterator.next();
 
                 continue;
             }
 
             // Fast-forward client actions to the one that is made at the same
             // time or later than the first unsynced action
-            if (unsyncedAction.startTime > clientAction.startTime) {
+            if (unsyncedAction.getStartTime() > clientAction.getStartTime()) {
                 if (++fastForwards > 1) {
                     Zetter.LOG.warn("Fast-forwarding actions without mark sync! Some actions were lost?");
                 }
 
                 while (actionsIterator.hasNext()) {
-                    if (clientAction.startTime >= unsyncedAction.startTime) {
+                    if (clientAction.getStartTime() >= unsyncedAction.getStartTime()) {
                         break;
                     }
 
@@ -1013,14 +1057,16 @@ public class EaselState {
                 actionsIterator.add(unsyncedAction);
                 clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             }
-
-            unsyncedAction = unsyncedIterator.next();
         } while (unsyncedIterator.hasNext());
 
         this.unfreeze();
 
         this.restoreSinceSnapshot();
         this.onStateChanged();
+
+        if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug("Processed actions sync from server");
+        }
     }
 
     /**
@@ -1038,7 +1084,9 @@ public class EaselState {
         //this.snapshots.add(CanvasSnapshot.createWeakSnapshot(canvasData.getColorData(), packetTimestamp));
         //this.restoreSinceSnapshot();
 
-        //CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
+        if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug("Processed weak snapshot");
+        }
     }
 
     /**

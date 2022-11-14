@@ -14,6 +14,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
+/**
+ * For some reason, network executor suppresses exceptions,
+ * so we catch all of those manually
+ */
 public class ClientHandler {
     /**
      * When canvas sent from sever, update client's canvas
@@ -23,15 +27,20 @@ public class ClientHandler {
      * @param world
      */
     public static void processCanvasSync(final SCanvasSyncMessage packetIn, Level world) {
-        final String canvasCode = packetIn.getCanvasCode();
+        try {
+            final String canvasCode = packetIn.getCanvasCode();
 
-        final AbstractCanvasData canvasData = packetIn.getCanvasData();
-        final long timestamp = packetIn.getTimestamp();
+            final AbstractCanvasData canvasData = packetIn.getCanvasData();
+            final long timestamp = packetIn.getTimestamp();
 
-        ICanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+            ICanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
                 .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
 
-        canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
+            canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
     }
 
     /**
@@ -41,25 +50,40 @@ public class ClientHandler {
      * @param world
      */
     public static void processCanvasSyncView(final SCanvasSyncViewMessage packetIn, Level world) {
-        final LocalPlayer player = Minecraft.getInstance().player;
-        final String canvasCode = packetIn.getCanvasCode();
+        try {
+            final LocalPlayer player = Minecraft.getInstance().player;
+            final String canvasCode = packetIn.getCanvasCode();
 
-        final AbstractCanvasData canvasData = packetIn.getCanvasData();
+            final AbstractCanvasData canvasData = packetIn.getCanvasData();
 
-        CanvasViewEvent event = new CanvasViewEvent(player, canvasCode, canvasData, packetIn.getHand());
+            CanvasViewEvent event = new CanvasViewEvent(player, canvasCode, canvasData, packetIn.getHand());
 
-        MinecraftForge.EVENT_BUS.post(event);
+            MinecraftForge.EVENT_BUS.post(event);
 
-        processCanvasSync(packetIn, world);
+            processCanvasSync(packetIn, world);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
     }
 
+    /**
+     *
+     * @param packetIn
+     * @param world
+     */
     public static void processEaselStateSync(final SEaselStateSync packetIn, Level world) {
-        EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
-        if (easel != null) {
-            easel.getStateHandler().processHistorySyncClient(packetIn.canvasCode, packetIn.snapshot, packetIn.unsyncedActions);
-        } else {
-            Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas snapshot");
+            if (easel != null) {
+                easel.getStateHandler().processHistorySyncClient(packetIn.canvasCode, packetIn.snapshot, packetIn.unsyncedActions);
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas snapshot");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 }

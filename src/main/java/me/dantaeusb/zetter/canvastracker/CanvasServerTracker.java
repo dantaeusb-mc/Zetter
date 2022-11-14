@@ -134,7 +134,6 @@ public class CanvasServerTracker implements ICanvasTracker {
 
                 CanvasDataType<T> type = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(Zetter.MOD_ID, canvasType));
 
-                // @todo: [HIGH]
                 if (type == null) {
                     throw new IllegalStateException("No type of canvas " + canvasType + " is registered");
                 }

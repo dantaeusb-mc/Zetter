@@ -169,7 +169,7 @@ public class CanvasRenderer implements AutoCloseable {
      * Method for public access: also removes tracking
      * @param canvasCode
      */
-    public void unregisterCanvas(String canvasCode) {
+    public void removeCanvas(String canvasCode) {
         // To keep it from reloading if for some reason it was not received from server yet
         this.textureRequestTimeout.remove(canvasCode);
 
@@ -245,18 +245,20 @@ public class CanvasRenderer implements AutoCloseable {
         CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvasCode);
 
         if (create && canvasRendererInstance == null) {
-            this.createCanvasRendererInstance(canvasCode, canvasData);
+            return this.createCanvasRendererInstance(canvasCode, canvasData);
         }
 
         return canvasRendererInstance;
     }
 
-    private void createCanvasRendererInstance(String canvasCode, AbstractCanvasData canvas) {
+    private CanvasRenderer.Instance createCanvasRendererInstance(String canvasCode, AbstractCanvasData canvas) {
         CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(
                 canvasCode, canvas.getWidth(), canvas.getHeight(), canvas.getResolution()
         );
         canvasRendererInstance.updateCanvasTexture(canvas);
         this.canvasRendererInstances.put(canvasCode, canvasRendererInstance);
+
+        return canvasRendererInstance;
     }
 
     /*

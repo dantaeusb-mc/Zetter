@@ -35,6 +35,9 @@ minecraft {
         client {
             workingDirectory project.file('run')
 
+            // JetBrains hot-swap environment
+            // jvmArg "-XX:+AllowEnhancedClassRedefinition"
+
             // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
 
