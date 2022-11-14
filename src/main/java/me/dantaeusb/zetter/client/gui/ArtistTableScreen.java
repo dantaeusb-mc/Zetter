@@ -1,9 +1,10 @@
 package me.dantaeusb.zetter.client.gui;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.ChangeActionWidget;
-import me.dantaeusb.zetter.client.gui.artisttable.CombinedCanvasWidget;
+import me.dantaeusb.zetter.client.gui.artisttable.PreviewWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -22,14 +23,19 @@ import net.minecraft.world.item.ItemStack;
 import java.util.List;
 
 public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> implements ContainerListener {
-    protected final Component title = Component.translatable("container.zetter.artistTable");
+    public static final Component TITLE = Component.translatable("container.zetter.artist_table");
+
+    private static final Component SPLIT_MODE_TITLE = Component.translatable("container.zetter.artist_table.mode.split");
+    private static final Component COMBINE_MODE_TITLE = Component.translatable("container.zetter.artist_table.mode.combine");
+
+    protected final Component titleLabel = TITLE;
 
     // This is the resource location for the background image
-    private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation("zetter", "textures/gui/artist_table.png");
+    private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
 
     protected final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
-    private CombinedCanvasWidget combinedCanvasWidget;
+    private PreviewWidget previewWidget;
     private ChangeActionWidget changeActionWidget;
     private HelpWidget helpWidget;
 
@@ -58,14 +64,14 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         final int CHANGE_ACTION_BUTTON_POSITION_X = WIDTH / 2 - 10;
         final int CHANGE_ACTION_BUTTON_POSITION_Y = 28;
 
-        final int HELP_POSITION_X = 225;
+        final int HELP_POSITION_X = 219;
         final int HELP_POSITION_Y = 0;
 
-        this.combinedCanvasWidget = new CombinedCanvasWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y);
+        this.previewWidget = new PreviewWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y);
         this.changeActionWidget = new ChangeActionWidget(this, this.getGuiLeft() + CHANGE_ACTION_BUTTON_POSITION_X, this.getGuiTop() + CHANGE_ACTION_BUTTON_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
-        this.addPaintingWidget(this.combinedCanvasWidget);
+        this.addPaintingWidget(this.previewWidget);
         this.addPaintingWidget(this.changeActionWidget);
         this.addPaintingWidget(this.helpWidget);
 
@@ -74,11 +80,11 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
     public void updateCombinedCanvasPosition() {
         if (this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
-            this.combinedCanvasWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X;
-            this.combinedCanvasWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y;
+            this.previewWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X;
+            this.previewWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y;
         } else {
-            this.combinedCanvasWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X;
-            this.combinedCanvasWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y;
+            this.previewWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X;
+            this.previewWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y;
         }
     }
 
@@ -155,27 +161,59 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
             blit(matrixStack, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS + COMBINED_SLOT_SIZE, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
         }
 
-        final int LOADING_XPOS = 128;
-        final int LOADING_YPOS = 54;
-        final int LOADING_UPOS = 100;
-        final int LOADING_VPOS = this.imageHeight;
+        final int LOADING_UPOS = 230;
+        final int LOADING_VPOS = 108;
         final int LOADING_WIDTH = 16;
         final int LOADING_HEIGHT = 10;
 
-        if (this.getMenu().canvasLoading()) {
-            final int animation = this.tick % 40;
-            int frame = animation / 10; // 0-3
-
-            frame = frame > 2 ? 1 : frame; // 3rd frame is the same as 1st frame
-
-            this.blit(matrixStack, this.leftPos + LOADING_XPOS, this.topPos + LOADING_YPOS, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT);
-        }
+        final int INVALID_UPOS = 230;
+        final int INVALID_VPOS = 138;
+        final int INVALID_WIDTH = 10;
+        final int INVALID_HEIGHT = 10;
 
         this.changeActionWidget.render(matrixStack, x, y, partialTicks);
         this.helpWidget.render(matrixStack, x, y, partialTicks);
 
-        if (this.getMenu().isCanvasReady()) {
-            this.combinedCanvasWidget.render(matrixStack);
+        // @todo: [MED] Move to preview widget
+        switch (this.getMenu().getActionState()) {
+            case EMPTY:
+                break;
+            case INVALID:
+                int xPosInvalid = (GRID_SIZE - INVALID_WIDTH) / 2;
+                int yPosInvalid = (GRID_SIZE - INVALID_HEIGHT) / 2;
+
+                if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
+                    xPosInvalid += GRID_XPOS_SPLIT;
+                    yPosInvalid += GRID_YPOS_SPLIT;
+                } else {
+                    xPosInvalid += GRID_XPOS_COMBINE;
+                    yPosInvalid += GRID_YPOS_COMBINE;
+                }
+
+                blit(matrixStack, this.leftPos + xPosInvalid, this.topPos + yPosInvalid, INVALID_UPOS, INVALID_VPOS, INVALID_WIDTH, INVALID_HEIGHT, 512, 256);
+                break;
+            case NOT_LOADED:
+                int xPosLoading = (GRID_SIZE - LOADING_WIDTH) / 2;
+                int yPosLoading = (GRID_SIZE - LOADING_HEIGHT) / 2;
+
+                if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
+                    xPosLoading += GRID_XPOS_SPLIT;
+                    yPosLoading += GRID_YPOS_SPLIT;
+                } else {
+                    xPosLoading += GRID_XPOS_COMBINE;
+                    yPosLoading += GRID_YPOS_COMBINE;
+                }
+
+                final int animation = this.tick % 40;
+                int frame = animation / 10; // 0-3
+
+                frame = frame > 2 ? 1 : frame; // 3rd frame is the same as 1st frame
+
+                blit(matrixStack, this.leftPos + xPosLoading, this.topPos + yPosLoading, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT, 512, 256);
+                break;
+            case READY:
+                this.previewWidget.render(matrixStack);
+                break;
         }
     }
 
@@ -203,7 +241,12 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
         final int LABEL_XPOS = 5;
         final int LABEL_YPOS = 5;
-        this.font.draw(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
+
+        Component artistTableModelLabel = this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE ? COMBINE_MODE_TITLE : SPLIT_MODE_TITLE;
+
+        Component artistTableLabel = Component.translatable("container.zetter.artist_table.mode", this.titleLabel, artistTableModelLabel);
+
+        this.font.draw(matrixStack, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
 
         final int FONT_Y_SPACING = 10;
         final int PLAYER_INV_LABEL_XPOS = ArtistTableMenu.PLAYER_INVENTORY_XPOS;

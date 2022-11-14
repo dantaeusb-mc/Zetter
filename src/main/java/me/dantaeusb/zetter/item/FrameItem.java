@@ -23,8 +23,8 @@ public class FrameItem extends PaintingItem {
     private CustomPaintingEntity.Materials material;
     private boolean hasPlate;
 
-    public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super();
+    public FrameItem(Properties properties, CustomPaintingEntity.Materials material, boolean plated) {
+        super(properties);
 
         this.material = material;
         this.hasPlate = plated;

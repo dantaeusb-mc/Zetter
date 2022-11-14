@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasDefaultTracker;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -104,9 +103,16 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         this.updateCanvasData(combinedHandler);
     }
 
+    /**
+     * When new item placed or it's canvas data
+     * updated from server, update the preview
+     *
+     * @param combinedHandler
+     */
     public void updateCanvasData(ItemStackHandler combinedHandler) {
         ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
+        // it's empty??
         CanvasData combinedStackCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         if (combinedStackCanvasData != null) {
@@ -116,6 +122,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                     combinedStackCanvasData.getHeight(),
                     combinedStackCanvasData.getColorData()
             );
+
+            if (this.level.isClientSide()) {
+                Helper.getWorldCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, this.canvasData);
+            }
 
             this.state = State.READY;
         } else {
@@ -228,7 +238,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.updateCanvasData(this.menu.getSplitHandler());
+        this.updateCanvasData(this.menu.getCombinedHandler());
     }
 
     private static byte[] getPartialColorData(byte[] colorData, int resolution, int blockX, int blockY, int blockWidth, int blockHeight) {

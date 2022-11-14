@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.menu;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.client.gui.easel.CanvasWidget;
 import me.dantaeusb.zetter.client.gui.easel.TabsWidget;
 import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.core.*;
@@ -19,19 +20,29 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
-public class EaselContainerMenu extends AbstractContainerMenu implements EaselStateListener {
+
+/**
+ * Easel menu, a place where magic happens
+ *
+ * Weird that we have scale and offset here even though it's client concepts
+ * More weird is canvasScaleFactor variable, which actually differs from
+ * actual scale (by times 2) and makes a lot of confusion
+ * @todo: [LOW] Rework scale factor to avoid confusion
+ */
+public class EaselMenu extends AbstractContainerMenu implements EaselStateListener, ItemStackHandlerListener {
     /*
      * Object references
      */
     private final Player player;
     private final EaselContainer container;
-    private final EaselState stateHandler;
+    private final EaselState state;
 
     private static final int HOTBAR_SLOT_COUNT = 9;
 
@@ -57,8 +68,11 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     private boolean canUndo = false;
     private boolean canRedo = false;
 
-    private final List<Consumer<AbstractToolParameters>> toolUpdateListeners = new ArrayList<>();
+    /*
+     * Update trackers
+     */
 
+    private final List<Consumer<AbstractToolParameters>> toolUpdateListeners = new ArrayList<>();
     private final List<Consumer<Integer>> colorUpdateListeners = new ArrayList<>();
 
     /*
@@ -70,28 +84,17 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     private int currentPaletteSlot = 0;
 
     /*
-     * Client settings
-     */
-
-    private int canvasOffsetX = 0;
-    private int canvasOffsetY = 0;
-    private int canvasScale = 3;
-
-    /*
      *
      * Initializing
      *
      */
-    public EaselContainerMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
+    public EaselMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
         super(ZetterContainerMenus.EASEL.get(), windowID);
-
-        if (ZetterContainerMenus.EASEL == null)
-            throw new IllegalStateException("Must initialise containerTypeLockTableContainer before constructing a LockTableContainer!");
 
         this.player = invPlayer.player;
 
         this.container = easelContainer;
-        this.stateHandler = stateHandler;
+        this.state = stateHandler;
 
         final int CANVAS_SLOT_X = 180;
         final int CANVAS_SLOT_Y = 9;
@@ -126,7 +129,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
                 this.addSlot(new Slot(invPlayer, slotNumber,  xpos, ypos) {
                     @Override
                     public boolean isActive() {
-                        if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
+                        if (EaselMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
                             return super.isActive();
                         }
 
@@ -141,7 +144,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
                 addSlot(new Slot(invPlayer, slotNumber, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS) {
                     @Override
                     public boolean isActive() {
-                        if (EaselContainerMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
+                        if (EaselMenu.this.getCurrentTab() == TabsWidget.Tab.INVENTORY) {
                             return super.isActive();
                         }
 
@@ -151,16 +154,22 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             }
         }
 
-        this.stateHandler.addListener(this);
+        this.state.addListener(this);
+        this.container.addListener(this);
+
+        // PlayerContainerEvent are not happening on client
+        if (this.player.getLevel().isClientSide()) {
+            this.state.addPlayer(player);
+        }
     }
 
-    public static EaselContainerMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
-        EaselContainerMenu easelContainerMenu = new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler);
+    public static EaselMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
+        EaselMenu easelMenu = new EaselMenu(windowID, playerInventory, easelContainer, stateHandler);
 
-        return easelContainerMenu;
+        return easelMenu;
     }
 
-    public static EaselContainerMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+    public static EaselMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
         EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
@@ -169,11 +178,47 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         EaselContainer easelContainer = easelEntity.getEaselContainer();
         EaselState stateHandler = easelEntity.getStateHandler();
 
-        // Manually update canvas on client @todo: [HIGH] Create snapshot
+        // Manually update canvas on client
         easelContainer.handleCanvasChange(createPacket.canvasCode);
-        //stateHandler.processSnapshotSyncClient();
 
-        return new EaselContainerMenu(windowID, playerInventory, easelContainer, stateHandler);
+        return new EaselMenu(windowID, playerInventory, easelContainer, stateHandler);
+    }
+
+    /*
+     * Canvas
+     */
+
+    public static final int MIN_SCALE = 1;
+    public static final int MAX_SCALE = 3;
+
+    private int canvasOffsetX = 0;
+    private int canvasOffsetY = 0;
+    private int canvasScaleFactor = 3;
+
+    public void resetCanvasPositioning() {
+        CanvasData canvasData = this.getCanvasData();
+
+        if (canvasData != null) {
+            int wScale = CanvasWidget.SIZE / canvasData.getWidth();
+            int hScale = CanvasWidget.SIZE / canvasData.getHeight();
+
+            int scaleFactor = Math.min(hScale, wScale) / 2; // / 2 because scale is scaleFactor * 2
+            scaleFactor = Math.min(Math.max(scaleFactor, MIN_SCALE), MAX_SCALE);
+
+            int scaledWidth = canvasData.getWidth() * scaleFactor * 2;
+            int scaledHeight = canvasData.getHeight() * scaleFactor * 2;
+
+            int offsetX = (CanvasWidget.SIZE - scaledWidth) / 2;
+            int offsetY = (CanvasWidget.SIZE - scaledHeight) / 2;
+
+            this.canvasOffsetX = offsetX;
+            this.canvasOffsetY = offsetY;
+            this.canvasScaleFactor = scaleFactor;
+        } else {
+            this.canvasOffsetX = 0;
+            this.canvasOffsetY = 0;
+            this.canvasScaleFactor = 3;
+        }
     }
 
     /*
@@ -209,8 +254,9 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
     /*
      * Tool
      */
+
     public void useTool(float posX, float posY) {
-        this.stateHandler.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
+        this.state.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
     }
 
     public AbstractToolParameters getCurrentToolParameters() {
@@ -225,9 +271,30 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         return this.container;
     }
 
+    public EaselState getState() {
+        return this.state;
+    }
+
     /*
      * Listeners
      */
+
+    /**
+     * Container updates - canvas and palette
+     * @param container
+     * @param slot
+     */
+    @Override
+    public void containerChanged(ItemStackHandler container, int slot) {
+        // If palette changed
+        if (slot == EaselContainer.PALETTE_SLOT) {
+            this.notifyColorUpdateListeners();
+        } else if (slot == EaselContainer.CANVAS_SLOT) {
+            if (this.player.getLevel().isClientSide()) {
+                this.resetCanvasPositioning();
+            }
+        }
+    }
 
     public void addToolUpdateListener(Consumer<AbstractToolParameters> subscriber) {
         if (this.toolUpdateListeners.contains(subscriber)) {
@@ -252,7 +319,6 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         }
 
         this.colorUpdateListeners.add(subscriber);
-        subscriber.accept(this.getCurrentColor());
     }
 
     public void removeColorUpdateListener(Consumer<Integer> subscriber) {
@@ -261,6 +327,12 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         }
 
         this.colorUpdateListeners.remove(subscriber);
+    }
+
+    public void notifyColorUpdateListeners() {
+        for (Consumer<Integer> listener: this.colorUpdateListeners) {
+            listener.accept(this.getCurrentColor());
+        }
     }
 
     /*
@@ -285,7 +357,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             return false;
         }
 
-        final boolean result = this.stateHandler.undo(this.player.getUUID());
+        final boolean result = this.state.undo();
 
         return result;
     }
@@ -295,14 +367,14 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             return false;
         }
 
-        final boolean result = this.stateHandler.redo(this.player.getUUID());
+        final boolean result = this.state.redo();
 
         return result;
     }
 
     private void updateCanHistory() {
-        this.canUndo = this.stateHandler.canUndo(this.player.getUUID());
-        this.canRedo = this.stateHandler.canRedo(this.player.getUUID());
+        this.canUndo = this.state.canUndo();
+        this.canRedo = this.state.canRedo();
     }
 
     /*
@@ -321,9 +393,15 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
         // Only update if we don't have canvas initialized or name changed
         if (this.container.getCanvas() == null || !this.container.getCanvas().code.equals(canvasCode)) {
             this.container.handleCanvasChange(canvasCode);
+
+            if (this.getCanvasData() != null) {
+                this.canvasOffsetX = (CanvasWidget.SIZE - (this.getCanvasData().getWidth() * this.getCanvasScaleFactor())) / 2;
+                this.canvasOffsetY = (CanvasWidget.SIZE - (this.getCanvasData().getHeight() * this.getCanvasScaleFactor())) / 2;
+            }
+
             return false;
         } else {
-            this.stateHandler.processWeakSnapshotClient(canvasCode, canvasData, timestamp);
+            this.state.processWeakSnapshotClient(canvasCode, canvasData, timestamp);
             return true;
         }
     }
@@ -363,9 +441,7 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
 
         PaletteItem.updatePaletteColor(paletteStack, slot, color);
 
-        for (Consumer<Integer> listener: this.colorUpdateListeners) {
-            listener.accept(this.getCurrentColor());
-        }
+        this.notifyColorUpdateListeners();
 
         if (this.player.getLevel().isClientSide()) {
             this.sendPaletteUpdatePacket();
@@ -431,16 +507,46 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
      *
      */
 
-    public int getCanvasScale() {
-        return this.canvasScale;
+    public int getCanvasOffsetX() {
+        return this.canvasOffsetX;
+    }
+
+    public int getCanvasOffsetY() {
+        return this.canvasOffsetY;
+    }
+
+    /**
+     * Update Canvas offset - usually with Hand tool
+     * @param offsetX
+     * @param offsetY
+     */
+    public void updateCanvasOffset(int offsetX, int offsetY) {
+        if (this.getCanvasData() == null) {
+            return;
+        }
+
+        final int width = this.getCanvasData().getWidth() * this.getCanvasScaleFactor() * 2;
+        final int minOffsetX = -width + CanvasWidget.SIZE / 2;
+        final int maxOffsetX = CanvasWidget.SIZE / 2;
+
+        final int height = this.getCanvasData().getHeight() * this.getCanvasScaleFactor() * 2;
+        final int minOffsetY = -height + CanvasWidget.SIZE / 2;
+        final int maxOffsetY = CanvasWidget.SIZE / 2;
+
+        this.canvasOffsetX = Math.max(minOffsetX, Math.min(offsetX, maxOffsetX));
+        this.canvasOffsetY = Math.max(minOffsetY, Math.min(offsetY, maxOffsetY));
+    }
+
+    public int getCanvasScaleFactor() {
+        return this.canvasScaleFactor;
     }
 
     public boolean canIncreaseCanvasScale() {
-        return this.canvasScale < 3;
+        return this.getCanvasData() != null && this.canvasScaleFactor < MAX_SCALE;
     }
 
     public boolean canDecreaseCanvasScale() {
-        return this.canvasScale > 1;
+        return this.getCanvasData() != null && this.canvasScaleFactor > MIN_SCALE;
     }
 
     public boolean increaseCanvasScale() {
@@ -448,7 +554,11 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             return false;
         }
 
-        this.canvasScale++;
+        assert this.getCanvasData() != null;
+        this.canvasScaleFactor++;
+
+        this.canvasOffsetX -= this.getCanvasData().getWidth();
+        this.canvasOffsetY -= this.getCanvasData().getHeight();
 
         return true;
     }
@@ -458,7 +568,12 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
             return false;
         }
 
-        this.canvasScale--;
+        assert this.getCanvasData() != null;
+
+        this.canvasScaleFactor--;
+
+        this.canvasOffsetX += this.getCanvasData().getWidth();
+        this.canvasOffsetY += this.getCanvasData().getHeight();
 
         return true;
     }
@@ -473,14 +588,15 @@ public class EaselContainerMenu extends AbstractContainerMenu implements EaselSt
      * Called when the ONLY when container is closed.
      * Push painting frames so it will be saved.
      */
-    public void removed(@NotNull Player playerIn) {
-        super.removed(playerIn);
+    public void removed(@NotNull Player player) {
+        super.removed(player);
 
+        this.state.removeListener(this);
+
+        // PlayerContainerEvent are not happening on client
         if (this.player.getLevel().isClientSide()) {
-            this.stateHandler.poolActionsQueueClient(true);
+            this.state.removePlayer(player);
         }
-
-        this.stateHandler.removeListener(this);
     }
 
     /**

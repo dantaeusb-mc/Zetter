@@ -47,7 +47,7 @@ public class SCanvasSyncMessage<T extends AbstractCanvasData> {
      */
     public static SCanvasSyncMessage<?> readPacketData(FriendlyByteBuf networkBuffer) {
         try {
-            String type = networkBuffer.readUtf(64);
+            String type = networkBuffer.readUtf(128);
             String canvasCode = networkBuffer.readUtf(128);
             long timestamp = networkBuffer.readLong();
 
@@ -70,12 +70,11 @@ public class SCanvasSyncMessage<T extends AbstractCanvasData> {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
-        networkBuffer.writeUtf(this.canvasData.type, 64);
+        networkBuffer.writeUtf(this.canvasData.resourceLocation.toString(), 128);
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
 
-        String type = this.canvasData.type;
-        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(type));
+        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.resourceLocation);
 
         assert canvasDataType != null;
         canvasDataType.writePacketData(this.canvasData, networkBuffer);

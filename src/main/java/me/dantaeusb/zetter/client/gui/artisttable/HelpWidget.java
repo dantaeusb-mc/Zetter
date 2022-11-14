@@ -19,8 +19,8 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
     final static int BUTTON_WIDTH = 11;
     final static int BUTTON_HEIGHT = 11;
 
-    final static int BUTTON_POSITION_U = 176;
-    final static int BUTTON_POSITION_V = 0;
+    final static int BUTTON_POSITION_U = 0;
+    final static int BUTTON_POSITION_V = 218;
 
     boolean clicked = false;
 
@@ -68,7 +68,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
             buttonU += BUTTON_WIDTH;
         }
 
-        this.blit(matrixStack, this.x, this.y, buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
+        blit(matrixStack, this.x, this.y, buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     @Override

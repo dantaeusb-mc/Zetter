@@ -308,11 +308,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
      * @return
      */
     public int getWidth() {
-        return this.blockWidth * Helper.getResolution().getNumeric();
+        return this.blockWidth * 16;
     }
 
     public int getHeight() {
-        return this.blockHeight * Helper.getResolution().getNumeric();
+        return this.blockHeight * 16;
     }
 
     /**

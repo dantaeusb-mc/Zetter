@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.storage;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -27,7 +28,7 @@ public class PaintingData extends AbstractCanvasData {
     protected boolean banned;
 
     protected PaintingData() {
-        super(TYPE);
+        super(Zetter.MOD_ID, TYPE);
 
         this.banned = false;
     }
@@ -112,6 +113,10 @@ public class PaintingData extends AbstractCanvasData {
         return false;
     }
 
+    public CanvasDataType<PaintingData> getType() {
+        return ZetterCanvasTypes.PAINTING.get();
+    }
+
     /*
      * Serialization
      */
@@ -168,8 +173,8 @@ public class PaintingData extends AbstractCanvasData {
         networkBuffer.writeInt(canvasData.height);
         networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());
         networkBuffer.writeBytes(canvasData.getColorDataBuffer());
-        networkBuffer.writeUtf(canvasData.authorName);
-        networkBuffer.writeUtf(canvasData.title);
+        networkBuffer.writeUtf(canvasData.authorName, 64);
+        networkBuffer.writeUtf(canvasData.title, 32);
     }
 }
 

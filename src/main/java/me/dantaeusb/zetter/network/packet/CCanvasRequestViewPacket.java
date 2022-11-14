@@ -36,7 +36,7 @@ public class CCanvasRequestViewPacket extends CCanvasRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeUtf(this.canvasName);
+        buf.writeUtf(this.canvasName, 64);
         buf.writeByte(this.hand.ordinal());
     }
 

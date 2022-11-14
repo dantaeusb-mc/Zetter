@@ -43,8 +43,8 @@ public class PaintingItem extends CanvasItem
     public static final int GENERATION_COPY = 1;
     public static final int GENERATION_COPY_OF_COPY = 2;
 
-    public PaintingItem() {
-        super();
+    public PaintingItem(Properties properties) {
+        super(properties);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
@@ -115,10 +115,13 @@ public class PaintingItem extends CanvasItem
 
             tooltip.add((Component.translatable("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
 
+            Component generationLabel = getGenerationLabel(stack);
             String stringSize = getCachedStringSize(stack);
 
-            if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
+            if (StringUtil.isNullOrEmpty(stringSize)) {
+                tooltip.add(Component.literal(generationLabel.getString()).withStyle(ChatFormatting.GRAY));
+            } else {
+                tooltip.add(Component.literal(generationLabel.getString() + ", " + stringSize).withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -141,7 +144,7 @@ public class PaintingItem extends CanvasItem
             }
         }
 
-        return super.getName(stack);
+        return Component.translatable(this.getDescriptionId(stack));
     }
 
     /**
@@ -238,5 +241,15 @@ public class PaintingItem extends CanvasItem
         }
 
         return compoundNBT.getInt(NBT_TAG_GENERATION);
+    }
+
+    public static Component getGenerationLabel(ItemStack stack) {
+        int generation = getGeneration(stack);
+
+        if (generation < 0 || generation > 2) {
+            generation = 1;
+        }
+
+        return Component.translatable("item.zetter.painting.generation." + generation);
     }
 }

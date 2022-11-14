@@ -187,7 +187,7 @@ public class EaselContainer extends ItemStackHandler {
     {
         if (this.listeners != null) {
             for(ItemStackHandlerListener listener : this.listeners) {
-                listener.containerChanged(this);
+                listener.containerChanged(this, slot);
             }
         }
 

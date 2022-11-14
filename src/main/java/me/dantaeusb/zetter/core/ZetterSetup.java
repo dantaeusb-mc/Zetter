@@ -32,6 +32,7 @@ public class ZetterSetup
             MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
+            // @todo: [MED] Resource location Zetter.MOD_ID?
             for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
                 ItemProperties.register(frame.get(), new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
                 ItemProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);

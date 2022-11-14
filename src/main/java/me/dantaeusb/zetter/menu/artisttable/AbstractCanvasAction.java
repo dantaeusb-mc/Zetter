@@ -11,7 +11,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 
 public abstract class AbstractCanvasAction {
-    public State state;
+    public State state = State.EMPTY;
     protected final ArtistTableMenu menu;
     protected final Level level;
 

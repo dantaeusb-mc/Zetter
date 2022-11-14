@@ -43,8 +43,8 @@ public class CanvasItem extends Item
     public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
     public static final String NBT_TAG_CACHED_BLOCK_SIZE = "CachedBlockSize";
 
-    public CanvasItem() {
-        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
+    public CanvasItem(Properties properties) {
+        super(properties);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!

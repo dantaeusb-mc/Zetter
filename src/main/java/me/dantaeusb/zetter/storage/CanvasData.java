@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.storage;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -23,7 +24,7 @@ public class CanvasData extends AbstractCanvasData {
     }
 
     protected CanvasData() {
-        super(TYPE);
+        super(Zetter.MOD_ID, TYPE);
     }
 
     public boolean isRenderable() {
@@ -70,6 +71,10 @@ public class CanvasData extends AbstractCanvasData {
         return newCanvas;
     }
 
+    public CanvasDataType<CanvasData> getType() {
+        return ZetterCanvasTypes.CANVAS.get();
+    }
+
     public static CanvasData load(CompoundTag compoundTag) {
         final CanvasData newCanvas = new CanvasData();
 
@@ -86,6 +91,10 @@ public class CanvasData extends AbstractCanvasData {
         newCanvas.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
 
         return newCanvas;
+    }
+
+    public CompoundTag save(CompoundTag compoundTag) {
+        return super.save(compoundTag);
     }
 
     /*

@@ -102,7 +102,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
         }
     }
 
-    public void containerChanged(ItemStackHandler container) {
+    /**
+     * @todo: [LOW] Do we need that?
+     * @param container
+     * @param slot
+     */
+    public void containerChanged(ItemStackHandler container, int slot) {
         this.setChanged();
     }
 

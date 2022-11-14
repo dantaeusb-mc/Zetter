@@ -4,7 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.entity.item.state.EaselState;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
@@ -56,10 +56,12 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     protected BlockPos pos;
     protected EaselContainer easelContainer;
     protected EaselState stateHandler;
+
     protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
     /** The list of players currently using this easel */
     private ArrayList<Player> playersUsing = new ArrayList<>();
+
     private int tick;
 
     public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
@@ -236,11 +238,15 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
     }
 
+    /**
+     * Check history, check that still exists,
+     * check if need to keep information
+     */
     public void tick() {
         this.stateHandler.tick();
         this.tick++;
 
-        // No need to track on client side
+        // No need to check correctness and players on client side
         if (this.level.isClientSide()) {
             return;
         }
@@ -304,7 +310,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return true;
     }
 
-    public void containerChanged(ItemStackHandler easelContainer) {
+    public void containerChanged(ItemStackHandler easelContainer, int slot) {
         ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
         String newCanvasCode = null;
         String existingCanvasCode = null;
@@ -341,8 +347,8 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
         for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
-            if (player.containerMenu instanceof EaselContainerMenu) {
-                EaselContainer storage = ((EaselContainerMenu)player.containerMenu).getContainer();
+            if (player.containerMenu instanceof EaselMenu) {
+                EaselContainer storage = ((EaselMenu)player.containerMenu).getContainer();
 
                 if (storage == this.getEaselContainer()) {
                     usingPlayers.add(player);
@@ -449,7 +455,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
-        return EaselContainerMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
+        return EaselMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
     }
 
     @Override

@@ -28,7 +28,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
 
     public HistoryWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT + 3, Component.translatable("container.zetter.painting.history"));
+        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, Component.translatable("container.zetter.painting.history"));
 
 
         this.buttons = new ArrayList<>() {{

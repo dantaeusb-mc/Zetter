@@ -3,13 +3,14 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.menu.EaselMenu;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.Util;
-import net.minecraft.world.inventory.Slot;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -40,6 +41,34 @@ public class ZetterGameEvents {
     public static void onRenderTickStart(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END && Minecraft.getInstance().level != null) {
             CanvasRenderer.getInstance().update(Util.getMillis());
+        }
+    }
+
+    /**
+     * We need this because we need to start flow
+     * only when container is opened and initialized
+     *
+     * Server-only
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onPlayerContainerOpened(PlayerContainerEvent.Open event) {
+        if (event.getContainer() instanceof EaselMenu easelMenu) {
+            easelMenu.getState().addPlayer(event.getEntity());
+        }
+    }
+
+    /**
+     * We need this because we need to start flow
+     * only when container is opened and initialized
+     *
+     * Server-only
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onPlayerContainerClosed(PlayerContainerEvent.Close event) {
+        if (event.getContainer() instanceof EaselMenu easelMenu) {
+            easelMenu.getState().removePlayer(event.getEntity());
         }
     }
 }

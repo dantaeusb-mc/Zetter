@@ -144,10 +144,7 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public int renderSaturationForeground(float percent) {
-        Color currentColor = new Color(this.parentScreen.getMenu().getCurrentColor());
-        float[] currentColorHsb = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
-
-        return Color.HSBtoRGB(currentColorHsb[0], percent, currentColorHsb[2]);
+        return Color.HSBtoRGB(this.hueSlider.getSliderState(), percent, 1.0f);
     }
 
     public void updateSaturation(float percent) {
@@ -155,10 +152,7 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public int renderBrightnessForeground(float percent) {
-        Color currentColor = new Color(this.parentScreen.getMenu().getCurrentColor());
-        float[] currentColorHsb = Color.RGBtoHSB(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue(), null);
-
-        return Color.HSBtoRGB(currentColorHsb[0], currentColorHsb[1], percent);
+        return Color.HSBtoRGB(this.hueSlider.getSliderState(), this.saturationSlider.getSliderState(), percent);
     }
 
     public void updateBrightness(float percent) {

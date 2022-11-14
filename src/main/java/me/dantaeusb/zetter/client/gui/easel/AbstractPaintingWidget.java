@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -12,7 +13,7 @@ import javax.annotation.Nullable;
 
 abstract public class AbstractPaintingWidget extends AbstractWidget implements GuiEventListener {
     // This is the resource location for the background image
-    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation("zetter", "textures/gui/easel/widgets.png");
+    public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel/widgets.png");
 
     protected final EaselScreen parentScreen;
 

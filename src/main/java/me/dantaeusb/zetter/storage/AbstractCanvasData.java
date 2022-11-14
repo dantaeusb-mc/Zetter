@@ -6,6 +6,7 @@ import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -21,6 +22,8 @@ import java.util.Map;
  */
 public abstract class AbstractCanvasData extends SavedData {
     public static final String NBT_TAG_TYPE = "CanvasDataType";
+    @Deprecated
+    public static final String NBT_TAG_TYPE_DEPRECATED = "type";
 
     protected static final String NBT_TAG_WIDTH = "width";
     protected static final String NBT_TAG_HEIGHT = "height";
@@ -28,6 +31,7 @@ public abstract class AbstractCanvasData extends SavedData {
     protected static final String NBT_TAG_COLOR = "color";
 
     public final String type;
+    public final ResourceLocation resourceLocation;
 
     // Maybe final?
 
@@ -46,8 +50,9 @@ public abstract class AbstractCanvasData extends SavedData {
      */
     protected boolean managed = true;
 
-    protected AbstractCanvasData(String type) {
+    protected AbstractCanvasData(String modId, String type) {
         this.type = type;
+        this.resourceLocation = new ResourceLocation(modId, type);
     }
 
     /**
@@ -76,7 +81,7 @@ public abstract class AbstractCanvasData extends SavedData {
             }
         }
 
-        this.color = color;
+        this.color = color.clone();
         this.canvasBuffer = ByteBuffer.wrap(this.color);
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
     }
@@ -100,6 +105,16 @@ public abstract class AbstractCanvasData extends SavedData {
         this.managed = managed;
     }
 
+    /**
+     * Is canvas managed: needs to sync over the net
+     * Non-managed canvases are placeholder canvases
+     * and temporary storages. They can be used on server
+     * but only as an intermediate storage. Mostly
+     * used on client, cannot be registered on server
+     * and therefore never saved.
+     *
+     * @return
+     */
     public boolean isManaged() {
         return this.managed;
     }
@@ -163,6 +178,8 @@ public abstract class AbstractCanvasData extends SavedData {
 
         return pixelY * this.width + pixelX;
     }
+
+    abstract public CanvasDataType<?> getType();
 
     /*
      * Loading and syncing

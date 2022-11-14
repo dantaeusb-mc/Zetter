@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 public class CanvasAction {
     private static final int MAX_ACTIONS_IN_BUFFER = 100;
     private static final long MAX_TIME = 5000L;
-    private static final long MAX_INACTIVE_TIME = 1000L;
+    private static final long MAX_INACTIVE_TIME = 750L;
 
     public final UUID uuid;
     public final UUID authorId;
@@ -52,13 +52,16 @@ public class CanvasAction {
     // Could be false only on client
     private boolean sent = false;
 
+    // Could be false only on client
+    private boolean sync = false;
+
     private boolean canceled = false;
 
     public CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
         this(authorId, tool, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
+    private CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
         this.uuid = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
         this.tool = tool;
@@ -82,6 +85,7 @@ public class CanvasAction {
 
         this.committed = true;
         this.sent = true;
+        this.sync = true;
         this.canceled = canceled;
     }
 
@@ -217,6 +221,14 @@ public class CanvasAction {
         return this.sent;
     }
 
+    public void setSync() {
+        this.sync = true;
+    }
+
+    public boolean isSync() {
+        return this.sync;
+    }
+
     public void undo() {
         if (!this.committed) {
             this.commit();
@@ -317,7 +329,7 @@ public class CanvasAction {
         buffer.writeBoolean(actionBuffer.canceled);
         AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
 
-        buffer.writeInt(actionBuffer.subActionBuffer.limit());
+        buffer.writeInt(actionBuffer.subActionBuffer.rewind().limit());
         buffer.writeBytes(actionBuffer.subActionBuffer);
     }
 

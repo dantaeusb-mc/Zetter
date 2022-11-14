@@ -19,14 +19,17 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
-public class CombinedCanvasWidget extends AbstractArtistTableWidget implements Widget, GuiEventListener {
+public class PreviewWidget extends AbstractArtistTableWidget implements Widget, GuiEventListener {
+    private static final Component EMPTY_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.empty");
+    private static final Component INVALID_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.invalid");
+    private static final Component LOADING_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.loading");
+
     private static final int size = 64;
 
-    public CombinedCanvasWidget(ArtistTableScreen parentScreen, int x, int y) {
+    public PreviewWidget(ArtistTableScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, size, size, Component.translatable("container.zetter.artist_table.combined_canvas"));
     }
 
-    // @todo: [HIGH] Why double-push?
     public void render(PoseStack matrixStack) {
         matrixStack.pushPose();
         matrixStack.translate(this.x, this.y, 1.0F);
@@ -84,11 +87,21 @@ public class CombinedCanvasWidget extends AbstractArtistTableWidget implements W
     public static CanvasData getCanvasData(Level world, String canvasName) {
         ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
 
-        if (canvasTracker == null) {
-            return null;
+        return canvasTracker.getCanvasData(canvasName);
+    }
+
+    public @Nullable
+    Component getTooltip(int mouseX, int mouseY) {
+        switch (this.parentScreen.getMenu().getActionState()) {
+            case EMPTY:
+                return EMPTY_TITLE;
+            case INVALID:
+                return INVALID_TITLE;
+            case NOT_LOADED:
+                return LOADING_TITLE;
         }
 
-        return canvasTracker.getCanvasData(canvasName);
+        return this.getMessage();
     }
 
     @Override

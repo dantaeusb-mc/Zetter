@@ -1,11 +1,16 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasPostRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasPreRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
+import me.dantaeusb.zetter.menu.ArtistTableMenu;
+import me.dantaeusb.zetter.menu.EaselMenu;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -25,6 +30,65 @@ public class ZetterClientModEvents {
         } else if (event.canvasData instanceof PaintingData paintingData) {
             ClientHelper.openPaintingScreen(event.player, event.canvasCode, paintingData, event.hand);
             event.setCanceled(true);
+        }
+    }
+
+    /**
+     * Handle canvas registration on event, some menus/screens
+     * might need to update
+     *
+     * We check if player is using some menus and try to update
+     * canvas through those menus.
+     *
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onCanvasPreRegistered(CanvasPreRegisterEvent event) {
+        String canvasCode = event.canvasCode;
+        AbstractCanvasData canvasData = event.canvasData;
+        long timestamp = event.timestamp;
+
+        Player player = Minecraft.getInstance().player;
+
+        if (canvasData instanceof CanvasData canvasCanvasData) {
+            // Initialize canvas if client had no canvas loaded when it was updated
+            if (player.containerMenu instanceof EaselMenu easelMenu) {
+                String canvasItemCode = easelMenu.getCanvasItemCode();
+                // If it's the same canvas player is editing
+                if (canvasItemCode != null && canvasItemCode.equals(canvasCode)) {
+                    // Pushing changes that were added after sync packet was created
+                    if (easelMenu.handleCanvasSync(canvasCode, canvasCanvasData, timestamp)) {
+                        // Easel does own registration with latest changes applied
+                        event.setCanceled(true);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle canvas registration on event, some menus/screens
+     * might need to update
+     *
+     * We check if player is using some menus and try to update
+     * canvas through those menus.
+     *
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onCanvasPostRegistered(CanvasPostRegisterEvent event) {
+        String canvasCode = event.canvasCode;
+        AbstractCanvasData canvasData = event.canvasData;
+        long timestamp = event.timestamp;
+
+        Player player = Minecraft.getInstance().player;
+
+        if (canvasData instanceof CanvasData canvasCanvasData) {
+            if  (player.containerMenu instanceof ArtistTableMenu artistTableMenu) {
+                if (artistTableMenu.handleCanvasSync(canvasCode, canvasCanvasData, timestamp)) {
+                    event.setCanceled(true);
+                }
+            }
         }
     }
 }

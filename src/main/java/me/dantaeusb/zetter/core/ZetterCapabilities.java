@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasDefaultTracker;
 import me.dantaeusb.zetter.canvastracker.CanvasTrackerProvider;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import net.minecraft.resources.ResourceLocation;
@@ -17,9 +16,9 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ZetterCapabilities
 {
-    public static Capability<ICanvasTracker> CANVAS_TRACKER = CapabilityManager.get(new CapabilityToken<>(){});
+    private static final ResourceLocation CANVAS_TRACKER_CAPABILITY_LOCATION = new ResourceLocation(Zetter.MOD_ID, "canvas_tracker_capability");
 
-    private static ResourceLocation CANVAS_TRACKER_CAPABILITY_LOCATION = new ResourceLocation(Zetter.MOD_ID, "canvas_tracker_capability");
+    public static Capability<ICanvasTracker> CANVAS_TRACKER = CapabilityManager.get(new CapabilityToken<>(){});
 
     @SubscribeEvent
     public static void attachCapabilityToWorldHandler(AttachCapabilitiesEvent<Level> event) {
@@ -34,6 +33,6 @@ public class ZetterCapabilities
 
     @SubscribeEvent
     public static void registerCapabilityHandler(RegisterCapabilitiesEvent event) {
-        event.register(CanvasDefaultTracker.class);
+        event.register(ICanvasTracker.class);
     }
 }

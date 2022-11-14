@@ -7,12 +7,11 @@ import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
@@ -31,7 +30,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processActionBuffer(final CCanvasActionBufferPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
         EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
         // @todo: [MED] Check if player can access entity
@@ -43,7 +42,7 @@ public class ServerHandler {
                     return;
                 }
 
-                easelEntity.getStateHandler().processNetworkAction(actionBuffer);
+                easelEntity.getStateHandler().processActionServer(actionBuffer);
             }
         } else {
             Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
@@ -136,8 +135,8 @@ public class ServerHandler {
     }
 
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu paintingContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
+        if (sendingPlayer.containerMenu instanceof EaselMenu) {
+            EaselMenu paintingContainer = (EaselMenu)sendingPlayer.containerMenu;
             paintingContainer.setPaletteColor(packetIn.getColor(), packetIn.getSlotIndex());
         }
     }
@@ -193,13 +192,17 @@ public class ServerHandler {
         return outStack;
     }
 
-    public static void processCanvasHistory(final CCanvasHistoryPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
         EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
         // @todo: [MED] Check if player can access entity
 
         if (easelEntity != null) {
-            easelEntity.getStateHandler().updateActionCanceledState(packetIn.actionId, sendingPlayer.getUUID(), packetIn.canceled);
+            if (packetIn.canceled) {
+                easelEntity.getStateHandler().undo(packetIn.actionId);
+            } else {
+                easelEntity.getStateHandler().redo(packetIn.actionId);
+            }
         } else {
             Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
         }

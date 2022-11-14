@@ -25,59 +25,21 @@ import static com.mojang.blaze3d.platform.GlConst.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class CanvasWidget extends AbstractPaintingWidget implements Widget {
-    private static final int SIZE = 128;
+    public static final int SIZE = 128;
 
-    public static final ResourceLocation PAINTING_CHECKER_RESOURCE = new ResourceLocation("zetter", "textures/gui/easel/checker.png");
+    public static final ResourceLocation PAINTING_CHECKER_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel/checker.png");
 
     private boolean canvasDragging = false;
-
-    private int canvasOffsetX = 0;
-    private int canvasOffsetY = 0;
 
     private double scrollDistance = 0d;
     private long scrollTimestamp = 0;
 
     public CanvasWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, SIZE, SIZE, Component.translatable("container.zetter.painting.canvas"));
-
-        if (parentScreen.getMenu().getCanvasData() != null) {
-            this.canvasOffsetX = (SIZE - (parentScreen.getMenu().getCanvasData().getWidth() * this.getCanvasScale())) / 2;
-            this.canvasOffsetY = (SIZE - (parentScreen.getMenu().getCanvasData().getHeight() * this.getCanvasScale())) / 2;
-        }
-    }
-
-    /**
-     * Update Canvas offset - usually with Hand tool
-     * @param offsetX
-     * @param offsetY
-     */
-    public void updateCanvasOffset(int offsetX, int offsetY) {
-        if (parentScreen.getMenu().getCanvasData() == null) {
-            return;
-        }
-
-        final int width = parentScreen.getMenu().getCanvasData().getWidth() * this.getCanvasScale();
-        final int minOffsetX = -width + SIZE / 2;
-        final int maxOffsetX = SIZE / 2;
-
-        final int height = parentScreen.getMenu().getCanvasData().getHeight() * this.getCanvasScale();
-        final int minOffsetY = -height + SIZE / 2;
-        final int maxOffsetY = SIZE / 2;
-
-        this.canvasOffsetX = Math.max(minOffsetX, Math.min(offsetX, maxOffsetX));
-        this.canvasOffsetY = Math.max(minOffsetY, Math.min(offsetY, maxOffsetY));
-    }
-
-    public int getCanvasOffsetX() {
-        return this.canvasOffsetX;
-    }
-
-    public int getCanvasOffsetY() {
-        return this.canvasOffsetY;
     }
 
     private int getCanvasScale() {
-        return this.parentScreen.getMenu().getCanvasScale() * 2;
+        return this.parentScreen.getMenu().getCanvasScaleFactor() * 2;
     }
 
     @Override
@@ -184,8 +146,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
      * @return
      */
     protected boolean handleCanvasInteraction(double mouseX, double mouseY) {
-        final float canvasX = (float) ((mouseX - this.x - this.canvasOffsetX) / (float) this.getCanvasScale());
-        final float canvasY = (float) ((mouseY - this.y - this.canvasOffsetY) / (float) this.getCanvasScale());
+        final float canvasX = (float) ((mouseX - this.x - this.parentScreen.getMenu().getCanvasOffsetX()) / (float) this.getCanvasScale());
+        final float canvasY = (float) ((mouseY - this.y - this.parentScreen.getMenu().getCanvasOffsetY()) / (float) this.getCanvasScale());
 
         this.parentScreen.getMenu().useTool(canvasX, canvasY);
 
@@ -219,7 +181,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
         CanvasData canvasData = this.parentScreen.getMenu().getCanvasData();
 
         matrixStack.pushPose();
-        matrixStack.translate(this.x + this.canvasOffsetX, this.y + this.canvasOffsetY, 1.0F);
+        matrixStack.translate(this.x + this.parentScreen.getMenu().getCanvasOffsetX(), this.y + this.parentScreen.getMenu().getCanvasOffsetY(), 1.0F);
         matrixStack.scale(this.getCanvasScale(), this.getCanvasScale(), 1.0F);
 
         MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
@@ -236,8 +198,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             if (this.parentScreen.getMenu().getCurrentTool().getTool() == Tools.HAND.getTool()) {
                 GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             } else {
-                double canvasX = (mouseX - this.x - this.canvasOffsetX) / (double) this.getCanvasScale();
-                double canvasY = (mouseY - this.y - this.canvasOffsetY) / (double) this.getCanvasScale();
+                double canvasX = (mouseX - this.x - this.parentScreen.getMenu().getCanvasOffsetX()) / (double) this.getCanvasScale();
+                double canvasY = (mouseY - this.y - this.parentScreen.getMenu().getCanvasOffsetY()) / (double) this.getCanvasScale();
 
                 this.renderCursor(matrixStack, canvasX, canvasY);
             }
@@ -254,8 +216,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
      * @param matrixStack
      */
     private void renderCheckerboard(PoseStack matrixStack) {
-        final int offsetX = Math.abs(this.getCanvasScale() * 2 - this.canvasOffsetX % (this.getCanvasScale() * 2));
-        final int offsetY = Math.abs(this.getCanvasScale() * 2 - this.canvasOffsetY % (this.getCanvasScale() * 2));
+        final int offsetX = Math.abs(this.getCanvasScale() * 2 - this.parentScreen.getMenu().getCanvasOffsetX() % (this.getCanvasScale() * 2));
+        final int offsetY = Math.abs(this.getCanvasScale() * 2 - this.parentScreen.getMenu().getCanvasOffsetY() % (this.getCanvasScale() * 2));
 
         final int width = this.width + this.getCanvasScale() * 4;
         final int height = this.height + this.getCanvasScale() * 4;
@@ -310,8 +272,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
                 radius = 4;
             }
 
-            int globalX = this.x + this.canvasOffsetX + (int) Math.floor(canvasX * this.getCanvasScale()) - 1;
-            int globalY = this.y + this.canvasOffsetY + (int) Math.floor(canvasY * this.getCanvasScale()) - 1;
+            int globalX = this.x + this.parentScreen.getMenu().getCanvasOffsetX() + (int) Math.floor(canvasX * this.getCanvasScale()) - 1;
+            int globalY = this.y + this.parentScreen.getMenu().getCanvasOffsetY() + (int) Math.floor(canvasY * this.getCanvasScale()) - 1;
 
             this.hLine(matrixStack, globalX - radius, globalX - 2, globalY, 0x80808080);
             this.hLine(matrixStack, globalX + radius, globalX + 2, globalY, 0x80808080);
@@ -324,8 +286,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
             // Offset for the current shape, in canvas pixels
             final int offset = -(shape.getSize() / 2);
 
-            int globalX = this.x + this.canvasOffsetX + (int) Math.floor(canvasX) * this.getCanvasScale();
-            int globalY = this.y + this.canvasOffsetY + (int) Math.floor(canvasY) * this.getCanvasScale();
+            int globalX = this.x + this.parentScreen.getMenu().getCanvasOffsetX() + (int) Math.floor(canvasX) * this.getCanvasScale();
+            int globalY = this.y + this.parentScreen.getMenu().getCanvasOffsetY() + (int) Math.floor(canvasY) * this.getCanvasScale();
 
             for (AbstractTool.ShapeLine line : shape.getLines()) {
                 // Relative positions from the cursor "center" in canvas pixels

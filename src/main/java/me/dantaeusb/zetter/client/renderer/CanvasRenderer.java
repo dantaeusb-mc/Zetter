@@ -75,19 +75,35 @@ public class CanvasRenderer implements AutoCloseable {
         this.createCanvasRendererInstance(canvasCode, canvasData);
     }
 
-    // @todo: Why do we need both code and data?
+    /**
+     * Tries to render canvas by it's code, if no code provided
+     * creates renderer from provided data
+     *
+     * @todo: [LOW] Make data optional, provide extra interface
+     *
+     * @param matrixStack
+     * @param renderTypeBuffer
+     * @param canvasCode
+     * @param canvas
+     * @param combinedLight
+     */
     public void renderCanvas(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
-        // We won't ever render or request 0 canvas, as 0 is a fallback value
+        // 0 is a reserved fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
-
-        if (canvas.isManaged()) {
-            this.ticksSinceRenderRequested.put(canvasCode, 0);
-        }
 
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvasCode, canvas, false);
 
+        if (canvas.isManaged()) {
+            this.ticksSinceRenderRequested.put(canvasCode, 0);
+
+            if (rendererInstance == null) {
+                this.queueCanvasTextureUpdate(canvasCode);
+                return;
+            }
+        }
+
         if (rendererInstance == null) {
-            this.queueCanvasTextureUpdate(canvasCode);
+            Zetter.LOG.error("Will not render " + canvasCode + ": non-managed canvas is empty!");
             return;
         }
 
@@ -327,7 +343,7 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     static class TextureRequest {
-        private final int TEXTURE_REQUEST_TIMEOUT = 20; // Not often than once in a second
+        private final int TEXTURE_REQUEST_TIMEOUT = 30; // Not often than once in a second and a half
 
         private final String code;
         private boolean needUpdate = true;

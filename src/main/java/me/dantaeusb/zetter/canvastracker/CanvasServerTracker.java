@@ -1,8 +1,11 @@
 package me.dantaeusb.zetter.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.core.ZetterRegistries;
+import me.dantaeusb.zetter.event.CanvasPostRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasPreRegisterEvent;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import me.dantaeusb.zetter.storage.*;
 import net.minecraft.nbt.CompoundTag;
@@ -11,12 +14,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class CanvasServerTracker extends CanvasDefaultTracker {
+public class CanvasServerTracker implements ICanvasTracker {
     private static final String NBT_TAG_CANVAS_LAST_ID = "LastCanvasId";
     private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
     private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
@@ -92,6 +96,11 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     }
 
     public void markCanvasDesync(String canvasCode) {
+        if (this.desyncCanvases.contains(canvasCode)) {
+            // Already waiting for sync
+            return;
+        }
+
         this.desyncCanvases.add(canvasCode);
     }
 
@@ -100,20 +109,44 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
         return this.world.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
+                int canvasTypeInt = -1;
                 String canvasType = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
 
                 if (canvasType.isEmpty()) {
-                    throw new IllegalStateException("Cannot find canvas type");
+                    if (!compoundTag.contains(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED)) {
+                        throw new IllegalStateException("Cannot find canvas type");
+                    }
+
+                    canvasTypeInt = compoundTag.getInt(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED);
+
+                    switch (canvasTypeInt) {
+                        case 0:
+                            canvasType = DummyCanvasData.TYPE;
+                            break;
+                        case 1:
+                            canvasType = CanvasData.TYPE;
+                            break;
+                        case 2:
+                            canvasType = PaintingData.TYPE;
+                            break;
+                    }
                 }
 
-                CanvasDataType<T> type = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(canvasType));
+                CanvasDataType<T> type = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(Zetter.MOD_ID, canvasType));
 
                 // @todo: [HIGH]
                 if (type == null) {
                     throw new IllegalStateException("No type of canvas " + canvasType + " is registered");
                 }
 
-                return type.loadFromNbt(compoundTag);
+                T canvasData = type.loadFromNbt(compoundTag);
+
+                // Remove deprecated tags
+                if (canvasTypeInt != -1) {
+                    canvasData.setDirty();
+                }
+
+                return canvasData;
             },
             canvasCode
         );
@@ -122,20 +155,32 @@ public class CanvasServerTracker extends CanvasDefaultTracker {
     /**
      * Just replacing the object that is serialized - maybe may need to be sure
      * that the object is GC'd
+     *
      * We can't do that on client cause renderers are using object reference,
      * and changing object would disconnect it from reference
-     * overworld = getOverworld
      */
     @Override
-    public void registerCanvasData(String canvasCode, AbstractCanvasData canvasData) {
-        if (canvasData instanceof DummyCanvasData) {
-            Zetter.LOG.error("Trying to register dummy canvas on server side");
+    public void registerCanvasData(String canvasCode, AbstractCanvasData canvasData, long timestamp) {
+        if (!canvasData.isManaged()) {
+            Zetter.LOG.error("Trying to register unmanaged canvas on server side");
             return;
         }
 
+        CanvasPreRegisterEvent preEvent = new CanvasPreRegisterEvent(canvasCode, canvasData, timestamp);
+        MinecraftForge.EVENT_BUS.post(preEvent);
+
         this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
+
+        CanvasPostRegisterEvent postEvent = new CanvasPostRegisterEvent(canvasCode, canvasData, timestamp);
+        MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
+    /**
+     * Practically, remove painting. We do not do that and
+     * do not intend to do that right now.
+     *
+     * @param canvasCode
+     */
     @Override
     public void unregisterCanvasData(String canvasCode) {
         Zetter.LOG.error("Trying to unregister canvas on server side, not supported yet");

@@ -1,9 +1,10 @@
 package me.dantaeusb.zetter.client.gui;
 
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.easel.*;
 import me.dantaeusb.zetter.client.gui.easel.tabs.*;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.menu.EaselMenu;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -20,7 +21,6 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -34,9 +34,9 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 
-public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener, ActionListener {
+public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements ContainerListener, ActionListener {
     // This is the resource location for the background image
-    public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/easel.png");
+    public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel.png");
 
     private List<AbstractPaintingWidget> paintingWidgets;
 
@@ -52,9 +52,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
 
     private final Player player;
 
-    private int tick = 0;
-
-    public EaselScreen(EaselContainerMenu paintingContainer, Inventory playerInventory, Component title) {
+    public EaselScreen(EaselMenu paintingContainer, Inventory playerInventory, Component title) {
         super(paintingContainer, playerInventory, title);
 
         this.player = playerInventory.player;
@@ -129,6 +127,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
 
         // Other
 
+        assert this.minecraft != null;
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
         this.menu.addToolUpdateListener(this::updateCurrentTool);
@@ -137,6 +136,8 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
 
         Tools.EYEDROPPER.getTool().addActionListener(this);
         Tools.HAND.getTool().addActionListener(this);
+
+        //this.updateCurrentColor(this.getMenu().getCurrentColor());
     }
 
     public void addPaintingWidget(AbstractPaintingWidget widget) {
@@ -275,8 +276,8 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         //this.font.draw(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
 
         final int FONT_Y_SPACING = 12;
-        final int TAB_LABEL_XPOS = EaselContainerMenu.PLAYER_INVENTORY_XPOS - 1;
-        final int TAB_LABEL_YPOS = EaselContainerMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
+        final int TAB_LABEL_XPOS = EaselMenu.PLAYER_INVENTORY_XPOS - 1;
+        final int TAB_LABEL_YPOS = EaselMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
         this.font.draw(matrixStack, this.getMenu().getCurrentTab().translatableComponent,
@@ -290,8 +291,6 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         super.containerTick();
 
         this.canvasWidget.tick();
-
-        this.tick++;
     }
 
     private double[] dragStart;
@@ -307,7 +306,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
      * @param posX
      * @param posY
      */
-    public void useToolCallback(CanvasData canvas, AbstractTool tool, AbstractToolParameters parameters, int color, float posX, float posY) {
+    public void useToolCallback(CanvasData canvas, AbstractTool<?> tool, AbstractToolParameters parameters, int color, float posX, float posY) {
         if (tool.equals(Tools.EYEDROPPER.getTool())) {
             int canvasPosX = (int) Math.min(Math.max(posX, 0), canvas.getWidth());
             int canvasPosY = (int) Math.min(Math.max(posY, 0), canvas.getHeight());
@@ -325,7 +324,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
             int offsetX = (int) Math.round(dragX);
             int offsetY = (int) Math.round(dragY);
 
-            this.canvasWidget.updateCanvasOffset(
+            this.getMenu().updateCanvasOffset(
                 this.dragStartCanvasOffset[0] - offsetX,
                 this.dragStartCanvasOffset[1] - offsetY
             );
@@ -347,6 +346,8 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
 
         switch (keyCode) {
             case GLFW.GLFW_KEY_ESCAPE:
+                assert this.minecraft != null;
+                assert this.minecraft.player != null;
                 this.minecraft.player.closeContainer();
                 return true;
             case Pencil.HOTKEY:
@@ -462,17 +463,12 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.dragStart == null) {
             this.dragStart = new double[]{mouseX, mouseY};
-            this.dragStartCanvasOffset = new int[]{this.canvasWidget.getCanvasOffsetX(), this.canvasWidget.getCanvasOffsetY()};
+            this.dragStartCanvasOffset = new int[]{this.getMenu().getCanvasOffsetX(), this.getMenu().getCanvasOffsetY()};
         }
 
         super.mouseClicked(mouseX, mouseY, button);
-        boolean result;
 
-        //if (!result) {
-        result = this.getCurrentTab().mouseClicked(mouseX, mouseY, button);
-        //}
-
-        return result;
+        return this.getCurrentTab().mouseClicked(mouseX, mouseY, button);
     }
 
     /**
@@ -589,7 +585,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselContainerMenu> imp
         }
     }
 
-    /**
+    /*
      * Helpers
      */
 

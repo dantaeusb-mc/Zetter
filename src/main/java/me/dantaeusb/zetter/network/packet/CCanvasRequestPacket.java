@@ -29,7 +29,7 @@ public class CCanvasRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeUtf(this.canvasName);
+        buf.writeUtf(this.canvasName, 64);
     }
 
     public String getCanvasName() {

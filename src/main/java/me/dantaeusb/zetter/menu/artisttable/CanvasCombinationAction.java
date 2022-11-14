@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -57,6 +58,12 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         this.updateCanvasData(menu.getCombinationContainer());
     }
 
+    /**
+     * When new item placed or it's canvas data
+     * updated from server, update the preview
+     *
+     * @param combinationContainer
+     */
     public void updateCanvasData(ItemStackHandler combinationContainer) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
@@ -82,8 +89,8 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
 
-        if (min == null || max == null) {
-            this.state = State.INVALID;
+        if (min == null) {
+            this.state = State.EMPTY;
             this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
@@ -112,10 +119,11 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                         return;
                     }
 
-                    if (CanvasItem.getCanvasData(currentStack, this.level) == null) {
-                        /**
-                         * @todo: [HIGH] Move request out of here, request with data load attempts but avoid loading unavailable canvases
-                         */
+                    if (
+                        this.level.isClientSide()
+                        && CanvasItem.getCanvasCode(currentStack) != null
+                        && CanvasItem.getCanvasData(currentStack, this.level) == null
+                    ) {
                         CanvasRenderer.getInstance().queueCanvasTextureUpdate(
                                 CanvasItem.getCanvasCode(currentStack)
                         );
@@ -126,14 +134,21 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
 
+        Rectangle rectangle = CanvasCombinationAction.getRect(min, max);
+
+        if (rectangle.height == 1 && rectangle.width == 1) {
+            this.state = State.EMPTY;
+            this.rectangle = CanvasCombinationAction.getZeroRect();
+            this.canvasData = null;
+            return;
+        }
+
         if (!canvasesReady) {
             this.state = State.NOT_LOADED;
             this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
         }
-
-        Rectangle rectangle = CanvasCombinationAction.getRect(min, max);
 
         boolean shapeAvailable = false;
         for (int[] shape: CanvasCombinationAction.paintingShapes) {
@@ -170,7 +185,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 int relativeX = slotX - rectangle.x;
                 int relativeY = slotY - rectangle.y;
 
-
                 if (smallCanvasData != null) {
                     for (int smallY = 0; smallY < smallCanvasData.getHeight(); smallY++) {
                         for (int smallX = 0; smallX < smallCanvasData.getWidth(); smallX++) {
@@ -199,7 +213,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
 
-        DummyCanvasData combinedCanvasData = DummyCanvasData.createWrap(
+        DummyCanvasData combinedCanvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
             Helper.getResolution(),
             pixelWidth,
             pixelHeight,
@@ -208,9 +222,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         if (world.isClientSide()) {
             Helper.getWorldCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
-        } else {
-            // @todo: drop texture
-
         }
 
         return combinedCanvasData;

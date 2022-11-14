@@ -27,7 +27,7 @@ public class ZetterNetwork {
     public static final byte PAINTING_RENAME = 26;
     public static final byte CANVAS_SYNC_VIEW = 27;
     public static final byte CANVAS_REQUEST_VIEW = 29;
-    public static final byte SNAPSHOT_SYNC = 30;
+    public static final byte HISTORY_SYNC = 30;
     public static final byte HISTORY_UPDATE = 31;
     public static final byte ARTIST_TABLE_MODE = 32;
 
@@ -41,9 +41,9 @@ public class ZetterNetwork {
                 ZetterNetwork::isThisProtocolAcceptedByServer
         );
 
-        simpleChannel.registerMessage(PAINTING_FRAME, CCanvasActionBufferPacket.class,
-                CCanvasActionBufferPacket::writePacketData, CCanvasActionBufferPacket::readPacketData,
-                CCanvasActionBufferPacket::handle,
+        simpleChannel.registerMessage(PAINTING_FRAME, CCanvasActionPacket.class,
+                CCanvasActionPacket::writePacketData, CCanvasActionPacket::readPacketData,
+                CCanvasActionPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(CANVAS_REQUEST, CCanvasRequestPacket.class,
@@ -81,14 +81,14 @@ public class ZetterNetwork {
                 CCanvasRequestViewPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(SNAPSHOT_SYNC, SCanvasSnapshotSync.class,
-                SCanvasSnapshotSync::writePacketData, SCanvasSnapshotSync::readPacketData,
-                SCanvasSnapshotSync::handle,
+        simpleChannel.registerMessage(HISTORY_SYNC, SEaselStateSync.class,
+                SEaselStateSync::writePacketData, SEaselStateSync::readPacketData,
+                SEaselStateSync::handle,
                 Optional.of(PLAY_TO_CLIENT));
 
-        simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryPacket.class,
-                CCanvasHistoryPacket::writePacketData, CCanvasHistoryPacket::readPacketData,
-                CCanvasHistoryPacket::handle,
+        simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryActionPacket.class,
+                CCanvasHistoryActionPacket::writePacketData, CCanvasHistoryActionPacket::readPacketData,
+                CCanvasHistoryActionPacket::handle,
                 Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(ARTIST_TABLE_MODE, CArtistTableModeChange.class,

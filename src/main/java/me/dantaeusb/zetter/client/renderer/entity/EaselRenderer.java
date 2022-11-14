@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
 import com.mojang.math.Matrix4f;
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -28,8 +29,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class EaselRenderer extends EntityRenderer<EaselEntity> {
-    public static final ResourceLocation TEXTURE = new ResourceLocation("zetter:textures/entity/easel.png");
-    public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation("zetter:textures/entity/canvas.png");
+    public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
+    public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
 
     protected EaselModel model;
     protected final List<RenderLayer<EaselEntity, EntityModel<EaselEntity>>> layers = Lists.newArrayList();

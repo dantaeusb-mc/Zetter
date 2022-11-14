@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.storage;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -20,7 +21,7 @@ public class DummyCanvasData extends AbstractCanvasData {
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
 
     protected DummyCanvasData() {
-        super(TYPE);
+        super(Zetter.MOD_ID, TYPE);
     }
 
     public static DummyCanvasData createDummy() {
@@ -64,6 +65,11 @@ public class DummyCanvasData extends AbstractCanvasData {
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
     }
 
+    // All dummy canvases are not managed, they are not synced over the net and manually destroyed
+    public boolean isManaged() {
+        return false;
+    }
+
     public boolean isRenderable() {
         return true;
     }
@@ -72,10 +78,19 @@ public class DummyCanvasData extends AbstractCanvasData {
         return false;
     }
 
+    public CanvasDataType<DummyCanvasData> getType() {
+        return ZetterCanvasTypes.DUMMY.get();
+    }
+
     /*
      * Serialization
      */
 
+    /**
+     * @todo: [HIGH] Use a placeholder, it's fall-back
+     * @param compoundTag
+     * @return
+     */
     public static DummyCanvasData load(CompoundTag compoundTag) {
         Zetter.LOG.error("Trying to read into dummy canvas!");
 

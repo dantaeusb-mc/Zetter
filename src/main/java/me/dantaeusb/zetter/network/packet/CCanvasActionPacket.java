@@ -15,16 +15,16 @@ import java.util.function.Supplier;
 /**
  * Painting update - get frame buffer from client when they're making changes
  */
-public class CCanvasActionBufferPacket {
+public class CCanvasActionPacket {
     public final int easelEntityId;
     public final Queue<CanvasAction> paintingActions;
 
-    public CCanvasActionBufferPacket(int entityId) {
+    public CCanvasActionPacket(int entityId) {
         this.easelEntityId = entityId;
         this.paintingActions = new ArrayDeque<>();
     }
 
-    public CCanvasActionBufferPacket(int entityId, Queue<CanvasAction> paintingActionBuffers) {
+    public CCanvasActionPacket(int entityId, Queue<CanvasAction> paintingActionBuffers) {
         this.easelEntityId = entityId;
         this.paintingActions = paintingActionBuffers;
     }
@@ -33,14 +33,14 @@ public class CCanvasActionBufferPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buffer is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CCanvasActionBufferPacket readPacketData(FriendlyByteBuf buffer) {
-        int entityId = buffer.readInt();
-        int actionBuffersCount = buffer.readInt();
+    public static CCanvasActionPacket readPacketData(FriendlyByteBuf networkBuffer) {
+        int entityId = networkBuffer.readInt();
+        int actionBuffersCount = networkBuffer.readInt();
 
-        CCanvasActionBufferPacket packet = new CCanvasActionBufferPacket(entityId);
+        CCanvasActionPacket packet = new CCanvasActionPacket(entityId);
 
         for (int i = 0; i < actionBuffersCount; i++) {
-            @Nullable CanvasAction action = CanvasAction.readPacketData(buffer);
+            @Nullable CanvasAction action = CanvasAction.readPacketData(networkBuffer);
 
             if (action != null) {
                 packet.paintingActions.add(action);
@@ -57,16 +57,16 @@ public class CCanvasActionBufferPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf buffer) {
-        buffer.writeInt(this.easelEntityId);
-        buffer.writeInt(this.paintingActions.size());
+    public void writePacketData(FriendlyByteBuf networkBuffer) {
+        networkBuffer.writeInt(this.easelEntityId);
+        networkBuffer.writeInt(this.paintingActions.size());
 
         for (CanvasAction actionBuffer : this.paintingActions) {
-            CanvasAction.writePacketData(actionBuffer, buffer);
+            CanvasAction.writePacketData(actionBuffer, networkBuffer);
         }
     }
 
-    public static void handle(final CCanvasActionBufferPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(final CCanvasActionPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
@@ -75,6 +75,6 @@ public class CCanvasActionBufferPacket {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processActionBuffer(packetIn, sendingPlayer));
+        ctx.enqueueWork(() -> ServerHandler.processAction(packetIn, sendingPlayer));
     }
 }
