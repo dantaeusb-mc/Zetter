@@ -120,13 +120,12 @@ public class CanvasServerTracker implements ICanvasTracker {
                     canvasTypeInt = compoundTag.getInt(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED);
 
                     switch (canvasTypeInt) {
-                        case 0:
-                            canvasType = DummyCanvasData.TYPE;
-                            break;
                         case 1:
                             canvasType = CanvasData.TYPE;
                             break;
+                        case 0:
                         case 2:
+                        default:
                             canvasType = PaintingData.TYPE;
                             break;
                     }
