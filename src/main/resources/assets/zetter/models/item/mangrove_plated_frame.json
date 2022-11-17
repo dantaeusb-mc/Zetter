@@ -1,0 +1,1 @@
+{"parent":"item/generated","textures":{"layer0":"zetter:item/frame/mangrove_plated"},"overrides":[{"predicate":{"painting":0},"model":"zetter:item/frame/mangrove_plated_empty"},{"predicate":{"painting":1},"model":"zetter:item/frame/mangrove_plated_painting"}]}

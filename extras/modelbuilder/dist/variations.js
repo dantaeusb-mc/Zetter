@@ -10,6 +10,7 @@ exports.materialVariations = {
     "spruce": { canHavePlate: true, isWood: true },
     "crimson": { canHavePlate: true, isWood: true },
     "warped": { canHavePlate: true, isWood: true },
+    "mangrove": { canHavePlate: true, isWood: true },
     "iron": { canHavePlate: false, isWood: false },
     "gold": { canHavePlate: true, isWood: false }
 };
