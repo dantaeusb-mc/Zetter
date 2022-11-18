@@ -4,9 +4,8 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.core.ZetterRegistries;
-import me.dantaeusb.zetter.event.CanvasPostRegisterEvent;
-import me.dantaeusb.zetter.event.CanvasPreRegisterEvent;
-import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.event.CanvasServerPostRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasServerPreRegisterEvent;
 import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.*;
@@ -166,12 +165,12 @@ public class CanvasServerTracker implements ICanvasTracker {
             return;
         }
 
-        CanvasPreRegisterEvent preEvent = new CanvasPreRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasServerPreRegisterEvent preEvent = new CanvasServerPreRegisterEvent(canvasCode, canvasData, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
         this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
 
-        CanvasPostRegisterEvent postEvent = new CanvasPostRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasServerPostRegisterEvent postEvent = new CanvasServerPostRegisterEvent(canvasCode, canvasData, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
@@ -183,7 +182,7 @@ public class CanvasServerTracker implements ICanvasTracker {
      */
     @Override
     public void unregisterCanvasData(String canvasCode) {
-        CanvasData canvasData = this.getCanvasData(canvasCode);
+        AbstractCanvasData canvasData = this.getCanvasData(canvasCode);
 
         if (canvasData == null) {
             Zetter.LOG.error("Cannot unregister non-existent canvas");
@@ -242,7 +241,7 @@ public class CanvasServerTracker implements ICanvasTracker {
     }
 
     /**
-     * @todo check if already tracking
+     * @todo: [MED] check if already tracking
      * @param playerId
      * @param canvasName
      */

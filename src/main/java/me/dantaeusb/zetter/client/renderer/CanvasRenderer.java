@@ -201,15 +201,10 @@ public class CanvasRenderer implements AutoCloseable {
         // Free the texture
         this.canvasRendererInstances.get(canvasCode).close();
         this.canvasRendererInstances.remove(canvasCode);
-
-        // Notifying server that we're no longer tracking it
-        // @todo: [LOW] Better just check tile entity who's around
-        CCanvasUnloadRequestPacket unloadPacket = new CCanvasUnloadRequestPacket(canvasCode);
-        ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
     }
 
     /**
-     * @todo: Still makes double-request on first load, markDirty called before update
+     * @todo: [HIGH] Still makes double-request on first load, markDirty called before update
      * @param canvasCode
      */
     public void queueCanvasTextureUpdate(String canvasCode) {

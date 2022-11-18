@@ -1,6 +1,6 @@
 modLoader="javafml"
 
-loaderVersion="[40,)"
+loaderVersion="[43,)"
 
 license="Mozilla Public License 2.0"
 
@@ -23,6 +23,7 @@ credits='''
 StuarteLitro/@ppblitto for fancy icons and Portuguese translation
 diesieben07#0714 from Forge Discord for absolutely insane amount of help
 gigaherz#9173 from Forge Discord for consultations about Forge and GUI
+XFactHD#5288 from Forge Discord for help on fixing issues further into the development
 
 ItamarDenkberg for Hebrew translation
 iSrNinja for Spanish translation
@@ -31,12 +32,16 @@ Vakarian89 for Polish translation
 cream280 for Chinese translation
 OttovonBismarckderErste for German translation
 
-Forge Discord:
+Pxlsamosa for art commissions and mod art
+Eliathx for art commissions
+
+Forge Discord special thanks:
 Cyborgmas#0379
 Amethyst#6998
 Kovak#5505
 Woodland Creature#3144
 ChampionAsh5357#5519
+Commoble#9251
 Lemongradle (sciwhiz12#1286)
 
 Examples and references:

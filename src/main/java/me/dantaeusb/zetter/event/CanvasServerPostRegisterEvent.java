@@ -9,12 +9,12 @@ import net.minecraftforge.eventbus.api.Event;
  * triggering this event, with the timestamp when the canvas
  * is updated over the network
  */
-public class CanvasPostRegisterEvent extends Event {
+public class CanvasServerPostRegisterEvent extends Event {
     public final String canvasCode;
     public final AbstractCanvasData canvasData;
     public final long timestamp;
 
-    public CanvasPostRegisterEvent(String canvasCode, AbstractCanvasData canvasData, long timestamp) {
+    public CanvasServerPostRegisterEvent(String canvasCode, AbstractCanvasData canvasData, long timestamp) {
         this.canvasCode = canvasCode;
         this.canvasData = canvasData;
         this.timestamp = timestamp;

@@ -2,12 +2,12 @@ package me.dantaeusb.zetter.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.event.CanvasPostRegisterEvent;
-import me.dantaeusb.zetter.event.CanvasPreRegisterEvent;
-import me.dantaeusb.zetter.event.CanvasPostUnregisterEvent;
-import me.dantaeusb.zetter.event.CanvasPreUnregisterEvent;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.event.*;
+import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.google.common.collect.Maps;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -43,7 +43,7 @@ public class CanvasClientTracker implements ICanvasTracker {
             return;
         }
 
-        CanvasPreRegisterEvent preEvent = new CanvasPreRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasRenderPreRegisterEvent preEvent = new CanvasRenderPreRegisterEvent(canvasCode, canvasData, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
         if (!preEvent.isCanceled()) {
@@ -53,13 +53,20 @@ public class CanvasClientTracker implements ICanvasTracker {
             CanvasRenderer.getInstance().addCanvas(canvasCode, canvasData);
         }
 
-        CanvasPostRegisterEvent postEvent = new CanvasPostRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasRenderPostRegisterEvent postEvent = new CanvasRenderPostRegisterEvent(canvasCode, canvasData, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
     @Override
     public void unregisterCanvasData(String removedCanvasCode) {
-        CanvasPreUnregisterEvent preEvent = new CanvasPreUnregisterEvent(removedCanvasCode);
+        AbstractCanvasData canvasData = this.getCanvasData(removedCanvasCode);
+
+        if (canvasData == null) {
+            Zetter.LOG.error("Cannot unregister not-registered canvas " + removedCanvasCode);
+            return;
+        }
+
+        CanvasRenderPreUnregisterEvent preEvent = new CanvasRenderPreUnregisterEvent(removedCanvasCode);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
         // Remove existing entry if we have one to replace with a new one
@@ -67,7 +74,13 @@ public class CanvasClientTracker implements ICanvasTracker {
 
         CanvasRenderer.getInstance().removeCanvas(removedCanvasCode);
 
-        CanvasPostUnregisterEvent postEvent = new CanvasPostUnregisterEvent(removedCanvasCode);
+        if (canvasData.isManaged()) {
+            // Notifying server that we're no longer tracking it
+            CCanvasUnloadRequestPacket unloadPacket = new CCanvasUnloadRequestPacket(removedCanvasCode);
+            ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
+        }
+
+        CanvasRenderPostUnregisterEvent postEvent = new CanvasRenderPostUnregisterEvent(removedCanvasCode);
         MinecraftForge.EVENT_BUS.post(postEvent);
     }
 

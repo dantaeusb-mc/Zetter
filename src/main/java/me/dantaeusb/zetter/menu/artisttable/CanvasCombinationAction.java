@@ -233,7 +233,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
-        // @todo: Can combine?
+        // @todo: [MED] Can combine?
         if (this.isReady()) {
             if (combinedStack.isEmpty()) {
                 combinedStack = new ItemStack(ZetterItems.CANVAS.get());

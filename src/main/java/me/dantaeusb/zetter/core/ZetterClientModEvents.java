@@ -1,9 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.event.CanvasPostRegisterEvent;
-import me.dantaeusb.zetter.event.CanvasPreRegisterEvent;
-import me.dantaeusb.zetter.event.CanvasViewEvent;
+import me.dantaeusb.zetter.event.*;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
@@ -15,7 +13,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ZetterClientModEvents {
     /**
      * Handle event when canvas is viewed. Because canvas types are
@@ -43,7 +41,7 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void onCanvasPreRegistered(CanvasPreRegisterEvent event) {
+    public static void onCanvasPreRegistered(CanvasRenderPreRegisterEvent event) {
         String canvasCode = event.canvasCode;
         AbstractCanvasData canvasData = event.canvasData;
         long timestamp = event.timestamp;
@@ -76,7 +74,7 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void onCanvasPostRegistered(CanvasPostRegisterEvent event) {
+    public static void onCanvasPostRegistered(CanvasRenderPostRegisterEvent event) {
         String canvasCode = event.canvasCode;
         AbstractCanvasData canvasData = event.canvasData;
         long timestamp = event.timestamp;

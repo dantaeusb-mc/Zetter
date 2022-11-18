@@ -18,12 +18,12 @@ import net.minecraftforge.eventbus.api.Event;
  * UPDATE THE TEXTURE IN APPROPRIATE WAY IF YOU CANCEL THE EVENT!
  */
 @Cancelable
-public class CanvasPreRegisterEvent extends Event {
+public class CanvasServerPreRegisterEvent extends Event {
     public final String canvasCode;
     public final AbstractCanvasData canvasData;
     public final long timestamp;
 
-    public CanvasPreRegisterEvent(String canvasCode, AbstractCanvasData canvasData, long timestamp) {
+    public CanvasServerPreRegisterEvent(String canvasCode, AbstractCanvasData canvasData, long timestamp) {
         this.canvasCode = canvasCode;
         this.canvasData = canvasData;
         this.timestamp = timestamp;

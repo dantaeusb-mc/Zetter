@@ -144,7 +144,7 @@ public class ServerHandler {
             Level world = server.overworld();
             CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
 
-            Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName());
+            Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName() + " from " + sendingPlayer.getUUID());
 
             if (canvasTracker == null) {
                 Zetter.LOG.error("Cannot find world canvas capability");

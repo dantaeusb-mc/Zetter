@@ -28,7 +28,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * Check if can put anything in
      * "combined" slot
      *
-     * @todo: Don't allow if grid is not empty
+     * @todo: [HIGH] Don't allow if grid is not empty
      * @param stack
      * @return
      */
@@ -231,6 +231,9 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         canvasTracker.registerCanvasData(canvasCode, itemData);
 
         CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
+
+        // Cleanup canvas ID
+        canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinedStack));
 
         // Remove split canvas item
         this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);

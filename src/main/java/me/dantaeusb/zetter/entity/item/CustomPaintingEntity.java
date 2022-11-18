@@ -259,7 +259,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         if (compound.contains(NBT_TAG_HAS_PLATE)) {
             this.hasPlate = compound.getBoolean(NBT_TAG_HAS_PLATE);
         } else {
-            // @todo: [LOW] Remove on release?
+            // @todo: [LOW] Remove on release after 0.18.x
             this.hasPlate = false;
         }
 
