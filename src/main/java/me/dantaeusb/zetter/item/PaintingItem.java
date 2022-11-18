@@ -50,12 +50,17 @@ public class PaintingItem extends CanvasItem
     // @todo: [HIGH] Canvas data could be null!!!
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        ItemStack painting = player.getItemInHand(hand);
+        ItemStack paintingStack = player.getItemInHand(hand);
 
         if (world.isClientSide()) {
             ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
-            String paintingCode = getPaintingCode(painting);
-            PaintingData canvasData = getPaintingData(painting, player.getLevel());
+            String paintingCode = getPaintingCode(paintingStack);
+
+            if (paintingCode == null) {
+                return InteractionResultHolder.fail(paintingStack);
+            }
+
+            PaintingData canvasData = getPaintingData(paintingStack, player.getLevel());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -75,7 +80,7 @@ public class PaintingItem extends CanvasItem
 
         player.awardStat(Stats.ITEM_USED.get(this));
 
-        return InteractionResultHolder.sidedSuccess(painting, world.isClientSide());
+        return InteractionResultHolder.sidedSuccess(paintingStack, world.isClientSide());
     }
 
     /**
