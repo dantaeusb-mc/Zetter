@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  * object that is sent more frequently than default canvases when
  * multiple players are drawing
  */
-public class SEaselStateSync {
+public class SEaselStateSyncPacket {
     public final int easelEntityId;
     public final String canvasCode;
 
@@ -27,7 +27,7 @@ public class SEaselStateSync {
 
     public final @Nullable ArrayList<CanvasAction> unsyncedActions;
 
-    public SEaselStateSync(int easelEntityId, String canvasCode, CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> unsyncedActions) {
+    public SEaselStateSyncPacket(int easelEntityId, String canvasCode, CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> unsyncedActions) {
         this.easelEntityId = easelEntityId;
 
         this.canvasCode = canvasCode;
@@ -39,7 +39,7 @@ public class SEaselStateSync {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SEaselStateSync readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SEaselStateSyncPacket readPacketData(FriendlyByteBuf networkBuffer) {
         try {
             final int easelEntityId = networkBuffer.readInt();
             final String canvasCode = networkBuffer.readUtf(128);
@@ -54,7 +54,7 @@ public class SEaselStateSync {
             int actionBuffersCount = networkBuffer.readInt();
 
             if (actionBuffersCount == 0) {
-                return new SEaselStateSync(easelEntityId, canvasCode, snapshot, null);
+                return new SEaselStateSyncPacket(easelEntityId, canvasCode, snapshot, null);
             }
 
             ArrayList<CanvasAction> unsyncedActions = new ArrayList<>();
@@ -69,7 +69,7 @@ public class SEaselStateSync {
                 }
             }
 
-            return new SEaselStateSync(easelEntityId, canvasCode, snapshot, unsyncedActions);
+            return new SEaselStateSyncPacket(easelEntityId, canvasCode, snapshot, unsyncedActions);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SEaselStateSync: " + e);
             return null;
@@ -100,7 +100,7 @@ public class SEaselStateSync {
         }
     }
 
-    public static void handle(final SEaselStateSync packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(final SEaselStateSyncPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);

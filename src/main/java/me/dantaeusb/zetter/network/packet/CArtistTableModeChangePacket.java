@@ -10,11 +10,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class CArtistTableModeChange {
+public class CArtistTableModeChangePacket {
     private final int windowId;
     private final ArtistTableMenu.Mode mode;
 
-    public CArtistTableModeChange(int windowId, ArtistTableMenu.Mode mode) {
+    public CArtistTableModeChangePacket(int windowId, ArtistTableMenu.Mode mode) {
         this.windowId = windowId;
         this.mode = mode;
     }
@@ -22,11 +22,11 @@ public class CArtistTableModeChange {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static CArtistTableModeChange readPacketData(FriendlyByteBuf buf) {
+    public static CArtistTableModeChangePacket readPacketData(FriendlyByteBuf buf) {
         int windowId = buf.readInt();
         byte modeId = buf.readByte();
 
-        CArtistTableModeChange packet = new CArtistTableModeChange(windowId, ArtistTableMenu.Mode.getById(modeId));
+        CArtistTableModeChangePacket packet = new CArtistTableModeChangePacket(windowId, ArtistTableMenu.Mode.getById(modeId));
 
         return packet;
     }
@@ -47,7 +47,7 @@ public class CArtistTableModeChange {
         return this.mode;
     }
 
-    public static void handle(final CArtistTableModeChange packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(final CArtistTableModeChangePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);

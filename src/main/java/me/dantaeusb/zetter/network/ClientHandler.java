@@ -9,7 +9,6 @@ import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -25,7 +24,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSync(final SCanvasSyncMessage packetIn, Level world) {
+    public static void processCanvasSync(final SCanvasSyncPacket packetIn, Level world) {
         try {
             final String canvasCode = packetIn.getCanvasCode();
 
@@ -48,7 +47,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSyncView(final SCanvasSyncViewMessage packetIn, Level world) {
+    public static void processCanvasSyncView(final SCanvasSyncViewPacket packetIn, Level world) {
         try {
             final LocalPlayer player = Minecraft.getInstance().player;
             final String canvasCode = packetIn.getCanvasCode();
@@ -71,7 +70,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processEaselStateSync(final SEaselStateSync packetIn, Level world) {
+    public static void processEaselStateSync(final SEaselStateSyncPacket packetIn, Level world) {
         try {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
@@ -92,17 +91,68 @@ public class ClientHandler {
      * @param world
      */
     public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, Level world) {
-        EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
-        // @todo: [MED] Check if player can access entity
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+            // @todo: [MED] Check if player can access entity
 
-        if (easel != null) {
-            if (packetIn.canceled) {
-                easel.getStateHandler().undo(packetIn.actionId);
+            if (easel != null) {
+                if (packetIn.canceled) {
+                    easel.getStateHandler().undo(packetIn.actionId);
+                } else {
+                    easel.getStateHandler().redo(packetIn.actionId);
+                }
             } else {
-                easel.getStateHandler().redo(packetIn.actionId);
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
             }
-        } else {
-            Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * When canvas combined on server, we need to cleanup
+     * our canvas data if loaded to request the new data
+     * if canvas id was reused.
+     *
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, Level world) {
+        try {
+            final String canvasCode = packetIn.canvasCode();
+            final long timestamp = packetIn.timestamp();
+
+            ICanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
+
+            canvasTracker.unregisterCanvasData(canvasCode);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * When canvas combined on server, we need to cleanup
+     * our canvas data if loaded to request the new data
+     * if canvas id was reused.
+     *
+     * @param packetIn
+     * @param world
+     */
+    public static void processEaselReset(final SEaselResetPacket packetIn, Level world) {
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+
+            if (easel != null) {
+                easel.getStateHandler().reset();
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 }

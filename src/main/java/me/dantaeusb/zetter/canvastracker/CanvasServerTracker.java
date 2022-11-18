@@ -1,12 +1,14 @@
 package me.dantaeusb.zetter.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.event.CanvasPostRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasPreRegisterEvent;
-import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
+import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
+import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
@@ -72,7 +74,7 @@ public class CanvasServerTracker implements ICanvasTracker {
         return this.canvasIds.length() - 1;
     }
 
-    public void clearCanvasId(int id) {
+    private void clearCanvasId(int id) {
         this.canvasIds.clear(id);
     }
 
@@ -181,7 +183,33 @@ public class CanvasServerTracker implements ICanvasTracker {
      */
     @Override
     public void unregisterCanvasData(String canvasCode) {
-        Zetter.LOG.error("Trying to unregister canvas on server side, not supported yet");
+        CanvasData canvasData = this.getCanvasData(canvasCode);
+
+        if (canvasData == null) {
+            Zetter.LOG.error("Cannot unregister non-existent canvas");
+            return;
+        }
+
+        if (!canvasData.getType().equals(ZetterCanvasTypes.CANVAS.get())) {
+            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.resourceLocation + " on server side, not supported yet");
+            return;
+        }
+
+        int canvasId = Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
+        this.clearCanvasId(canvasId);
+
+        Vector<PlayerTrackingCanvas> trackingPlayers = this.trackedCanvases.get(canvasCode);
+
+        if (trackingPlayers != null) {
+            for (PlayerTrackingCanvas trackingPlayer : trackingPlayers) {
+                SCanvasRemovalPacket canvasRemovalPacket = new SCanvasRemovalPacket(canvasCode, System.currentTimeMillis());
+
+                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(
+                    () -> (ServerPlayer) this.world.getPlayerByUUID(trackingPlayer.playerId)),
+                    canvasRemovalPacket
+                );
+            }
+        }
     }
 
     /**
@@ -204,7 +232,7 @@ public class CanvasServerTracker implements ICanvasTracker {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
                 ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
-                SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
+                SCanvasSyncPacket canvasSyncMessage = new SCanvasSyncPacket(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }

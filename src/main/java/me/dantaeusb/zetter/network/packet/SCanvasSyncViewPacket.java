@@ -1,55 +1,40 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.network.ClientHandler;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
-import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
-import java.util.function.Supplier;
+
 import java.util.Optional;
+import java.util.function.Supplier;
 
-public class SCanvasSyncMessage<T extends AbstractCanvasData> {
-    protected final String canvasCode;
-    protected final long timestamp;
-    protected final T canvasData;
+public class SCanvasSyncViewPacket<T extends AbstractCanvasData> extends SCanvasSyncPacket<T> {
+    private final InteractionHand hand;
 
-    public SCanvasSyncMessage(String canvasCode, T canvasData, long timestamp) {
-        this.canvasCode = canvasCode;
-        this.timestamp = timestamp;
-        this.canvasData = canvasData;
-    }
+    public SCanvasSyncViewPacket(String canvasCode, T canvasData, long timestamp, InteractionHand hand) {
+        super(canvasCode, canvasData, timestamp);
 
-    public String getCanvasCode() {
-        return this.canvasCode;
-    }
-
-    public T getCanvasData() {
-        return this.canvasData;
-    }
-
-    public long getTimestamp() {
-        return this.timestamp;
+        this.hand = hand;
     }
 
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SCanvasSyncMessage<?> readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SCanvasSyncViewPacket<?> readPacketData(FriendlyByteBuf networkBuffer) {
         try {
             String type = networkBuffer.readUtf(128);
             String canvasCode = networkBuffer.readUtf(128);
             long timestamp = networkBuffer.readLong();
+            byte handCode = networkBuffer.readByte();
+            InteractionHand hand = InteractionHand.values()[handCode];
 
             CanvasDataType<?> canvasDataType = ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(type));
 
@@ -59,7 +44,7 @@ public class SCanvasSyncMessage<T extends AbstractCanvasData> {
 
             AbstractCanvasData canvasData = canvasDataType.readPacketData(networkBuffer);
 
-            return new SCanvasSyncMessage<>(canvasCode, canvasData, timestamp);
+            return new SCanvasSyncViewPacket(canvasCode, canvasData, timestamp, hand);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SCanvasSyncMessage: " + e);
             return null;
@@ -73,30 +58,36 @@ public class SCanvasSyncMessage<T extends AbstractCanvasData> {
         networkBuffer.writeUtf(this.canvasData.resourceLocation.toString(), 128);
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
+        networkBuffer.writeByte(this.hand.ordinal());
 
         CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.resourceLocation);
 
         assert canvasDataType != null;
         canvasDataType.writePacketData(this.canvasData, networkBuffer);
+
     }
 
-    public static void handle(final SCanvasSyncMessage<?> packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public InteractionHand getHand() {
+        return this.hand;
+    }
+
+    public static void handle(final SCanvasSyncViewPacket<?> packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
         Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
-        if (clientWorld.isEmpty()) {
-            Zetter.LOG.error("SCanvasSyncMessage context could not provide a ClientWorld.");
+        if (!clientWorld.isPresent()) {
+            Zetter.LOG.warn("SCanvasSyncViewMessage context could not provide a ClientWorld.");
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processCanvasSync(packetIn, clientWorld.get()));
+        ctx.enqueueWork(() -> ClientHandler.processCanvasSyncView(packetIn, clientWorld.get()));
     }
 
     @Override
     public String toString()
     {
-        return "SCanvasSyncMessage[canvas=" + this.canvasCode + ",timestamp=" + this.timestamp + "]";
+        return "SCanvasSyncViewMessage[canvas=" + this.canvasCode + ",timestamp=" + this.timestamp + "]";
     }
 }

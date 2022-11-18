@@ -275,9 +275,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 }
 
                 // Cleanup IDs and grid
-                int canvasId = CanvasItem.getCanvasId(combinationStack);
-                // @todo: [MED] Remove texture from other clients too
-                canvasTracker.clearCanvasId(canvasId);
+                canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinationStack));
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
         } else {

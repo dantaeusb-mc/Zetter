@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.artisttable.AbstractCanvasAction;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
-import me.dantaeusb.zetter.network.packet.CArtistTableModeChange;
+import me.dantaeusb.zetter.network.packet.CArtistTableModeChangePacket;
 import me.dantaeusb.zetter.network.packet.SArtistTableMenuCreatePacket;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.server.level.ServerPlayer;
@@ -251,7 +251,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         this.setData(ArtistTableBlockEntity.DATA_MODE, mode.getId());
 
         if (this.player.getLevel().isClientSide()) {
-            CArtistTableModeChange unloadPacket = new CArtistTableModeChange(this.containerId, mode);
+            CArtistTableModeChangePacket unloadPacket = new CArtistTableModeChangePacket(this.containerId, mode);
             ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
         }
     }

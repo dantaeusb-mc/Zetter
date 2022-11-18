@@ -26,11 +26,13 @@ public class ZetterNetwork {
     public static final byte PALETTE_UPDATE = 25;
     public static final byte PAINTING_RENAME = 26;
     public static final byte CANVAS_SYNC_VIEW = 27;
-    public static final byte CANVAS_REQUEST_VIEW = 29;
+    public static final byte CANVAS_REQUEST_VIEW = 28;
+    public static final byte CANVAS_REMOVE = 29;
     public static final byte EASEL_SYNC = 30;
     public static final byte HISTORY_UPDATE = 31;
     public static final byte ARTIST_TABLE_MODE = 32;
     public static final byte HISTORY_SYNC = 33;
+    public static final byte HISTORY_RESET = 34;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -57,9 +59,9 @@ public class ZetterNetwork {
             CCanvasUnloadRequestPacket::handle,
             Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(CANVAS_SYNC, SCanvasSyncMessage.class,
-            SCanvasSyncMessage::writePacketData, SCanvasSyncMessage::readPacketData,
-            SCanvasSyncMessage::handle,
+        simpleChannel.registerMessage(CANVAS_SYNC, SCanvasSyncPacket.class,
+            SCanvasSyncPacket::writePacketData, SCanvasSyncPacket::readPacketData,
+            SCanvasSyncPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(PALETTE_UPDATE, CPaletteUpdatePacket.class,
@@ -72,9 +74,9 @@ public class ZetterNetwork {
             CSignPaintingPacket::handle,
             Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(CANVAS_SYNC_VIEW, SCanvasSyncViewMessage.class,
-            SCanvasSyncViewMessage::writePacketData, SCanvasSyncViewMessage::readPacketData,
-            SCanvasSyncViewMessage::handle,
+        simpleChannel.registerMessage(CANVAS_SYNC_VIEW, SCanvasSyncViewPacket.class,
+            SCanvasSyncViewPacket::writePacketData, SCanvasSyncViewPacket::readPacketData,
+            SCanvasSyncViewPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(CANVAS_REQUEST_VIEW, CCanvasRequestViewPacket.class,
@@ -82,9 +84,14 @@ public class ZetterNetwork {
             CCanvasRequestViewPacket::handle,
             Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(EASEL_SYNC, SEaselStateSync.class,
-            SEaselStateSync::writePacketData, SEaselStateSync::readPacketData,
-            SEaselStateSync::handle,
+        simpleChannel.registerMessage(CANVAS_REMOVE, SCanvasRemovalPacket.class,
+            SCanvasRemovalPacket::writePacketData, SCanvasRemovalPacket::readPacketData,
+            SCanvasRemovalPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(EASEL_SYNC, SEaselStateSyncPacket.class,
+            SEaselStateSyncPacket::writePacketData, SEaselStateSyncPacket::readPacketData,
+            SEaselStateSyncPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryActionPacket.class,
@@ -92,14 +99,19 @@ public class ZetterNetwork {
             CCanvasHistoryActionPacket::handle,
             Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(ARTIST_TABLE_MODE, CArtistTableModeChange.class,
-            CArtistTableModeChange::writePacketData, CArtistTableModeChange::readPacketData,
-            CArtistTableModeChange::handle,
+        simpleChannel.registerMessage(ARTIST_TABLE_MODE, CArtistTableModeChangePacket.class,
+            CArtistTableModeChangePacket::writePacketData, CArtistTableModeChangePacket::readPacketData,
+            CArtistTableModeChangePacket::handle,
             Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(HISTORY_SYNC, SCanvasHistoryActionPacket.class,
             SCanvasHistoryActionPacket::writePacketData, SCanvasHistoryActionPacket::readPacketData,
             SCanvasHistoryActionPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(HISTORY_RESET, SEaselResetPacket.class,
+            SEaselResetPacket::writePacketData, SEaselResetPacket::readPacketData,
+            SEaselResetPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
     }
 

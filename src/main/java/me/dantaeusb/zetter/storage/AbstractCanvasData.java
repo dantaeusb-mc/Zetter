@@ -1,11 +1,8 @@
 package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.saveddata.SavedData;

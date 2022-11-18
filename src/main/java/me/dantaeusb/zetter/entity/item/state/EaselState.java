@@ -10,10 +10,7 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
-import me.dantaeusb.zetter.network.packet.CCanvasActionPacket;
-import me.dantaeusb.zetter.network.packet.CCanvasHistoryActionPacket;
-import me.dantaeusb.zetter.network.packet.SCanvasHistoryActionPacket;
-import me.dantaeusb.zetter.network.packet.SEaselStateSync;
+import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -44,7 +41,7 @@ public class EaselState {
 
     private final int MAX_ACTIONS_BEFORE_SNAPSHOT = ACTION_HISTORY_SIZE / SNAPSHOT_HISTORY_SIZE;
 
-    public static int CLIENT_SNAPSHOT_HISTORY_SIZE = 100;
+    public static int CLIENT_SNAPSHOT_HISTORY_SIZE = 50;
 
     private final EaselEntity easel;
     private List<EaselStateListener> listeners;
@@ -63,7 +60,8 @@ public class EaselState {
      */
 
     private final ArrayList<Player> players = new ArrayList<>();
-    private final ArrayList<CanvasAction> actions = new ArrayList<>(ACTION_HISTORY_SIZE + 1);
+    // Allocate 110%
+    private final ArrayList<CanvasAction> actions = new ArrayList<>(ACTION_HISTORY_SIZE + (int) (ACTION_HISTORY_SIZE * 0.1f));
     private final HashMap<UUID, UUID> playerLastSyncedAction = new HashMap<>();
 
     /*
@@ -146,8 +144,6 @@ public class EaselState {
     /**
      * Drops all buffers and removes all snapshots,
      * i.e. when canvas removed
-     *
-     * @todo: [HIGH] Create reset packet
      */
     public void reset() {
         this.actions.clear();
@@ -155,7 +151,11 @@ public class EaselState {
         this.playerLastSyncedAction.clear();
 
         if (this.getCanvasData() != null) {
-            //this.syncPlayerEaselState();
+            SEaselResetPacket resetPacket = new SEaselResetPacket(this.easel.getId(), this.getCanvasCode());
+
+            for (Player player : this.players) {
+                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), resetPacket);
+            }
         }
 
         this.onStateChanged();
@@ -301,15 +301,18 @@ public class EaselState {
 
         boolean foundCanceled = false;
 
-        ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
-        long lastCanceled = System.currentTimeMillis();
+        ListIterator<CanvasAction> actionsIterator = this.actions.listIterator();
+        long firstCanceled = System.currentTimeMillis();
 
-        while(actionsIterator.hasPrevious()) {
-            CanvasAction paintingActionBuffer = actionsIterator.previous();
+        while(actionsIterator.hasNext()) {
+            CanvasAction paintingActionBuffer = actionsIterator.next();
 
             if (paintingActionBuffer.isCanceled()) {
-                foundCanceled = true;
-                lastCanceled = paintingActionBuffer.getStartTime();
+                if (!foundCanceled) {
+                    foundCanceled = true;
+                    firstCanceled = paintingActionBuffer.getStartTime();
+                }
+
                 actionsIterator.remove();
             }
         }
@@ -324,7 +327,7 @@ public class EaselState {
         while(snapshotIterator.hasPrevious()) {
             CanvasSnapshot snapshot = snapshotIterator.previous();
 
-            if (snapshot.timestamp > lastCanceled) {
+            if (snapshot.timestamp > firstCanceled) {
                 snapshotIterator.remove();
             } else {
                 break;
@@ -441,7 +444,7 @@ public class EaselState {
             return false;
         }
 
-        this.restoreSinceSnapshot();
+        this.recollectPaintingData();
         this.onStateChanged();
 
         // If tillAction is not sent, just checking flag will be enough, it will be sent with proper canceled status
@@ -640,12 +643,9 @@ public class EaselState {
      * This action will get the latest available snapshot for the current action set
      * (might look up down the snapshot deque if the actions are canceled)
      * From that snapshot, canvas state will be restored and actions applied
-     * in order
-     *
-     * @todo: [HIGH] When several players editing, last action can be non-canceled,
-     * but some previous by another author are
+     * in submitted order
      */
-    public void restoreSinceSnapshot() {
+    public void recollectPaintingData() {
         CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(true);
         CanvasSnapshot latestSnapshot;
 
@@ -707,8 +707,6 @@ public class EaselState {
                         )
                     ) {
                         this.applyAction(action, false);
-                    } else {
-                        Zetter.LOG.debug("Ignoring action " + action.uuid);
                     }
                 }
 
@@ -772,8 +770,6 @@ public class EaselState {
      * we should if players made more than
      * MAX_ACTIONS_BEFORE_SNAPSHOT since last snapshot was made
      *
-     * @todo: [HIGH] Add snapshots by time
-     *
      * Server-only
      * @return
      */
@@ -802,6 +798,11 @@ public class EaselState {
         return actionsSinceSnapshot >= MAX_ACTIONS_BEFORE_SNAPSHOT;
     }
 
+    /**
+     * Make a snapshot
+     *
+     * Server-only
+     */
     private void makeSnapshot() {
         assert this.getCanvasData() != null;
         this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData()));
@@ -826,6 +827,26 @@ public class EaselState {
 
                 if (i++ > maxSize - 1) {
                     canvasSnapshotIterator.remove();
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes all older actions
+     */
+    private void cleanupActionHistory() {
+        int maxSize = ACTION_HISTORY_SIZE;
+
+        if (this.actions.size() > maxSize) {
+            int i = 0;
+            ListIterator<CanvasAction> canvasActionIterator = this.getActionsEndIterator();
+
+            while(canvasActionIterator.hasPrevious()) {
+                canvasActionIterator.previous();
+
+                if (i++ > maxSize - 1) {
+                    canvasActionIterator.remove();
                 }
             }
         }
@@ -908,7 +929,7 @@ public class EaselState {
             this.playerLastSyncedAction.put(player.getUUID(), unsyncedActions.get(unsyncedActions.size() - 1).uuid);
         }
 
-        // @todo: [HIGH] Just sync all snapshots
+        // @todo: [MED] Just sync all snapshots
         CanvasAction lastCanceledAction = this.getLastActionOfCanceledState(true);
         CanvasSnapshot lastSnapshot;
 
@@ -918,7 +939,7 @@ public class EaselState {
             lastSnapshot = this.getLastSnapshot();
         }
 
-        SEaselStateSync syncMessage = new SEaselStateSync(
+        SEaselStateSyncPacket syncMessage = new SEaselStateSyncPacket(
                 this.easel.getId(), this.getCanvasCode(), lastSnapshot, unsyncedActions
         );
 
@@ -972,22 +993,62 @@ public class EaselState {
      * Called from network - process player's work
      * And drop canceled actions on server if needed
      *
+     * @todo: [MED] Then rewind and make sure that playerLastSyncedAction is not after the first inserted action
+     * @todo: [LOW] It is possible that this and processHistorySyncClient could be unified, because they're doing essentially the same thing
+     *
      * Server-only
-     * @param action
+     * @param newActions
      */
-    public void processActionServer(CanvasAction action) {
-        if (!action.isCanceled()) {
-            this.applyAction(action, true);
-            this.wipeCanceledActionsAndDiscardSnapshots();
+    public void processActionServer(Queue<CanvasAction> newActions) {
+        this.wipeCanceledActionsAndDiscardSnapshots();
+
+        Iterator<CanvasAction> newActionsIterator = newActions.iterator();
+        ListIterator<CanvasAction> existingActionsIterator = this.actions.listIterator();
+
+        // We should have at least one, so it's safe
+        CanvasAction newAction = newActionsIterator.next();
+
+        while (existingActionsIterator.hasNext()) {
+            if (newAction == null) {
+                break;
+            }
+
+            CanvasAction existingAction = existingActionsIterator.next();
+
+            if (newAction.getStartTime().equals(existingAction.getStartTime())) {
+                Zetter.LOG.warn("Two actions have the same timestamp, weird!");
+
+                if (newAction.uuid.equals(existingAction.uuid)) {
+                    Zetter.LOG.warn("Got already synced action, ignoring");
+                }
+
+                existingActionsIterator.add(newAction);
+                newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
+            } else if (existingAction.getStartTime() > newAction.getStartTime()) {
+                existingActionsIterator.previous(); // rewind to insert before
+                existingActionsIterator.add(newAction); // 5
+                existingActionsIterator.next(); // get back
+                newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
+            }
         }
 
-        // @todo: [MED] Properly sort using iterators
-        this.actions.add(action);
+        if (newAction != null) {
+            existingActionsIterator.add(newAction);
+        }
 
+        while(newActionsIterator.hasNext()) {
+            existingActionsIterator.add(newActionsIterator.next());
+        }
+
+        this.unfreeze();
+
+        this.cleanupActionHistory();
+        this.recollectPaintingData();
+        this.onStateChanged();
         this.markDesync();
 
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_SERVER) {
-            //Zetter.LOG.debug("Processed actions from player " + action.authorId.toString());
+            Zetter.LOG.debug("Processed actions sync from client");
         }
     }
 
@@ -1018,6 +1079,8 @@ public class EaselState {
      * Add all newest pixels to the canvas when syncing to keep recent player's changes
      * Additionally writes state to recover history
      *
+     * @todo: [LOW] It is possible that this and processActionServer could be unified, because they're doing essentially the same thing
+     *
      * Client-only
      * @param canvasCode
      * @param snapshot
@@ -1030,13 +1093,13 @@ public class EaselState {
         }
 
         if (this.getLastSnapshot() == null) {
-            this.snapshots.add(snapshot);
+            this.insertSnapshot(snapshot);
         } else if (!this.getLastSnapshot().uuid.equals(snapshot.uuid)) {
             if (this.snapshots.size() >= SNAPSHOT_HISTORY_SIZE) {
                 this.snapshots.remove(0);
             }
 
-            this.snapshots.add(snapshot);
+            this.insertSnapshot(snapshot);
 
             if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
                 Zetter.LOG.debug("Processed server snapshot");
@@ -1044,7 +1107,7 @@ public class EaselState {
         }
 
         if (actions == null || actions.isEmpty()) {
-            this.restoreSinceSnapshot();
+            this.recollectPaintingData();
 
             if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
                 Zetter.LOG.debug("Processed actions sync from server");
@@ -1093,10 +1156,8 @@ public class EaselState {
                 clientAction.setSync();
                 clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             } else {
-                if (Zetter.DEBUG_MODE) {
-                    if (this.findAction(unsyncedAction.uuid) != null) {
-                        Zetter.LOG.warn("Duplicating action");
-                    }
+                if (this.findAction(unsyncedAction.uuid) != null) {
+                    Zetter.LOG.warn("Duplicating action");
                 }
 
                 actionsIterator.add(unsyncedAction);
@@ -1106,7 +1167,8 @@ public class EaselState {
 
         this.unfreeze();
 
-        this.restoreSinceSnapshot();
+        this.cleanupActionHistory();
+        this.recollectPaintingData();
         this.onStateChanged();
 
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
@@ -1120,18 +1182,67 @@ public class EaselState {
      * update for all players in range. This is useful for quicker restoration
      * of the canvas when working with history on client.
      *
+     * @todo: [LOW] Generally not sure if that needed. Before we synced
+     * actions, that was painting sync mechanism, but now it's excessive.
+     * It sure does allow to restore paintings quicker but it's not that hard
+     * anyway.
+     *
      * Client-only
      * @param canvasCode
      * @param canvasData
      * @param packetTimestamp
      */
     public void processWeakSnapshotClient(String canvasCode, CanvasData canvasData, long packetTimestamp) {
-        //this.snapshots.add(CanvasSnapshot.createWeakSnapshot(canvasData.getColorData(), packetTimestamp));
-        //this.restoreSinceSnapshot();
+        CanvasSnapshot lastSnapshot = this.getLastSnapshot();
+
+        // If not much happened since last snapshot, ignore this
+        if (lastSnapshot != null) {
+            ListIterator<CanvasAction> actionIterator = this.getActionsEndIterator();
+            int actionsSinceLastSnapshot = 0;
+
+            while (actionIterator.hasPrevious()) {
+                if (actionIterator.previous().getStartTime() < lastSnapshot.timestamp) {
+                    break;
+                }
+
+                actionsSinceLastSnapshot++;
+            }
+
+            if (actionsSinceLastSnapshot < ACTION_HISTORY_SIZE / CLIENT_SNAPSHOT_HISTORY_SIZE) {
+                return;
+            }
+        }
+
+        this.insertSnapshot(CanvasSnapshot.createWeakSnapshot(canvasData.getColorData(), packetTimestamp));
+        this.recollectPaintingData();
 
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
             Zetter.LOG.debug("Processed weak snapshot");
         }
+    }
+
+    /**
+     * Insert snapshot keeping the list sorted
+     *
+     * @param addedSnapshot
+     */
+    private void insertSnapshot(CanvasSnapshot addedSnapshot) {
+        final ListIterator<CanvasSnapshot> canvasSnapshotIterator = this.getSnapshotsEndIterator();
+
+        while(canvasSnapshotIterator.hasPrevious()) {
+            CanvasSnapshot currentSnapshot = canvasSnapshotIterator.previous();
+
+            // When iterated to the snapshot that was created before added one
+            // Can just add a snapshot
+            if (addedSnapshot.timestamp > currentSnapshot.timestamp) {
+                canvasSnapshotIterator.add(addedSnapshot);
+                this.cleanupSnapshotHistory();
+                return;
+            }
+        }
+
+        // If no snapshots exist, just add
+        canvasSnapshotIterator.add(addedSnapshot);
     }
 
     /**
