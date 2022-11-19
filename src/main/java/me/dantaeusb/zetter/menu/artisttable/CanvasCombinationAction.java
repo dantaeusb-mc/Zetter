@@ -52,6 +52,12 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     public Rectangle rectangle;
 
+    /*
+     * This needed to stop sending canvas update requests
+     * when we are emptying
+     */
+    private boolean ignoreUpdateEvents = false;
+
     public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
         super(menu, level);
 
@@ -125,7 +131,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                         && CanvasItem.getCanvasData(currentStack, this.level) == null
                     ) {
                         CanvasRenderer.getInstance().queueCanvasTextureUpdate(
-                                CanvasItem.getCanvasCode(currentStack)
+                            CanvasItem.getCanvasCode(currentStack)
                         );
 
                         canvasesReady = false;
@@ -282,7 +288,12 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getWorldCanvasTracker(player.getLevel());
 
             for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-                ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+                // First we are removing item to avoid loading it's canvas on update
+                // otherwise, when server will push container update events with
+                // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
+                // One by one by every removed canvas and cause client to load
+                // textures for removed canvases again
+                ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
 
                 if (combinationStack.isEmpty()) {
                     continue;

@@ -33,7 +33,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     // This is the resource location for the background image
     private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
 
-    protected final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
+    private final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
     private PreviewWidget previewWidget;
     private ChangeActionWidget changeActionWidget;
@@ -67,13 +67,16 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         final int HELP_POSITION_X = 219;
         final int HELP_POSITION_Y = 0;
 
+        // @todo: [LOW] Use rebuildWidgets in Screen
+        this.artistTableWidgets.clear();
+
         this.previewWidget = new PreviewWidget(this, this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X, this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y);
         this.changeActionWidget = new ChangeActionWidget(this, this.getGuiLeft() + CHANGE_ACTION_BUTTON_POSITION_X, this.getGuiTop() + CHANGE_ACTION_BUTTON_POSITION_Y);
         this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
 
-        this.addPaintingWidget(this.previewWidget);
-        this.addPaintingWidget(this.changeActionWidget);
-        this.addPaintingWidget(this.helpWidget);
+        this.addArtistTableWidget(this.previewWidget);
+        this.addArtistTableWidget(this.changeActionWidget);
+        this.addArtistTableWidget(this.helpWidget);
 
         this.getMenu().addSlotListener(this);
     }
@@ -88,7 +91,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         }
     }
 
-    public void addPaintingWidget(AbstractArtistTableWidget widget) {
+    public void addArtistTableWidget(AbstractArtistTableWidget widget) {
         this.artistTableWidgets.add(widget);
         this.addWidget(widget);
     }

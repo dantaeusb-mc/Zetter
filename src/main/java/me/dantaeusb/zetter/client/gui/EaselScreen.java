@@ -38,7 +38,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     // This is the resource location for the background image
     public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel.png");
 
-    private List<AbstractPaintingWidget> paintingWidgets;
+    private final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
 
     private HashMap<TabsWidget.Tab, AbstractTab> tabs;
 
@@ -87,7 +87,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         final int HELP_POSITION_Y = 0;
 
         // @todo: [LOW] Use rebuildWidgets in Screen
-        this.paintingWidgets = Lists.newArrayList();
+        this.paintingWidgets.clear();
 
         // Widgets
 
