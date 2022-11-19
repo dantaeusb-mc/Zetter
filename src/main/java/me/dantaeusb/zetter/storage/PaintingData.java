@@ -62,28 +62,6 @@ public class PaintingData extends AbstractCanvasData {
         return newPainting;
     }
 
-    public static PaintingData load(CompoundTag compoundTag) {
-        final PaintingData newPainting = new PaintingData();
-
-        newPainting.width = compoundTag.getInt(NBT_TAG_WIDTH);
-        newPainting.height = compoundTag.getInt(NBT_TAG_HEIGHT);
-
-        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
-            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
-            newPainting.resolution = Resolution.values()[resolutionOrdinal];
-        } else {
-            newPainting.resolution = Helper.getResolution();
-        }
-
-        newPainting.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
-
-        newPainting.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
-        newPainting.title = compoundTag.getString(NBT_TAG_TITLE);
-        newPainting.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
-
-        return newPainting;
-    }
-
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
     }
@@ -120,6 +98,28 @@ public class PaintingData extends AbstractCanvasData {
     /*
      * Serialization
      */
+
+    public static PaintingData load(CompoundTag compoundTag) {
+        final PaintingData newPainting = new PaintingData();
+
+        newPainting.width = compoundTag.getInt(NBT_TAG_WIDTH);
+        newPainting.height = compoundTag.getInt(NBT_TAG_HEIGHT);
+
+        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
+            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
+            newPainting.resolution = Resolution.values()[resolutionOrdinal];
+        } else {
+            newPainting.resolution = Helper.getResolution();
+        }
+
+        newPainting.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
+
+        newPainting.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
+        newPainting.title = compoundTag.getString(NBT_TAG_TITLE);
+        newPainting.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
+
+        return newPainting;
+    }
 
     public CompoundTag save(CompoundTag compoundTag) {
         super.save(compoundTag);

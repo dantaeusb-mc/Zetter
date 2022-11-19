@@ -109,7 +109,7 @@ public class EaselState {
 
         if (!this.easel.getLevel().isClientSide()) {
             this.updateSnapshots();
-            this.performHistorySyncForServerPlayer(player, true);
+            this.performHistorySyncForServerPlayer(player);
         }
     }
 
@@ -905,7 +905,7 @@ public class EaselState {
      */
     public void performHistorySyncServer() {
         for (Player player : this.players) {
-            this.performHistorySyncForServerPlayer(player, false);
+            this.performHistorySyncForServerPlayer(player);
         }
     }
 
@@ -918,14 +918,12 @@ public class EaselState {
      *
      * @param player
      */
-    public void performHistorySyncForServerPlayer(Player player, boolean force) {
+    public void performHistorySyncForServerPlayer(Player player) {
         ArrayList<CanvasAction> unsyncedActions = this.getUnsyncedActionsForPlayer(player);
 
-        if (unsyncedActions == null || unsyncedActions.isEmpty()) {
-            if (!force) {
-                return;
-            }
-        } else {
+        boolean hasUnsyncedActions = unsyncedActions != null && !unsyncedActions.isEmpty();
+
+        if (hasUnsyncedActions) {
             this.playerLastSyncedAction.put(player.getUUID(), unsyncedActions.get(unsyncedActions.size() - 1).uuid);
         }
 
@@ -937,6 +935,11 @@ public class EaselState {
             lastSnapshot = this.getSnapshotBefore(lastCanceledAction.getStartTime());
         } else {
             lastSnapshot = this.getLastSnapshot();
+        }
+
+        // Nothing to sync
+        if (!hasUnsyncedActions && lastSnapshot == null) {
+            return;
         }
 
         SEaselStateSyncPacket syncMessage = new SEaselStateSyncPacket(
@@ -1157,7 +1160,9 @@ public class EaselState {
                 clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             } else {
                 if (this.findAction(unsyncedAction.uuid) != null) {
-                    Zetter.LOG.warn("Duplicating action");
+                    Zetter.LOG.warn("Duplicating action! Ignoring.");
+                    clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
+                    continue;
                 }
 
                 actionsIterator.add(unsyncedAction);
