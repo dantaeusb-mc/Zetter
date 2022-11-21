@@ -21,12 +21,9 @@ import java.util.function.Supplier;
  */
 public class SEaselResetPacket {
     public final int easelEntityId;
-    public final String canvasCode;
 
-    public SEaselResetPacket(int easelEntityId, String canvasCode) {
+    public SEaselResetPacket(int easelEntityId) {
         this.easelEntityId = easelEntityId;
-
-        this.canvasCode = canvasCode;
     }
 
     /**
@@ -35,9 +32,8 @@ public class SEaselResetPacket {
     public static SEaselResetPacket readPacketData(FriendlyByteBuf networkBuffer) {
         try {
             final int easelEntityId = networkBuffer.readInt();
-            final String canvasCode = networkBuffer.readUtf(128);
 
-            return new SEaselResetPacket(easelEntityId, canvasCode);
+            return new SEaselResetPacket(easelEntityId);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SEaselStateSync: " + e);
             return null;
@@ -49,7 +45,6 @@ public class SEaselResetPacket {
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
-        networkBuffer.writeUtf(this.canvasCode, 128);
     }
 
     public static void handle(final SEaselResetPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -69,6 +64,6 @@ public class SEaselResetPacket {
     @Override
     public String toString()
     {
-        return "SEaselReset[easel=" + this.easelEntityId + "painting=" + this.canvasCode + "]";
+        return "SEaselReset[easel=" + this.easelEntityId + "]";
     }
 }

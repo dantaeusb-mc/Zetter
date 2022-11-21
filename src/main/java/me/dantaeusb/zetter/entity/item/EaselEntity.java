@@ -323,7 +323,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 CanvasItem.getCanvasData(canvasStack, this.level);
                 newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
             }
-        } //@todo: else
+        }
 
         if (this.getEaselContainer().getCanvas() != null) {
             existingCanvasCode = this.getEaselContainer().getCanvas().code;
@@ -331,7 +331,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
         // @todo: [HIGH] Supposedly won't work on client if new canvas is not yet initialized, because it'll have nullish code
         // Canvas changed, drop state
-        if (newCanvasCode != null && !newCanvasCode.equals(existingCanvasCode)) {
+        if (newCanvasCode == null || !newCanvasCode.equals(existingCanvasCode)) {
             this.stateHandler.reset();
         }
 

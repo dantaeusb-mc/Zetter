@@ -59,7 +59,7 @@ public abstract class AbstractCanvasData extends SavedData {
      * @param height
      * @param color
      */
-    protected final void wrapData(Resolution resolution, int width, int height, byte[] color) {
+    public final void wrapData(Resolution resolution, int width, int height, byte[] color) {
         if (width % resolution.getNumeric() != 0 || height % resolution.getNumeric() != 0) {
             throw new IllegalArgumentException("Canvas size is not proportional to given canvas resolution");
         }
@@ -83,7 +83,7 @@ public abstract class AbstractCanvasData extends SavedData {
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
     }
 
-    public boolean updateCanvasPixel(int index, int color) {
+    public final boolean updateCanvasPixel(int index, int color) {
         if (!this.isEditable()) {
             Zetter.LOG.warn("Tried to update sealed canvas " + this);
             return false;
@@ -94,7 +94,7 @@ public abstract class AbstractCanvasData extends SavedData {
         return true;
     }
 
-    public int getColorAt(int pixelX, int pixelY) {
+    public final int getColorAt(int pixelX, int pixelY) {
         return this.getColorAt(this.getPixelIndex(pixelX, pixelY));
     }
 
@@ -159,7 +159,7 @@ public abstract class AbstractCanvasData extends SavedData {
      * @param index Integer index, not byte index
      * @return
      */
-    public int getColorAt(int index) {
+    public final int getColorAt(int index) {
         return this.canvasBuffer.getInt(index * 4);
     }
 
@@ -169,7 +169,7 @@ public abstract class AbstractCanvasData extends SavedData {
      * @param pixelY
      * @return
      */
-    public int getPixelIndex(int pixelX, int pixelY) {
+    public final int getPixelIndex(int pixelX, int pixelY) {
         pixelX = Mth.clamp(pixelX, 0, this.width - 1);
         pixelY = Mth.clamp(pixelY, 0, this.height - 1);
 

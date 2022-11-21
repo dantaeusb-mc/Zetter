@@ -23,17 +23,20 @@ public class SEaselStateSyncPacket {
     public final int easelEntityId;
     public final String canvasCode;
 
-    public final CanvasSnapshot snapshot;
-
+    public final @Nullable CanvasSnapshot snapshot;
     public final @Nullable ArrayList<CanvasAction> unsyncedActions;
 
-    public SEaselStateSyncPacket(int easelEntityId, String canvasCode, CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> unsyncedActions) {
+    public SEaselStateSyncPacket(int easelEntityId, String canvasCode, @Nullable CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> unsyncedActions) {
         this.easelEntityId = easelEntityId;
 
         this.canvasCode = canvasCode;
         this.snapshot = snapshot;
 
         this.unsyncedActions = unsyncedActions;
+
+        if (snapshot == null && (unsyncedActions == null || unsyncedActions.isEmpty())) {
+            Zetter.LOG.error("Preparing empty easel sync packet");
+        }
     }
 
     /**
@@ -44,12 +47,17 @@ public class SEaselStateSyncPacket {
             final int easelEntityId = networkBuffer.readInt();
             final String canvasCode = networkBuffer.readUtf(128);
 
-            final UUID snapshotUuid = networkBuffer.readUUID();
-            final int snapshotColorLength = networkBuffer.readInt();
-            final byte[] snapshotColor = networkBuffer.readByteArray(snapshotColorLength);
-            final long snapshotTimestamp = networkBuffer.readLong();
+            CanvasSnapshot snapshot = null;
+            final boolean hasSnapshot = networkBuffer.readBoolean();
 
-            CanvasSnapshot snapshot = CanvasSnapshot.createNetworkSnapshot(snapshotUuid, snapshotColor, snapshotTimestamp);
+            if (hasSnapshot) {
+                final UUID snapshotUuid = networkBuffer.readUUID();
+                final int snapshotColorLength = networkBuffer.readInt();
+                final byte[] snapshotColor = networkBuffer.readByteArray(snapshotColorLength);
+                final long snapshotTimestamp = networkBuffer.readLong();
+
+                snapshot = CanvasSnapshot.createNetworkSnapshot(snapshotUuid, snapshotColor, snapshotTimestamp);
+            }
 
             int actionBuffersCount = networkBuffer.readInt();
 
@@ -83,20 +91,23 @@ public class SEaselStateSyncPacket {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode, 128);
 
-        networkBuffer.writeUUID(this.snapshot.uuid);
-        networkBuffer.writeInt(this.snapshot.colors.length);
-        networkBuffer.writeByteArray(this.snapshot.colors);
-        networkBuffer.writeLong(this.snapshot.timestamp);
+        networkBuffer.writeBoolean(this.snapshot != null);
 
-        if (this.unsyncedActions == null || this.unsyncedActions.isEmpty()) {
-            networkBuffer.writeInt(0);
-            return;
+        if (this.snapshot != null) {
+            networkBuffer.writeUUID(this.snapshot.uuid);
+            networkBuffer.writeInt(this.snapshot.colors.length);
+            networkBuffer.writeByteArray(this.snapshot.colors);
+            networkBuffer.writeLong(this.snapshot.timestamp);
         }
 
-        networkBuffer.writeInt(this.unsyncedActions.size());
+        if (this.unsyncedActions != null && !this.unsyncedActions.isEmpty()) {
+            networkBuffer.writeInt(this.unsyncedActions.size());
 
-        for (CanvasAction actionBuffer : this.unsyncedActions) {
-            CanvasAction.writePacketData(actionBuffer, networkBuffer);
+            for (CanvasAction actionBuffer : this.unsyncedActions) {
+                CanvasAction.writePacketData(actionBuffer, networkBuffer);
+            }
+        } else {
+            networkBuffer.writeInt(0);
         }
     }
 
