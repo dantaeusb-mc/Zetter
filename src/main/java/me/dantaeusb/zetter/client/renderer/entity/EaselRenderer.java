@@ -83,7 +83,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         // Scale and prepare
         poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
-        poseStack.translate(-8.0D, 12.5D, -3.0D);
+        poseStack.translate(-8.0D, 12.5D, -4.0D);
         poseStack.mulPose(Vector3f.XP.rotation(0.1745F));
         poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
         poseStack.translate(-8.0D - (8.0D * canvasBlockWidth), -16.0D * canvasBlockHeight, 0.0D);

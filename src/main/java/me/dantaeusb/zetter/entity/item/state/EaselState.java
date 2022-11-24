@@ -939,7 +939,6 @@ public class EaselState {
      * including history actions and latest
      * verified snapshot
      *
-     * @todo: [HIGH]: Server sends snapshots indefinitely.
      * @todo: [MED]: First check should be redundant, it SHOULD never happen.
      * But it still happen sometimes, for example when easel is removed in painting process
      *
@@ -1163,7 +1162,6 @@ public class EaselState {
             return;
         }
 
-        // @todo: [HIGH] Insert carefully
         if (snapshot != null) {
             if (this.getLastSnapshot() == null) {
                 this.insertSnapshot(snapshot);
