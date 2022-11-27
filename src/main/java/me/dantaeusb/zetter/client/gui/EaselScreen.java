@@ -250,7 +250,6 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
 
     @Override
     protected void renderTooltip(PoseStack matrixStack, int x, int y) {
-
         super.renderTooltip(matrixStack, x, y);
 
         for (AbstractPaintingWidget widget : this.paintingWidgets) {

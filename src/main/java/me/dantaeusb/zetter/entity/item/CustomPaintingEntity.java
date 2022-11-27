@@ -278,7 +278,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         buffer.writeBlockPos(this.pos);
         buffer.writeByte((byte)this.direction.get2DDataValue());
 
-        buffer.writeUtf(this.paintingCode, 64);
+        buffer.writeUtf(this.paintingCode, Helper.CANVAS_CODE_MAX_LENGTH);
 
         buffer.writeInt(this.blockWidth);
         buffer.writeInt(this.blockHeight);
@@ -291,7 +291,7 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
         this.pos = buffer.readBlockPos();
         this.direction = Direction.from2DDataValue(buffer.readByte());
 
-        this.paintingCode = buffer.readUtf(64);
+        this.paintingCode = buffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
 
         this.blockWidth = buffer.readInt();
         this.blockHeight = buffer.readInt();

@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.network.ServerHandler;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,7 +21,7 @@ public class CCanvasRequestPacket {
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
     public static CCanvasRequestPacket readPacketData(FriendlyByteBuf buf) {
-        String canvasName = buf.readUtf(64);
+        String canvasName = buf.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
 
         return new CCanvasRequestPacket(canvasName);
     }
@@ -29,7 +30,7 @@ public class CCanvasRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeUtf(this.canvasName, 64);
+        buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_LENGTH);
     }
 
     public String getCanvasName() {

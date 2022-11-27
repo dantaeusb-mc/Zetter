@@ -12,12 +12,14 @@ import javax.annotation.Nullable;
  * @todo: [MID] Get rid of this class, all functions can be moved to the classes with execution context
  */
 public class Helper {
-    public static int DUMMY_BLACK_COLOR = 0xFF000000;
-    public static int DUMMY_PINK_COLOR = 0xFFFF00FF;
-    public static int CANVAS_COLOR = 0xFFE0DACE;
+    public static final int DUMMY_BLACK_COLOR = 0xFF000000;
+    public static final int DUMMY_PINK_COLOR = 0xFFFF00FF;
+    public static final int CANVAS_COLOR = 0xFFE0DACE;
 
     public static final String COMBINED_CANVAS_CODE = Zetter.MOD_ID + "_combined_canvas";
     public static final String FALLBACK_CANVAS_CODE = Zetter.MOD_ID + "_fallback_canvas";
+
+    public static final int CANVAS_CODE_MAX_LENGTH = 64;
 
     /**
      * Resolution for GUIs
