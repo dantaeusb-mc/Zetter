@@ -20,9 +20,9 @@ public class DummyCanvasData extends AbstractCanvasData {
     public static final String TYPE = "dummy";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
 
-    protected DummyCanvasData() {
-        super(Zetter.MOD_ID, TYPE);
-    }
+    public static final CanvasDataBuilder<DummyCanvasData> BUILDER = new DummyCanvasDataBuilder();
+
+    protected DummyCanvasData() {}
 
     public static DummyCanvasData createDummy() {
         int width = Helper.getResolution().getNumeric();
@@ -50,13 +50,6 @@ public class DummyCanvasData extends AbstractCanvasData {
         return newDummyCanvas;
     }
 
-    public static DummyCanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
-        final DummyCanvasData newCanvas = new DummyCanvasData();
-        newCanvas.wrapData(resolution, width, height, color);
-
-        return newCanvas;
-    }
-
     public void updateColorData(byte[] color) {
         // Don't check size mismatch cause we might use it as combined canvas
 
@@ -82,38 +75,42 @@ public class DummyCanvasData extends AbstractCanvasData {
         return ZetterCanvasTypes.DUMMY.get();
     }
 
-    /*
-     * Serialization
-     */
+    private static class DummyCanvasDataBuilder implements CanvasDataBuilder<DummyCanvasData> {
+        public DummyCanvasData createFresh(Resolution resolution, int width, int height) {
+            return DummyCanvasData.createDummy(resolution, width, height);
+        }
 
-    /**
-     * @todo: [HIGH] Use a placeholder, it's fall-back
-     * @param compoundTag
-     * @return
-     */
-    public static DummyCanvasData load(CompoundTag compoundTag) {
-        Zetter.LOG.error("Trying to read into dummy canvas!");
+        public DummyCanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
+            final DummyCanvasData newCanvas = new DummyCanvasData();
+            newCanvas.wrapData(resolution, width, height, color);
 
-        return DummyCanvasData.createDummy();
-    }
+            return newCanvas;
+        }
 
-    public CompoundTag save(CompoundTag compoundTag) {
-        Zetter.LOG.error("Trying to save dummy canvas!");
+        /**
+         * @todo: [HIGH] Use a placeholder, it's fall-back
+         * @param compoundTag
+         * @return
+         */
+        public DummyCanvasData load(CompoundTag compoundTag) {
+            Zetter.LOG.error("Trying to read into dummy canvas!");
 
-        return compoundTag;
-    }
+            return DummyCanvasData.createDummy();
+        }
 
-    /*
-     * Networking
-     */
+        public CompoundTag save(CompoundTag compoundTag) {
+            Zetter.LOG.error("Trying to save dummy canvas!");
 
+            return compoundTag;
+        }
 
-    public static DummyCanvasData readPacketData(FriendlyByteBuf networkBuffer) {
-        throw new IllegalStateException("Trying to read Dummy Canvas from network!");
-    }
+        public DummyCanvasData readPacketData(FriendlyByteBuf networkBuffer) {
+            throw new IllegalStateException("Trying to read Dummy Canvas from network!");
+        }
 
-    public static void writePacketData(DummyCanvasData canvasData, FriendlyByteBuf networkBuffer) {
-        throw new IllegalStateException("Trying to write Dummy Canvas to network!");
+        public void writePacketData(DummyCanvasData canvasData, FriendlyByteBuf networkBuffer) {
+            throw new IllegalStateException("Trying to write Dummy Canvas to network!");
+        }
     }
 }
 

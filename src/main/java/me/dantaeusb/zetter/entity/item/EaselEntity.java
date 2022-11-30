@@ -34,6 +34,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -145,7 +146,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+        if (capability == ForgeCapabilities.ITEM_HANDLER
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.easelContainerOptional.cast();
         }

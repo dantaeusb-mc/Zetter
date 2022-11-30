@@ -17,50 +17,19 @@ public class PaintingData extends AbstractCanvasData {
     public static final String TYPE = "painting";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
 
+    public static final CanvasDataBuilder<PaintingData> BUILDER = new PaintingDataBuilder();
+
+    public static final int MAX_GENERATION = 2;
+
     protected static final String NBT_TAG_AUTHOR_NAME = "author_name";
     protected static final String NBT_TAG_TITLE = "title";
     protected static final String NBT_TAG_BANNED = "Banned";
 
-    public static final int MAX_GENERATION = 2;
-
     protected String authorName;
     protected String title;
-    protected boolean banned;
+    protected boolean banned = false;
 
-    protected PaintingData() {
-        super(Zetter.MOD_ID, TYPE);
-
-        this.banned = false;
-    }
-
-    /**
-     * @todo: [HIGH] Use placeholders
-     * @param resolution
-     * @param width
-     * @param height
-     * @return
-     */
-    public static PaintingData createFresh(Resolution resolution, int width, int height) {
-        final PaintingData newPainting = new PaintingData();
-
-        byte[] color = new byte[width * height * 4];
-        ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
-
-        for (int x = 0; x < width * height; x++) {
-            defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
-        }
-
-        newPainting.wrapData(resolution, width, height, color);
-
-        return newPainting;
-    }
-
-    public static PaintingData createWrap(Resolution resolution, int width, int height, byte[] color) {
-        final PaintingData newPainting = new PaintingData();
-        newPainting.wrapData(resolution, width, height, color);
-
-        return newPainting;
-    }
+    protected PaintingData() {}
 
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
@@ -91,34 +60,8 @@ public class PaintingData extends AbstractCanvasData {
         return false;
     }
 
-    public CanvasDataType<PaintingData> getType() {
+    public CanvasDataType<? extends PaintingData> getType() {
         return ZetterCanvasTypes.PAINTING.get();
-    }
-
-    /*
-     * Serialization
-     */
-
-    public static PaintingData load(CompoundTag compoundTag) {
-        final PaintingData newPainting = new PaintingData();
-
-        newPainting.width = compoundTag.getInt(NBT_TAG_WIDTH);
-        newPainting.height = compoundTag.getInt(NBT_TAG_HEIGHT);
-
-        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
-            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
-            newPainting.resolution = Resolution.values()[resolutionOrdinal];
-        } else {
-            newPainting.resolution = Helper.getResolution();
-        }
-
-        newPainting.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
-
-        newPainting.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
-        newPainting.title = compoundTag.getString(NBT_TAG_TITLE);
-        newPainting.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
-
-        return newPainting;
     }
 
     public CompoundTag save(CompoundTag compoundTag) {
@@ -131,50 +74,108 @@ public class PaintingData extends AbstractCanvasData {
         return compoundTag;
     }
 
-    /*
-     * Networking
-     */
+    private static class PaintingDataBuilder implements CanvasDataBuilder<PaintingData> {
 
-    public static PaintingData readPacketData(FriendlyByteBuf networkBuffer) {
-        final PaintingData newPainting = new PaintingData();
+        /**
+         * @todo: [HIGH] Use placeholders
+         * @param resolution
+         * @param width
+         * @param height
+         * @return
+         */
+        public PaintingData createFresh(Resolution resolution, int width, int height) {
+            final PaintingData newPainting = new PaintingData();
 
-        final byte resolutionOrdinal = networkBuffer.readByte();
-        AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
+            byte[] color = new byte[width * height * 4];
+            ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
-        final int width = networkBuffer.readInt();
-        final int height = networkBuffer.readInt();
+            for (int x = 0; x < width * height; x++) {
+                defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
+            }
 
-        final int colorDataSize = networkBuffer.readInt();
-        ByteBuffer colorData = networkBuffer.readBytes(colorDataSize).nioBuffer();
-        byte[] unwrappedColorData = new byte[width * height * 4];
-        colorData.get(unwrappedColorData);
+            newPainting.wrapData(resolution, width, height, color);
 
-        newPainting.wrapData(
+            return newPainting;
+        }
+
+        public PaintingData createWrap(Resolution resolution, int width, int height, byte[] color) {
+            final PaintingData newPainting = new PaintingData();
+            newPainting.wrapData(resolution, width, height, color);
+
+            return newPainting;
+        }
+
+        /*
+         * Serialization
+         */
+
+        public PaintingData load(CompoundTag compoundTag) {
+            final PaintingData newPainting = new PaintingData();
+
+            newPainting.width = compoundTag.getInt(NBT_TAG_WIDTH);
+            newPainting.height = compoundTag.getInt(NBT_TAG_HEIGHT);
+
+            if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
+                int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
+                newPainting.resolution = Resolution.values()[resolutionOrdinal];
+            } else {
+                newPainting.resolution = Helper.getResolution();
+            }
+
+            newPainting.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
+
+            newPainting.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
+            newPainting.title = compoundTag.getString(NBT_TAG_TITLE);
+            newPainting.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
+
+            return newPainting;
+        }
+
+        /*
+         * Networking
+         */
+
+        public PaintingData readPacketData(FriendlyByteBuf networkBuffer) {
+            final PaintingData newPainting = new PaintingData();
+
+            final byte resolutionOrdinal = networkBuffer.readByte();
+            AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
+
+            final int width = networkBuffer.readInt();
+            final int height = networkBuffer.readInt();
+
+            final int colorDataSize = networkBuffer.readInt();
+            ByteBuffer colorData = networkBuffer.readBytes(colorDataSize).nioBuffer();
+            byte[] unwrappedColorData = new byte[width * height * 4];
+            colorData.get(unwrappedColorData);
+
+            newPainting.wrapData(
                 resolution,
                 width,
                 height,
                 unwrappedColorData
-        );
+            );
 
-        final String authorName = networkBuffer.readUtf(64);
-        final String title = networkBuffer.readUtf(32);
+            final String authorName = networkBuffer.readUtf(64);
+            final String title = networkBuffer.readUtf(32);
 
-        newPainting.setMetaProperties(
+            newPainting.setMetaProperties(
                 authorName,
                 title
-        );
+            );
 
-        return newPainting;
-    }
+            return newPainting;
+        }
 
-    public static void writePacketData(PaintingData canvasData, FriendlyByteBuf networkBuffer) {
-        networkBuffer.writeByte(canvasData.resolution.ordinal());
-        networkBuffer.writeInt(canvasData.width);
-        networkBuffer.writeInt(canvasData.height);
-        networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());
-        networkBuffer.writeBytes(canvasData.getColorDataBuffer());
-        networkBuffer.writeUtf(canvasData.authorName, 64);
-        networkBuffer.writeUtf(canvasData.title, 32);
+        public void writePacketData(PaintingData canvasData, FriendlyByteBuf networkBuffer) {
+            networkBuffer.writeByte(canvasData.resolution.ordinal());
+            networkBuffer.writeInt(canvasData.width);
+            networkBuffer.writeInt(canvasData.height);
+            networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());
+            networkBuffer.writeBytes(canvasData.getColorDataBuffer());
+            networkBuffer.writeUtf(canvasData.authorName, 64);
+            networkBuffer.writeUtf(canvasData.title, 32);
+        }
     }
 }
 

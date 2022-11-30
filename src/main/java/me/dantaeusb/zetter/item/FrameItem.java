@@ -65,9 +65,6 @@ public class FrameItem extends PaintingItem {
     }
 
     /**
-     * @todo: [LOW] Wtf is this?
-     * gets the fullness property override, used in mbe11_item_variants_registry_name.json to select which model should
-     *   be rendered
      * @param stack
      * @param world
      * @param livingEntity

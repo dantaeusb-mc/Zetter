@@ -260,7 +260,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         if (!player.getLevel().isClientSide()) {
             CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
-            CanvasData combinedCanvasData = CanvasData.createWrap(
+            CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
                     this.canvasData.getResolution(),
                     this.canvasData.getWidth(),
                     this.canvasData.getHeight(),

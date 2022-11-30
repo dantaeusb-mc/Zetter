@@ -9,28 +9,19 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ZetterCanvasTypes
 {
-    private static final DeferredRegister<CanvasDataType<?>> CANVAS_TYPES = DeferredRegister.create(ZetterRegistries.CANVAS_TYPE_REGISTRY_NAME, Zetter.MOD_ID);
+    public static final DeferredRegister<CanvasDataType<?>> CANVAS_TYPES = DeferredRegister.create(ZetterRegistries.CANVAS_TYPE_REGISTRY_NAME, Zetter.MOD_ID);
 
     public static final RegistryObject<CanvasDataType<DummyCanvasData>> DUMMY = CANVAS_TYPES.register(DummyCanvasData.TYPE, () -> new CanvasDataType<>(
-            DummyCanvasData::createDummy,
-            DummyCanvasData::createWrap,
-            DummyCanvasData::load,
-            DummyCanvasData::readPacketData,
-            DummyCanvasData::writePacketData
+        new ResourceLocation(Zetter.MOD_ID, DummyCanvasData.TYPE),
+        DummyCanvasData.BUILDER
     ));
     public static final RegistryObject<CanvasDataType<CanvasData>> CANVAS = CANVAS_TYPES.register(CanvasData.TYPE, () -> new CanvasDataType<>(
-            CanvasData::createFresh,
-            CanvasData::createWrap,
-            CanvasData::load,
-            CanvasData::readPacketData,
-            CanvasData::writePacketData
+        new ResourceLocation(Zetter.MOD_ID, CanvasData.TYPE),
+        CanvasData.BUILDER
     ));
     public static final RegistryObject<CanvasDataType<PaintingData>> PAINTING = CANVAS_TYPES.register(PaintingData.TYPE, () -> new CanvasDataType<>(
-            PaintingData::createFresh,
-            PaintingData::createWrap,
-            PaintingData::load,
-            PaintingData::readPacketData,
-            PaintingData::writePacketData
+        new ResourceLocation(Zetter.MOD_ID, PaintingData.TYPE),
+        PaintingData.BUILDER
     ));
 
     public static void init(IEventBus bus) {

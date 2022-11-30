@@ -190,7 +190,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                         continue;
                     }
 
-                    CanvasData itemData = CanvasData.createWrap(
+                    CanvasData itemData = CanvasData.BUILDER.createWrap(
                             combinedCanvasData.getResolution(),
                             numericResolution,
                             numericResolution,
@@ -213,7 +213,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Set data for the picked item
-        CanvasData itemData = CanvasData.createWrap(
+        CanvasData itemData = CanvasData.BUILDER.createWrap(
                 combinedCanvasData.getResolution(),
                 numericResolution,
                 numericResolution,

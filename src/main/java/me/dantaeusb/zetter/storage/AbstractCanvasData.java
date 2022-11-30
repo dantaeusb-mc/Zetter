@@ -27,9 +27,6 @@ public abstract class AbstractCanvasData extends SavedData {
     protected static final String NBT_TAG_RESOLUTION = "resolution";
     protected static final String NBT_TAG_COLOR = "color";
 
-    public final String type;
-    public final ResourceLocation resourceLocation;
-
     // Maybe final?
 
     protected byte[] color;
@@ -47,10 +44,12 @@ public abstract class AbstractCanvasData extends SavedData {
      */
     protected boolean managed = true;
 
-    protected AbstractCanvasData(String modId, String type) {
-        this.type = type;
-        this.resourceLocation = new ResourceLocation(modId, type);
-    }
+    /**
+     * Returns type of this canvas, which can return
+     * resource id
+     * @return
+     */
+    public abstract CanvasDataType<? extends AbstractCanvasData> getType();
 
     /**
      *
@@ -176,14 +175,12 @@ public abstract class AbstractCanvasData extends SavedData {
         return pixelY * this.width + pixelX;
     }
 
-    abstract public CanvasDataType<?> getType();
-
     /*
      * Loading and syncing
      */
 
     public CompoundTag save(CompoundTag compoundTag) {
-        compoundTag.putString(NBT_TAG_TYPE, this.type);
+        compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);
         compoundTag.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());

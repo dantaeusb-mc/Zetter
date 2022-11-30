@@ -283,7 +283,7 @@ public class CanvasItem extends Item
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(level);
         final int numericResolution = Helper.getResolution().getNumeric();
 
-        CanvasData canvasData = CanvasData.createFresh(Helper.getResolution(), numericResolution, numericResolution);
+        CanvasData canvasData = CanvasData.BUILDER.createFresh(Helper.getResolution(), numericResolution, numericResolution);
         String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
         canvasTracker.registerCanvasData(canvasCode, canvasData);
 

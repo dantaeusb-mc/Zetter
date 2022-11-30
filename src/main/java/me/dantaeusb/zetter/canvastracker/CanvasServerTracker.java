@@ -3,7 +3,6 @@ package me.dantaeusb.zetter.canvastracker;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.event.CanvasServerPostRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasServerPreRegisterEvent;
 import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
@@ -11,12 +10,12 @@ import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -105,15 +104,23 @@ public class CanvasServerTracker implements ICanvasTracker {
         this.desyncCanvases.add(canvasCode);
     }
 
+    /**
+     * @todo: [MED] Remove deprecated sections on next release
+     * @param canvasCode
+     * @return
+     * @param <T>
+     */
     @Override
     @Nullable
+    @SuppressWarnings("unchecked")
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
+        assert this.world.getServer() != null;
         return this.world.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
                 int canvasTypeInt = -1;
-                String canvasType = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
+                String canvasResourceLocation = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
 
-                if (canvasType.isEmpty()) {
+                if (canvasResourceLocation.isEmpty()) {
                     if (!compoundTag.contains(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED)) {
                         throw new IllegalStateException("Cannot find canvas type");
                     }
@@ -122,26 +129,35 @@ public class CanvasServerTracker implements ICanvasTracker {
 
                     switch (canvasTypeInt) {
                         case 1:
-                            canvasType = CanvasData.TYPE;
+                            canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().resourceLocation.toString();
                             break;
                         case 0:
                         case 2:
                         default:
-                            canvasType = PaintingData.TYPE;
+                            canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().resourceLocation.toString();
                             break;
                     }
                 }
 
-                CanvasDataType<T> type = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(Zetter.MOD_ID, canvasType));
-
-                if (type == null) {
-                    throw new IllegalStateException("No type of canvas " + canvasType + " is registered");
+                // Minor beta versions were saving data without modid separator
+                boolean deprecatedType = !canvasResourceLocation.contains(":");
+                if (deprecatedType) {
+                    canvasResourceLocation = Zetter.MOD_ID + ":" + canvasResourceLocation;
                 }
 
-                T canvasData = type.loadFromNbt(compoundTag);
+                final String finalCanvasResourceLocation = canvasResourceLocation;
+                Optional<RegistryObject<CanvasDataType<?>>> type = ZetterCanvasTypes.CANVAS_TYPES.getEntries().stream()
+                    .filter((canvasType) -> canvasType.get().resourceLocation.toString().equals(finalCanvasResourceLocation))
+                    .findFirst();
+
+                if (type.isEmpty()) {
+                    throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
+                }
+
+                T canvasData = (T) type.get().get().loadFromNbt(compoundTag);
 
                 // Remove deprecated tags
-                if (canvasTypeInt != -1) {
+                if (canvasTypeInt != -1 || deprecatedType) {
                     canvasData.setDirty();
                 }
 
@@ -168,6 +184,7 @@ public class CanvasServerTracker implements ICanvasTracker {
         CanvasServerPreRegisterEvent preEvent = new CanvasServerPreRegisterEvent(canvasCode, canvasData, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
+        assert this.world.getServer() != null;
         this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
 
         CanvasServerPostRegisterEvent postEvent = new CanvasServerPostRegisterEvent(canvasCode, canvasData, timestamp);
@@ -190,7 +207,7 @@ public class CanvasServerTracker implements ICanvasTracker {
         }
 
         if (!canvasData.getType().equals(ZetterCanvasTypes.CANVAS.get())) {
-            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.resourceLocation + " on server side, not supported yet");
+            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.getType().resourceLocation.toString() + " on server side, not supported yet");
             return;
         }
 
@@ -216,6 +233,7 @@ public class CanvasServerTracker implements ICanvasTracker {
      */
 
     public void tick() {
+        assert this.world.getServer() != null;
         this.ticksFromLastSync++;
 
         if (this.ticksFromLastSync < 20) {
@@ -231,7 +249,7 @@ public class CanvasServerTracker implements ICanvasTracker {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
                 ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
-                SCanvasSyncPacket canvasSyncMessage = new SCanvasSyncPacket(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
+                SCanvasSyncPacket<?> canvasSyncMessage = new SCanvasSyncPacket(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }
