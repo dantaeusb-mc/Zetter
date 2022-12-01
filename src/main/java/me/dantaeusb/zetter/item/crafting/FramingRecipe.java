@@ -91,6 +91,7 @@ public class FramingRecipe extends CustomRecipe {
 
         if (!paintingStack.isEmpty() && paintingStack.hasTag()) {
             ItemStack outStack = frameStack.copy();
+            outStack.setCount(1);
 
             CompoundTag compoundnbt = paintingStack.getTag().copy();
             outStack.setTag(compoundnbt);
