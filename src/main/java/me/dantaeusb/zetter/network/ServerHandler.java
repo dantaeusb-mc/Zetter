@@ -219,7 +219,7 @@ public class ServerHandler {
                 canvasData.getColorData()
             );
 
-            paintingData.setMetaProperties(player.getName().getString(), paintingTitle);
+            paintingData.setMetaProperties(player.getUUID(), player.getName().getString(), paintingTitle);
             canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
 
             PaintingItem.storePaintingData(outStack, newCode, paintingData, 0);

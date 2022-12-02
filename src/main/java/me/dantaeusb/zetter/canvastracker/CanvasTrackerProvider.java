@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.core.ZetterCapabilities;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -25,7 +26,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
         if (world.isClientSide()) {
             this.canvasTrackerCapability = new CanvasClientTracker(world);
         } else {
-            this.canvasTrackerCapability = new CanvasServerTracker(world);
+            this.canvasTrackerCapability = new CanvasServerTracker((ServerLevel) world);
         }
     }
 

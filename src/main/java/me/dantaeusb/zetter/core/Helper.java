@@ -4,9 +4,13 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
 import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * @todo: [MID] Get rid of this class, all functions can be moved to the classes with execution context
@@ -54,5 +58,25 @@ public class Helper {
         }
 
         return key;
+    }
+
+    /**
+     * Before we did not store player UUID data in paintings,
+     * to provide compatibility layer we would need to convert
+     * player nickname back to uuid, this should work for the most cases.
+     * @param level
+     * @param authorNickname
+     * @return
+     */
+    public static @Nullable UUID tryToRestoreAuthorUuid(ServerLevel level, String authorNickname) {
+        List<ServerPlayer> playersWithAuthorNickname = level.getPlayers(serverPlayer -> {
+            return serverPlayer.getName().getString().equals(authorNickname);
+        });
+
+        if (playersWithAuthorNickname.size() == 1) {
+            return playersWithAuthorNickname.get(0).getUUID();
+        }
+
+        return null;
     }
 }

@@ -10,6 +10,7 @@ import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.*;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
@@ -25,7 +26,7 @@ public class CanvasServerTracker implements ICanvasTracker {
     private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
     private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
 
-    private final Level world;
+    private final ServerLevel world;
 
     protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
@@ -34,7 +35,7 @@ public class CanvasServerTracker implements ICanvasTracker {
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
 
-    public CanvasServerTracker(Level world) {
+    public CanvasServerTracker(ServerLevel world) {
         super();
 
         this.world = world;
@@ -155,6 +156,7 @@ public class CanvasServerTracker implements ICanvasTracker {
                 }
 
                 T canvasData = (T) type.get().get().loadFromNbt(compoundTag);
+                canvasData.correctData(this.world);
 
                 // Remove deprecated tags
                 if (canvasTypeInt != -1 || deprecatedType) {

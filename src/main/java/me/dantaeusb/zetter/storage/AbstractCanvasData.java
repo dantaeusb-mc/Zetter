@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -178,6 +179,10 @@ public abstract class AbstractCanvasData extends SavedData {
     /*
      * Loading and syncing
      */
+
+    public void correctData(ServerLevel level) {
+        // Do nothing
+    }
 
     public CompoundTag save(CompoundTag compoundTag) {
         compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
