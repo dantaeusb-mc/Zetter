@@ -1,14 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
   "pattern": [
-    "SSS",
-    "WAW",
-    "WPW"
+    "AP",
+    "WW",
+    "WW"
   ],
   "key": {
-    "S": {
-      "tag": "minecraft:wooden_slabs"
-    },
     "A": {
       "item": "zetter:paints"
     },
