@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.EntityType;
@@ -15,7 +15,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class ZetterEntities {
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Zetter.MOD_ID);
 
-    public static RegistryObject<EntityType<CustomPaintingEntity>> CUSTOM_PAINTING_ENTITY = ENTITIES.register("custom_painting_entity", () -> EntityType.Builder.<CustomPaintingEntity>of(CustomPaintingEntity::new, MobCategory.MISC)
+    public static RegistryObject<EntityType<PaintingEntity>> CUSTOM_PAINTING_ENTITY = ENTITIES.register("custom_painting_entity", () -> EntityType.Builder.<PaintingEntity>of(PaintingEntity::new, MobCategory.MISC)
             .sized(1.0F, 1.0F)
             .build(Zetter.MOD_ID + "_custom_painting_entity"));
     public static RegistryObject<EntityType<EaselEntity>> EASEL_ENTITY = ENTITIES.register("easel_entity", () -> EntityType.Builder.<EaselEntity>of(EaselEntity::new, MobCategory.MISC)

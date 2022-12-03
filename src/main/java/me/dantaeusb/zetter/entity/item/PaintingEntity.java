@@ -37,7 +37,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 
-public class CustomPaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
+public class PaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
     public static final String NBT_TAG_FACING = "Facing";
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
     public static final String NBT_TAG_MATERIAL = "Material";
@@ -60,11 +60,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
     protected Materials material;
 
-    public CustomPaintingEntity(EntityType<? extends CustomPaintingEntity> type, Level world) {
+    public PaintingEntity(EntityType<? extends PaintingEntity> type, Level world) {
         super(type, world);
     }
 
-    public CustomPaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
+    public PaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
         super(ZetterEntities.CUSTOM_PAINTING_ENTITY.get(), world, pos);
 
         this.material = material;
@@ -207,21 +207,11 @@ public class CustomPaintingEntity extends HangingEntity implements IEntityAdditi
 
         PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode);
 
-        String paintingName = paintingData.getPaintingTitle();
-        String authorName = paintingData.getAuthorName();
-
-        if (StringUtil.isNullOrEmpty(paintingName)) {
-            paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+        if (paintingData == null) {
+            return InteractionResult.FAIL;
         }
 
-        if (StringUtil.isNullOrEmpty(authorName)) {
-            authorName = Component.translatable("item.zetter.painting.unknown").getString();
-        }
-
-        player.displayClientMessage(
-            Component.translatable("item.zetter.customPaintingByAuthor", paintingName, authorName),
-            true
-        );
+        paintingData.getOverlay().setPainting(paintingData);
 
         return InteractionResult.CONSUME;
     }

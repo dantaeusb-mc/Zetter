@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter.item;
 
-import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -15,15 +15,14 @@ import java.util.Optional;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 
 public class FrameItem extends PaintingItem {
-    private CustomPaintingEntity.Materials material;
+    private PaintingEntity.Materials material;
     private boolean hasPlate;
 
-    public FrameItem(Properties properties, CustomPaintingEntity.Materials material, boolean plated) {
+    public FrameItem(Properties properties, PaintingEntity.Materials material, boolean plated) {
         super(properties);
 
         this.material = material;
@@ -56,7 +55,7 @@ public class FrameItem extends PaintingItem {
         return Component.translatable(this.getDescriptionId(stack));
     }
 
-    public CustomPaintingEntity.Materials getMaterial() {
+    public PaintingEntity.Materials getMaterial() {
         return this.material;
     }
 
@@ -103,7 +102,7 @@ public class FrameItem extends PaintingItem {
 
             Level world = context.getLevel();
 
-            CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
+            PaintingEntity paintingEntity = new PaintingEntity(
                     world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack), getGeneration(stack)
             );
 

@@ -42,6 +42,8 @@ public class ZetterGameEvents {
         if (event.phase == TickEvent.Phase.END && Minecraft.getInstance().level != null) {
             CanvasRenderer.getInstance().update(Util.getMillis());
         }
+
+        ZetterOverlays.PAINTING_INFO.tick();
     }
 
     /**

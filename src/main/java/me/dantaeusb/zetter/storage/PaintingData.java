@@ -2,12 +2,17 @@ package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import me.dantaeusb.zetter.core.ZetterOverlays;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
@@ -61,12 +66,20 @@ public class PaintingData extends AbstractCanvasData {
         return CODE_PREFIX + paintingId;
     }
 
+    public boolean isBanned() {
+        return this.banned;
+    }
+
     public boolean isRenderable() {
         return true;
     }
 
     public boolean isEditable() {
         return false;
+    }
+
+    public PaintingInfoOverlay getOverlay() {
+        return ZetterOverlays.PAINTING_INFO;
     }
 
     public CanvasDataType<? extends PaintingData> getType() {

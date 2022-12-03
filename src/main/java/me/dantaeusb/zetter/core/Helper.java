@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -50,7 +50,7 @@ public class Helper {
         return canvasTracker;
     }
 
-    public static String getFrameKey(CustomPaintingEntity.Materials material, boolean plated) {
+    public static String getFrameKey(PaintingEntity.Materials material, boolean plated) {
         String key = material.toString();
 
         if (plated) {
