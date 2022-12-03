@@ -203,7 +203,7 @@ public class EaselState {
             }
         } else {
             // No need to tick if no one's using
-            if (this.players.size() == 0) {
+            if (this.players.size() == 0 || this.getCanvasCode() == null) {
                 return;
             }
 
