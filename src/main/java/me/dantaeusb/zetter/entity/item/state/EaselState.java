@@ -24,13 +24,13 @@ import net.minecraftforge.network.PacketDistributor;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class is responsible for all canvas interactions for easels
  * It keeps painting states at different moments (snapshots)
  * action history, processes sync signals
  *
- * @todo: [HIGH] When wiping actions and snapshots, update last synced actions and snapshots for every player
  * @todo: [LOW] Make it capability?
  */
 public class EaselState {
@@ -305,38 +305,81 @@ public class EaselState {
             return;
         }
 
-        boolean foundCanceled = false;
+        ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
+        CanvasAction firstRemovedAction = null;
+        CanvasAction firstNonRemovedAction = null;
 
-        ListIterator<CanvasAction> actionsIterator = this.actions.listIterator();
-        long firstCanceled = System.currentTimeMillis();
+        while(actionsIterator.hasPrevious()) {
+            CanvasAction action = actionsIterator.previous();
 
-        while(actionsIterator.hasNext()) {
-            CanvasAction paintingActionBuffer = actionsIterator.next();
-
-            if (paintingActionBuffer.isCanceled()) {
-                if (!foundCanceled) {
-                    foundCanceled = true;
-                    firstCanceled = paintingActionBuffer.getStartTime();
-                }
-
+            if (action.isCanceled()) {
+                firstRemovedAction = action;
                 actionsIterator.remove();
+            } else if(firstNonRemovedAction == null) {
+                firstNonRemovedAction = action;
+            } else {
+                break;
             }
         }
 
-        if (!foundCanceled) {
+        if (firstRemovedAction == null) {
             this.historyDirty = false;
             return;
         }
 
+        if (!this.easel.getLevel().isClientSide()) {
+            if (firstNonRemovedAction != null) {
+                // Update last synced actions tracker
+                // Set false for players that need to have the last synced action updated
+                List<UUID> playersNeedToUpdateLastSyncedAction = this.playerLastSyncedAction.entrySet().stream()
+                    .filter(lastSyncedActionEntry -> this.actions.stream().noneMatch(canvasAction -> canvasAction.uuid.equals(lastSyncedActionEntry.getValue())))
+                    .map(Map.Entry::getKey).toList();
+
+                for (UUID playerUuid : playersNeedToUpdateLastSyncedAction) {
+                    this.playerLastSyncedAction.put(playerUuid, firstNonRemovedAction.uuid);
+                }
+            } else {
+                this.playerLastSyncedAction.clear();
+            }
+        }
+
         ListIterator<CanvasSnapshot> snapshotIterator = this.getSnapshotsEndIterator();
+        CanvasSnapshot firstRemovedSnapshot = null;
+        CanvasSnapshot firstNonRemovedSnapshot = null;
 
         while(snapshotIterator.hasPrevious()) {
             CanvasSnapshot snapshot = snapshotIterator.previous();
 
-            if (snapshot.timestamp > firstCanceled) {
+            if (snapshot.timestamp > firstRemovedAction.getStartTime()) {
+                firstRemovedSnapshot = snapshot;
                 snapshotIterator.remove();
+            } else if (firstNonRemovedSnapshot == null) {
+                firstNonRemovedSnapshot = snapshot;
             } else {
                 break;
+            }
+        }
+
+        if (firstRemovedSnapshot == null) {
+            this.historyDirty = false;
+            return;
+        }
+
+        if (!this.easel.getLevel().isClientSide()) {
+            if (firstNonRemovedSnapshot != null) {
+                // Update last synced snapshot tracker
+                // Set false for players that need to have the last synced snapshot updated
+                List<UUID> playersNeedToUpdateLastSyncedSnapshot = this.playerLastSyncedSnapshot.entrySet().stream()
+                    .filter(lastSyncedSnapshotEntry -> this.snapshots.stream().noneMatch(canvasAction -> canvasAction.uuid.equals(lastSyncedSnapshotEntry.getValue())))
+                    .map(Map.Entry::getKey).toList();
+
+                for (UUID playerUuid : playersNeedToUpdateLastSyncedSnapshot) {
+                    this.playerLastSyncedSnapshot.put(playerUuid, firstNonRemovedSnapshot.uuid);
+                }
+            } else {
+                Zetter.LOG.warn("Removed all snapshots, that should not be happening!");
+                this.playerLastSyncedSnapshot.clear();
+                this.makeSnapshot();
             }
         }
 
