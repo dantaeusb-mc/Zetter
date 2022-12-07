@@ -112,7 +112,7 @@ public class EaselState {
         this.unfreeze();
 
         this.updateSnapshots();
-        if (!this.easel.getLevel().isClientSide()) {
+        if (!this.easel.getLevel().isClientSide() && this.getCanvasCode() != null) {
             this.performHistorySyncForServerPlayer(player);
         }
     }

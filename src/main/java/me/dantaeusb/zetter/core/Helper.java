@@ -26,7 +26,9 @@ public class Helper {
     public static final int CANVAS_CODE_MAX_LENGTH = 64;
 
     /**
-     * Resolution for GUIs
+     * Basic resolution is a minimal resolution of a painting, 16px
+     * Used for GUIs and converting from ENUM resolution (power pf 2)
+     * to the numeric resolution (actual pixel count)
      * @return
      */
     public static AbstractCanvasData.Resolution getBasicResolution() {

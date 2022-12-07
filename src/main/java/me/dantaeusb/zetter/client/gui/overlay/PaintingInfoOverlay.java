@@ -41,7 +41,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
         Component title;
 
         if (!this.paintingData.isBanned()) {
-            String paintingName = this.paintingData.getPaintingTitle();
+            String paintingName = this.paintingData.getPaintingName();
             String authorName = this.paintingData.getAuthorName();
 
             if (StringUtil.isNullOrEmpty(paintingName)) {

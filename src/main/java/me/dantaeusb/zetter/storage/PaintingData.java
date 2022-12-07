@@ -8,12 +8,10 @@ import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterOverlays;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
-import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -27,15 +25,16 @@ public class PaintingData extends AbstractCanvasData {
     public static final CanvasDataBuilder<PaintingData> BUILDER = new PaintingDataBuilder();
 
     public static final int MAX_GENERATION = 2;
+    public static final UUID FALLBACK_UUID = new UUID(0L, 0L);
 
     protected static final String NBT_TAG_AUTHOR_NAME = "author_name";
     protected static final String NBT_TAG_AUTHOR_UUID = "AuthorUuid";
-    protected static final String NBT_TAG_TITLE = "title";
+    protected static final String NBT_TAG_NAME = "title";
     protected static final String NBT_TAG_BANNED = "Banned";
 
     protected UUID authorUuid;
     protected String authorName;
-    protected String title;
+    protected String name;
     protected boolean banned = false;
 
     protected PaintingData() {}
@@ -44,14 +43,14 @@ public class PaintingData extends AbstractCanvasData {
         return CODE_PREFIX + canvasId;
     }
 
-    public void setMetaProperties(UUID authorUuid, String authorName, String title) {
+    public void setMetaProperties(UUID authorUuid, String authorName, String name) {
         this.authorUuid = authorUuid;
         this.authorName = authorName;
-        this.title = title;
+        this.name = name;
     }
 
-    public String getPaintingTitle() {
-        return this.title;
+    public String getPaintingName() {
+        return this.name;
     }
 
     public UUID getAuthorUuid() {
@@ -105,7 +104,7 @@ public class PaintingData extends AbstractCanvasData {
 
         compoundTag.putUUID(NBT_TAG_AUTHOR_UUID, this.authorUuid);
         compoundTag.putString(NBT_TAG_AUTHOR_NAME, this.authorName);
-        compoundTag.putString(NBT_TAG_TITLE, this.title);
+        compoundTag.putString(NBT_TAG_NAME, this.name);
         compoundTag.putBoolean(NBT_TAG_BANNED, this.banned);
 
         return compoundTag;
@@ -164,7 +163,7 @@ public class PaintingData extends AbstractCanvasData {
             }
 
             newPainting.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
-            newPainting.title = compoundTag.getString(NBT_TAG_TITLE);
+            newPainting.name = compoundTag.getString(NBT_TAG_NAME);
             newPainting.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
 
             return newPainting;
@@ -197,12 +196,12 @@ public class PaintingData extends AbstractCanvasData {
 
             final UUID authorUuid = networkBuffer.readUUID();
             final String authorName = networkBuffer.readUtf(64);
-            final String title = networkBuffer.readUtf(32);
+            final String name = networkBuffer.readUtf(32);
 
             newPainting.setMetaProperties(
                 authorUuid,
                 authorName,
-                title
+                name
             );
 
             return newPainting;
@@ -214,9 +213,12 @@ public class PaintingData extends AbstractCanvasData {
             networkBuffer.writeInt(canvasData.height);
             networkBuffer.writeInt(canvasData.getColorDataBuffer().remaining());
             networkBuffer.writeBytes(canvasData.getColorDataBuffer());
-            networkBuffer.writeUUID(canvasData.authorUuid);
+
+            // @todo: [LOW] Compatibility code, remove on release
+            networkBuffer.writeUUID(Objects.requireNonNullElse(canvasData.authorUuid, FALLBACK_UUID));
+
             networkBuffer.writeUtf(canvasData.authorName, 64);
-            networkBuffer.writeUtf(canvasData.title, 32);
+            networkBuffer.writeUtf(canvasData.name, 32);
         }
     }
 }

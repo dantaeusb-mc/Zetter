@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.canvastracker;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.event.CanvasServerPostRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasServerPreRegisterEvent;
 import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
@@ -147,15 +148,16 @@ public class CanvasServerTracker implements ICanvasTracker {
                 }
 
                 final String finalCanvasResourceLocation = canvasResourceLocation;
-                Optional<RegistryObject<CanvasDataType<?>>> type = ZetterCanvasTypes.CANVAS_TYPES.getEntries().stream()
-                    .filter((canvasType) -> canvasType.get().resourceLocation.toString().equals(finalCanvasResourceLocation))
+                Optional<? extends CanvasDataType<?>> type = ZetterRegistries.CANVAS_TYPE.get().getEntries().stream()
+                    .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
+                    .map(Map.Entry::getValue)
                     .findFirst();
 
                 if (type.isEmpty()) {
                     throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
                 }
 
-                T canvasData = (T) type.get().get().loadFromNbt(compoundTag);
+                T canvasData = (T) type.get().loadFromNbt(compoundTag);
                 canvasData.correctData(this.world);
 
                 // Remove deprecated tags

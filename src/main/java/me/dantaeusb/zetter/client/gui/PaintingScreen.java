@@ -68,7 +68,7 @@ public class PaintingScreen extends Screen {
     }
 
     public static PaintingScreen createScreenForPainting(Player player, String canvasCode, PaintingData paintingData, InteractionHand hand) {
-        return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingTitle(), false);
+        return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingName(), false);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!

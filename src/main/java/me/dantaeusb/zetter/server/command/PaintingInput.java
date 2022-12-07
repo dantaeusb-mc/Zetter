@@ -53,7 +53,7 @@ public class PaintingInput {
                 continue;
             }
 
-            if (paintingData.getPaintingTitle().equals(this.title)) {
+            if (paintingData.getPaintingName().equals(this.title)) {
                 this.code = code;
                 this.paintingData = paintingData;
                 break;
