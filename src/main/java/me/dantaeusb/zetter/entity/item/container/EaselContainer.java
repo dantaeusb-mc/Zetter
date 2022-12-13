@@ -121,7 +121,7 @@ public class EaselContainer extends ItemStackHandler {
      * @return
      */
     public boolean stillValid(Player player) {
-        if (this.easel != null) {
+        if (this.easel != null && this.easel.isAlive()) {
             return player.distanceToSqr((double)this.easel.getPos().getX() + 0.5D, (double)this.easel.getPos().getY() + 0.5D, (double)this.easel.getPos().getZ() + 0.5D) <= 64.0D;
         }
 
