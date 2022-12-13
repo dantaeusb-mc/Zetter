@@ -702,14 +702,18 @@ public class EaselState {
 
         if (this.easel.getLevel().isClientSide()) {
             ClientPacketListener connection = Minecraft.getInstance().getConnection();
+            assert connection != null;
+            assert Minecraft.getInstance().player != null;
             latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency()) * 2;
         }
 
         if (firstCanceledAction != null) {
-            // =
             latestSnapshot = this.getSnapshotBefore(firstCanceledAction.getStartTime() - latency);
+        } else if (this.getLastAction() != null) {
+            // We CANNOT just use last snapshot, because it might have been captured "on a different timeline"
+            // Where some actions which are no longer in history are applied
+            latestSnapshot = this.getSnapshotBefore(this.getLastAction().getStartTime() - latency);
         } else {
-            // Nothing canceled - just use last snapshot!
             latestSnapshot = this.getLastSnapshot();
         }
 
@@ -1238,6 +1242,7 @@ public class EaselState {
         @Nullable CanvasAction clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
 
         int fastForwards = 0;
+        int addedActions = 0;
 
         do {
             CanvasAction unsyncedAction = unsyncedIterator.next();
@@ -1246,6 +1251,7 @@ public class EaselState {
             // add all unsynced
             if (clientAction == null) {
                 this.actions.add(unsyncedAction);
+                addedActions++;
 
                 continue;
             }
@@ -1279,13 +1285,19 @@ public class EaselState {
                 }
 
                 actionsIterator.add(unsyncedAction);
+                addedActions++;
+
                 clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             }
         } while (unsyncedIterator.hasNext());
 
         this.unfreeze();
 
-        this.cleanupActionHistory();
+        if (addedActions > 0) {
+            this.wipeCanceledActionsAndDiscardSnapshots();
+            this.cleanupActionHistory();
+        }
+
         this.recollectPaintingData();
         this.onStateChanged();
 
