@@ -118,7 +118,6 @@ public class EaselContainer extends ItemStackHandler {
      */
 
     /**
-     * @todo: this
      * @return
      */
     public boolean stillValid(Player player) {
@@ -126,7 +125,7 @@ public class EaselContainer extends ItemStackHandler {
             return player.distanceToSqr((double)this.easel.getPos().getX() + 0.5D, (double)this.easel.getPos().getY() + 0.5D, (double)this.easel.getPos().getZ() + 0.5D) <= 64.0D;
         }
 
-        return true;
+        return false;
     }
 
     public boolean isItemValid(int index, ItemStack stack) {
