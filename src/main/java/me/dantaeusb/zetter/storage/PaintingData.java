@@ -85,17 +85,25 @@ public class PaintingData extends AbstractCanvasData {
         return ZetterCanvasTypes.PAINTING.get();
     }
 
+    /**
+     * One day we will remove that, and for paintings created
+     * long ago where we were unable to restore author id,
+     * we will keep fallback UUID.
+     * @param level
+     */
     @Override
     public void correctData(ServerLevel level) {
-        if (this.authorUuid == null) {
+        if (this.authorUuid == null || this.authorUuid.equals(FALLBACK_UUID)) {
             UUID authorUuid = Helper.tryToRestoreAuthorUuid(level, this.authorName);
 
-            if (authorUuid != null) {
+            if (authorUuid != null && !this.authorUuid.equals(FALLBACK_UUID)) {
                 this.authorUuid = authorUuid;
-                this.setDirty();
             } else {
                 Zetter.LOG.warn("Cannot restore author UUID for player " + this.authorName);
+                this.authorUuid = FALLBACK_UUID;
             }
+
+            this.setDirty();
         }
     }
 
