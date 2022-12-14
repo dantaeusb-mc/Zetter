@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
@@ -62,8 +62,8 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
             if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, blendingButton.width, blendingButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
-                if (parameters instanceof BlendingInterface) {
-                    ((BlendingInterface) parameters).setBlending(blendingButton.blending);
+                if (parameters instanceof BlendingParameterHolder) {
+                    ((BlendingParameterHolder) parameters).setBlending(blendingButton.blending);
                 } else {
                     throw new RuntimeException("Cannot apply blending parameter");
                 }
@@ -86,8 +86,8 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         BlendingPipe.BlendingOption blending = null;
 
-        if (parameters instanceof BlendingInterface) {
-            blending = ((BlendingInterface) parameters).getBlending();
+        if (parameters instanceof BlendingParameterHolder) {
+            blending = ((BlendingParameterHolder) parameters).getBlending();
         } else {
             throw new RuntimeException("Cannot render blending parameter");
         }

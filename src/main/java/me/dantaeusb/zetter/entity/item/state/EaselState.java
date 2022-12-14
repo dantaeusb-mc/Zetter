@@ -433,8 +433,13 @@ public class EaselState {
             lastAction.commit();
         }
 
-        final CanvasAction newAction = new CanvasAction(playerId, tool, color, parameters);
-        this.actions.add(newAction);
+        CanvasAction newAction;
+        try {
+            newAction = new CanvasAction(playerId, tool, color, parameters.clone());
+            this.actions.add(newAction);
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot copy parameters for action: " + e.getMessage());
+        }
 
         this.onStateChanged();
 

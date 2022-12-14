@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
+import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
@@ -61,8 +61,8 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
             if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, ditheringButton.width, ditheringButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
-                if (parameters instanceof DitheringInterface) {
-                    ((DitheringInterface) parameters).setDithering(ditheringButton.dithering);
+                if (parameters instanceof DitheringParameterHolder) {
+                    ((DitheringParameterHolder) parameters).setDithering(ditheringButton.dithering);
                 } else {
                     throw new RuntimeException("Cannot apply blending parameter");
                 }
@@ -85,8 +85,8 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         DitheringPipe.DitheringOption dithering = null;
 
-        if (parameters instanceof DitheringInterface) {
-            dithering = ((DitheringInterface) parameters).getDithering();
+        if (parameters instanceof DitheringParameterHolder) {
+            dithering = ((DitheringParameterHolder) parameters).getDithering();
         } else {
             throw new RuntimeException("Cannot render dithering parameter");
         }

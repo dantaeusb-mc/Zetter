@@ -2,8 +2,8 @@ package me.dantaeusb.zetter.painting.pipes;
 
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.BlendingInterface;
-import me.dantaeusb.zetter.painting.parameters.IntensityInterface;
+import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
+import me.dantaeusb.zetter.painting.parameters.IntensityParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.painting.tools.Brush;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -20,8 +20,8 @@ public class BlendingPipe implements Pipe {
         }
 
         // We do not blend on max intensity
-        if (params instanceof IntensityInterface) {
-            return ((IntensityInterface) params).getIntensity() < 1f;
+        if (params instanceof IntensityParameterHolder) {
+            return ((IntensityParameterHolder) params).getIntensity() < 1f;
         }
 
         return false;
@@ -32,15 +32,15 @@ public class BlendingPipe implements Pipe {
         final int originalColor = canvas.getColorAt(index);
 
         float intensity = 1f;
-        if (params instanceof IntensityInterface) {
-            intensity = ((IntensityInterface) params).getIntensity();
+        if (params instanceof IntensityParameterHolder) {
+            intensity = ((IntensityParameterHolder) params).getIntensity();
         }
 
         intensity *= localIntensity;
 
         BlendingOption blending = BlendingOption.DEFAULT;
-        if (params instanceof BlendingInterface) {
-            blending = ((BlendingInterface) params).getBlending();
+        if (params instanceof BlendingParameterHolder) {
+            blending = ((BlendingParameterHolder) params).getBlending();
         }
 
         return blending.blendingFunction.apply(color, originalColor, intensity);

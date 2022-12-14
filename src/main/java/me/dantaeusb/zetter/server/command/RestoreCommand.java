@@ -24,7 +24,7 @@ public class RestoreCommand {
 
     static ArgumentBuilder<CommandSourceStack, ?> register() {
         return Commands.literal("restore")
-            .requires(cs -> cs.hasPermission(Commands.LEVEL_ALL))
+            .requires(cs -> cs.hasPermission(Commands.LEVEL_GAMEMASTERS))
             .then(
                 Commands.argument("painting", PaintingLookupArgument.painting())
                     .executes(ctx -> execute(ctx.getSource(), ctx.getSource().getPlayer(), ctx.getSource().getLevel(), PaintingLookupArgument.getPaintingInput(ctx, "painting")))

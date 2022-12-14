@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.painting.pipes;
 
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
+import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.Component;
@@ -14,8 +14,8 @@ public class DitheringPipe implements Pipe {
 
     @Override
     public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params) {
-        if (params instanceof DitheringInterface) {
-            return ((DitheringInterface) params).getDithering() != DitheringOption.NO_DITHERING;
+        if (params instanceof DitheringParameterHolder) {
+            return ((DitheringParameterHolder) params).getDithering() != DitheringOption.NO_DITHERING;
         }
 
         return false;
@@ -23,8 +23,8 @@ public class DitheringPipe implements Pipe {
 
     @Override
     public int applyPipe(CanvasData canvas, AbstractToolParameters params, int color, int index, float localIntensity) {
-        if (params instanceof DitheringInterface) {
-            if (((DitheringInterface) params).getDithering() == DitheringOption.DENSE_DITHERING) {
+        if (params instanceof DitheringParameterHolder) {
+            if (((DitheringParameterHolder) params).getDithering() == DitheringOption.DENSE_DITHERING) {
                 int posX = index % canvas.getHeight();
                 int posY = index / canvas.getHeight();
 

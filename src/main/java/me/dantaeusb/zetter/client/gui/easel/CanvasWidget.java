@@ -8,7 +8,7 @@ import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.SizeInterface;
+import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
@@ -264,8 +264,8 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
 
             int radius = this.getCanvasScale() * 2;
 
-            if (toolParameters instanceof SizeInterface) {
-                radius = Math.round(this.getCanvasScale() * ((SizeInterface) toolParameters).getSize());
+            if (toolParameters instanceof SizeParameterHolder) {
+                radius = Math.round(this.getCanvasScale() * ((SizeParameterHolder) toolParameters).getSize());
             }
 
             if (radius < 4) {

@@ -1,8 +1,8 @@
 package me.dantaeusb.zetter.painting.parameters;
 
-import java.security.InvalidParameterException;
+public interface IntensityParameterHolder {
+    String PARAMETER_CODE = "Intensity";
 
-public interface IntensityInterface {
     float getIntensity();
 
     void setIntensity(float intensity);

@@ -12,7 +12,7 @@ import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
-import me.dantaeusb.zetter.painting.parameters.SizeInterface;
+import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.*;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.gui.Font;
@@ -519,21 +519,21 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
             if (this.getMenu().getCurrentTool() == Tools.BRUSH) {
                 AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
 
-                if (parameters instanceof SizeInterface) {
-                    float newSize = ((SizeInterface) parameters).getSize() + (float) delta;
+                if (parameters instanceof SizeParameterHolder) {
+                    float newSize = ((SizeParameterHolder) parameters).getSize() + (float) delta;
                     newSize = Math.min(Math.max(newSize, BrushParameters.MIN_SIZE), BrushParameters.MAX_SIZE);
 
-                    ((SizeInterface) parameters).setSize(newSize);
+                    ((SizeParameterHolder) parameters).setSize(newSize);
                     return true;
                 }
             } else if (this.getMenu().getCurrentTool() == Tools.PENCIL) {
                 AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
 
-                if (parameters instanceof SizeInterface) {
-                    float newSize = ((SizeInterface) parameters).getSize() + (delta > 0 ? 1 : -1);
+                if (parameters instanceof SizeParameterHolder) {
+                    float newSize = ((SizeParameterHolder) parameters).getSize() + (delta > 0 ? 1 : -1);
                     newSize = Math.min(Math.max(newSize, PencilParameters.MIN_SIZE), PencilParameters.MAX_SIZE);
 
-                    ((SizeInterface) parameters).setSize(newSize);
+                    ((SizeParameterHolder) parameters).setSize(newSize);
                     return true;
                 }
             }
