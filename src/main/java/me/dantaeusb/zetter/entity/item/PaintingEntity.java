@@ -7,7 +7,6 @@ import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
 import com.google.common.collect.Maps;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -18,7 +17,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.*;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.GameRules;
@@ -205,7 +203,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
             return InteractionResult.CONSUME;
         }
 
-        PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode);
+        PaintingData paintingData = Helper.getLevelCanvasTracker(this.level).getCanvasData(this.paintingCode);
 
         if (paintingData == null) {
             return InteractionResult.FAIL;
@@ -324,7 +322,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
 
             ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)).get());
 
-            PaintingData paintingData = Helper.getWorldCanvasTracker(this.level).getCanvasData(this.paintingCode);
+            PaintingData paintingData = Helper.getLevelCanvasTracker(this.level).getCanvasData(this.paintingCode);
 
             FrameItem.storePaintingData(canvasStack, this.paintingCode, paintingData, this.generation);
 

@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
@@ -31,7 +31,7 @@ public class ClientHandler {
             final AbstractCanvasData canvasData = packetIn.getCanvasData();
             final long timestamp = packetIn.getTimestamp();
 
-            ICanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
                 .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
 
             canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
@@ -123,7 +123,7 @@ public class ClientHandler {
             final String canvasCode = packetIn.canvasCode();
             final long timestamp = packetIn.timestamp();
 
-            ICanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
                 .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
 
             canvasTracker.unregisterCanvasData(canvasCode);

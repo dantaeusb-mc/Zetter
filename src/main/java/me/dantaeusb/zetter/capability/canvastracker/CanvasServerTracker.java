@@ -1,11 +1,11 @@
-package me.dantaeusb.zetter.canvastracker;
+package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.core.ZetterRegistries;
-import me.dantaeusb.zetter.event.CanvasServerPostRegisterEvent;
-import me.dantaeusb.zetter.event.CanvasServerPreRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.*;
@@ -17,17 +17,16 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.registries.RegistryObject;
 
 import javax.annotation.Nullable;
 import java.util.*;
 
-public class CanvasServerTracker implements ICanvasTracker {
+public class CanvasServerTracker implements CanvasTracker {
     private static final String NBT_TAG_CANVAS_LAST_ID = "LastCanvasId";
     private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
     private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
 
-    private final ServerLevel world;
+    private final ServerLevel level;
 
     protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
@@ -36,15 +35,15 @@ public class CanvasServerTracker implements ICanvasTracker {
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
 
-    public CanvasServerTracker(ServerLevel world) {
+    public CanvasServerTracker(ServerLevel level) {
         super();
 
-        this.world = world;
+        this.level = level;
     }
 
     @Override
-    public Level getWorld() {
-        return this.world;
+    public Level getLevel() {
+        return this.level;
     }
 
     /*
@@ -116,8 +115,8 @@ public class CanvasServerTracker implements ICanvasTracker {
     @Nullable
     @SuppressWarnings("unchecked")
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
-        assert this.world.getServer() != null;
-        return this.world.getServer().overworld().getDataStorage().get(
+        assert this.level.getServer() != null;
+        return this.level.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
                 int canvasTypeInt = -1;
                 String canvasResourceLocation = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
@@ -158,7 +157,7 @@ public class CanvasServerTracker implements ICanvasTracker {
                 }
 
                 T canvasData = (T) type.get().loadFromNbt(compoundTag);
-                canvasData.correctData(this.world);
+                canvasData.correctData(this.level);
 
                 // Remove deprecated tags
                 if (canvasTypeInt != -1 || deprecatedType) {
@@ -185,13 +184,12 @@ public class CanvasServerTracker implements ICanvasTracker {
             return;
         }
 
-        CanvasServerPreRegisterEvent preEvent = new CanvasServerPreRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasRegisterEvent.Pre preEvent = new CanvasRegisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
-        assert this.world.getServer() != null;
-        this.world.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
+        this.level.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
 
-        CanvasServerPostRegisterEvent postEvent = new CanvasServerPostRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasRegisterEvent.Post postEvent = new CanvasRegisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
@@ -215,6 +213,11 @@ public class CanvasServerTracker implements ICanvasTracker {
             return;
         }
 
+        long timestamp = System.currentTimeMillis();
+
+        CanvasUnregisterEvent.Pre preEvent = new CanvasUnregisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
+        MinecraftForge.EVENT_BUS.post(preEvent);
+
         int canvasId = Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
         this.clearCanvasId(canvasId);
 
@@ -225,11 +228,14 @@ public class CanvasServerTracker implements ICanvasTracker {
                 SCanvasRemovalPacket canvasRemovalPacket = new SCanvasRemovalPacket(canvasCode, System.currentTimeMillis());
 
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(
-                    () -> (ServerPlayer) this.world.getPlayerByUUID(trackingPlayer.playerId)),
+                    () -> (ServerPlayer) this.level.getPlayerByUUID(trackingPlayer.playerId)),
                     canvasRemovalPacket
                 );
             }
         }
+
+        CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
+        MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
     /**
@@ -237,7 +243,7 @@ public class CanvasServerTracker implements ICanvasTracker {
      */
 
     public void tick() {
-        assert this.world.getServer() != null;
+        assert this.level.getServer() != null;
         this.ticksFromLastSync++;
 
         if (this.ticksFromLastSync < 20) {
@@ -247,7 +253,7 @@ public class CanvasServerTracker implements ICanvasTracker {
         /**
          * Send canvas sync message to every tracking player entity
          */
-        MinecraftServer server = this.world.getServer();
+        MinecraftServer server = this.level.getServer();
 
         for (String canvasCode : this.desyncCanvases) {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {

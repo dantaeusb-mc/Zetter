@@ -1,7 +1,8 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.server.level.ServerLevel;
@@ -39,17 +40,30 @@ public class Helper {
         return AbstractCanvasData.Resolution.x16;
     }
 
-    public static ICanvasTracker getWorldCanvasTracker(Level world) {
-        ICanvasTracker canvasTracker;
+    public static CanvasTracker getLevelCanvasTracker(Level level) {
+        CanvasTracker canvasTracker;
 
-        if (!world.isClientSide()) {
+        if (!level.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = world.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = level.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         } else {
-            canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = level.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         }
 
         return canvasTracker;
+    }
+
+    public static PaintingRegistry getLevelPaintingRegistry(Level world) {
+        PaintingRegistry paintingRegistry;
+
+        if (!world.isClientSide()) {
+            // looking for a server canvas tracker in the overworld, since canvases are world-independent
+            paintingRegistry = world.getServer().overworld().getCapability(ZetterCapabilities.PAINTING_REGISTRY).orElse(null);
+        } else {
+            throw new IllegalArgumentException("Painting Registry is not supposed to exist on client");
+        }
+
+        return paintingRegistry;
     }
 
     public static String getFrameKey(PaintingEntity.Materials material, boolean plated) {

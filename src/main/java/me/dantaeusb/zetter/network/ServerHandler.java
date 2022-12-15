@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -203,7 +203,7 @@ public class ServerHandler {
                 throw new InvalidParameterException("Create painting called on client");
             }
 
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
             ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
 
             /**

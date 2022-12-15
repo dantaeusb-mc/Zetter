@@ -1,15 +1,14 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasClientTracker;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
@@ -227,7 +226,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         );
 
         if (world.isClientSide()) {
-            Helper.getWorldCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
+            Helper.getLevelCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
         }
 
         return combinedCanvasData;
@@ -259,7 +258,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
 
         if (!player.getLevel().isClientSide()) {
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
             CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
                     this.canvasData.getResolution(),
                     this.canvasData.getWidth(),
@@ -285,7 +284,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
         } else {
-            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getWorldCanvasTracker(player.getLevel());
+            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.getLevel());
 
             for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
                 // First we are removing item to avoid loading it's canvas on update

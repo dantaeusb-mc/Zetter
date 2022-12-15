@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -85,7 +85,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Widget, 
 
     @Nullable
     public static CanvasData getCanvasData(Level world, String canvasName) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         return canvasTracker.getCanvasData(canvasName);
     }

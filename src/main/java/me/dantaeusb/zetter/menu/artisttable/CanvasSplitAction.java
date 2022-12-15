@@ -1,17 +1,15 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -124,7 +122,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             );
 
             if (this.level.isClientSide()) {
-                Helper.getWorldCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, this.canvasData);
+                Helper.getLevelCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, this.canvasData);
             }
 
             this.state = State.READY;
@@ -158,7 +156,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Get data from split canvas
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(player.getLevel());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
         final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         // Don't need that data for client, it'll request if needed

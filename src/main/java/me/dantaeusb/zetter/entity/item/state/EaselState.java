@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.entity.item.state;
 
 import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.EaselStateListener;
 import me.dantaeusb.zetter.core.Helper;
@@ -24,7 +24,6 @@ import net.minecraftforge.network.PacketDistributor;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class is responsible for all canvas interactions for easels
@@ -1396,7 +1395,7 @@ public class EaselState {
      */
     private void markDesync() {
         if (!this.easel.getLevel().isClientSide()) {
-            ((CanvasServerTracker) Helper.getWorldCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
+            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
         }
     }
 

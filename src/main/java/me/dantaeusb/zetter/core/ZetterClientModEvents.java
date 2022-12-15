@@ -41,7 +41,11 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void onCanvasPreRegistered(CanvasRenderPreRegisterEvent event) {
+    public static void onCanvasPreRegistered(CanvasRegisterEvent.Pre event) {
+        if (!event.level.isClientSide()) {
+            return;
+        }
+
         String canvasCode = event.canvasCode;
         AbstractCanvasData canvasData = event.canvasData;
         long timestamp = event.timestamp;
@@ -74,7 +78,11 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void onCanvasPostRegistered(CanvasRenderPostRegisterEvent event) {
+    public static void onCanvasPostRegistered(CanvasRegisterEvent.Post event) {
+        if (!event.level.isClientSide()) {
+            return;
+        }
+
         String canvasCode = event.canvasCode;
         AbstractCanvasData canvasData = event.canvasData;
         long timestamp = event.timestamp;

@@ -25,8 +25,8 @@ public class DitheringPipe implements Pipe {
     public int applyPipe(CanvasData canvas, AbstractToolParameters params, int color, int index, float localIntensity) {
         if (params instanceof DitheringParameterHolder) {
             if (((DitheringParameterHolder) params).getDithering() == DitheringOption.DENSE_DITHERING) {
-                int posX = index % canvas.getHeight();
-                int posY = index / canvas.getHeight();
+                int posX = index % canvas.getWidth();
+                int posY = index / canvas.getWidth();
 
                 if (posY % 2 == 0) {
                     return posX % 2 == 0 ? canvas.getColorAt(index) : color;

@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
@@ -47,7 +47,7 @@ public class PaintingItem extends CanvasItem
         ItemStack paintingStack = player.getItemInHand(hand);
 
         if (world.isClientSide()) {
-            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
             String paintingCode = getPaintingCode(paintingStack);
 
             if (paintingCode == null) {
@@ -180,7 +180,7 @@ public class PaintingItem extends CanvasItem
                 return null;
             }
 
-            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
             return canvasTracker.getCanvasData(paintingCode);
         }

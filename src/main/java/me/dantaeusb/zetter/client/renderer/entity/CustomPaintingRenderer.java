@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
@@ -276,7 +276,7 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
     @Nullable
     public static PaintingData getCanvasData(Level world, String canvasName) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         if (canvasTracker == null) {
             return null;

@@ -1,4 +1,4 @@
-package me.dantaeusb.zetter.canvastracker;
+package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.core.ZetterCapabilities;
 import net.minecraft.nbt.CompoundTag;
@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 
 public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTag> {
     private final Direction NO_SPECIFIC_SIDE = null;
-    private final ICanvasTracker canvasTrackerCapability;
+    private final CanvasTracker canvasTrackerCapability;
 
     /**
      * @todo: datafix to CanvasTracker
@@ -56,7 +56,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
     public CompoundTag serializeNBT() {
         CompoundTag compoundTag = new CompoundTag();
 
-        if (this.canvasTrackerCapability.getWorld() == null || this.canvasTrackerCapability.getWorld().isClientSide()) {
+        if (this.canvasTrackerCapability.getLevel() == null || this.canvasTrackerCapability.getLevel().isClientSide()) {
             return compoundTag;
         }
 
@@ -71,7 +71,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
      * We need to get the data only for Server Implementation of the capability
      */
     public void deserializeNBT(CompoundTag compoundTag) {
-        if (this.canvasTrackerCapability.getWorld() == null || this.canvasTrackerCapability.getWorld().isClientSide()) {
+        if (this.canvasTrackerCapability.getLevel() == null || this.canvasTrackerCapability.getLevel().isClientSide()) {
             return;
         }
 

@@ -1,18 +1,15 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.stats.Stats;
@@ -26,7 +23,6 @@ import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,8 +30,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import java.security.InvalidParameterException;
 import java.util.List;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class CanvasItem extends Item
 {
@@ -116,7 +110,7 @@ public class CanvasItem extends Item
         }
 
         String canvasCode = createNewCanvasData(world);
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         CanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
         assert canvasData != null;
@@ -187,7 +181,7 @@ public class CanvasItem extends Item
                 canvasCode = getCanvasCode(stack);
             }
 
-            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
             return canvasTracker.getCanvasData(canvasCode);
         }
@@ -280,7 +274,7 @@ public class CanvasItem extends Item
             throw new InvalidParameterException("Create canvas called on client");
         }
 
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(level);
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
         final int numericResolution = Helper.getResolution().getNumeric();
 
         CanvasData canvasData = CanvasData.BUILDER.createFresh(Helper.getResolution(), numericResolution, numericResolution);

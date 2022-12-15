@@ -1,4 +1,4 @@
-package me.dantaeusb.zetter.canvastracker;
+package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -7,22 +7,21 @@ import me.dantaeusb.zetter.event.*;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import com.google.common.collect.Maps;
-import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
-public class CanvasClientTracker implements ICanvasTracker {
-    private final Level world;
+public class CanvasClientTracker implements CanvasTracker {
+    private final Level level;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
 
-    public CanvasClientTracker(Level world) {
+    public CanvasClientTracker(Level level) {
         super();
 
-        this.world = world;
+        this.level = level;
     }
 
     @Override
@@ -43,7 +42,7 @@ public class CanvasClientTracker implements ICanvasTracker {
             return;
         }
 
-        CanvasRenderPreRegisterEvent preEvent = new CanvasRenderPreRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasRegisterEvent.Pre preEvent = new CanvasRegisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
         if (!preEvent.isCanceled()) {
@@ -53,7 +52,7 @@ public class CanvasClientTracker implements ICanvasTracker {
             CanvasRenderer.getInstance().addCanvas(canvasCode, canvasData);
         }
 
-        CanvasRenderPostRegisterEvent postEvent = new CanvasRenderPostRegisterEvent(canvasCode, canvasData, timestamp);
+        CanvasRegisterEvent.Post postEvent = new CanvasRegisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
@@ -66,7 +65,9 @@ public class CanvasClientTracker implements ICanvasTracker {
             return;
         }
 
-        CanvasRenderPreUnregisterEvent preEvent = new CanvasRenderPreUnregisterEvent(removedCanvasCode);
+        long timestamp = System.currentTimeMillis();
+
+        CanvasUnregisterEvent.Pre preEvent = new CanvasUnregisterEvent.Pre(removedCanvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
         // Remove existing entry if we have one to replace with a new one
@@ -80,12 +81,12 @@ public class CanvasClientTracker implements ICanvasTracker {
             ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
         }
 
-        CanvasRenderPostUnregisterEvent postEvent = new CanvasRenderPostUnregisterEvent(removedCanvasCode);
-        MinecraftForge.EVENT_BUS.post(postEvent);
+        CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
+        MinecraftForge.EVENT_BUS.post(preEvent);
     }
 
     @Override
-    public Level getWorld() {
-        return this.world;
+    public Level getLevel() {
+        return this.level;
     }
 }

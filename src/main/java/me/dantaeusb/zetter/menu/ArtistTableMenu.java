@@ -395,7 +395,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
         // Manually clean combined canvas as it's unmanaged
         if (this.level.isClientSide()) {
-            Helper.getWorldCanvasTracker(this.level).unregisterCanvasData(Helper.COMBINED_CANVAS_CODE);
+            Helper.getLevelCanvasTracker(this.level).unregisterCanvasData(Helper.COMBINED_CANVAS_CODE);
         }
     }
 

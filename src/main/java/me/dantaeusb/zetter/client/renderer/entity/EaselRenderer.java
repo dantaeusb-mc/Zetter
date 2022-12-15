@@ -2,12 +2,11 @@ package me.dantaeusb.zetter.client.renderer.entity;
 
 import com.mojang.math.Matrix4f;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -262,7 +261,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
     @Nullable
     public static CanvasData getCanvasData(Level world, String canvasName) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         if (canvasTracker == null) {
             return null;

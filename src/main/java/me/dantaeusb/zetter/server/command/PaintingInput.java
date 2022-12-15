@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter.server.command;
 
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -39,7 +39,7 @@ public class PaintingInput {
     public void lookup(Level level) {
         this.didLookup = true;
 
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(level);
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
         if (this.code != null) {
             this.paintingData = canvasTracker.getCanvasData(this.code);

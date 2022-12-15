@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;

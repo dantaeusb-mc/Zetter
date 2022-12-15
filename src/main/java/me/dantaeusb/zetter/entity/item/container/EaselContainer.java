@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.entity.item.container;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import com.google.common.collect.Lists;
@@ -89,7 +89,7 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        ICanvasTracker canvasTracker;
+        CanvasTracker canvasTracker;
 
         if (this.easel.getLevel().isClientSide()) {
             canvasTracker = this.easel.getLevel().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
