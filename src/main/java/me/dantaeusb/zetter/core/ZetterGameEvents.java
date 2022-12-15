@@ -36,7 +36,6 @@ public class ZetterGameEvents {
      * @todo: [MED] Do we really need that hook here? It might be called very frequently
      * @param event
      */
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onRenderTickStart(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END && Minecraft.getInstance().level != null) {

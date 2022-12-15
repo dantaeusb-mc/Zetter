@@ -15,8 +15,8 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 public class PaintingInfoOverlay implements IGuiOverlay {
     private static final Component BANNED_TEXT = Component.translatable("painting.zetter.banned");
 
-    private PaintingData paintingData = null;
-    private int overlayMessageTime = 0;
+    protected PaintingData paintingData = null;
+    protected int overlayMessageTime = 0;
 
     public void setPainting(PaintingData paintingData) {
         this.paintingData = paintingData;
