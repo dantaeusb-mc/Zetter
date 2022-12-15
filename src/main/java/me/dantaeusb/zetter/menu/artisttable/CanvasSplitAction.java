@@ -237,9 +237,15 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
     }
 
+    /**
+     * Call changed container to update output slot
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     */
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.updateCanvasData(this.menu.getCombinedHandler());
+        this.onChangedCombined(this.menu.getCombinedHandler());
     }
 
     private static byte[] getPartialColorData(byte[] colorData, int resolution, int blockX, int blockY, int blockWidth, int blockHeight) {

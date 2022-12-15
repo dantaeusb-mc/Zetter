@@ -46,9 +46,9 @@ public abstract class AbstractCanvasAction {
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) { }
 
     public enum State {
-        EMPTY,
-        INVALID,
-        NOT_LOADED,
-        READY
+        EMPTY, // No items in crafting slots
+        INVALID, // Invalid shape or canvas found, cannot proceed
+        NOT_LOADED, // Canvases data is not yet loaded
+        READY // Free to proceed with action
     }
 }

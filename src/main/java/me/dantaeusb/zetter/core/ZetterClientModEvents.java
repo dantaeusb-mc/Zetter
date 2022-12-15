@@ -97,4 +97,14 @@ public class ZetterClientModEvents {
             }
         }
     }
+
+    /**
+     * Every other overlay should do that too, so they
+     * won't overlap
+     * @param event
+     */
+    @SubscribeEvent
+    public static void overlayViewEvent(PaintingInfoOverlayEvent event) {
+        ZetterOverlays.PAINTING_INFO.hide();
+    }
 }

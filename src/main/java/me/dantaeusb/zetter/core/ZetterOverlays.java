@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
+import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;

@@ -304,9 +304,15 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
     }
 
+    /**
+     * Call changed container to update output slot
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     */
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.updateCanvasData(this.menu.getCombinationContainer());
+        this.onChangedCombination(this.menu.getCombinationContainer());
     }
 
     public boolean isReady() {

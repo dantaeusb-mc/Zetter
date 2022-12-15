@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.capability.paintingregistry;
 
+import me.dantaeusb.zetter.Zetter;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
@@ -82,7 +83,13 @@ public class PaintingRegistry {
                 if (canvasCodesBuffer.get() == BYTE_SEPARATOR) {
                     // Do not get byte[], it'll share the reference to the full array I suppose
                     ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
-                    this.paintingCanvasCodeList.add(StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString());
+                    String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
+
+                    if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
+                        Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
+                    } else {
+                        this.paintingCanvasCodeList.add(canvasCode);
+                    }
 
                     lastZeroBytePosition = canvasCodesBuffer.position();
                 }

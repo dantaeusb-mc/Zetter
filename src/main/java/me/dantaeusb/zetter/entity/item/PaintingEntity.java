@@ -3,6 +3,8 @@ package me.dantaeusb.zetter.entity.item;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -21,6 +23,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import net.minecraftforge.network.NetworkHooks;
 import org.apache.commons.lang3.Validate;
@@ -208,6 +211,9 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         if (paintingData == null) {
             return InteractionResult.FAIL;
         }
+
+        PaintingInfoOverlayEvent viewEvent = new PaintingInfoOverlayEvent(paintingData.getOverlay());
+        MinecraftForge.EVENT_BUS.post(viewEvent);
 
         paintingData.getOverlay().setPainting(paintingData);
 
