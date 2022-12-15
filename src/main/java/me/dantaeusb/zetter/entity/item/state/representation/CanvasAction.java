@@ -52,7 +52,7 @@ public class CanvasAction {
     // Could be false only on client
     private boolean sent = false;
 
-    // Could be false only on client
+    // On client means there's no confirmation that server received event, on server it means that no damage was applied with this action
     private boolean sync = false;
 
     private boolean canceled = false;
@@ -85,7 +85,6 @@ public class CanvasAction {
 
         this.commitTime = commitTime;
         this.sent = true;
-        this.sync = true;
         this.canceled = canceled;
     }
 
@@ -237,23 +236,12 @@ public class CanvasAction {
         return this.sync;
     }
 
-    public void undo() {
-        if (this.commitTime == null) {
-            this.commit();
-        }
-
-        this.canceled = true;
-    }
-
-    public void redo() {
-        if (this.commitTime == null) {
-            this.commit();
-        }
-
-        this.canceled = false;
-    }
-
     public void setCanceled(boolean canceled) {
+        if (this.commitTime == null) {
+            this.commit();
+        }
+
+        this.commit();
         this.canceled = canceled;
     }
 

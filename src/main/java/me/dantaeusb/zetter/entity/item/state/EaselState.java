@@ -382,6 +382,10 @@ public class EaselState {
             }
         }
 
+        if (Zetter.DEBUG_MODE) {
+            this.logActions();
+        }
+
         this.historyDirty = false;
     }
 
@@ -499,6 +503,10 @@ public class EaselState {
 
         this.recollectPaintingData();
         this.onStateChanged();
+
+        if (Zetter.DEBUG_MODE) {
+            this.logActions();
+        }
 
         // If tillAction is not sent, just checking flag will be enough, it will be sent with proper canceled status
         if (this.easel.getLevel().isClientSide()) {
@@ -1144,10 +1152,20 @@ public class EaselState {
                 }
 
                 existingActionsIterator.add(newAction);
+
+                if (newAction.isCanceled()) {
+                    this.historyDirty = true;
+                }
+
                 newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
             } else if (existingAction.getStartTime() > newAction.getStartTime()) {
                 existingActionsIterator.previous(); // rewind to insert before
                 existingActionsIterator.add(newAction); // 5
+
+                if (newAction.isCanceled()) {
+                    this.historyDirty = true;
+                }
+
                 existingActionsIterator.next(); // get back
                 newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
             }
@@ -1155,10 +1173,19 @@ public class EaselState {
 
         if (newAction != null) {
             existingActionsIterator.add(newAction);
+
+            if (newAction.isCanceled()) {
+                this.historyDirty = true;
+            }
         }
 
         while(newActionsIterator.hasNext()) {
-            existingActionsIterator.add(newActionsIterator.next());
+            newAction = newActionsIterator.next();
+            existingActionsIterator.add(newAction);
+
+            if (newAction.isCanceled()) {
+                this.historyDirty = true;
+            }
         }
 
         this.unfreeze();
@@ -1176,8 +1203,11 @@ public class EaselState {
     /**
      * Apply action from history or network - don't save it
      * @param action
+     * @param doDamageClient apply damage to palette on client when applying action, server determines it by "sync" state
      */
-    public void applyAction(CanvasAction action, boolean doDamage) {
+    public void applyAction(CanvasAction action, boolean doDamageClient) {
+        boolean client = this.easel.getLevel().isClientSide();
+
         action.getSubActionStream().forEach((CanvasAction.CanvasSubAction subAction) -> {
             // Apply subAction directly
             int damage = action.tool.getTool().apply(
@@ -1188,10 +1218,20 @@ public class EaselState {
                     subAction.posY
             );
 
-            if (doDamage) {
-                this.easel.getEaselContainer().damagePalette(damage);
+            if (client) {
+                if (doDamageClient) {
+                    this.easel.getEaselContainer().damagePalette(damage);
+                }
+            } else {
+                if (!action.isSync()) {
+                    this.easel.getEaselContainer().damagePalette(damage);
+                }
             }
         });
+
+        if (!client) {
+            action.setSync();
+        }
 
         this.unfreeze();
     }
@@ -1441,5 +1481,15 @@ public class EaselState {
         } else {
             return this.snapshots.get(this.snapshots.size() - 1);
         }
+    }
+
+    private void logActions() {
+        Zetter.LOG.debug("= Start actions =");
+
+        this.actions.stream().forEach((action) -> {
+            Zetter.LOG.debug(action.uuid.toString() + ": " + (action.isCommitted() ? 'M' : '_') + (action.isCanceled() ? 'C' : '_') + (action.isSent() ? 'S' : '_') + (action.isSync() ? 'Y' : '_'));
+        });
+
+        Zetter.LOG.debug("= End actions =");
     }
 }

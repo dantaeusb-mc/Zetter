@@ -25,6 +25,7 @@ public class Helper {
     public static final String FALLBACK_CANVAS_CODE = Zetter.MOD_ID + "_fallback_canvas";
 
     public static final int CANVAS_CODE_MAX_LENGTH = 64;
+    public static final int PAINTING_TITLE_MAX_LENGTH = 32;
 
     /**
      * Basic resolution is a minimal resolution of a painting, 16px

@@ -60,7 +60,7 @@ public class PaintingScreen extends Screen {
     }, (String input) -> {
         this.title = input;
     }, this::getClipboard, this::setClipboard, (String input) -> {
-        return input.length() <= 32;
+        return input.length() <= Helper.PAINTING_TITLE_MAX_LENGTH;
     });
 
     public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {

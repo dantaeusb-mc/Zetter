@@ -15,6 +15,8 @@ import java.util.List;
  * Painting registry can be used to control
  * and moderate painting that exist on server.
  * It is just a list of strings.
+ *
+ * @todo: [HIGH] Serializer needs more love, it's poor
  */
 public class PaintingRegistry {
     private static final String NBT_TAG_PAINTING_LIST = "PaintingCanvasCodeList";
@@ -79,21 +81,23 @@ public class PaintingRegistry {
             ByteBuffer canvasCodesBuffer = ByteBuffer.wrap(compoundTag.getByteArray(NBT_TAG_PAINTING_LIST));
             int lastZeroBytePosition = 0;
 
-            do {
-                if (canvasCodesBuffer.get() == BYTE_SEPARATOR) {
-                    // Do not get byte[], it'll share the reference to the full array I suppose
-                    ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
-                    String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
-
-                    if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
-                        Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
-                    } else {
-                        this.paintingCanvasCodeList.add(canvasCode);
-                    }
-
-                    lastZeroBytePosition = canvasCodesBuffer.position();
+            while (canvasCodesBuffer.hasRemaining()) {
+                if (canvasCodesBuffer.get() != BYTE_SEPARATOR) {
+                    continue;
                 }
-            } while (canvasCodesBuffer.hasRemaining());
+
+                // Do not get byte[], it'll share the reference to the full array I suppose
+                ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
+                String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
+
+                if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
+                    Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
+                } else {
+                    this.paintingCanvasCodeList.add(canvasCode);
+                }
+
+                lastZeroBytePosition = canvasCodesBuffer.position();
+            }
         }
     }
 }
