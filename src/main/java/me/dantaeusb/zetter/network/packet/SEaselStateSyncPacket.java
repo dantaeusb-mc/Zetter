@@ -15,21 +15,31 @@ import java.util.*;
 import java.util.function.Supplier;
 
 /**
- * Send snapshot of a canvas, used only for easel when drawing, a bit more specific
- * object that is sent more frequently than default canvases when
- * multiple players are drawing
+ * Send snapshot of a canvas and actions to keep every
+ * using player history of changes up to date
  */
 public class SEaselStateSyncPacket {
+    public static final int MAX_ACTIONS = 50;
+
     public final int easelEntityId;
     public final String canvasCode;
+
+    /* If at the moment of creation of this packet,
+     * all sent data (actions or/and snapshots) are
+     * the latest available data for the easel state,
+     * so we can consider our easels sync after processing
+     * those; or if we expect more large updates to come
+     */
+    public final boolean sync;
 
     public final @Nullable CanvasSnapshot snapshot;
     public final @Nullable ArrayList<CanvasAction> unsyncedActions;
 
-    public SEaselStateSyncPacket(int easelEntityId, String canvasCode, @Nullable CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> unsyncedActions) {
+    public SEaselStateSyncPacket(int easelEntityId, String canvasCode, boolean sync, @Nullable CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> unsyncedActions) {
         this.easelEntityId = easelEntityId;
-
         this.canvasCode = canvasCode;
+        this.sync = sync;
+
         this.snapshot = snapshot;
 
         this.unsyncedActions = unsyncedActions;
@@ -46,6 +56,7 @@ public class SEaselStateSyncPacket {
         try {
             final int easelEntityId = networkBuffer.readInt();
             final String canvasCode = networkBuffer.readUtf(128);
+            final boolean sync = networkBuffer.readBoolean();
 
             CanvasSnapshot snapshot = null;
             final boolean hasSnapshot = networkBuffer.readBoolean();
@@ -62,7 +73,7 @@ public class SEaselStateSyncPacket {
             int actionBuffersCount = networkBuffer.readInt();
 
             if (actionBuffersCount == 0) {
-                return new SEaselStateSyncPacket(easelEntityId, canvasCode, snapshot, null);
+                return new SEaselStateSyncPacket(easelEntityId, canvasCode, sync, snapshot, null);
             }
 
             ArrayList<CanvasAction> unsyncedActions = new ArrayList<>();
@@ -77,7 +88,7 @@ public class SEaselStateSyncPacket {
                 }
             }
 
-            return new SEaselStateSyncPacket(easelEntityId, canvasCode, snapshot, unsyncedActions);
+            return new SEaselStateSyncPacket(easelEntityId, canvasCode, sync, snapshot, unsyncedActions);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SEaselStateSync: " + e);
             return null;
@@ -90,6 +101,7 @@ public class SEaselStateSyncPacket {
     public void writePacketData(FriendlyByteBuf networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode, 128);
+        networkBuffer.writeBoolean(this.sync);
 
         networkBuffer.writeBoolean(this.snapshot != null);
 

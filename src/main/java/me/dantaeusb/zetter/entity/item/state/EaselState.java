@@ -46,6 +46,15 @@ public class EaselState {
     private final EaselEntity easel;
     private List<EaselStateListener> listeners;
 
+    /**
+     * Flag for cilent if it assumes that current state
+     * is actual state. Used for history packets:
+     * if the last history packed is marked as "actual"
+     * (no more unsent actions at the time of generating packet)
+     * then we have our easel state sync and can use snapshot
+     * restoration
+     */
+    private boolean sync = false;
     private int tick;
 
     /**
@@ -95,6 +104,8 @@ public class EaselState {
             this.snapshots = new ArrayList<>(CLIENT_SNAPSHOT_HISTORY_SIZE + 1);
         } else {
             this.snapshots = new ArrayList<>(SNAPSHOT_HISTORY_SIZE + 1);
+            // Server is always synchronized with itself, technically
+            this.sync = true;
         }
     }
 
@@ -721,9 +732,11 @@ public class EaselState {
 
         if (firstCanceledAction != null) {
             latestSnapshot = this.getSnapshotBefore(firstCanceledAction.getStartTime() - latency);
-        } else if (this.getLastAction() != null) {
+        } else if (this.sync && this.getLastAction() != null) {
             // We CANNOT just use last snapshot, because it might have been captured "on a different timeline"
             // Where some actions which are no longer in history are applied
+            // But to avoid visible "history fast-forward", we do not use that until history is
+            // fully synchronized
             latestSnapshot = this.getSnapshotBefore(this.getLastAction().getStartTime() - latency);
         } else {
             latestSnapshot = this.getLastSnapshot();
@@ -1020,8 +1033,15 @@ public class EaselState {
             return;
         }
 
+        /* When we are sending the last snapshot/actions and have no more actions/snapshots to sync, we consider state
+         * Sync; this does not mean that we are fully synchronized, but we can use previous snapshot as an authoritative
+         * state
+         * If we have unsynchronized actions/snapshots, we have last actions/snapshots, ignore errors */
+        boolean actionsSync = !hasUnsyncedActions || unsyncedActions.get(unsyncedActions.size() - 1).uuid.equals(this.getLastAction().uuid);
+        boolean snapshotsSync = !hasUnsyncedSnapshot || unsyncedSnapshot.uuid.equals(this.getLastSnapshot().uuid);
+
         SEaselStateSyncPacket syncMessage = new SEaselStateSyncPacket(
-                this.easel.getId(), this.getCanvasCode(), unsyncedSnapshot, unsyncedActions
+                this.easel.getId(), this.getCanvasCode(), actionsSync && snapshotsSync, unsyncedSnapshot, unsyncedActions
         );
 
         ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), syncMessage);
@@ -1043,6 +1063,8 @@ public class EaselState {
      * Get list of actions in history that was not synced with the
      * player since the last sync, to keep history consistent between
      * players
+     *
+     * Amount of action is limited by the packet SEaselStateSyncPacket
      * @param player
      * @return
      */
@@ -1060,16 +1082,17 @@ public class EaselState {
         while(actionBufferIterator.hasPrevious()) {
             CanvasAction action = actionBufferIterator.previous();
             // Because we're using reverse iterator, we add to the front
-            unsyncedActions.add(action);
+            if (action.uuid.equals(lastSyncedActionUuid)) {
+                while(actionBufferIterator.hasNext() && unsyncedActions.size() < SEaselStateSyncPacket.MAX_ACTIONS) {
+                    action = actionBufferIterator.next();
+                    unsyncedActions.add(action);
+                }
 
-            if (action.uuid == lastSyncedActionUuid) {
                 break;
             }
         }
 
-        Collections.reverse(unsyncedActions);
-
-        if (unsyncedActions.size() == 1 && unsyncedActions.get(0).uuid == lastSyncedActionUuid) {
+        if (unsyncedActions.size() == 1 && unsyncedActions.get(0).uuid.equals(lastSyncedActionUuid)) {
             return null;
         }
 
@@ -1247,7 +1270,7 @@ public class EaselState {
      * @param snapshot
      * @param actions
      */
-    public void processHistorySyncClient(String canvasCode, @Nullable CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> actions) {
+    public void processHistorySyncClient(String canvasCode, boolean sync, @Nullable CanvasSnapshot snapshot, @Nullable ArrayList<CanvasAction> actions) {
         if (!canvasCode.equals(this.getCanvasCode())) {
             Zetter.LOG.error("Different canvas code in history sync packet, ignoring");
             return;
@@ -1271,6 +1294,8 @@ public class EaselState {
 
 
         if (actions == null || actions.isEmpty()) {
+            this.sync = sync;
+
             this.recollectPaintingData();
 
             if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
@@ -1341,6 +1366,8 @@ public class EaselState {
             this.wipeCanceledActionsAndDiscardSnapshots();
             this.cleanupActionHistory();
         }
+
+        this.sync = sync;
 
         this.recollectPaintingData();
         this.onStateChanged();

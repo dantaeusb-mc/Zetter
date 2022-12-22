@@ -75,7 +75,7 @@ public class ClientHandler {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
             if (easel != null) {
-                easel.getStateHandler().processHistorySyncClient(packetIn.canvasCode, packetIn.snapshot, packetIn.unsyncedActions);
+                easel.getStateHandler().processHistorySyncClient(packetIn.canvasCode, packetIn.sync, packetIn.snapshot, packetIn.unsyncedActions);
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas snapshot");
             }
