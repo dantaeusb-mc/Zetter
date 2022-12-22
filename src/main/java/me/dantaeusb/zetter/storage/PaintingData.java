@@ -96,7 +96,7 @@ public class PaintingData extends AbstractCanvasData {
         if (this.authorUuid == null || this.authorUuid.equals(FALLBACK_UUID)) {
             UUID authorUuid = Helper.tryToRestoreAuthorUuid(level, this.authorName);
 
-            if (authorUuid != null && !this.authorUuid.equals(FALLBACK_UUID)) {
+            if (authorUuid != null) {
                 this.authorUuid = authorUuid;
             } else {
                 Zetter.LOG.warn("Cannot restore author UUID for player " + this.authorName);
