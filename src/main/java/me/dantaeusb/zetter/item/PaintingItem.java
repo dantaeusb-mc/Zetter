@@ -163,6 +163,20 @@ public class PaintingItem extends CanvasItem
     }
 
     /**
+     * Check if canvas has data
+     * As all canvases initialized with id,
+     * no id means canvas was not initialized
+     *
+     * @param stack
+     * @return
+     */
+    public static boolean isEmpty(ItemStack stack) {
+        String paintingCode = getPaintingCode(stack);
+
+        return paintingCode == null;
+    }
+
+    /**
      *
      * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
      * @param stack

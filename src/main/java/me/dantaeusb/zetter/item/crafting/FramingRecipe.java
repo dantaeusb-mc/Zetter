@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.FrameItem;
+import me.dantaeusb.zetter.item.PaintingItem;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -60,10 +61,25 @@ public class FramingRecipe extends CustomRecipe {
                 }
 
                 paintingStack = craftingInventory.getItem(i);
+            } else {
+                // We have something else in the grid
+                return false;
             }
         }
 
-        return !frameStack.isEmpty() && (!paintingStack.isEmpty() && paintingStack.hasTag());
+        if (frameStack.isEmpty() || paintingStack.isEmpty()) {
+            return false;
+        }
+
+        if (!paintingStack.hasTag()) {
+            return false;
+        }
+
+        if (!FrameItem.isEmpty(frameStack) || PaintingItem.isEmpty(paintingStack)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -89,17 +105,25 @@ public class FramingRecipe extends CustomRecipe {
             }
         }
 
-        if (!paintingStack.isEmpty() && paintingStack.hasTag()) {
-            ItemStack outStack = frameStack.copy();
-            outStack.setCount(1);
-
-            CompoundTag compoundnbt = paintingStack.getTag().copy();
-            outStack.setTag(compoundnbt);
-
-            return outStack;
-        } else {
+        if (frameStack.isEmpty() || paintingStack.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
+        if (!paintingStack.hasTag()) {
+            return ItemStack.EMPTY;
+        }
+
+        if (!FrameItem.isEmpty(frameStack) || PaintingItem.isEmpty(paintingStack)) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack outStack = frameStack.copy();
+        outStack.setCount(1);
+
+        CompoundTag compoundTag = paintingStack.getTag().copy();
+        outStack.setTag(compoundTag);
+
+        return outStack;
     }
 
     /**

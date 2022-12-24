@@ -51,10 +51,14 @@ public class UnframingRecipe extends CustomRecipe {
 
             if (this.inputFrame.test(craftingInventory.getItem(i))) {
                 if (!frameStack.isEmpty()) {
+                    // We already found frame
                     return false;
                 }
 
                 frameStack = craftingInventory.getItem(i);
+            } else {
+                // We have something else in the grid
+                return false;
             }
         }
 

@@ -157,9 +157,9 @@ public class CanvasItem extends Item
      * @return
      */
     public static boolean isEmpty(ItemStack stack) {
-        String canvasSize = getCanvasCode(stack);
+        String canvasCode = getCanvasCode(stack);
 
-        return canvasSize == null;
+        return canvasCode == null;
     }
 
     /**
