@@ -347,21 +347,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         return false;
     }
 
-    /**
-     * If we requested partial canvas
-     *
-     * @todo: [MED] Check that handled canvas is in this table!
-     *
-     * @param canvasCode
-     * @param canvasData
-     * @param timestamp
-     * @return
-     */
-    public boolean handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.action.handleCanvasSync(canvasCode, canvasData, timestamp);
-        return false;
-    }
-
     @Override
     public void slotChanged(AbstractContainerMenu containerMenu, int slotInd, ItemStack stack) {
 
