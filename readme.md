@@ -4,11 +4,14 @@
 ) [![](http://cf.way2muchnoise.eu/versions/zetter.svg)](https://www.curseforge.com/minecraft/mc-mods/zetter
 )
 
-Supported versions: 1.16.3-1.16.5 with Forge 34+
+Supported versions: 
+* 1.16.5 (no update yet, will be on 0.19 LTS),
+* 1.17.1 (has an outdated build, won't update),
+* 1.18.2 (update in priority, will be on 0.19 LTS), 
+* 1.19.2 (update in priority, will be on 0.19 LTS),
+* 1.19.3 (master)
 
 Info: https://www.curseforge.com/minecraft/mc-mods/zetter
-
-Public backlog & stuff: https://thundering-athlete-4df.notion.site/Zetter-4515088bfb50410c92f681e3534f877f
 
 ### Licensing
 
