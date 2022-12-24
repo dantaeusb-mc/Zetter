@@ -7,7 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
     final static int WIDTH = TAB_BUTTON_WIDTH;
     final static int HEIGHT = TAB_BUTTON_HEIGHT + (TAB_BUTTON_OFFSET) * 2;
     public TabsWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.tabs"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.tabs"));
 
         this.updateTabs();
     }
@@ -129,7 +128,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
             this.width = width;
         }
 
-        public TranslatableComponent getTooltip() {
+        public Component getTooltip() {
             return this.tab.translatableComponent;
         }
 
@@ -139,18 +138,18 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
     }
 
     public enum Tab {
-        COLOR("color", new TranslatableComponent("container.zetter.painting.tabs.color")),
-        PENCIL_PARAMETERS("pencil_parameters", new TranslatableComponent("container.zetter.painting.tabs.pencil_parameters")),
-        BRUSH_PARAMETERS("brush_parameters", new TranslatableComponent("container.zetter.painting.tabs.brush_parameters")),
-        BUCKET_PARAMETERS("bucket_parameters", new TranslatableComponent("container.zetter.painting.tabs.bucket_parameters")),
-        INVENTORY("inventory", new TranslatableComponent("container.zetter.painting.tabs.inventory"));
+        COLOR("color", Component.translatable("container.zetter.painting.tabs.color")),
+        PENCIL_PARAMETERS("pencil_parameters", Component.translatable("container.zetter.painting.tabs.pencil_parameters")),
+        BRUSH_PARAMETERS("brush_parameters", Component.translatable("container.zetter.painting.tabs.brush_parameters")),
+        BUCKET_PARAMETERS("bucket_parameters", Component.translatable("container.zetter.painting.tabs.bucket_parameters")),
+        INVENTORY("inventory", Component.translatable("container.zetter.painting.tabs.inventory"));
 
         public final String code;
 
         // @todo: [LOW] Remove?
-        public final TranslatableComponent translatableComponent;
+        public final Component translatableComponent;
 
-        Tab(String code, TranslatableComponent translatableComponent) {
+        Tab(String code, Component translatableComponent) {
             this.code = code;
             this.translatableComponent = translatableComponent;
         }

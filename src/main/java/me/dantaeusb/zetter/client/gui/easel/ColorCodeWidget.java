@@ -5,12 +5,13 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.core.tools.Color;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.StringUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
@@ -44,7 +45,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     };
 
     public ColorCodeWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT + TEXTBOX_TITLE_HEIGHT, new TranslatableComponent("container.zetter.painting.color_code"));
+        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT + TEXTBOX_TITLE_HEIGHT, Component.translatable("container.zetter.painting.color_code"));
     }
 
     @Override
@@ -60,8 +61,14 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
                 this.y + TEXTBOX_TITLE_HEIGHT + 4,
                 TEXTBOX_WIDTH - 7,
                 12,
-                new TranslatableComponent("container.zetter.easel")
-        );
+                Component.translatable("container.zetter.easel")
+        ) {
+            public void insertText(String text) {
+                text = text.replaceAll("[^\\p{XDigit}]", "");
+
+                super.insertText(text);
+            }
+        };
 
         this.textField.setCanLoseFocus(false);
         this.textField.setTextColor(INACTIVE_COLOR);
@@ -126,6 +133,11 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.textField.isFocused()) {
+            // When pasting, just reset field first. It's never combined.
+            if (Screen.isPaste(keyCode)) {
+                this.textField.setValue("");
+            }
+
             return this.textField.keyPressed(keyCode, scanCode, modifiers) || this.textField.canConsumeInput();
         }
 

@@ -21,9 +21,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -102,7 +102,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
         }
     }
 
-    public void containerChanged(ItemStackHandler container) {
+    /**
+     * @todo: [LOW] Do we need that?
+     * @param container
+     * @param slot
+     */
+    public void containerChanged(ItemStackHandler container, int slot) {
         this.setChanged();
     }
 
@@ -123,8 +128,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
-    {
+    public void load(CompoundTag compoundTag) {
         super.load(compoundTag);
 
         CompoundTag canvasStorageTag;
@@ -137,8 +141,9 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
 
         this.artistTableGridContainer.deserializeNBT(canvasStorageTag);
 
-        if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE)
+        if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE) {
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
+        }
 
         if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_MODE)) {
             byte modeId = compoundTag.getByte(NBT_TAG_ARTIST_TABLE_MODE);
@@ -188,12 +193,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     }
     @Override
     public Component getDisplayName() {
-        return new TranslatableComponent("container.zetter.artistTable");
+        return Component.translatable("container.zetter.artistTable");
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+        if (capability == ForgeCapabilities.ITEM_HANDLER
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.artistTableContainerOptional.cast();
         }

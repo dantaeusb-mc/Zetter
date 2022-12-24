@@ -2,15 +2,12 @@ package me.dantaeusb.zetter.menu;
 
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.block.entity.container.ArtistTableGridContainer;
-import me.dantaeusb.zetter.core.ItemStackHandlerListener;
-import me.dantaeusb.zetter.core.ZetterContainerMenus;
-import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.artisttable.AbstractCanvasAction;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
-import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
-import me.dantaeusb.zetter.network.packet.CArtistTableModeChange;
+import me.dantaeusb.zetter.network.packet.CArtistTableModeChangePacket;
 import me.dantaeusb.zetter.network.packet.SArtistTableMenuCreatePacket;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.server.level.ServerPlayer;
@@ -65,7 +62,17 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     private AbstractCanvasAction action;
     private final ContainerLevelAccess access;
 
+    /*
+     * Active only in combination mode, large
+     * area for combining canvases, saved in the
+     * artist table
+     */
     private final ArtistTableGridContainer combinationContainer;
+
+    /*
+     * Active always, result slot in combination mode
+     * and craft slot in split mode
+     */
     private final ItemStackHandler combinedHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -74,6 +81,13 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             //super.onContentsChanged(slot);
         }
     };
+
+    /*
+     * Active in split mode, temporary holder
+     * for parts of combined canvas, will not be
+     * saved in the entity and drop when menu is closed
+     * in case if combined slot is empty (after split)
+     */
     private final ItemStackHandler splitHandler = new ItemStackHandler(ArtistTableMenu.CANVAS_SLOT_COUNT) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -183,8 +197,6 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         } else if (this.getMode() == Mode.SPLIT) {
             this.action = new CanvasSplitAction(this, this.level);
         }
-
-        this.containerChanged(this.combinationContainer);
     }
 
     public static ArtistTableMenu createMenuServerSide(int windowID, Inventory playerInventory,
@@ -239,7 +251,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         this.setData(ArtistTableBlockEntity.DATA_MODE, mode.getId());
 
         if (this.player.getLevel().isClientSide()) {
-            CArtistTableModeChange unloadPacket = new CArtistTableModeChange(this.containerId, mode);
+            CArtistTableModeChangePacket unloadPacket = new CArtistTableModeChangePacket(this.containerId, mode);
             ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
         }
     }
@@ -288,7 +300,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * canvas in the slot already, so we should not
      * remove or overwrite it
      */
-    public void containerChanged(ItemStackHandler container) {
+    public void containerChanged(ItemStackHandler container, int slot) {
         this.getAction().onChangedCombination(container);
     }
 
@@ -316,12 +328,23 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         return this.action;
     }
 
-    public boolean isCanvasReady() {
-        return this.action.state == CanvasCombinationAction.State.READY;
+    public AbstractCanvasAction.State getActionState() {
+        return this.action.state;
     }
 
-    public boolean canvasLoading() {
-        return this.action.state == CanvasCombinationAction.State.NOT_LOADED;
+    /**
+     * If we requested partial canvas
+     *
+     * @todo: [MED] Check that handled canvas is in this table!
+     *
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     * @return
+     */
+    public boolean handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
+        this.action.handleCanvasSync(canvasCode, canvasData, timestamp);
+        return false;
     }
 
     /**
@@ -383,6 +406,11 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             });
 
             this.discardSplitGrid(player);
+        }
+
+        // Manually clean combined canvas as it's unmanaged
+        if (this.level.isClientSide()) {
+            Helper.getLevelCanvasTracker(this.level).unregisterCanvasData(Helper.COMBINED_CANVAS_CODE);
         }
     }
 

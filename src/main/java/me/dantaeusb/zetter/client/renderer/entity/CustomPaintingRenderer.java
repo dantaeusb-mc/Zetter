@@ -1,10 +1,10 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -32,12 +32,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import com.mojang.math.Vector3f;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.model.data.EmptyModelData;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 
-public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity> {
+public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
     public static ModelLayerLocation PAINTING_PLATE_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "custom_painting"), "plate_layer");
 
     public static final String[] MODEL_CODES = {
@@ -72,12 +71,12 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
     static {
         for (String modelCode: CustomPaintingRenderer.MODEL_CODES) {
-            for (CustomPaintingEntity.Materials material: CustomPaintingEntity.Materials.values()) {
+            for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
                 CustomPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation("zetter:frame/" + material + "/" + modelCode));
             }
         }
 
-        for (CustomPaintingEntity.Materials material: CustomPaintingEntity.Materials.values()) {
+        for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
             if (material.canHavePlate()) {
                 CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
             }
@@ -91,7 +90,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         return LayerDefinition.create(meshdefinition, 16, 16);
     }
 
-    public void render(CustomPaintingEntity entity, float entityYaw, float partialTicks, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
+    public void render(PaintingEntity entity, float entityYaw, float partialTicks, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
         Level world = entity.getCommandSenderWorld();
 
         matrixStack.pushPose();
@@ -223,7 +222,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getPaintingCode(), canvasData, combinedLight);
             matrixStack.popPose();
         } else {
-            CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.PAINTING, entity.getPaintingCode());
+            CanvasRenderer.getInstance().queueCanvasTextureUpdate(entity.getPaintingCode());
         }
 
         // Render plate
@@ -244,7 +243,7 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         super.render(entity, entityYaw, partialTicks, matrixStack, renderBuffers, combinedLight);
     }
 
-    private void renderModel(CustomPaintingEntity entity, String key, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
+    private void renderModel(PaintingEntity entity, String key, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
         ModelResourceLocation modelResourceLocation = FRAME_MODELS.get(entity.getMaterial() + "/" + key);
 
         PoseStack.Pose currentMatrix = matrixStack.last();
@@ -253,11 +252,15 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
         BakedModel frameModel = Minecraft.getInstance().getModelManager().getModel(modelResourceLocation);
 
         BlockRenderDispatcher rendererDispatcher = Minecraft.getInstance().getBlockRenderer();
-        rendererDispatcher.getModelRenderer().renderModel(currentMatrix, vertexBuffer, null, frameModel,
-                1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY, EmptyModelData.INSTANCE);
+        rendererDispatcher.getModelRenderer().renderModel(
+                currentMatrix, vertexBuffer, null, frameModel,
+                1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY,
+                net.minecraftforge.client.model.data.ModelData.EMPTY,
+                RenderType.cutout()
+        );
     }
 
-    public static BlockPos getOffsetBlockPos(CustomPaintingEntity entity, int h, int v) {
+    public static BlockPos getOffsetBlockPos(PaintingEntity entity, int h, int v) {
         Direction facingDirection = entity.getDirection();
         facingDirection = facingDirection.getCounterClockWise();
 
@@ -273,20 +276,20 @@ public class CustomPaintingRenderer extends EntityRenderer<CustomPaintingEntity>
 
     @Nullable
     public static PaintingData getCanvasData(Level world, String canvasName) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         if (canvasTracker == null) {
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName, PaintingData.class);
+        return canvasTracker.getCanvasData(canvasName);
     }
 
     /**
      * Returns the location of an entity's texture.
      * @todo: do something with this
      */
-    public ResourceLocation getTextureLocation(CustomPaintingEntity entity) {
+    public ResourceLocation getTextureLocation(PaintingEntity entity) {
         return PLATE_TEXTURES.get("oak");
     }
 }

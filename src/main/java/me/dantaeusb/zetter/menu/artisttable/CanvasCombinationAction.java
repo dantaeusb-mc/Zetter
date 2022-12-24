@@ -1,14 +1,14 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasClientTracker;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
@@ -51,12 +51,24 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     public Rectangle rectangle;
 
+    /*
+     * This needed to stop sending canvas update requests
+     * when we are emptying
+     */
+    private boolean ignoreUpdateEvents = false;
+
     public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
         super(menu, level);
 
         this.updateCanvasData(menu.getCombinationContainer());
     }
 
+    /**
+     * When new item placed or it's canvas data
+     * updated from server, update the preview
+     *
+     * @param combinationContainer
+     */
     public void updateCanvasData(ItemStackHandler combinationContainer) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
@@ -82,8 +94,8 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
 
-        if (min == null || max == null) {
-            this.state = State.INVALID;
+        if (min == null) {
+            this.state = State.EMPTY;
             this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
@@ -112,13 +124,13 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                         return;
                     }
 
-                    if (CanvasItem.getCanvasData(currentStack, this.level) == null) {
-                        /**
-                         * @todo: [HIGH] Move request out of here, request with data load attempts but avoid loading unavailable canvases
-                         */
+                    if (
+                        this.level.isClientSide()
+                        && CanvasItem.getCanvasCode(currentStack) != null
+                        && CanvasItem.getCanvasData(currentStack, this.level) == null
+                    ) {
                         CanvasRenderer.getInstance().queueCanvasTextureUpdate(
-                                AbstractCanvasData.Type.CANVAS,
-                                CanvasItem.getCanvasCode(currentStack)
+                            CanvasItem.getCanvasCode(currentStack)
                         );
 
                         canvasesReady = false;
@@ -127,14 +139,21 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
 
+        Rectangle rectangle = CanvasCombinationAction.getRect(min, max);
+
+        if (rectangle.height == 1 && rectangle.width == 1) {
+            this.state = State.EMPTY;
+            this.rectangle = CanvasCombinationAction.getZeroRect();
+            this.canvasData = null;
+            return;
+        }
+
         if (!canvasesReady) {
             this.state = State.NOT_LOADED;
             this.rectangle = CanvasCombinationAction.getZeroRect();
             this.canvasData = null;
             return;
         }
-
-        Rectangle rectangle = CanvasCombinationAction.getRect(min, max);
 
         boolean shapeAvailable = false;
         for (int[] shape: CanvasCombinationAction.paintingShapes) {
@@ -171,7 +190,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 int relativeX = slotX - rectangle.x;
                 int relativeY = slotY - rectangle.y;
 
-
                 if (smallCanvasData != null) {
                     for (int smallY = 0; smallY < smallCanvasData.getHeight(); smallY++) {
                         for (int smallX = 0; smallX < smallCanvasData.getWidth(); smallX++) {
@@ -200,7 +218,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
 
-        DummyCanvasData combinedCanvasData = DummyCanvasData.createWrap(
+        DummyCanvasData combinedCanvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
             Helper.getResolution(),
             pixelWidth,
             pixelHeight,
@@ -208,10 +226,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         );
 
         if (world.isClientSide()) {
-            Helper.getWorldCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
-        } else {
-            // @todo: drop texture
-
+            Helper.getLevelCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
         }
 
         return combinedCanvasData;
@@ -223,7 +238,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
-        // @todo: Can combine?
+        // @todo: [MED] Can combine?
         if (this.isReady()) {
             if (combinedStack.isEmpty()) {
                 combinedStack = new ItemStack(ZetterItems.CANVAS.get());
@@ -243,8 +258,8 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
 
         if (!player.getLevel().isClientSide()) {
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(player.getLevel());
-            CanvasData combinedCanvasData = CanvasData.createWrap(
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
+            CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
                     this.canvasData.getResolution(),
                     this.canvasData.getWidth(),
                     this.canvasData.getHeight(),
@@ -265,31 +280,38 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 }
 
                 // Cleanup IDs and grid
-                int canvasId = CanvasItem.getCanvasId(combinationStack);
-                // @todo: remove texture from client too
-                canvasTracker.clearCanvasId(canvasId);
+                canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinationStack));
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
         } else {
-            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getWorldCanvasTracker(player.getLevel());
+            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.getLevel());
 
             for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-                ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+                // First we are removing item to avoid loading it's canvas on update
+                // otherwise, when server will push container update events with
+                // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
+                // One by one by every removed canvas and cause client to load
+                // textures for removed canvases again
+                ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
 
                 if (combinationStack.isEmpty()) {
                     continue;
                 }
 
-                // @todo: Force client to invalidate paintings maybe?
                 String canvasCode = CanvasItem.getCanvasCode(combinationStack);
                 canvasTracker.unregisterCanvasData(canvasCode);
             }
         }
     }
-
+    /**
+     * Call changed container to update output slot
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     */
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.updateCanvasData(this.menu.getCombinationContainer());
+        this.onChangedCombination(this.menu.getCombinationContainer());
     }
 
     public boolean isReady() {

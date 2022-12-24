@@ -2,12 +2,11 @@ package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.menu.EaselMenu;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -18,12 +17,12 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
 
     final static int PALETTE_COLS = 2;
     final static int WIDTH = PALETTE_SCALE_FACTOR + PALETTE_OFFSET;
-    final static int HEIGHT = PALETTE_SCALE_FACTOR + ((EaselContainerMenu.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET);
+    final static int HEIGHT = PALETTE_SCALE_FACTOR + ((EaselMenu.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET);
 
     public static final int SWAP_HOTKEY = GLFW.GLFW_KEY_X;
 
     public PaletteWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.palette"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.palette"));
     }
 
     @Override
@@ -44,7 +43,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
             return false;
         }
 
-        for (int i = 0; i < EaselContainerMenu.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < EaselMenu.PALETTE_SLOTS; i++) {
             int slotX = this.x + (i % 2) * PALETTE_OFFSET;
             int slotY = this.y + (i / 2) * PALETTE_OFFSET;
 
@@ -78,7 +77,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
             return;
         }
 
-        for (int i = 0; i < EaselContainerMenu.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < EaselMenu.PALETTE_SLOTS; i++) {
             int fromX = this.x + (i % 2) * PALETTE_OFFSET;
             int fromY = this.y + (i / 2) * PALETTE_OFFSET;
 

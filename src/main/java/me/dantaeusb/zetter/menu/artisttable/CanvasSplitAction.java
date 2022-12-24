@@ -1,17 +1,15 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasDefaultTracker;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -28,7 +26,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * Check if can put anything in
      * "combined" slot
      *
-     * @todo: Don't allow if grid is not empty
+     * @todo: [HIGH] Don't allow if grid is not empty
      * @param stack
      * @return
      */
@@ -91,8 +89,8 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                     this.menu.getSplitHandler().setStackInSlot(slotNumber, new ItemStack(ZetterItems.CANVAS.get()));
                 } else {
                     if (
-                        !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
-                        !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
+                            !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
+                                    !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
                     ) {
                         this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
                     }
@@ -103,23 +101,33 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         this.updateCanvasData(combinedHandler);
     }
 
+    /**
+     * When new item placed or it's canvas data
+     * updated from server, update the preview
+     *
+     * @param combinedHandler
+     */
     public void updateCanvasData(ItemStackHandler combinedHandler) {
         ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
+        // it's empty??
         CanvasData combinedStackCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         if (combinedStackCanvasData != null) {
-            this.canvasData = DummyCanvasData.createWrap(
+            this.canvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
                     combinedStackCanvasData.getResolution(),
                     combinedStackCanvasData.getWidth(),
                     combinedStackCanvasData.getHeight(),
                     combinedStackCanvasData.getColorData()
             );
 
+            if (this.level.isClientSide()) {
+                Helper.getLevelCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, this.canvasData);
+            }
+
             this.state = State.READY;
         } else {
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(
-                    AbstractCanvasData.Type.CANVAS,
                     CanvasItem.getCanvasCode(combinedStack)
             );
 
@@ -148,7 +156,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Get data from split canvas
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(player.getLevel());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
         final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         // Don't need that data for client, it'll request if needed
@@ -180,7 +188,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                         continue;
                     }
 
-                    CanvasData itemData = CanvasData.createWrap(
+                    CanvasData itemData = CanvasData.BUILDER.createWrap(
                             combinedCanvasData.getResolution(),
                             numericResolution,
                             numericResolution,
@@ -203,7 +211,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Set data for the picked item
-        CanvasData itemData = CanvasData.createWrap(
+        CanvasData itemData = CanvasData.BUILDER.createWrap(
                 combinedCanvasData.getResolution(),
                 numericResolution,
                 numericResolution,
@@ -222,13 +230,22 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
 
+        // Cleanup canvas ID
+        canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinedStack));
+
         // Remove split canvas item
         this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
     }
 
+    /**
+     * Call changed container to update output slot
+     * @param canvasCode
+     * @param canvasData
+     * @param timestamp
+     */
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.updateCanvasData(this.menu.getSplitHandler());
+        this.onChangedCombined(this.menu.getCombinedHandler());
     }
 
     private static byte[] getPartialColorData(byte[] colorData, int resolution, int blockX, int blockY, int blockWidth, int blockHeight) {

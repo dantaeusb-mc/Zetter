@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.entity.item.container;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import com.google.common.collect.Lists;
@@ -89,7 +89,7 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        ICanvasTracker canvasTracker;
+        CanvasTracker canvasTracker;
 
         if (this.easel.getLevel().isClientSide()) {
             canvasTracker = this.easel.getLevel().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
@@ -103,7 +103,7 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        CanvasData canvas = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+        CanvasData canvas = canvasTracker.getCanvasData(canvasCode);
 
         if (canvas == null) {
             this.canvas = null;
@@ -118,15 +118,14 @@ public class EaselContainer extends ItemStackHandler {
      */
 
     /**
-     * @todo: this
      * @return
      */
     public boolean stillValid(Player player) {
-        if (this.easel != null) {
+        if (this.easel != null && this.easel.isAlive()) {
             return player.distanceToSqr((double)this.easel.getPos().getX() + 0.5D, (double)this.easel.getPos().getY() + 0.5D, (double)this.easel.getPos().getZ() + 0.5D) <= 64.0D;
         }
 
-        return true;
+        return false;
     }
 
     public boolean isItemValid(int index, ItemStack stack) {
@@ -187,7 +186,7 @@ public class EaselContainer extends ItemStackHandler {
     {
         if (this.listeners != null) {
             for(ItemStackHandlerListener listener : this.listeners) {
-                listener.containerChanged(this);
+                listener.containerChanged(this, slot);
             }
         }
 

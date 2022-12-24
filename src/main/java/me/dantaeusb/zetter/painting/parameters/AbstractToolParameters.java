@@ -9,12 +9,35 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Tuple;
 import org.apache.commons.lang3.SerializationException;
 
+import javax.lang.model.type.PrimitiveType;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class AbstractToolParameters {
+public abstract class AbstractToolParameters implements Cloneable {
     protected HashMap<String, Object> values = new HashMap<>();
+
+    @Override
+    public AbstractToolParameters clone() throws CloneNotSupportedException {
+        AbstractToolParameters copy = (AbstractToolParameters) super.clone();
+        copy.values = new HashMap<>();
+
+        for (Map.Entry<String, Object> valueEntry : this.values.entrySet()) {
+            if (
+                valueEntry.getValue() instanceof Number
+                    || valueEntry.getValue() instanceof String
+                    || valueEntry.getValue() instanceof Boolean
+            ) {
+                copy.values.put(valueEntry.getKey(), valueEntry.getValue());
+            } else if (valueEntry.getValue() instanceof CloneableParameter) {
+                copy.values.put(valueEntry.getKey(), ((CloneableParameter) valueEntry.getValue()).clone());
+            } else {
+                throw new CloneNotSupportedException("Value of parameter " + valueEntry.getKey() + " is not cloneable!");
+            }
+        }
+
+        return copy;
+    }
 
     public static void writePacketData(AbstractToolParameters toolParameters, FriendlyByteBuf buffer) {
         buffer.writeCollection(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
@@ -24,9 +47,10 @@ public abstract class AbstractToolParameters {
      * Uses Java's ObjectOutputStream which apparently is extremely inefficient
      * for primitives. It takes 79 bytes to send float and int.
      * Though works good for enums/strings
-     * @todo: fix that wasteful serializer
+     *
      * @param buffer
      * @param entry
+     * @todo: fix that wasteful serializer
      */
     private static void writeEntry(FriendlyByteBuf buffer, Map.Entry<String, Object> entry) {
         try {
@@ -64,13 +88,13 @@ public abstract class AbstractToolParameters {
         }
 
         final List<Tuple<String, Object>> rawParameters = buffer.readCollection(
-                NonNullList::createWithCapacity,
-                AbstractToolParameters::readEntry
+            NonNullList::createWithCapacity,
+            AbstractToolParameters::readEntry
         );
 
         toolParameters.values = (HashMap<String, Object>) rawParameters.stream().collect(Collectors.toMap(
-                Tuple::getA,
-                Tuple::getB
+            Tuple::getA,
+            Tuple::getB
         ));
 
         return toolParameters;

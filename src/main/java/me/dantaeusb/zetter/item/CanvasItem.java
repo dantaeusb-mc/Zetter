@@ -1,23 +1,17 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
@@ -29,7 +23,6 @@ import net.minecraft.server.level.ServerLevel;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -44,8 +37,8 @@ public class CanvasItem extends Item
     public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
     public static final String NBT_TAG_CACHED_BLOCK_SIZE = "CachedBlockSize";
 
-    public CanvasItem() {
-        super(new Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS));
+    public CanvasItem(Properties properties) {
+        super(properties);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
@@ -71,7 +64,7 @@ public class CanvasItem extends Item
                 );
             } else {
                 // If data is not loaded, request and show screen after
-                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.CANVAS, canvasCode, hand);
+                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(canvasCode, hand);
                 Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
                 ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
             }
@@ -90,11 +83,11 @@ public class CanvasItem extends Item
             String canvasCode = getCanvasCode(stack);
 
             if (!StringUtil.isNullOrEmpty(canvasCode)) {
-                return new TranslatableComponent("item.zetter.canvas.painted");
+                return Component.translatable("item.zetter.canvas.painted");
             }
         }
 
-        return new TranslatableComponent("item.zetter.canvas.blank");
+        return Component.translatable("item.zetter.canvas.blank");
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -103,7 +96,7 @@ public class CanvasItem extends Item
             String stringSize = getCachedStringSize(stack);
 
             if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
+                tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -117,9 +110,9 @@ public class CanvasItem extends Item
         }
 
         String canvasCode = createNewCanvasData(world);
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
-        CanvasData canvasData = canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+        CanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
         assert canvasData != null;
 
         storeCanvasData(stack, canvasCode, canvasData);
@@ -132,7 +125,7 @@ public class CanvasItem extends Item
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
@@ -164,9 +157,9 @@ public class CanvasItem extends Item
      * @return
      */
     public static boolean isEmpty(ItemStack stack) {
-        String canvasSize = getCanvasCode(stack);
+        String canvasCode = getCanvasCode(stack);
 
-        return canvasSize == null;
+        return canvasCode == null;
     }
 
     /**
@@ -188,9 +181,9 @@ public class CanvasItem extends Item
                 canvasCode = getCanvasCode(stack);
             }
 
-            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
-            return canvasTracker.getCanvasData(canvasCode, CanvasData.class);
+            return canvasTracker.getCanvasData(canvasCode);
         }
 
         return null;
@@ -281,10 +274,10 @@ public class CanvasItem extends Item
             throw new InvalidParameterException("Create canvas called on client");
         }
 
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getWorldCanvasTracker(level);
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
         final int numericResolution = Helper.getResolution().getNumeric();
 
-        CanvasData canvasData = CanvasData.createFresh(Helper.getResolution(), numericResolution, numericResolution);
+        CanvasData canvasData = CanvasData.BUILDER.createFresh(Helper.getResolution(), numericResolution, numericResolution);
         String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
         canvasTracker.registerCanvasData(canvasCode, canvasData);
 

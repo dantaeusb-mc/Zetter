@@ -5,6 +5,8 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 
+import net.minecraft.world.item.Item.Properties;
+
 public class PaletteItem extends Item
 {
     public static final String NBT_TAG_NAME_PALETTE_COLORS = "paletteColors";
@@ -12,6 +14,16 @@ public class PaletteItem extends Item
 
     public PaletteItem() {
         super(new Properties().durability(4096).tab(CreativeModeTab.TAB_TOOLS));
+    }
+
+    /**
+     * For custom repairs with color saving
+     * @param stack
+     * @return
+     */
+    @Override
+    public boolean isRepairable(ItemStack stack) {
+        return false;
     }
 
     public static int[] getPaletteColors(ItemStack stack)

@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -33,7 +34,7 @@ public class CSignPaintingPacket {
 
         try {
             packet.slot = buf.readByte();
-            packet.paintingTitle = buf.readUtf(32);
+            packet.paintingTitle = buf.readUtf(Helper.PAINTING_TITLE_MAX_LENGTH);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading CCreatePaintingPacket: " + e);
             return packet;
@@ -47,7 +48,7 @@ public class CSignPaintingPacket {
      */
     public void writePacketData(FriendlyByteBuf buf) {
         buf.writeByte(this.slot);
-        buf.writeUtf(this.paintingTitle, 32);
+        buf.writeUtf(this.paintingTitle, Helper.PAINTING_TITLE_MAX_LENGTH);
     }
 
     public int getSlot() {

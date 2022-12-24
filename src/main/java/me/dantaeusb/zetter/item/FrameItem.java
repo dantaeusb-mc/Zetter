@@ -1,15 +1,12 @@
 package me.dantaeusb.zetter.item;
 
-import me.dantaeusb.zetter.entity.item.CustomPaintingEntity;
+import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.*;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
@@ -18,16 +15,15 @@ import java.util.Optional;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 
 public class FrameItem extends PaintingItem {
-    private CustomPaintingEntity.Materials material;
+    private PaintingEntity.Materials material;
     private boolean hasPlate;
 
-    public FrameItem(CustomPaintingEntity.Materials material, boolean plated) {
-        super();
+    public FrameItem(Properties properties, PaintingEntity.Materials material, boolean plated) {
+        super(properties);
 
         this.material = material;
         this.hasPlate = plated;
@@ -45,21 +41,21 @@ public class FrameItem extends PaintingItem {
 
             if (StringUtil.isNullOrEmpty(paintingName)) {
                 if (StringUtil.isNullOrEmpty(getPaintingCode(stack))) {
-                    return new TranslatableComponent(this.getDescriptionId(stack));
+                    return Component.translatable(this.getDescriptionId(stack));
                 }
 
-                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
+                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
-                return new TextComponent(paintingName);
+                return Component.translatable(paintingName);
             }
         }
 
-        return new TranslatableComponent(this.getDescriptionId(stack));
+        return Component.translatable(this.getDescriptionId(stack));
     }
 
-    public CustomPaintingEntity.Materials getMaterial() {
+    public PaintingEntity.Materials getMaterial() {
         return this.material;
     }
 
@@ -68,9 +64,6 @@ public class FrameItem extends PaintingItem {
     }
 
     /**
-     * @todo: [LOW] Wtf is this?
-     * gets the fullness property override, used in mbe11_item_variants_registry_name.json to select which model should
-     *   be rendered
      * @param stack
      * @param world
      * @param livingEntity
@@ -109,7 +102,7 @@ public class FrameItem extends PaintingItem {
 
             Level world = context.getLevel();
 
-            CustomPaintingEntity paintingEntity = new CustomPaintingEntity(
+            PaintingEntity paintingEntity = new PaintingEntity(
                     world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack), getGeneration(stack)
             );
 

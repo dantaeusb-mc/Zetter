@@ -9,13 +9,13 @@ import java.util.UUID;
  * state restoration
  */
 public class CanvasSnapshot {
-    public final UUID id;
+    public final UUID uuid;
     public final Long timestamp;
     public final byte[] colors;
     public final boolean weak;
 
     private CanvasSnapshot(UUID uuid, byte[] colors, Long snapshotTime, boolean weak) {
-        this.id = uuid;
+        this.uuid = uuid;
         this.timestamp = snapshotTime;
         this.colors = colors;
         this.weak = weak;

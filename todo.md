@@ -1,28 +1,25 @@
+## Reminder list:
+
+* Do not use AWT. It is not supported on all platforms;
+* Nbt tags are UpperCamelCase; when creating new tags follow that rule;
+* Getters-setters, are, in fact, rarely needed; think about avoiding them when creating.
+
+## To-do list:
+
 #### Pre-release tasks:
 
-* \[HIGH\] * Client desync on split;
-* \[HIGH\] Check carefully that CanvasServerTracker#deserializeNBT data migration works fine, and canvas id is not reset;
 * \[HIGH\] * Not saving current palette selection and pixel buffer in Easel Entity;
-* \[HIGH\] ? Requested non-existent canvas errors because of synceddata desync;
-* \[HIGH\] * If you put non-initialized canvas on artist table in split mode, it will be loading forever;
 * \[HIGH\] ? Central piece of iron frame actually has no model (except back which it lacks for some reason);
-* \[HIGH\] When you change shape quickly after drawing, packet is sent with new shape;
-* \[HIGH\] * No drop when easel damaged;
-* \[HIGH\] Combined canvas unloaded on server somehow;
-* \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
-* \[MED\] Add a hook for image load, send naming packet from artist table as soon as image loaded;
 * \[MED\] If painting has some problems, just remove it instead of crashing or throwing errors (i.e. requesting non-existent canvas);
 
 #### Release tasks:
 
-* \[HIGH\] (Check) Remove awt usage;
 * \[HIGH\] When dropping painting, if cannot be loaded, just drop frame (gallery workaround);
 * \[HIGH\] Configuration file for texture size;
 * \[MED\] Reduce saving and sending format to write RGB data instead of RGBA;
 * \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel;
 * \[MED\] Make sure bucket tool has decent performance;
 * \[MED\] Add data format validation;
-* \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
 * \[MED\] It is said that capability (getCapability) should be cached by modders, we may need to do that here: Helper#getWorldCanvasTracker()
   

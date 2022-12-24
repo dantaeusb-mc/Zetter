@@ -6,7 +6,6 @@ import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.Mth;
 
 import javax.annotation.Nullable;
@@ -29,7 +28,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Widget {
      */
 
     public SliderWidget(
-            EaselScreen parentScreen, int x, int y, TranslatableComponent translatableComponent,
+            EaselScreen parentScreen, int x, int y, Component translatableComponent,
             Consumer<Float> positionConsumer,
             @Nullable BackgroundConsumer backgroundLambda, @Nullable ForegroundColorFunction foregroundLambda
     ) {

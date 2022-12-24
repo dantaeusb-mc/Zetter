@@ -1,12 +1,12 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
 import com.mojang.math.Matrix4f;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
+import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -28,8 +28,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class EaselRenderer extends EntityRenderer<EaselEntity> {
-    public static final ResourceLocation TEXTURE = new ResourceLocation("zetter:textures/entity/easel.png");
-    public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation("zetter:textures/entity/canvas.png");
+    public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
+    public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
 
     protected EaselModel model;
     protected final List<RenderLayer<EaselEntity, EntityModel<EaselEntity>>> layers = Lists.newArrayList();
@@ -62,7 +62,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
             if (canvasData != null) {
                 this.renderCanvas(easelEntity, canvasData, partialTicks, poseStack, buffer, packedLight);
             } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(AbstractCanvasData.Type.CANVAS, easelEntity.getEntityCanvasCode());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(easelEntity.getEntityCanvasCode());
             }
         }
 
@@ -82,7 +82,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         // Scale and prepare
         poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
-        poseStack.translate(-8.0D, 12.5D, -3.0D);
+        poseStack.translate(-8.0D, 12.5D, -4.0D);
         poseStack.mulPose(Vector3f.XP.rotation(0.1745F));
         poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
         poseStack.translate(-8.0D - (8.0D * canvasBlockWidth), -16.0D * canvasBlockHeight, 0.0D);
@@ -261,13 +261,13 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
     @Nullable
     public static CanvasData getCanvasData(Level world, String canvasName) {
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         if (canvasTracker == null) {
             return null;
         }
 
-        return canvasTracker.getCanvasData(canvasName, CanvasData.class);
+        return canvasTracker.getCanvasData(canvasName);
     }
 
     /**

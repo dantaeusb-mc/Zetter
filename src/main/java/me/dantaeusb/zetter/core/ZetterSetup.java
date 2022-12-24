@@ -32,12 +32,11 @@ public class ZetterSetup
             MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
+            // @todo: [CRIT] Broke icons with paintings!
             for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
                 ItemProperties.register(frame.get(), new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
                 ItemProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
             }
-
-            ItemBlockRenderTypes.setRenderLayer(ZetterBlocks.EASEL.get(), RenderType.cutout());
 
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
             new ClientPaintingToolParameters();

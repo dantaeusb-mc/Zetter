@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 public class CanvasAction {
     private static final int MAX_ACTIONS_IN_BUFFER = 100;
     private static final long MAX_TIME = 5000L;
-    private static final long MAX_INACTIVE_TIME = 1000L;
+    private static final long MAX_INACTIVE_TIME = 750L;
 
     public final UUID uuid;
     public final UUID authorId;
@@ -32,7 +32,9 @@ public class CanvasAction {
     public final int color;
 
     public final AbstractToolParameters parameters;
-    public final Long startTime;
+
+    private final Long startTime;
+    private Long commitTime;
 
     /**
      * 1 byte -- meta reserved
@@ -47,10 +49,11 @@ public class CanvasAction {
 
     private CanvasSubAction lastAction;
 
-    private boolean committed = false;
-
     // Could be false only on client
     private boolean sent = false;
+
+    // On client means there's no confirmation that server received event, on server it means that no damage was applied with this action
+    private boolean sync = false;
 
     private boolean canceled = false;
 
@@ -58,7 +61,7 @@ public class CanvasAction {
         this(authorId, tool, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    public CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
+    private CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
         this.uuid = UUID.randomUUID(); // is it too much?
         this.authorId = authorId;
         this.tool = tool;
@@ -69,7 +72,7 @@ public class CanvasAction {
         this.subActionBuffer = actionBuffer;
     }
 
-    private CanvasAction(UUID actionId, UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer, boolean canceled) {
+    private CanvasAction(UUID actionId, UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, Long commitTime, ByteBuffer actionBuffer, boolean canceled) {
         this.uuid = actionId;
         this.authorId = authorId;
         this.tool = tool;
@@ -80,9 +83,17 @@ public class CanvasAction {
         // When we create with data, it should be non-editable
         this.subActionBuffer = actionBuffer.asReadOnlyBuffer();
 
-        this.committed = true;
+        this.commitTime = commitTime;
         this.sent = true;
         this.canceled = canceled;
+    }
+
+    public Long getStartTime() {
+        return this.startTime;
+    }
+
+    public Long getCommitTime() {
+        return this.commitTime;
     }
 
     /**
@@ -95,7 +106,7 @@ public class CanvasAction {
      */
     public boolean canContinue(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
         // Not committed, should not yet be committed, and action is compatible
-        return !this.committed && !this.shouldCommit() && this.isActionCompatible(authorId, tool, color, parameters);
+        return this.commitTime == null && !this.shouldCommit() && this.isActionCompatible(authorId, tool, color, parameters);
     }
 
     /**
@@ -140,16 +151,14 @@ public class CanvasAction {
      *
      * @param posX
      * @param posY
-     * @return
      */
-    public boolean addFrame(float posX, float posY) {
-        if (this.committed) {
-            return false;
+    public void addFrame(float posX, float posY) {
+        if (this.commitTime != null) {
+            throw new IllegalStateException("Cannot add frame to committed action buffer");
         }
 
         if (this.shouldCommit()) {
-            this.commit();
-            return false;
+            throw new IllegalStateException("Cannot add frame to action buffer that should be committed");
         }
 
         final long currentTime = System.currentTimeMillis();
@@ -159,8 +168,6 @@ public class CanvasAction {
         CanvasSubAction.writeToBuffer(action, this.subActionBuffer);
 
         this.lastAction = action;
-
-        return true;
     }
 
     public Stream<CanvasSubAction> getSubActionStream() {
@@ -192,7 +199,7 @@ public class CanvasAction {
     }
 
     public void commit() {
-        if (this.committed) {
+        if (this.commitTime != null) {
             Zetter.LOG.warn("Already committed");
             return;
         }
@@ -202,15 +209,17 @@ public class CanvasAction {
         }
 
         this.sealBuffer();
-        this.committed = true;
+        this.commitTime = System.currentTimeMillis();
     }
 
     public boolean isCommitted() {
-        return this.committed;
+        return this.commitTime != null;
     }
 
     public void setSent() {
-        this.commit();
+        if (this.commitTime == null) {
+            this.commit();
+        }
 
         this.sent = true;
     }
@@ -219,19 +228,20 @@ public class CanvasAction {
         return this.sent;
     }
 
-    public void undo() {
-        this.commit();
-
-        this.canceled = true;
+    public void setSync() {
+        this.sync = true;
     }
 
-    public void redo() {
-        this.commit();
-
-        this.canceled = false;
+    public boolean isSync() {
+        return this.sync;
     }
 
     public void setCanceled(boolean canceled) {
+        if (this.commitTime == null) {
+            this.commit();
+        }
+
+        this.commit();
         this.canceled = canceled;
     }
 
@@ -312,10 +322,11 @@ public class CanvasAction {
         buffer.writeUtf(actionBuffer.tool.toString(), 32);
         buffer.writeInt(actionBuffer.color);
         buffer.writeLong(actionBuffer.startTime);
+        buffer.writeLong(actionBuffer.commitTime);
         buffer.writeBoolean(actionBuffer.canceled);
         AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
 
-        buffer.writeInt(actionBuffer.subActionBuffer.limit());
+        buffer.writeInt(actionBuffer.subActionBuffer.rewind().limit());
         buffer.writeBytes(actionBuffer.subActionBuffer);
     }
 
@@ -325,12 +336,12 @@ public class CanvasAction {
         Tools tool = Tools.valueOf(buffer.readUtf(32));
         int color = buffer.readInt();
         Long startTime = buffer.readLong();
+        Long commitTime = buffer.readLong();
         boolean canceled = buffer.readBoolean();
         AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, tool);
 
         int bufferSize = buffer.readInt();
         try {
-
             ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
 
             return new CanvasAction(
@@ -340,6 +351,7 @@ public class CanvasAction {
                     color,
                     parameters,
                     startTime,
+                    commitTime,
                     actionsBuffer,
                     canceled
             );

@@ -17,7 +17,7 @@ public class ZetterNetwork {
     public static SimpleChannel simpleChannel;
     // @todo: [LOW] Rename this on release, it's zetter:zetter_channel 0.1
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
-    public static final String MESSAGE_PROTOCOL_VERSION = "0.2";
+    public static final String MESSAGE_PROTOCOL_VERSION = "0.3";
 
     public static final byte PAINTING_FRAME = 21;
     public static final byte CANVAS_REQUEST = 22;
@@ -26,75 +26,93 @@ public class ZetterNetwork {
     public static final byte PALETTE_UPDATE = 25;
     public static final byte PAINTING_RENAME = 26;
     public static final byte CANVAS_SYNC_VIEW = 27;
-    public static final byte CANVAS_REQUEST_VIEW = 29;
-    public static final byte SNAPSHOT_SYNC = 30;
+    public static final byte CANVAS_REQUEST_VIEW = 28;
+    public static final byte CANVAS_REMOVE = 29;
+    public static final byte EASEL_SYNC = 30;
     public static final byte HISTORY_UPDATE = 31;
     public static final byte ARTIST_TABLE_MODE = 32;
+    public static final byte HISTORY_SYNC = 33;
+    public static final byte HISTORY_RESET = 34;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onCommonSetupEvent(FMLCommonSetupEvent event) {
         simpleChannel = NetworkRegistry.newSimpleChannel(
-                simpleChannelRL,
-                () -> MESSAGE_PROTOCOL_VERSION,
-                ZetterNetwork::isThisProtocolAcceptedByClient,
-                ZetterNetwork::isThisProtocolAcceptedByServer
+            simpleChannelRL,
+            () -> MESSAGE_PROTOCOL_VERSION,
+            ZetterNetwork::isThisProtocolAcceptedByClient,
+            ZetterNetwork::isThisProtocolAcceptedByServer
         );
 
-        simpleChannel.registerMessage(PAINTING_FRAME, CCanvasActionBufferPacket.class,
-                CCanvasActionBufferPacket::writePacketData, CCanvasActionBufferPacket::readPacketData,
-                CCanvasActionBufferPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+        simpleChannel.registerMessage(PAINTING_FRAME, CCanvasActionPacket.class,
+            CCanvasActionPacket::writePacketData, CCanvasActionPacket::readPacketData,
+            CCanvasActionPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(CANVAS_REQUEST, CCanvasRequestPacket.class,
-                CCanvasRequestPacket::writePacketData, CCanvasRequestPacket::readPacketData,
-                CCanvasRequestPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+            CCanvasRequestPacket::writePacketData, CCanvasRequestPacket::readPacketData,
+            CCanvasRequestPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_UNLOAD_CANVAS, CCanvasUnloadRequestPacket.class,
-                CCanvasUnloadRequestPacket::writePacketData, CCanvasUnloadRequestPacket::readPacketData,
-                CCanvasUnloadRequestPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+            CCanvasUnloadRequestPacket::writePacketData, CCanvasUnloadRequestPacket::readPacketData,
+            CCanvasUnloadRequestPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(CANVAS_SYNC, SCanvasSyncMessage.class,
-                SCanvasSyncMessage::writePacketData, SCanvasSyncMessage::readPacketData,
-                SCanvasSyncMessage::handle,
-                Optional.of(PLAY_TO_CLIENT));
+        simpleChannel.registerMessage(CANVAS_SYNC, SCanvasSyncPacket.class,
+            SCanvasSyncPacket::writePacketData, SCanvasSyncPacket::readPacketData,
+            SCanvasSyncPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(PALETTE_UPDATE, CPaletteUpdatePacket.class,
-                CPaletteUpdatePacket::writePacketData, CPaletteUpdatePacket::readPacketData,
-                CPaletteUpdatePacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+            CPaletteUpdatePacket::writePacketData, CPaletteUpdatePacket::readPacketData,
+            CPaletteUpdatePacket::handle,
+            Optional.of(PLAY_TO_SERVER));
 
         simpleChannel.registerMessage(PAINTING_RENAME, CSignPaintingPacket.class,
-                CSignPaintingPacket::writePacketData, CSignPaintingPacket::readPacketData,
-                CSignPaintingPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+            CSignPaintingPacket::writePacketData, CSignPaintingPacket::readPacketData,
+            CSignPaintingPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(CANVAS_SYNC_VIEW, SCanvasSyncViewMessage.class,
-                SCanvasSyncViewMessage::writePacketData, SCanvasSyncViewMessage::readPacketData,
-                SCanvasSyncViewMessage::handle,
-                Optional.of(PLAY_TO_CLIENT));
+        simpleChannel.registerMessage(CANVAS_SYNC_VIEW, SCanvasSyncViewPacket.class,
+            SCanvasSyncViewPacket::writePacketData, SCanvasSyncViewPacket::readPacketData,
+            SCanvasSyncViewPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
 
         simpleChannel.registerMessage(CANVAS_REQUEST_VIEW, CCanvasRequestViewPacket.class,
-                CCanvasRequestViewPacket::writePacketData, CCanvasRequestViewPacket::readPacketData,
-                CCanvasRequestViewPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+            CCanvasRequestViewPacket::writePacketData, CCanvasRequestViewPacket::readPacketData,
+            CCanvasRequestViewPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(SNAPSHOT_SYNC, SCanvasSnapshotSync.class,
-                SCanvasSnapshotSync::writePacketData, SCanvasSnapshotSync::readPacketData,
-                SCanvasSnapshotSync::handle,
-                Optional.of(PLAY_TO_CLIENT));
+        simpleChannel.registerMessage(CANVAS_REMOVE, SCanvasRemovalPacket.class,
+            SCanvasRemovalPacket::writePacketData, SCanvasRemovalPacket::readPacketData,
+            SCanvasRemovalPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
 
-        simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryPacket.class,
-                CCanvasHistoryPacket::writePacketData, CCanvasHistoryPacket::readPacketData,
-                CCanvasHistoryPacket::handle,
-                Optional.of(PLAY_TO_SERVER));
+        simpleChannel.registerMessage(EASEL_SYNC, SEaselStateSyncPacket.class,
+            SEaselStateSyncPacket::writePacketData, SEaselStateSyncPacket::readPacketData,
+            SEaselStateSyncPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
 
-        simpleChannel.registerMessage(ARTIST_TABLE_MODE, CArtistTableModeChange.class,
-                CArtistTableModeChange::writePacketData, CArtistTableModeChange::readPacketData,
-                CArtistTableModeChange::handle,
-                Optional.of(PLAY_TO_SERVER));
+        simpleChannel.registerMessage(HISTORY_UPDATE, CCanvasHistoryActionPacket.class,
+            CCanvasHistoryActionPacket::writePacketData, CCanvasHistoryActionPacket::readPacketData,
+            CCanvasHistoryActionPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(ARTIST_TABLE_MODE, CArtistTableModeChangePacket.class,
+            CArtistTableModeChangePacket::writePacketData, CArtistTableModeChangePacket::readPacketData,
+            CArtistTableModeChangePacket::handle,
+            Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(HISTORY_SYNC, SCanvasHistoryActionPacket.class,
+            SCanvasHistoryActionPacket::writePacketData, SCanvasHistoryActionPacket::readPacketData,
+            SCanvasHistoryActionPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(HISTORY_RESET, SEaselResetPacket.class,
+            SEaselResetPacket::writePacketData, SEaselResetPacket::readPacketData,
+            SEaselResetPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
     }
 
     public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {

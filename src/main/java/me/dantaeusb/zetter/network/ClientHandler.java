@@ -1,24 +1,21 @@
 package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import me.dantaeusb.zetter.core.ClientHelper;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
-import me.dantaeusb.zetter.network.packet.SCanvasSyncMessage;
-import me.dantaeusb.zetter.network.packet.SCanvasSnapshotSync;
-import me.dantaeusb.zetter.network.packet.SCanvasSyncViewMessage;
+import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.MinecraftForge;
 
+/**
+ * For some reason, network executor suppresses exceptions,
+ * so we catch all of those manually
+ */
 public class ClientHandler {
     /**
      * When canvas sent from sever, update client's canvas
@@ -27,59 +24,21 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSync(final SCanvasSyncMessage packetIn, Level world) {
-        final LocalPlayer player = Minecraft.getInstance().player;
-        final String canvasCode = packetIn.getCanvasCode();
+    public static void processCanvasSync(final SCanvasSyncPacket packetIn, Level world) {
+        try {
+            final String canvasCode = packetIn.getCanvasCode();
 
-        assert packetIn.getType().equals(AbstractCanvasData.Type.CANVAS);
+            final AbstractCanvasData canvasData = packetIn.getCanvasData();
+            final long timestamp = packetIn.getTimestamp();
 
-        final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
-        final long timestamp = packetIn.getTimestamp();
+            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
 
-        // Get overworld world instance
-        ICanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-
-        if (canvasTracker == null) {
-            Zetter.LOG.error("Cannot find world canvas capability");
-            return;
+            canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
-
-        /**
-         * First, we check if player is using some menus and try to update
-         * canvas through those menus. This is needed to avoid flashing
-         * texture on client, when client still draws.
-         *
-         * Then, if no containers used, we do update canvas
-         * directly in canvas manager.
-         */
-
-        boolean consumed = false;
-
-        // Do extra things
-
-        // Initialize canvas if client had no canvas loaded when it was updated
-        if (player.containerMenu instanceof EaselContainerMenu) {
-            String canvasItemCode = ((EaselContainerMenu) player.containerMenu).getCanvasItemCode();
-            // If it's the same canvas player is editing
-            if (canvasItemCode != null && canvasItemCode.equals(canvasCode)) {
-                // Pushing changes that were added after sync packet was created
-                consumed = ((EaselContainerMenu) player.containerMenu).handleCanvasSync(canvasCode, canvasData, timestamp);
-            }
-        }
-
-        if (consumed) {
-            return;
-        }
-
-        if  (player.containerMenu instanceof ArtistTableMenu) {
-            consumed = ((ArtistTableMenu) player.containerMenu).handleCanvasSync(canvasCode, canvasData, timestamp);
-        }
-
-        if (consumed) {
-            return;
-        }
-
-        canvasTracker.registerCanvasData(canvasCode, canvasData);
     }
 
     /**
@@ -88,58 +47,112 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSyncView(final SCanvasSyncViewMessage packetIn, Level world) {
-        final LocalPlayer player = Minecraft.getInstance().player;
-        final String canvasCode = packetIn.getCanvasCode();
+    public static void processCanvasSyncView(final SCanvasSyncViewPacket packetIn, Level world) {
+        try {
+            final LocalPlayer player = Minecraft.getInstance().player;
+            final String canvasCode = packetIn.getCanvasCode();
 
-        if (packetIn.getType().equals(AbstractCanvasData.Type.CANVAS)) {
-            final CanvasData canvasData = (CanvasData) packetIn.getCanvasData();
+            final AbstractCanvasData canvasData = packetIn.getCanvasData();
 
-            ClientHelper.openCanvasScreen(player, canvasCode, canvasData, packetIn.getHand());
+            CanvasViewEvent event = new CanvasViewEvent(player, canvasCode, canvasData, packetIn.getHand());
+
+            MinecraftForge.EVENT_BUS.post(event);
+
             processCanvasSync(packetIn, world);
-        } else if (packetIn.getType().equals(AbstractCanvasData.Type.PAINTING)) {
-            final PaintingData canvasData = (PaintingData) packetIn.getCanvasData();
-
-            ClientHelper.openPaintingScreen(player, canvasCode, canvasData, packetIn.getHand());
-            processPaintingSync(packetIn, world);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 
     /**
-     * Painting data needs lesser amount of check
-     * after being received, just update textue on
-     * client's side
-     *
-     * @todo: better add switch for type in handler
      *
      * @param packetIn
      * @param world
      */
-    public static void processPaintingSync(final SCanvasSyncMessage packetIn, Level world) {
-        final LocalPlayer player = Minecraft.getInstance().player;
+    public static void processEaselStateSync(final SEaselStateSyncPacket packetIn, Level world) {
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
-        assert packetIn.getType().equals(AbstractCanvasData.Type.PAINTING);
-
-        String canvasCode = packetIn.getCanvasCode();
-        PaintingData canvasData = (PaintingData) packetIn.getCanvasData();
-
-        ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
-
-        if (canvasTracker == null) {
-            Zetter.LOG.error("Cannot find world canvas capability");
-            return;
+            if (easel != null) {
+                easel.getStateHandler().processHistorySyncClient(packetIn.canvasCode, packetIn.sync, packetIn.snapshot, packetIn.unsyncedActions);
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas snapshot");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
-
-        canvasTracker.registerCanvasData(canvasCode, canvasData);
     }
 
-    public static void processSnapshotSync(final SCanvasSnapshotSync packetIn, Level world) {
-        EaselEntity easel = (EaselEntity) world.getEntity(packetIn.getEaselEntityId());
+    /**
+     * Undo and redo packets from other players
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, Level world) {
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+            // @todo: [MED] Check if player can access entity
 
-        if (easel != null) {
-            easel.getStateHandler().processSnapshotSyncClient(packetIn.getCanvasCode(), packetIn.getCanvasData(), packetIn.getTimestamp());
-        } else {
-            Zetter.LOG.warn("Unable to find entity " + packetIn.getEaselEntityId() + " disregarding canvas snapshot");
+            if (easel != null) {
+                if (packetIn.canceled) {
+                    easel.getStateHandler().undo(packetIn.actionId);
+                } else {
+                    easel.getStateHandler().redo(packetIn.actionId);
+                }
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * When canvas combined on server, we need to cleanup
+     * our canvas data if loaded to request the new data
+     * if canvas id was reused.
+     *
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, Level world) {
+        try {
+            final String canvasCode = packetIn.canvasCode();
+            final long timestamp = packetIn.timestamp();
+
+            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
+
+            canvasTracker.unregisterCanvasData(canvasCode);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * When canvas combined on server, we need to cleanup
+     * our canvas data if loaded to request the new data
+     * if canvas id was reused.
+     *
+     * @param packetIn
+     * @param world
+     */
+    public static void processEaselReset(final SEaselResetPacket packetIn, Level world) {
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+
+            if (easel != null) {
+                easel.getStateHandler().reset();
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 }

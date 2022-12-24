@@ -23,6 +23,8 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.NetworkHooks;
 
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
+
 public class ArtistTableBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
@@ -55,7 +57,7 @@ public class ArtistTableBlock extends BaseEntityBlock {
 
         if (currentTileEntity instanceof ArtistTableBlockEntity) {
             if (!level.isClientSide()) {
-                NetworkHooks.openGui((ServerPlayer) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
+                NetworkHooks.openScreen((ServerPlayer) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
                     SArtistTableMenuCreatePacket packet = new SArtistTableMenuCreatePacket(currentTileEntity.getBlockPos(), ((ArtistTableBlockEntity) currentTileEntity).getMode());
                     packet.writePacketData(packetBuffer);
                 });

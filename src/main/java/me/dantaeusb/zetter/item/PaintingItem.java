@@ -1,31 +1,23 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.ICanvasTracker;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.client.Minecraft;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.StringUtil;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.ChatFormatting;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -45,19 +37,24 @@ public class PaintingItem extends CanvasItem
     public static final int GENERATION_COPY = 1;
     public static final int GENERATION_COPY_OF_COPY = 2;
 
-    public PaintingItem() {
-        super();
+    public PaintingItem(Properties properties) {
+        super(properties);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
-        ItemStack painting = player.getItemInHand(hand);
+        ItemStack paintingStack = player.getItemInHand(hand);
 
         if (world.isClientSide()) {
-            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
-            String paintingCode = getPaintingCode(painting);
-            PaintingData canvasData = getPaintingData(painting, player.getLevel());
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
+            String paintingCode = getPaintingCode(paintingStack);
+
+            if (paintingCode == null) {
+                return InteractionResultHolder.fail(paintingStack);
+            }
+
+            PaintingData canvasData = getPaintingData(paintingStack, player.getLevel());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -69,7 +66,7 @@ public class PaintingItem extends CanvasItem
                 );
             } else {
                 // If data is not loaded, request and show screen after
-                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(AbstractCanvasData.Type.PAINTING, paintingCode, hand);
+                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(paintingCode, hand);
                 Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
                 ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
             }
@@ -77,7 +74,7 @@ public class PaintingItem extends CanvasItem
 
         player.awardStat(Stats.ITEM_USED.get(this));
 
-        return InteractionResultHolder.sidedSuccess(painting, world.isClientSide());
+        return InteractionResultHolder.sidedSuccess(paintingStack, world.isClientSide());
     }
 
     /**
@@ -93,13 +90,13 @@ public class PaintingItem extends CanvasItem
         stack.getOrCreateTag().putString(NBT_TAG_PAINTING_CODE, paintingCode);
 
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_AUTHOR_NAME, paintingData.getAuthorName());
-        stack.getOrCreateTag().putString(NBT_TAG_CACHED_PAINTING_TITLE, paintingData.getPaintingTitle());
+        stack.getOrCreateTag().putString(NBT_TAG_CACHED_PAINTING_TITLE, paintingData.getPaintingName());
 
         int widthBlocks = paintingData.getWidth() / paintingData.getResolution().getNumeric();
         int heightBlocks = paintingData.getHeight() / paintingData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        TranslatableComponent blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
@@ -112,15 +109,18 @@ public class PaintingItem extends CanvasItem
             String authorName = getCachedAuthorName(stack);
 
             if (StringUtil.isNullOrEmpty(authorName)) {
-                authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
+                authorName = Component.translatable("item.zetter.painting.unknown").getString();
             }
 
-            tooltip.add((new TranslatableComponent("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
+            tooltip.add((Component.translatable("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
 
+            Component generationLabel = getGenerationLabel(stack);
             String stringSize = getCachedStringSize(stack);
 
-            if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
+            if (StringUtil.isNullOrEmpty(stringSize)) {
+                tooltip.add(Component.literal(generationLabel.getString()).withStyle(ChatFormatting.GRAY));
+            } else {
+                tooltip.add(Component.literal(generationLabel.getString() + ", " + stringSize).withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -135,15 +135,15 @@ public class PaintingItem extends CanvasItem
                     return super.getName(stack);
                 }
 
-                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
+                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
-                return new TextComponent(paintingName);
+                return Component.literal(paintingName);
             }
         }
 
-        return super.getName(stack);
+        return Component.translatable(this.getDescriptionId(stack));
     }
 
     /**
@@ -160,6 +160,20 @@ public class PaintingItem extends CanvasItem
         }
 
         return compoundNBT.getString(NBT_TAG_PAINTING_CODE);
+    }
+
+    /**
+     * Check if canvas has data
+     * As all canvases initialized with id,
+     * no id means canvas was not initialized
+     *
+     * @param stack
+     * @return
+     */
+    public static boolean isEmpty(ItemStack stack) {
+        String paintingCode = getPaintingCode(stack);
+
+        return paintingCode == null;
     }
 
     /**
@@ -180,9 +194,9 @@ public class PaintingItem extends CanvasItem
                 return null;
             }
 
-            ICanvasTracker canvasTracker = Helper.getWorldCanvasTracker(world);
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
-            return canvasTracker.getCanvasData(paintingCode, PaintingData.class);
+            return canvasTracker.getCanvasData(paintingCode);
         }
 
         return null;
@@ -240,5 +254,15 @@ public class PaintingItem extends CanvasItem
         }
 
         return compoundNBT.getInt(NBT_TAG_GENERATION);
+    }
+
+    public static Component getGenerationLabel(ItemStack stack) {
+        int generation = getGeneration(stack);
+
+        if (generation < 0 || generation > 2) {
+            generation = 1;
+        }
+
+        return Component.translatable("item.zetter.painting.generation." + generation);
     }
 }

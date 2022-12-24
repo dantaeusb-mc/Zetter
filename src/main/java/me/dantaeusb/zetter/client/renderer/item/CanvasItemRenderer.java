@@ -20,6 +20,8 @@ import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.ForgeRegistry;
 
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +78,7 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
 
     public static void handleModel(Map<ResourceLocation, BakedModel> modelRegistry)
     {
-        ResourceLocation location = new ModelResourceLocation(Objects.requireNonNull(ZetterItems.CANVAS.get().getRegistryName()), "inventory");
+        ResourceLocation location = new ModelResourceLocation(Objects.requireNonNull(ForgeRegistries.ITEMS.getKey(ZetterItems.CANVAS.get())), "inventory");
         bakedModel = modelRegistry.get(location);
     }
 }

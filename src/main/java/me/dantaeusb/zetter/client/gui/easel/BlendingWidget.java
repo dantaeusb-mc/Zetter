@@ -5,13 +5,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.BlendingInterface;
+import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
     private final List<BlendingButton> buttons;
 
     public BlendingWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.blending"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.blending"));
 
         final int BLENDING_BUTTON_U = 80;
         final int BLENDING_BUTTON_V = 32;
@@ -63,8 +62,8 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
             if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, blendingButton.width, blendingButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
-                if (parameters instanceof BlendingInterface) {
-                    ((BlendingInterface) parameters).setBlending(blendingButton.blending);
+                if (parameters instanceof BlendingParameterHolder) {
+                    ((BlendingParameterHolder) parameters).setBlending(blendingButton.blending);
                 } else {
                     throw new RuntimeException("Cannot apply blending parameter");
                 }
@@ -87,8 +86,8 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         BlendingPipe.BlendingOption blending = null;
 
-        if (parameters instanceof BlendingInterface) {
-            blending = ((BlendingInterface) parameters).getBlending();
+        if (parameters instanceof BlendingParameterHolder) {
+            blending = ((BlendingParameterHolder) parameters).getBlending();
         } else {
             throw new RuntimeException("Cannot render blending parameter");
         }
@@ -122,7 +121,7 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
             this.width = width;
         }
 
-        public TranslatableComponent getTooltip() {
+        public Component getTooltip() {
             return this.blending.translatableComponent;
         }
     }

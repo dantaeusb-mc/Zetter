@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 public class PencilParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
@@ -16,7 +16,7 @@ public class PencilParametersTab extends AbstractTab {
     private final SliderWidget sizeWidget;
 
     public PencilParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.parameters"));
+        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;
         final int BLENDING_POSITION_Y = 1;
@@ -34,13 +34,13 @@ public class PencilParametersTab extends AbstractTab {
         this.ditheringWidget = new DitheringWidget(this.parentScreen, this.x + DITHERING_POSITION_X, this.y + DITHERING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
                 parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
-                new TranslatableComponent("container.zetter.painting.sliders.intensity"),
+                Component.translatable("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
         this.sizeWidget = new SliderWidget(
                 parentScreen, this.x + SIZE_POSITION_X, this.y + SIZE_POSITION_Y,
-                new TranslatableComponent("container.zetter.painting.sliders.size"),
+                Component.translatable("container.zetter.painting.sliders.size"),
                 this::updateSize, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
@@ -51,12 +51,12 @@ public class PencilParametersTab extends AbstractTab {
     }
 
     public void update(AbstractToolParameters parameters) {
-        if (parameters instanceof IntensityInterface) {
-            this.intensityWidget.setSliderState(((IntensityInterface) parameters).getIntensity());
+        if (parameters instanceof IntensityParameterHolder) {
+            this.intensityWidget.setSliderState(((IntensityParameterHolder) parameters).getIntensity());
         }
 
-        if (parameters instanceof SizeInterface) {
-            float size = ((SizeInterface) parameters).getSize();
+        if (parameters instanceof SizeParameterHolder) {
+            float size = ((SizeParameterHolder) parameters).getSize();
             this.sizeWidget.setSliderState((size - 1f) / 5f);
         }
     }
@@ -66,19 +66,19 @@ public class PencilParametersTab extends AbstractTab {
         if (this.visible) {
             fill(matrixStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingInterface) {
+            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
                 this.blendingWidget.render(matrixStack);
             }
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringInterface) {
+            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringParameterHolder) {
                 this.ditheringWidget.render(matrixStack);
             }
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityInterface) {
+            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityParameterHolder) {
                 this.intensityWidget.render(matrixStack);
             }
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeInterface) {
+            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeParameterHolder) {
                 this.sizeWidget.render(matrixStack);
             }
         }
@@ -133,16 +133,16 @@ public class PencilParametersTab extends AbstractTab {
     public void updateIntensity(float percent) {
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
-        if (parameters instanceof IntensityInterface) {
-            ((IntensityInterface) parameters).setIntensity(percent);
+        if (parameters instanceof IntensityParameterHolder) {
+            ((IntensityParameterHolder) parameters).setIntensity(percent);
         }
     }
 
     public void updateSize(float percent) {
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
-        if (parameters instanceof SizeInterface) {
-            ((SizeInterface) parameters).setSize(1f + percent * 5f);
+        if (parameters instanceof SizeParameterHolder) {
+            ((SizeParameterHolder) parameters).setSize(1f + percent * 5f);
         }
     }
 

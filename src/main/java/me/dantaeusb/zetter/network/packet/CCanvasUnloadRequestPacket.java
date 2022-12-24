@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
@@ -29,7 +30,7 @@ public class CCanvasUnloadRequestPacket {
     public static CCanvasUnloadRequestPacket readPacketData(FriendlyByteBuf buf) {
         CCanvasUnloadRequestPacket packet = new CCanvasUnloadRequestPacket();
 
-        packet.canvasName = buf.readUtf(32767);
+        packet.canvasName = buf.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
 
         return packet;
     }
@@ -38,7 +39,7 @@ public class CCanvasUnloadRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeUtf(this.canvasName);
+        buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_LENGTH);
     }
 
     public String getCanvasName() {

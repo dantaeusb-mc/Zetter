@@ -1,0 +1,5 @@
+{
+  "type": "zetter:palette_recharge",
+  "palette": {"item": "zetter:palette"},
+  "recharge": {"tag": "zetter:paint_sources"}
+}

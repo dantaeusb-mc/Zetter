@@ -5,13 +5,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import me.dantaeusb.zetter.painting.parameters.DitheringInterface;
+import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -29,7 +28,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
     private final List<DitheringButton> buttons;
 
     public DitheringWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.dithering"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.dithering"));
 
         final int DITHERING_BUTTON_U = 0;
         final int DITHERING_BUTTON_V = 32;
@@ -62,8 +61,8 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
             if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, ditheringButton.width, ditheringButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
-                if (parameters instanceof DitheringInterface) {
-                    ((DitheringInterface) parameters).setDithering(ditheringButton.dithering);
+                if (parameters instanceof DitheringParameterHolder) {
+                    ((DitheringParameterHolder) parameters).setDithering(ditheringButton.dithering);
                 } else {
                     throw new RuntimeException("Cannot apply blending parameter");
                 }
@@ -86,8 +85,8 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         DitheringPipe.DitheringOption dithering = null;
 
-        if (parameters instanceof DitheringInterface) {
-            dithering = ((DitheringInterface) parameters).getDithering();
+        if (parameters instanceof DitheringParameterHolder) {
+            dithering = ((DitheringParameterHolder) parameters).getDithering();
         } else {
             throw new RuntimeException("Cannot render dithering parameter");
         }
@@ -121,7 +120,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
             this.width = width;
         }
 
-        public TranslatableComponent getTooltip() {
+        public Component getTooltip() {
             return this.dithering.translatableComponent;
         }
     }

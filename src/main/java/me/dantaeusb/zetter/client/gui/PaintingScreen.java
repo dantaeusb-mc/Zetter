@@ -19,14 +19,13 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
 
 public class PaintingScreen extends Screen {
-    private static final Component DEFAULT_TITLE = new TranslatableComponent("item.zetter.painting.unnamed");
+    private static final Component DEFAULT_TITLE = Component.translatable("item.zetter.painting.unnamed");
 
     private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
     private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
@@ -61,7 +60,7 @@ public class PaintingScreen extends Screen {
     }, (String input) -> {
         this.title = input;
     }, this::getClipboard, this::setClipboard, (String input) -> {
-        return input.length() <= 32;
+        return input.length() <= Helper.PAINTING_TITLE_MAX_LENGTH;
     });
 
     public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
@@ -69,12 +68,12 @@ public class PaintingScreen extends Screen {
     }
 
     public static PaintingScreen createScreenForPainting(Player player, String canvasCode, PaintingData paintingData, InteractionHand hand) {
-        return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingTitle(), false);
+        return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingName(), false);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
     private PaintingScreen(Player player, InteractionHand hand, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, boolean editable) {
-        super(new TranslatableComponent("container.zetter.painting"));
+        super(Component.translatable("container.zetter.painting"));
 
         this.owner = player;
         this.hand = hand;
@@ -110,7 +109,7 @@ public class PaintingScreen extends Screen {
                 this.paintingOffsetY + this.paintingHeight + SCREEN_PADDING,
                 BUTTON_WIDTH,
                 BUTTON_HEIGHT,
-                new TranslatableComponent("book.signButton"),
+                Component.translatable("book.signButton"),
                 (button) -> {
                     this.signPainting();
                 }
@@ -252,7 +251,7 @@ public class PaintingScreen extends Screen {
         }
 
         this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
-        this.font.draw(matrixStack, new TranslatableComponent("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
+        this.font.draw(matrixStack, Component.translatable("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
 
         super.render(matrixStack, mouseX, mouseY, partialTick);
     }
