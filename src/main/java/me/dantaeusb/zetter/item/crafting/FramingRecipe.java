@@ -3,7 +3,9 @@ package me.dantaeusb.zetter.item.crafting;
 import me.dantaeusb.zetter.Zetter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.FrameItem;
+import me.dantaeusb.zetter.item.PaintingItem;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -11,7 +13,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -21,9 +22,6 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
  * Only for frames, toggle
  */
 public class FramingRecipe extends CustomRecipe {
-    public static final Serializer SERIALIZER = new Serializer();
-    public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "framing");
-
     private final Ingredient inputFrame;
     private final Ingredient inputPainting;
 
@@ -41,7 +39,6 @@ public class FramingRecipe extends CustomRecipe {
 
     /**
      * Used to check if a recipe matches current crafting inventory
-     * @todo: Maybe we can just extend ShapelessRecipe
      */
     public boolean matches(CraftingContainer craftingInventory, Level world) {
         ItemStack frameStack = ItemStack.EMPTY;
@@ -64,10 +61,25 @@ public class FramingRecipe extends CustomRecipe {
                 }
 
                 paintingStack = craftingInventory.getItem(i);
+            } else {
+                // We have something else in the grid
+                return false;
             }
         }
 
-        return !frameStack.isEmpty() && (!paintingStack.isEmpty() && paintingStack.hasTag());
+        if (frameStack.isEmpty() || paintingStack.isEmpty()) {
+            return false;
+        }
+
+        if (!paintingStack.hasTag()) {
+            return false;
+        }
+
+        if (!FrameItem.isEmpty(frameStack) || PaintingItem.isEmpty(paintingStack)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -93,16 +105,25 @@ public class FramingRecipe extends CustomRecipe {
             }
         }
 
-        if (!paintingStack.isEmpty() && paintingStack.hasTag()) {
-            ItemStack outStack = frameStack.copy();
-
-            CompoundTag compoundnbt = paintingStack.getTag().copy();
-            outStack.setTag(compoundnbt);
-
-            return outStack;
-        } else {
+        if (frameStack.isEmpty() || paintingStack.isEmpty()) {
             return ItemStack.EMPTY;
         }
+
+        if (!paintingStack.hasTag()) {
+            return ItemStack.EMPTY;
+        }
+
+        if (!FrameItem.isEmpty(frameStack) || PaintingItem.isEmpty(paintingStack)) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack outStack = frameStack.copy();
+        outStack.setCount(1);
+
+        CompoundTag compoundTag = paintingStack.getTag().copy();
+        outStack.setTag(compoundTag);
+
+        return outStack;
     }
 
     /**
@@ -110,7 +131,7 @@ public class FramingRecipe extends CustomRecipe {
      * @return
      */
     public RecipeSerializer<?> getSerializer() {
-        return SERIALIZER;
+        return ZetterCraftingRecipes.FRAMING.get();
     }
 
     /**
@@ -120,12 +141,7 @@ public class FramingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<FramingRecipe> {
-
-        Serializer() {
-            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "framing"));
-        }
-
+    public static class Serializer implements RecipeSerializer<FramingRecipe> {
         @Override
         public FramingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");

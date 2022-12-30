@@ -1,233 +1,177 @@
 package me.dantaeusb.zetter.client.gui;
 
-import me.dantaeusb.zetter.client.gui.painting.*;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.gui.Font;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.network.packet.CSignPaintingPacket;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.font.TextFieldHelper;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerListener;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import org.lwjgl.glfw.GLFW;
 
-import java.util.List;
+public class PaintingScreen extends Screen {
+    private static final Component DEFAULT_TITLE = new TranslatableComponent("item.zetter.painting.unnamed");
 
-public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> implements ContainerListener {
-    // This is the resource location for the background image
-    private static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation("zetter", "textures/gui/painting.png");
+    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
+    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
 
-    protected final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
+    private final Player owner;
+    private final InteractionHand hand;
 
-    private ToolsWidget toolsWidget;
-    private CanvasWidget canvasWidget;
-    private PaletteWidget paletteWidget;
-    private ColorCodeWidget colorCodeWidget;
-    private SlidersWidget slidersWidget;
-    private HelpWidget helpWidget;
+    private final String canvasCode;
+    private final AbstractCanvasData canvasData;
 
-    private final Player player;
+    private final String authorName;
+    private String title = "";
+    private int tick = 0;
+    private boolean editable = true;
 
-    public PaintingScreen(EaselContainerMenu paintingContainer, Inventory playerInventory, Component title) {
-        super(paintingContainer, playerInventory, title);
+    private int paintingOffsetX;
+    private int paintingOffsetY;
+    private int paintingWidth;
+    private int paintingHeight;
 
-        this.player = playerInventory.player;
+    private float paintingScale;
 
-        this.imageWidth = 176;
-        this.imageHeight = 185;
+    private int screenOffsetX;
+    private int screenOffsetY;
+    private int screenWidth;
+    private int screenHeight;
+
+    private Button signButton;
+
+    private final TextFieldHelper titleEdit = new TextFieldHelper(() -> {
+        return this.title;
+    }, (String input) -> {
+        this.title = input;
+    }, this::getClipboard, this::setClipboard, (String input) -> {
+        return input.length() <= Helper.PAINTING_TITLE_MAX_LENGTH;
+    });
+
+    public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
+        return new PaintingScreen(player, hand, canvasCode, canvasData, player.getName().getString(), "", true);
     }
 
+    public static PaintingScreen createScreenForPainting(Player player, String canvasCode, PaintingData paintingData, InteractionHand hand) {
+        return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingName(), false);
+    }
+
+    // @todo: [HIGH] Canvas data could be null!!!
+    private PaintingScreen(Player player, InteractionHand hand, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, boolean editable) {
+        super(new TranslatableComponent("container.zetter.painting"));
+
+        this.owner = player;
+        this.hand = hand;
+
+        this.canvasCode = canvasCode;
+        this.canvasData = canvasData;
+
+        this.authorName = authorName;
+        this.title = paintingTitle;
+
+        this.editable = editable;
+    }
+
+    private static final int SCREEN_MARGIN = 10;
+    private static final int SCREEN_PADDING = 5;
+    private static final int SCREEN_BOTTOM_TEXT = 30;
+
+    private static final int TEXT_COLOR_ACTIVE = 0xFF000000;
+    private static final int TEXT_COLOR = 0xFF2B200B;
+
+    private static final int BUTTON_WIDTH = 98;
+    private static final int BUTTON_HEIGHT = 20;
+
     @Override
-    protected void init() {
-        super.init();
-
-        final int CANVAS_POSITION_X = 48;
-        final int CANVAS_POSITION_Y = 9;
-
-        final int TOOLS_POSITION_X = 7;
-        final int TOOLS_POSITION_Y = 8;
-
-        final int PALETTE_POSITION_X = 147;
-        final int PALETTE_POSITION_Y = 13;
-
-        final int SLIDER_POSITION_X = 13;
-        final int SLIDER_OFFSET_Y = 117;
-
-        final int TEXTBOX_POSITION_X = 47;
-        final int TEXTBOX_POSITION_Y = 95;
-
-        final int HELP_POSITION_X = 165;
-        final int HELP_POSITION_Y = 0;
-
-        this.canvasWidget = new CanvasWidget(this, this.getGuiLeft() + CANVAS_POSITION_X, this.getGuiTop() + CANVAS_POSITION_Y);
-        this.paletteWidget = new PaletteWidget(this, this.getGuiLeft() + PALETTE_POSITION_X, this.getGuiTop() + PALETTE_POSITION_Y);
-        this.toolsWidget = new ToolsWidget(this, this.getGuiLeft() + TOOLS_POSITION_X, this.getGuiTop() + TOOLS_POSITION_Y);
-        this.slidersWidget = new SlidersWidget(this, this.getGuiLeft() + SLIDER_POSITION_X, this.getGuiTop() + SLIDER_OFFSET_Y);
-        this.colorCodeWidget = new ColorCodeWidget(this, this.getGuiLeft() + TEXTBOX_POSITION_X, this.getGuiTop() + TEXTBOX_POSITION_Y);
-        this.helpWidget = new HelpWidget(this, this.getGuiLeft() + HELP_POSITION_X, this.getGuiTop() + HELP_POSITION_Y);
-
-        this.colorCodeWidget.initFields();
-
-        this.addPaintingWidget(this.canvasWidget);
-        this.addPaintingWidget(this.paletteWidget);
-        this.addPaintingWidget(this.toolsWidget);
-        this.addPaintingWidget(this.slidersWidget);
-        this.addPaintingWidget(this.colorCodeWidget);
-        this.addPaintingWidget(this.helpWidget);
-
-        this.getMenu().setFirstLoadNotification(this::firstLoadUpdate);
-
+    public void init() {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
-        this.menu.addSlotListener(this);
-    }
+        this.calculatePaintingOffset();
 
-    public void addPaintingWidget(AbstractPaintingWidget widget) {
-        this.paintingWidgets.add(widget);
-        this.addWidget(widget);
-    }
-
-    /**
-     * Make add widget "public" so painting widgets can pipe their components to this screen
-     */
-    public <T extends GuiEventListener & NarratableEntry> void pipeWidget(T widget) {
-        this.addWidget(widget);
-    }
-
-    public void removed() {
-        super.removed();
-    }
-
-    /**
-     * Expose some methods for widgets
-     */
-
-    public Font getFont() {
-        return this.font;
-    }
-
-    public boolean isCanvasAvailable() {
-        return this.menu.isCanvasAvailable();
-    }
-
-    public boolean isPaletteAvailable() {
-        return this.menu.isPaletteAvailable();
-    }
-
-    public int getColorAt(int pixelIndex) {
-        return this.menu.getCanvasData().getColorAt(pixelIndex);
-    }
-
-    public int getColorAt(int pixelX, int pixelY) {
-        return this.menu.getCanvasData().getColorAt(pixelX, pixelY);
-    }
-
-    public int getCurrentColor() {
-        return this.getPaletteColor(this.paletteWidget.getCurrentPaletteSlot());
-    }
-
-    public int getPaletteColor(int slot) {
-        return this.menu.getPaletteColor(slot);
-    }
-
-    public void firstLoadUpdate() {
-        this.updateSlidersWithCurrentColor();
-    }
-
-    public void updateCurrentPaletteColor(int color) {
-        this.menu.setPaletteColor(this.paletteWidget.getCurrentPaletteSlot(), color);
-        this.slidersWidget.updateSlidersWithCurrentColor();
-        // Triggers eternal loop
-        //this.colorCodeWidget.updateColorValue(color);
-    }
-
-    public void pushPaletteUpdateColor() {
-        this.menu.sendPaletteUpdatePacket(this.paletteWidget.getCurrentPaletteSlot(), this.getCurrentColor());
-    }
-
-    public void updateSlidersWithCurrentColor() {
-        this.slidersWidget.updateSlidersWithCurrentColor();
-    }
-
-    public void useTool(int canvasX, int canvasY) {
-        switch (this.toolsWidget.getCurrentTool()) {
-            case PENCIL:
-                this.getMenu().writePixelOnCanvasClientSide(canvasX, canvasY, this.getCurrentColor(), this.getPlayer().getUUID());
-                break;
-            case EYEDROPPER:
-                this.getMenu().eyedropper(this.paletteWidget.getCurrentPaletteSlot(), canvasX, canvasY);
-                this.updateSlidersWithCurrentColor();
-                break;
-            case BUCKET:
-                this.getMenu().bucket(canvasX, canvasY, this.getCurrentColor());
-                break;
-        }
-    }
-
-    @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(matrixStack, mouseX, mouseY);
-    }
-
-    @Override
-    public void containerTick() {
-        super.containerTick();
-
-        this.getMenu().tick();
-        this.colorCodeWidget.tick();
-    }
-
-    @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
-
-        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
-        this.canvasWidget.render(matrixStack);
-        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
-
-        this.toolsWidget.render(matrixStack);
-        this.paletteWidget.render(matrixStack);
-        this.slidersWidget.render(matrixStack);
-        this.helpWidget.render(matrixStack, x, y, partialTicks);
-        // @todo: If color code goes not last, it may stop others from drawing. Is there an exception maybe?
-        this.colorCodeWidget.render(matrixStack, x, y, partialTicks);
-    }
-
-    @Override
-    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
-
-        super.renderTooltip(matrixStack, x, y);
-
-        for (AbstractPaintingWidget widget : this.paintingWidgets) {
-            if (widget.isMouseOver(x, y)) {
-                Component tooltip = widget.getTooltip(x, y);
-
-                if (tooltip != null) {
-                    this.renderTooltip(matrixStack, tooltip, x, y);
+        this.signButton = this.addRenderableWidget(
+            new Button(
+                this.screenOffsetX + this.screenWidth - BUTTON_WIDTH - SCREEN_PADDING,
+                this.paintingOffsetY + this.paintingHeight + SCREEN_PADDING,
+                BUTTON_WIDTH,
+                BUTTON_HEIGHT,
+                new TranslatableComponent("book.signButton"),
+                (button) -> {
+                    this.signPainting();
                 }
-            }
-        }
+            )
+        );
+
+        this.signButton.visible = this.editable;
+
+        this.initFields();
     }
 
-    /**
-     * @param matrixStack
-     * @param mouseX
-     * @param mouseY
-     */
+    protected void initFields() {
+        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
+    }
+
+    private void signPainting() {
+        int slot = this.hand == InteractionHand.MAIN_HAND ? this.owner.getInventory().selected : 40;
+
+        CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
+        ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
+
+        this.minecraft.player.closeContainer();
+    }
+
+    private void calculatePaintingOffset() {
+        float paintingAspectRatio = this.canvasData.getWidth() / (float) this.canvasData.getHeight();
+        float windowAspectRatio = this.width / (float) this.height;
+
+        // Painting is wider than screen: we're limited by width
+        if (paintingAspectRatio > windowAspectRatio) {
+            paintingWidth = this.width - SCREEN_MARGIN * 2 - SCREEN_PADDING * 2;
+            paintingHeight = (int) (paintingWidth / paintingAspectRatio);
+        // Painting is taller than screen: we're limited by height
+        } else {
+            paintingHeight = this.height - SCREEN_MARGIN * 2 - SCREEN_PADDING * 2 - SCREEN_BOTTOM_TEXT;
+            paintingWidth = (int) (paintingHeight * paintingAspectRatio);
+        }
+
+        this.paintingOffsetX = (this.width - paintingWidth) / 2;
+        this.paintingOffsetY = (this.height - (paintingHeight + SCREEN_BOTTOM_TEXT)) / 2;
+
+        this.paintingScale = (float) paintingWidth / this.canvasData.getWidth();
+
+        int minWidth = 6 * 32;
+
+        // If we can edit title, we need to fit title and a button, otherwise
+        // we can use the size of the painting itself
+        if (this.editable) {
+            minWidth += BUTTON_WIDTH + 5;
+        }
+
+        this.screenWidth = Math.max(minWidth, paintingWidth) + SCREEN_PADDING * 2;
+        this.screenHeight = paintingHeight + SCREEN_BOTTOM_TEXT + SCREEN_PADDING * 2;
+
+        this.screenOffsetX = (this.width - screenWidth) / 2;
+        this.screenOffsetY = (this.height - (paintingHeight + SCREEN_BOTTOM_TEXT + SCREEN_PADDING * 2)) / 2;
+    }
+
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        // Do not draw titles to save some extra space
+    public void tick() {
+        this.tick++;
     }
 
     /**
@@ -239,82 +183,93 @@ public class PaintingScreen extends AbstractContainerScreen<EaselContainerMenu> 
      */
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == 256) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             this.minecraft.player.closeContainer();
             return true;
+        }
+
+        if (this.editable) {
+            return this.titleEdit.keyPressed(keyCode) || super.keyPressed(keyCode, scanCode, modifiers);
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    /**
-     * Unfortunately this event is not passed to children
-     * @param mouseX
-     * @param mouseY
-     * @param button
-     * @param dragX
-     * @param dragY
-     * @return
-     */
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        this.canvasWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-        this.slidersWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.editable) {
+            return this.titleEdit.charTyped(codePoint) || super.charTyped(codePoint, modifiers);
+        }
 
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-    }
-
-    /**
-     * This one not passed when out of widget bounds but we need to track this event to release slider/pencil
-     * @param mouseX
-     * @param mouseY
-     * @param button
-     * @param dragX
-     * @param dragY
-     * @return
-     */
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        this.canvasWidget.mouseReleased(mouseX, mouseY, button);
-        this.slidersWidget.mouseReleased(mouseX, mouseY, button);
-
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    public Player getPlayer() {
-        return this.player;
+        return super.charTyped(codePoint, modifiers);
     }
 
     @Override
-    public void dataChanged(AbstractContainerMenu p_150524_, int p_150525_, int p_150526_) {
+    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(matrixStack);
+        this.setFocused((GuiEventListener)null);
+
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        // Border
+        fill(
+            matrixStack,
+            this.screenOffsetX,
+            this.screenOffsetY,
+            this.screenOffsetX + this.screenWidth,
+            this.screenOffsetY + this.screenHeight,
+            0xFFCAC3B4
+        );
+
+        fill(
+            matrixStack,
+            this.screenOffsetX + 1,
+            this.screenOffsetY + 1,
+            this.screenOffsetX + this.screenWidth - 1,
+            this.screenOffsetY + this.screenHeight - 1,
+            Helper.CANVAS_COLOR
+        );
+
+        //this.blit(matrixStack, , 2, 0, 0, 192, 192);
+
+        matrixStack.pushPose();
+        matrixStack.translate(this.paintingOffsetX, this.paintingOffsetY, 1.0F);
+        matrixStack.scale(this.paintingScale, this.paintingScale, 1.0F);
+
+        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, this.canvasCode, this.canvasData, 0xF000F0);
+        renderTypeBufferImpl.endBatch();
+
+        matrixStack.popPose();
+
+        String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
+        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(title, Style.EMPTY);
+
+        if (this.editable) {
+            boolean cursorTick = this.tick / 6 % 2 == 0;
+            formattedTitle = FormattedCharSequence.composite(formattedTitle, cursorTick ? BLACK_CURSOR : GRAY_CURSOR);
+        }
+
+        this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
+        this.font.draw(matrixStack, new TranslatableComponent("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
+
+        super.render(matrixStack, mouseX, mouseY, partialTick);
+    }
+
+    @Override
+    public void removed() {
+        this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
+    }
+
+    private void setClipboard(String p_98148_) {
+        if (this.minecraft != null) {
+            TextFieldHelper.setClipboardContents(this.minecraft, p_98148_);
+        }
 
     }
 
-    /**
-     * Sends the contents of an inventory slot to the client-side Container. This doesn't have to match the actual
-     * contents of that slot.
-     */
-    public void slotChanged(AbstractContainerMenu containerToSend, int slotInd, ItemStack stack) {
-
-    }
-
-    /**
-     * Helpers
-     */
-
-    /**
-     * @todo: use this.isPointInRegion
-     *
-     * @param x
-     * @param y
-     * @param xSize
-     * @param ySize
-     * @param mouseX
-     * @param mouseY
-     * @return
-     */
-    // Returns true if the given x,y coordinates are within the given rectangle
-    public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY){
-        return ((mouseX >= x && mouseX <= x+xSize) && (mouseY >= y && mouseY <= y+ySize));
+    private String getClipboard() {
+        return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
     }
 }

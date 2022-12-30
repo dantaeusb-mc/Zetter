@@ -7,6 +7,7 @@ export const materialVariations: { [key: string]: MaterialVariation } = {
     "spruce": {canHavePlate: true, isWood: true},
     "crimson": {canHavePlate: true, isWood: true},
     "warped": {canHavePlate: true, isWood: true},
+    "mangrove": {canHavePlate: true, isWood: true},
     "iron": {canHavePlate: false, isWood: false},
     "gold": {canHavePlate: true, isWood: false}
 };

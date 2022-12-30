@@ -1,9 +1,9 @@
 package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -18,15 +18,19 @@ import java.util.Map;
  * @see CanvasServerTracker ::registerCanvasData();
  */
 public abstract class AbstractCanvasData extends SavedData {
-    protected static final String NBT_TAG_TYPE = "type";
+    public static final String NBT_TAG_TYPE = "CanvasDataType";
+    @Deprecated
+    public static final String NBT_TAG_TYPE_DEPRECATED = "type";
+
     protected static final String NBT_TAG_WIDTH = "width";
     protected static final String NBT_TAG_HEIGHT = "height";
     protected static final String NBT_TAG_RESOLUTION = "resolution";
     protected static final String NBT_TAG_COLOR = "color";
 
+    // Maybe final?
+
     protected byte[] color;
     protected ByteBuffer canvasBuffer;
-
     protected Resolution resolution;
     protected int width;
     protected int height;
@@ -41,13 +45,20 @@ public abstract class AbstractCanvasData extends SavedData {
     protected boolean managed = true;
 
     /**
+     * Returns type of this canvas, which can return
+     * resource id
+     * @return
+     */
+    public abstract CanvasDataType<? extends AbstractCanvasData> getType();
+
+    /**
      *
      * @param resolution
      * @param width
      * @param height
      * @param color
      */
-    protected final void wrapData(Resolution resolution, int width, int height, byte[] color) {
+    public final void wrapData(Resolution resolution, int width, int height, byte[] color) {
         if (width % resolution.getNumeric() != 0 || height % resolution.getNumeric() != 0) {
             throw new IllegalArgumentException("Canvas size is not proportional to given canvas resolution");
         }
@@ -59,19 +70,19 @@ public abstract class AbstractCanvasData extends SavedData {
         this.setDirty();
     }
 
-    protected void updateColorData(byte[] color) {
+    public void updateColorData(byte[] color) {
         if (this.color != null) {
             if (color.length != this.color.length) {
                 throw new IllegalArgumentException("Color data size mismatch");
             }
         }
 
-        this.color = color;
+        this.color = color.clone();
         this.canvasBuffer = ByteBuffer.wrap(this.color);
         this.canvasBuffer.order(ByteOrder.BIG_ENDIAN);
     }
 
-    public boolean updateCanvasPixel(int index, int color) {
+    public final boolean updateCanvasPixel(int index, int color) {
         if (!this.isEditable()) {
             Zetter.LOG.warn("Tried to update sealed canvas " + this);
             return false;
@@ -82,7 +93,7 @@ public abstract class AbstractCanvasData extends SavedData {
         return true;
     }
 
-    public int getColorAt(int pixelX, int pixelY) {
+    public final int getColorAt(int pixelX, int pixelY) {
         return this.getColorAt(this.getPixelIndex(pixelX, pixelY));
     }
 
@@ -90,6 +101,16 @@ public abstract class AbstractCanvasData extends SavedData {
         this.managed = managed;
     }
 
+    /**
+     * Is canvas managed: needs to sync over the net
+     * Non-managed canvases are placeholder canvases
+     * and temporary storages. They can be used on server
+     * but only as an intermediate storage. Mostly
+     * used on client, cannot be registered on server
+     * and therefore never saved.
+     *
+     * @return
+     */
     public boolean isManaged() {
         return this.managed;
     }
@@ -106,9 +127,26 @@ public abstract class AbstractCanvasData extends SavedData {
         return this.resolution;
     }
 
+    /**
+     * Sometimes painting could be disabled for some specific client types
+     * or for other reasons, i.e. banned. We're keeping the data but marking
+     * those paintings as non-renderable.
+     *
+     * If painting is not renderable, use placeholder.
+     * @return
+     */
+    abstract public boolean isRenderable();
+
+    /**
+     * If painting can be edited, altered by user. Signed paintings should not
+     * be editable.
+     * @return
+     */
     abstract public boolean isEditable();
 
-    abstract public Type getType();
+    public byte[] getColorData() {
+        return this.color.clone();
+    }
 
     public ByteBuffer getColorDataBuffer() {
         this.canvasBuffer.rewind();
@@ -120,7 +158,7 @@ public abstract class AbstractCanvasData extends SavedData {
      * @param index Integer index, not byte index
      * @return
      */
-    public int getColorAt(int index) {
+    public final int getColorAt(int index) {
         return this.canvasBuffer.getInt(index * 4);
     }
 
@@ -130,32 +168,23 @@ public abstract class AbstractCanvasData extends SavedData {
      * @param pixelY
      * @return
      */
-    public int getPixelIndex(int pixelX, int pixelY) {
+    public final int getPixelIndex(int pixelX, int pixelY) {
         pixelX = Mth.clamp(pixelX, 0, this.width - 1);
         pixelY = Mth.clamp(pixelY, 0, this.height - 1);
 
         return pixelY * this.width + pixelX;
     }
 
-    /**
-     * reads in data from the NBTTagCompound into this MapDataBase
+    /*
+     * Loading and syncing
      */
-    public void load(CompoundTag compoundTag) {
-        this.width = compoundTag.getInt(NBT_TAG_WIDTH);
-        this.height = compoundTag.getInt(NBT_TAG_HEIGHT);
 
-        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
-            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
-            this.resolution = Resolution.values()[resolutionOrdinal];
-        } else {
-            this.resolution = Helper.getResolution();
-        }
-
-        this.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
+    public void correctData(ServerLevel level) {
+        // Do nothing
     }
 
     public CompoundTag save(CompoundTag compoundTag) {
-        compoundTag.putInt(NBT_TAG_TYPE, this.getType().ordinal());
+        compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);
         compoundTag.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());
@@ -164,18 +193,10 @@ public abstract class AbstractCanvasData extends SavedData {
         return compoundTag;
     }
 
-    public enum Type {
-        DUMMY,
-        CANVAS,
-        PAINTING
-    }
-
     public enum Resolution {
         x16(16),
         x32(32),
         x64(64);
-
-        private final int numeric;
         private static final Map<Integer, Resolution> lookup = new HashMap<>();
 
         static {
@@ -184,12 +205,14 @@ public abstract class AbstractCanvasData extends SavedData {
             }
         }
 
+        private final int numeric;
+
         Resolution(int numeric) {
             this.numeric = numeric;
         }
 
         public int getNumeric() {
-            return numeric;
+            return this.numeric;
         }
 
         @Nullable

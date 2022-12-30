@@ -1,16 +1,16 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 
 /**
- * @todo: combine with another help widget?
+ * @todo: [MED] Combine with another help widget?
  */
 public class HelpWidget extends AbstractArtistTableWidget implements Widget {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#combining";
@@ -18,13 +18,13 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
     final static int BUTTON_WIDTH = 11;
     final static int BUTTON_HEIGHT = 11;
 
-    final static int BUTTON_POSITION_U = 176;
-    final static int BUTTON_POSITION_V = 0;
+    final static int BUTTON_POSITION_U = 0;
+    final static int BUTTON_POSITION_V = 218;
 
     boolean clicked = false;
 
     public HelpWidget(ArtistTableScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslatableComponent("container.zetter.artist_table.help"));
+        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.artist_table.help"));
 
         if (!ClientHelper.openUriAllowed()) {
             this.active = false;
@@ -38,7 +38,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
             int iMouseX = (int) mouseX;
             int iMouseY = (int) mouseY;
 
-            if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
                 ClientHelper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
@@ -63,11 +63,11 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
 
         if (this.clicked) {
             buttonU += BUTTON_WIDTH * 2;
-        } else if (PaintingScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
+        } else if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
             buttonU += BUTTON_WIDTH;
         }
 
-        this.blit(matrixStack, this.x, this.y, buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
+        blit(matrixStack, this.x, this.y, buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     @Override

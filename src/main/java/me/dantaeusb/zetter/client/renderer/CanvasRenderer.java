@@ -4,7 +4,6 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
-import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Maps;
@@ -38,9 +37,15 @@ public class CanvasRenderer implements AutoCloseable {
     /**
      * Canvasses marked as managed will be unloaded after some time
      * If canvas is not managed, it should not be added to this map
+     * @todo: [MED] It is possible that Race Condition happens here
      */
     private final Map<String, Integer> ticksSinceRenderRequested = Maps.newHashMap();
 
+    /**
+     * To avoid request thrashing, textures are requested from server
+     * with some timeout/request limiter. Texture will be requested
+     * again if it's not loaded yet and this timeout reaches 0 or below
+     */
     private final  Map<String, TextureRequest> textureRequestTimeout = Maps.newHashMap();
 
     public CanvasRenderer(TextureManager textureManager) {
@@ -69,19 +74,35 @@ public class CanvasRenderer implements AutoCloseable {
         this.createCanvasRendererInstance(canvasCode, canvasData);
     }
 
-    // @todo: Why do we need both code and data?
+    /**
+     * Tries to render canvas by it's code, if no code provided
+     * creates renderer from provided data
+     *
+     * @todo: [LOW] Make data optional, provide extra interface
+     *
+     * @param matrixStack
+     * @param renderTypeBuffer
+     * @param canvasCode
+     * @param canvas
+     * @param combinedLight
+     */
     public void renderCanvas(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
-        // We won't ever render or request 0 canvas, as 0 is a fallback value
+        // 0 is a reserved fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
-
-        if (canvas.isManaged()) {
-            this.ticksSinceRenderRequested.put(canvasCode, 0);
-        }
 
         CanvasRenderer.Instance rendererInstance = this.getCanvasRendererInstance(canvasCode, canvas, false);
 
+        if (canvas.isManaged()) {
+            this.ticksSinceRenderRequested.put(canvasCode, 0);
+
+            if (rendererInstance == null) {
+                this.queueCanvasTextureUpdate(canvasCode);
+                return;
+            }
+        }
+
         if (rendererInstance == null) {
-            this.queueCanvasTextureUpdate(canvas.getType(), canvasCode);
+            Zetter.LOG.error("Will not render " + canvasCode + ": non-managed canvas is empty!");
             return;
         }
 
@@ -144,40 +165,50 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     /**
+     * Method for public access: also removes tracking
+     * @param canvasCode
+     */
+    public void removeCanvas(String canvasCode) {
+        // To keep it from reloading if for some reason it was not received from server yet
+        this.textureRequestTimeout.remove(canvasCode);
+
+        // To disable tracking so it won't be removed twice
+        this.ticksSinceRenderRequested.remove(canvasCode);
+
+        if (this.canvasRendererInstances.containsKey(canvasCode)) {
+            this.unloadCanvas(canvasCode);
+        } else {
+            Zetter.LOG.debug("Canvas " + canvasCode + " is not loaded, so can't unregister");
+        }
+    }
+
+    /**
      * Saying to the server that we no longer want to recieve updates
      * on this canvas since we're not using it
      * @param canvasCode
      */
-    public void unloadCanvas(String canvasCode) {
+    private void unloadCanvas(String canvasCode) {
         Zetter.LOG.debug("Unloading canvas " + canvasCode);
 
-        // Free the texture
-        this.canvasRendererInstances.get(canvasCode).close();
-
-        this.canvasRendererInstances.remove(canvasCode);
         this.textureRequestTimeout.remove(canvasCode);
 
-        // Not needed cause called from its iterator
-        // this.ticksSinceRenderRequested.remove(canvasCode);
-
-        // Notifying server that we're no longer tracking it
-        // @todo [LOW] better just check tile entity who's around
-        CCanvasUnloadRequestPacket unloadPacket = new CCanvasUnloadRequestPacket(canvasCode);
-        ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
-    }
-
-    /**
-     * @todo: Still makes double-request on first load, markDirty called before update
-     * @param canvasCode
-     */
-    public void queueCanvasTextureUpdate(AbstractCanvasData.Type type, String canvasCode) {
-        if (canvasCode == null) {
-            Zetter.LOG.debug("Tried to queue null canvas");
+        if (!this.canvasRendererInstances.containsKey(canvasCode)) {
+            Zetter.LOG.error("Cannot unload canvas " + canvasCode + ", it's not loaded!");
             return;
         }
 
-        if (type == AbstractCanvasData.Type.DUMMY) {
-            Zetter.LOG.debug("Tried to queue dummy canvas");
+        // Free the texture
+        this.canvasRendererInstances.get(canvasCode).close();
+        this.canvasRendererInstances.remove(canvasCode);
+    }
+
+    /**
+     * @todo: [HIGH] Still makes double-request on first load, markDirty called before update
+     * @param canvasCode
+     */
+    public void queueCanvasTextureUpdate(String canvasCode) {
+        if (canvasCode == null) {
+            Zetter.LOG.debug("Tried to queue null canvas");
             return;
         }
 
@@ -189,12 +220,12 @@ public class CanvasRenderer implements AutoCloseable {
 
             textureRequest.markDirty();
         } else {
-            this.textureRequestTimeout.put(canvasCode, new TextureRequest(type, canvasCode));
+            this.textureRequestTimeout.put(canvasCode, new TextureRequest(canvasCode));
         }
     }
 
     protected void requestCanvasTexture(TextureRequest request) {
-        CCanvasRequestPacket requestSyncPacket = new CCanvasRequestPacket(request.getCanvasType(), request.getCanvasCode());
+        CCanvasRequestPacket requestSyncPacket = new CCanvasRequestPacket(request.getCanvasCode());
         ZetterNetwork.simpleChannel.sendToServer(requestSyncPacket);
 
         request.update();
@@ -208,18 +239,20 @@ public class CanvasRenderer implements AutoCloseable {
         CanvasRenderer.Instance canvasRendererInstance = this.canvasRendererInstances.get(canvasCode);
 
         if (create && canvasRendererInstance == null) {
-            this.createCanvasRendererInstance(canvasCode, canvasData);
+            return this.createCanvasRendererInstance(canvasCode, canvasData);
         }
 
         return canvasRendererInstance;
     }
 
-    private void createCanvasRendererInstance(String canvasCode, AbstractCanvasData canvas) {
+    private CanvasRenderer.Instance createCanvasRendererInstance(String canvasCode, AbstractCanvasData canvas) {
         CanvasRenderer.Instance canvasRendererInstance = new CanvasRenderer.Instance(
                 canvasCode, canvas.getWidth(), canvas.getHeight(), canvas.getResolution()
         );
         canvasRendererInstance.updateCanvasTexture(canvas);
         this.canvasRendererInstances.put(canvasCode, canvasRendererInstance);
+
+        return canvasRendererInstance;
     }
 
     /*
@@ -236,6 +269,7 @@ public class CanvasRenderer implements AutoCloseable {
 
     public void close() {
         this.clearLoadedCanvases();
+        this.textureRequestTimeout.clear();
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -305,15 +339,13 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     static class TextureRequest {
-        private final int TEXTURE_REQUEST_TIMEOUT = 20; // Not often than once in a second
+        private final int TEXTURE_REQUEST_TIMEOUT = 30; // Not often than once in a second and a half
 
-        private final AbstractCanvasData.Type type;
         private final String code;
         private boolean needUpdate = true;
         private int timeout = 0;
 
-        TextureRequest(AbstractCanvasData.Type type, String canvasCode) {
-            this.type = type;
+        TextureRequest(String canvasCode) {
             this.code = canvasCode;
         }
 
@@ -332,10 +364,6 @@ public class CanvasRenderer implements AutoCloseable {
 
         public String getCanvasCode() {
             return this.code;
-        }
-
-        public AbstractCanvasData.Type getCanvasType() {
-            return this.type;
         }
 
         public void tick(int ticks) {

@@ -1,97 +1,135 @@
 package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.core.ZetterCapabilities;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.core.*;
+import me.dantaeusb.zetter.entity.item.EaselEntity;
+import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.menu.EaselMenu;
+import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.network.PacketDistributor;
 
+import javax.annotation.Nullable;
+import java.security.InvalidParameterException;
+
+/**
+ * For some reason, network executor suppresses exceptions,
+ * so we catch all of those manually
+ */
 public class ServerHandler {
     /**
      * Update canvas on server-side and send update to other tracking players
      * @param packetIn
      * @param sendingPlayer
-     *
-     * @todo: send changes to TE, not container, as it's created per player
      */
-    public static void processFrameBuffer(final CPaintingFrameBufferPacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu paintingContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
+    public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
-            paintingContainer.processFrameBufferServer(packetIn.getFrameBuffer(), sendingPlayer.getUUID());
+            // @todo: [MED] Check if player can access entity
 
-            /**
-             * Keep it there, but it's not really useful since it's easier to sync whole canvas and keep recent
-             * changes on top
-             */
+            if (easelEntity != null) {
+                easelEntity.getStateHandler().processActionServer(packetIn.paintingActions);
 
-            /*for (PlayerEntity playerEntity : paintingContainer.getTileEntityReference().getPlayersUsing()) {
-                if (playerEntity.equals(sendingPlayer)) {
-                    // No need to send it back
-                    continue;
+                for (CanvasAction actionBuffer : packetIn.paintingActions) {
+                    if (!actionBuffer.authorId.equals(sendingPlayer.getUUID())) {
+                        Zetter.LOG.warn("Received action from player claimed another player UUID, ignoring");
+                        return;
+                    }
                 }
-
-                SPaintingFrameBufferPacket packet = new SPaintingFrameBufferPacket(packetIn.getFrameBuffer());
-                ModNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) playerEntity), packet);
-            }*/
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 
-    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
-        // Get overworld world instance
+    /**
+     * When client requests a canvas, we need to load data
+     * about that canvas, and send according type of canvas in
+     * sync packet
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
         final Level world = server.overworld();
         final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         final String canvasName = packetIn.getCanvasName();
 
-        Zetter.LOG.debug("Got request to sync canvas " + packetIn.getCanvasName());
-
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
-            return;
+            return null;
         }
 
         // Notify canvas manager that player is tracking canvas from no ow
         canvasTracker.trackCanvas(sendingPlayer.getUUID(), canvasName);
 
-        AbstractCanvasData canvasData;
-
-        if (packetIn.getCanvasType() == AbstractCanvasData.Type.CANVAS) {
-            canvasData = canvasTracker.getCanvasData(canvasName, CanvasData.class);
-        } else if (packetIn.getCanvasType() == AbstractCanvasData.Type.PAINTING) {
-            canvasData = canvasTracker.getCanvasData(canvasName, PaintingData.class);
-        } else {
-            canvasData = canvasTracker.getCanvasData(canvasName, DummyCanvasData.class);
-        }
+        AbstractCanvasData canvasData = canvasTracker.getCanvasData(canvasName);
 
         if (canvasData == null) {
             Zetter.LOG.error("Player " + sendingPlayer + " requested non-existent canvas: " + canvasName);
-            return;
+            return null;
         }
 
-        if (canvasData instanceof PaintingData) {
-            SPaintingSyncMessage paintingSyncMessage = new SPaintingSyncMessage(canvasName, (PaintingData) canvasData, System.currentTimeMillis());
+        return canvasData;
+    }
 
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), paintingSyncMessage);
-        } else {
-            SCanvasSyncMessage canvasSyncMessage = new SCanvasSyncMessage(canvasName, canvasData, System.currentTimeMillis());
+    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
+            final String canvasName = packetIn.getCanvasName();
+
+            if (canvasData == null) {
+                Zetter.LOG.warn("No canvas data found, not answering request for " + canvasName);
+                return;
+            }
+
+            SCanvasSyncPacket canvasSyncMessage = new SCanvasSyncPacket(canvasName, canvasData, System.currentTimeMillis());
 
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static void processCanvasViewRequest(final CCanvasRequestViewPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
+            final String canvasName = packetIn.getCanvasName();
+
+            if (canvasData == null) {
+                Zetter.LOG.warn("No canvas data found, not answering view request for " + canvasName);
+                return;
+            }
+
+            SCanvasSyncViewPacket canvasSyncViewMessage = new SCanvasSyncViewPacket(canvasName, canvasData, System.currentTimeMillis(), packetIn.getHand());
+
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncViewMessage);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 
     /**
-     * @todo: Think about removing this
+     * @todo: [MED] Think about removing this
      * Not sure if it's needed, this can cause condition when canvas is unloaded while
      * other players would like to track it. Unloading on back-end should happen
      * by requests timeout and I believe this should work properly already
@@ -100,39 +138,134 @@ public class ServerHandler {
      * @param sendingPlayer
      */
     public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayer sendingPlayer) {
-        // Get overworld world instance
-        MinecraftServer server = sendingPlayer.getLevel().getServer();
-        Level world = server.overworld();
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+        try {
+            // Get overworld world instance
+            MinecraftServer server = sendingPlayer.getLevel().getServer();
+            Level world = server.overworld();
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
 
-        Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName());
+            Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName() + " from " + sendingPlayer.getUUID());
 
-        if (canvasTracker == null) {
-            Zetter.LOG.error("Cannot find world canvas capability");
-            return;
+            if (canvasTracker == null) {
+                Zetter.LOG.error("Cannot find world canvas capability");
+                return;
+            }
+
+            canvasTracker.stopTrackingCanvas(sendingPlayer.getUUID(), packetIn.getCanvasName());
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
-
-        canvasTracker.stopTrackingCanvas(sendingPlayer.getUUID(), packetIn.getCanvasName());
     }
 
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu paintingContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
-            paintingContainer.setPaletteColor(packetIn.getSlotIndex(), packetIn.getColor());
+        try {
+            if (sendingPlayer.containerMenu instanceof EaselMenu) {
+                EaselMenu paintingContainer = (EaselMenu)sendingPlayer.containerMenu;
+                paintingContainer.setPaletteColor(packetIn.getColor(), packetIn.getSlotIndex());
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 
-    public static void processRenamePainting(final CRenamePaintingPacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
-            ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;
-            artistTableMenu.updatePaintingName(packetIn.getPaintingName());
+    public static void processSignPainting(final CSignPaintingPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            int slot = packetIn.getSlot();
+            if (Inventory.isHotbarSlot(slot) || slot == 40) {
+                ItemStack canvasStack = sendingPlayer.getInventory().getItem(slot);
+
+                if (!canvasStack.is(ZetterItems.CANVAS.get())) {
+                    Zetter.LOG.error("Unable to process painting signature - item in slot is not a canvas");
+                    return;
+                }
+
+                CanvasData canvasData = CanvasItem.getCanvasData(canvasStack, sendingPlayer.getLevel());
+
+                if (canvasData == null) {
+                    Zetter.LOG.error("Unable to process painting signature - canvas data is empty");
+                    return;
+                }
+
+                ItemStack paintingStack = ServerHandler.createPainting(sendingPlayer, packetIn.getPaintingTitle(), canvasData);
+                sendingPlayer.getInventory().setItem(slot, paintingStack);
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 
-    public static void processBucketTool(final CCanvasBucketToolPacket packetIn, ServerPlayer sendingPlayer) {
-        if (sendingPlayer.containerMenu instanceof EaselContainerMenu) {
-            EaselContainerMenu easelContainer = (EaselContainerMenu)sendingPlayer.containerMenu;
-            easelContainer.processBucketToolServer(packetIn.position, packetIn.color);
+    private static ItemStack createPainting(Player player, String paintingTitle, CanvasData canvasData) {
+        try {
+            if (player.getLevel().isClientSide()) {
+                throw new InvalidParameterException("Create painting called on client");
+            }
+
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
+            ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
+
+            /**
+             * Feel like I'm getting ids before getting code always. Maybe make getCanvasCode call
+             * CanvasTracker itself?
+             */
+            final int newId = canvasTracker.getFreePaintingId();
+            final String newCode = PaintingData.getCanvasCode(newId);
+            PaintingData paintingData = ZetterCanvasTypes.PAINTING.get().createWrap(
+                canvasData.getResolution(),
+                canvasData.getWidth(),
+                canvasData.getHeight(),
+                canvasData.getColorData()
+            );
+
+            paintingData.setMetaProperties(player.getUUID(), player.getName().getString(), paintingTitle);
+            canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
+
+            PaintingItem.storePaintingData(outStack, newCode, paintingData, 0);
+
+            return outStack;
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Undo and redo packets
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
+
+            // @todo: [MED] Check if player can access entity
+
+            if (easelEntity != null) {
+                if (packetIn.canceled) {
+                    easelEntity.getStateHandler().undo(packetIn.actionId);
+                } else {
+                    easelEntity.getStateHandler().redo(packetIn.actionId);
+                }
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    public static void processArtistTableModeChange(final CArtistTableModeChangePacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
+                ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;
+                artistTableMenu.setMode(packetIn.getMode());
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
         }
     }
 }

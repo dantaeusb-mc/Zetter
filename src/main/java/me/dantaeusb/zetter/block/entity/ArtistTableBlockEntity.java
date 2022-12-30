@@ -1,9 +1,7 @@
 package me.dantaeusb.zetter.block.entity;
 
-import me.dantaeusb.zetter.block.entity.container.ArtistTableContainer;
+import me.dantaeusb.zetter.block.entity.container.ArtistTableGridContainer;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
-import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
 import net.minecraft.core.Direction;
@@ -12,6 +10,8 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Containers;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.MenuProvider;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
@@ -21,9 +21,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -31,30 +31,67 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 
 public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHandlerListener, MenuProvider {
-    private static final String ARTIST_TABLE_CANVAS_STORAGE_TAG = "canvas_storage";
+    // @todo: [LOW] Remove before release: transition 0.16 - 0.17
+    private static final String NBT_TAG_DEPRECATED_ARTIST_TABLE_CANVAS_STORAGE = "canvas_storage";
+    private static final String NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE = "CanvasStorage";
+    private static final String NBT_TAG_ARTIST_TABLE_MODE = "Mode";
 
-    protected ArtistTableContainer artistTableContainer;
-    protected final LazyOptional<ItemStackHandler> artistTableContainerOptional = LazyOptional.of(() -> this.artistTableContainer);
+    public static final int DATA_MODE = 0;
+
+    private final ContainerData dataAccess = new ContainerData() {
+        public int get(int slot) {
+            if (slot == DATA_MODE) {
+                return ArtistTableBlockEntity.this.mode.getId();
+            }
+
+            return 0;
+        }
+
+        public void set(int slot, int value) {
+            if (slot == DATA_MODE) {
+                ArtistTableBlockEntity.this.mode = ArtistTableMenu.Mode.getById((byte) value);
+            }
+        }
+
+        public int getCount() {
+            return 1;
+        }
+    };
+
+    private ArtistTableGridContainer artistTableGridContainer;
+    private final LazyOptional<ItemStackHandler> artistTableContainerOptional = LazyOptional.of(() -> this.artistTableGridContainer);
+
+    private ArtistTableMenu.Mode mode = ArtistTableMenu.Mode.COMBINE;
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
         super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(), pos, state);
         this.createInventory();
     }
 
+    public ArtistTableMenu.Mode getMode() {
+        return this.mode;
+    }
+
+    public void setMode(ArtistTableMenu.Mode mode) {
+        this.mode = mode;
+    }
+
     protected void createInventory() {
-        ArtistTableContainer currentArtistTableContainer = this.artistTableContainer;
-        this.artistTableContainer = new ArtistTableContainer(this);
+        ArtistTableGridContainer currentArtistTableContainer = this.artistTableGridContainer;
+        this.artistTableGridContainer = new ArtistTableGridContainer(this);
 
         if (currentArtistTableContainer != null) {
-            int i = Math.min(currentArtistTableContainer.getSlots(), this.artistTableContainer.getSlots());
+            int i = Math.min(currentArtistTableContainer.getSlots(), this.artistTableGridContainer.getSlots());
 
             for(int j = 0; j < i; ++j) {
                 ItemStack itemstack = currentArtistTableContainer.getStackInSlot(j);
                 if (!itemstack.isEmpty()) {
-                    this.artistTableContainer.setStackInSlot(j, itemstack.copy());
+                    this.artistTableGridContainer.setStackInSlot(j, itemstack.copy());
                 }
             }
         }
+
+        this.artistTableGridContainer.addListener(this);
     }
 
     public boolean canPlayerAccessInventory(Player player) {
@@ -65,7 +102,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
         }
     }
 
-    public void containerChanged(ItemStackHandler container) {
+    /**
+     * @todo: [LOW] Do we need that?
+     * @param container
+     * @param slot
+     */
+    public void containerChanged(ItemStackHandler container, int slot) {
         this.setChanged();
     }
 
@@ -80,20 +122,35 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     @Override
     public void saveAdditional(CompoundTag compoundTag)
     {
-        CompoundTag canvasNbt = this.artistTableContainer.serializeNBT();
-        compoundTag.put(ARTIST_TABLE_CANVAS_STORAGE_TAG, canvasNbt);
+        CompoundTag gridContainer = this.artistTableGridContainer.serializeNBT();
+        compoundTag.put(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE, gridContainer);
+        compoundTag.putByte(NBT_TAG_ARTIST_TABLE_MODE, this.mode.getId());
     }
 
     @Override
-    public void load(CompoundTag parentNBTTagCompound)
-    {
-        super.load(parentNBTTagCompound);
+    public void load(CompoundTag compoundTag) {
+        super.load(compoundTag);
 
-        CompoundTag canvasNbt = parentNBTTagCompound.getCompound(ARTIST_TABLE_CANVAS_STORAGE_TAG);
-        this.artistTableContainer.deserializeNBT(canvasNbt);
+        CompoundTag canvasStorageTag;
 
-        if (this.artistTableContainer.getSlots() != ArtistTableContainer.STORAGE_SIZE)
+        if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE)) {
+            canvasStorageTag = compoundTag.getCompound(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE);
+        } else {
+            canvasStorageTag = compoundTag.getCompound(NBT_TAG_DEPRECATED_ARTIST_TABLE_CANVAS_STORAGE);
+        }
+
+        this.artistTableGridContainer.deserializeNBT(canvasStorageTag);
+
+        if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE) {
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");
+        }
+
+        if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_MODE)) {
+            byte modeId = compoundTag.getByte(NBT_TAG_ARTIST_TABLE_MODE);
+            this.mode = ArtistTableMenu.Mode.getById(modeId);
+        } else {
+            this.mode = ArtistTableMenu.Mode.COMBINE;
+        }
     }
 
     // network stack
@@ -130,18 +187,18 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
      * @param blockPos
      */
     public void dropAllContents(Level world, BlockPos blockPos) {
-        for (int i = 0; i < this.artistTableContainer.getSlots(); i++) {
-            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.artistTableContainer.getStackInSlot(i));
+        for (int i = 0; i < this.artistTableGridContainer.getSlots(); i++) {
+            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.artistTableGridContainer.getStackInSlot(i));
         }
     }
     @Override
     public Component getDisplayName() {
-        return new TranslatableComponent("container.zetter.artistTable");
+        return Component.translatable("container.zetter.artistTable");
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+        if (capability == ForgeCapabilities.ITEM_HANDLER
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.artistTableContainerOptional.cast();
         }
@@ -158,6 +215,9 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
-        return ArtistTableMenu.createMenuServerSide(windowID, playerInventory, this.artistTableContainer);
+        return ArtistTableMenu.createMenuServerSide(
+                windowID, playerInventory, this.artistTableGridContainer,
+                this.dataAccess, ContainerLevelAccess.create(this.level, this.getBlockPos())
+        );
     }
 }

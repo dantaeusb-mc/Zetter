@@ -20,6 +20,8 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import net.minecraft.world.item.Item.Properties;
+
 public class EaselItem extends Item
 {
     public EaselItem() {
@@ -66,7 +68,7 @@ public class EaselItem extends Item
                     world.addFreshEntity(easel);
 
                     world.playSound(null, easel.getX(), easel.getY(), easel.getZ(), SoundEvents.ARMOR_STAND_PLACE, SoundSource.BLOCKS, 0.75F, 0.8F);
-                    world.gameEvent(context.getPlayer(), GameEvent.ENTITY_PLACE, easel);
+                    easel.gameEvent(GameEvent.ENTITY_PLACE, context.getPlayer());
                 }
 
                 easelItem.shrink(1);

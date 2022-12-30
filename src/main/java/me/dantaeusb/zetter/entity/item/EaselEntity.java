@@ -3,10 +3,10 @@ package me.dantaeusb.zetter.entity.item;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.menu.EaselContainerMenu;
+import me.dantaeusb.zetter.entity.item.state.EaselState;
+import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.network.packet.SCanvasNamePacket;
-import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,8 +31,10 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.DiodeBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.items.CapabilityItemHandler;
@@ -43,8 +45,8 @@ import java.util.ArrayList;
 import java.util.function.Predicate;
 
 public class   EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
-    private static final String EASEL_STORAGE_TAG = "storage";
-    private static final String CANVAS_CODE_TAG = "CanvasCode";
+    private static final String NBT_TAG_EASEL_STORAGE = "storage";
+    private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
     protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> {
         return entity instanceof EaselEntity;
@@ -54,23 +56,26 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     protected BlockPos pos;
     protected EaselContainer easelContainer;
+    protected EaselState stateHandler;
+
     protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
     /** The list of players currently using this easel */
     private ArrayList<Player> playersUsing = new ArrayList<>();
-    private int ticksSinceSync;
-    private int checkInterval = 0;
+
+    private int tick;
 
     public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
         super(type, world);
         this.createInventory();
+        this.stateHandler = new EaselState(this);
     }
 
     protected void defineSynchedData() {
         this.entityData.define(DATA_ID_CANVAS_CODE, "");
     }
 
-    public @Nullable String getCanvasCode() {
+    public @Nullable String getEntityCanvasCode() {
         String canvasCode = this.entityData.get(DATA_ID_CANVAS_CODE);
 
         if (canvasCode.isEmpty()) {
@@ -80,7 +85,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return canvasCode;
     }
 
-    protected void setCanvasCode(@Nullable String canvasCode) {
+    protected void setEntityCanvasCode(@Nullable String canvasCode) {
         if (canvasCode != null) {
             this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
         } else {
@@ -99,10 +104,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         if (
             this.level.isClientSide
             && DATA_ID_CANVAS_CODE.equals(entityDataAccessor)
-            && this.getCanvasCode() != null
+            && this.getEntityCanvasCode() != null
         ) {
             final ItemStack canvasStack = this.easelContainer.getCanvasStack();
-            CanvasItem.setCanvasCode(canvasStack, this.getCanvasCode());
+            CanvasItem.setCanvasCode(canvasStack, this.getEntityCanvasCode());
         }
     }
 
@@ -127,21 +132,21 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
 
         this.easelContainer.addListener(this);
-        this.updateDataFromInventory();
+        //this.updateDataFromInventory();
     }
 
-    protected void updateDataFromInventory() {
-        this.setCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
+    protected void updateEntityDataFromInventory() {
+        this.setEntityCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
     }
 
     public boolean canPlayerAccessInventory(Player player) {
-        // @todo: this
+        // @todo: [HIGH] Implement check
         return true;
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+        if (capability == ForgeCapabilities.ITEM_HANDLER
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.easelContainerOptional.cast();
         }
@@ -149,32 +154,35 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return super.getCapability(capability, direction);
     }
 
+    public EaselState getStateHandler() {
+        return this.stateHandler;
+    }
+
     /**
      * This is temporary for migrating from BE to Entity
      * @return
      */
-    @Deprecated()
     public EaselContainer getEaselContainer() {
         return this.easelContainer;
     }
 
     public void addAdditionalSaveData(CompoundTag compoundTag) {
-        compoundTag.put(EASEL_STORAGE_TAG, this.easelContainer.serializeNBT());
+        compoundTag.put(NBT_TAG_EASEL_STORAGE, this.easelContainer.serializeNBT());
 
-        if (this.getCanvasCode() != null) {
-            compoundTag.putString(CANVAS_CODE_TAG, this.getCanvasCode());
+        if (this.getEntityCanvasCode() != null) {
+            compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getEntityCanvasCode());
         }
     }
 
     public void readAdditionalSaveData(CompoundTag compoundTag) {
         this.createInventory();
 
-        this.easelContainer.deserializeNBT(compoundTag.getCompound(EASEL_STORAGE_TAG));
+        this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_EASEL_STORAGE));
 
-        final String canvasCode = compoundTag.getString(CANVAS_CODE_TAG);
+        final String canvasCode = compoundTag.getString(NBT_TAG_CANVAS_CODE);
 
         if (canvasCode != null) {
-            this.setCanvasCode(canvasCode);
+            this.setEntityCanvasCode(canvasCode);
         }
     }
 
@@ -204,7 +212,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         final boolean isPalette = heldItem.is(ZetterItems.PALETTE.get());
 
         if (isCanvas) {
-            if (this.easelContainer.getCanvasStack().isEmpty()) {
+            if (this.easelContainer.getCanvasStack().isEmpty() && this.easelContainer.isItemValid(EaselContainer.CANVAS_SLOT, heldItem)) {
                 this.easelContainer.setCanvasStack(heldItem);
                 player.setItemInHand(hand, ItemStack.EMPTY);
 
@@ -224,25 +232,32 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     public void openInventory(Player player) {
         if (!this.level.isClientSide) {
-            NetworkHooks.openGui((ServerPlayer) player, this, (packetBuffer) -> {
-                SCanvasNamePacket.writeCanvasName(packetBuffer, (this.getCanvasCode()));
+            NetworkHooks.openScreen((ServerPlayer) player, this, (packetBuffer) -> {
+                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
+                packet.writePacketData(packetBuffer);
             });
         }
     }
 
+    /**
+     * Check history, check that still exists,
+     * check if need to keep information
+     */
     public void tick() {
-        // No need to track on client side
+        this.stateHandler.tick();
+        this.tick++;
+
+        // No need to check correctness and players on client side
         if (this.level.isClientSide()) {
             return;
         }
 
         this.checkOutOfWorld();
-        if (++this.ticksSinceSync > 200) {
+        if (this.tick % 200 == 0) {
             this.playersUsing = this.calculatePlayersUsing();
         }
 
-        if (this.checkInterval++ == 100) {
-            this.checkInterval = 0;
+        if (this.tick % 100 == 0) {
             if (!this.isRemoved() && !this.survives()) {
                 this.discard();
                 this.dropItem(null);
@@ -269,7 +284,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     // specific
 
     public boolean hasCanvas() {
-        return this.getCanvasCode() != null;
+        return this.getEntityCanvasCode() != null;
     }
 
     public @Nullable ItemStack getCanvasStack() {
@@ -287,7 +302,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return false;
         }
 
-        // @todo: seems dumb, lazy load ftw
+        // @todo: [LOW] Seems dumb, lazy load ftw
         // Also could already have canvas, but it's client-only right now so we disregard client data
         // Initialize data if it's not yet
         CanvasItem.getCanvasData(itemStack, this.level);
@@ -296,46 +311,51 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return true;
     }
 
-    public @Nullable
-    CanvasData getCanvasData() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack.isEmpty() || canvasStack.getItem() != ZetterItems.CANVAS.get()) {
-            return null;
-        }
-
-        return  CanvasItem.getCanvasData(canvasStack, this.level);
-    }
-
-    public void containerChanged(ItemStackHandler easelContainer) {
+    public void containerChanged(ItemStackHandler easelContainer, int slot) {
         ItemStack canvasStack = ((EaselContainer)easelContainer).getCanvasStack();
+        String newCanvasCode = null;
+        String existingCanvasCode = null;
 
-        if (!canvasStack.isEmpty() && CanvasItem.getCanvasCode(canvasStack) == null) {
-            // Initialize if not yet
-            CanvasItem.getCanvasData(canvasStack, this.level);
+        if (!canvasStack.isEmpty()) {
+            newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+            // Initialize canvas
+            if (newCanvasCode == null) {
+                CanvasItem.getCanvasData(canvasStack, this.level);
+                newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
+            }
         }
 
-        this.updateDataFromInventory();
+        if (this.getEaselContainer().getCanvas() != null) {
+            existingCanvasCode = this.getEaselContainer().getCanvas().code;
+        }
+
+        // @todo: [HIGH] Supposedly won't work on client if new canvas is not yet initialized, because it'll have nullish code
+        // Canvas changed, drop state
+        if (newCanvasCode == null || !newCanvasCode.equals(existingCanvasCode)) {
+            this.stateHandler.reset();
+        }
+
+        this.updateEntityDataFromInventory();
     }
 
     // track using players to send packets
 
     /**
-     * @todo: Does not work!
      * @return
      */
     public ArrayList<Player> calculatePlayersUsing() {
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
-        /*for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
-            if (player.containerMenu instanceof EaselContainerMenu) {
-                EaselContainer storage = ((EaselContainerMenu)player.containerMenu).getEaselContainer();
+        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
+            if (player.containerMenu instanceof EaselMenu) {
+                EaselContainer storage = ((EaselMenu)player.containerMenu).getContainer();
 
                 if (storage == this.getEaselContainer()) {
                     usingPlayers.add(player);
                 }
             }
-        }*/
+        }
 
         return usingPlayers;
     }
@@ -359,7 +379,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * Drop contents and item then die when moved or hurt
      */
 
-    public boolean hurt(DamageSource damageSource, float p_31716_) {
+    public boolean hurt(DamageSource damageSource, float pAmount) {
         if (this.isInvulnerableTo(damageSource)) {
             return false;
         } else {
@@ -384,7 +404,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     /**
-     * @todo: rename params
+     * @todo: [LOW] Rename params
      * @param x
      * @param y
      * @param z
@@ -436,7 +456,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
-        return EaselContainerMenu.createMenuServerSide(windowID, playerInventory, this, this.easelContainer);
+        return EaselMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
     }
 
     @Override

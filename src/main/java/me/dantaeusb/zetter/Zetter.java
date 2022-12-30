@@ -14,6 +14,8 @@ public class Zetter
 {
     public static final String MOD_ID = "zetter";
     public static boolean DEBUG_MODE = false;
+    public static boolean DEBUG_SERVER = false;
+    public static boolean DEBUG_CLIENT = false;
 
     // get a reference to the event bus for this mod;  Registration events are fired on this bus.
     public static IEventBus MOD_EVENT_BUS;
@@ -36,5 +38,11 @@ public class Zetter
         ZetterBlockEntities.init(MOD_EVENT_BUS);
         ZetterContainerMenus.init(MOD_EVENT_BUS);
         ZetterEntities.init(MOD_EVENT_BUS);
+        ZetterCraftingRecipes.init(MOD_EVENT_BUS);
+        ZetterConsoleCommands.init(MOD_EVENT_BUS);
+
+        // Custom types and registries
+        ZetterRegistries.init(MOD_EVENT_BUS);
+        ZetterCanvasTypes.init(MOD_EVENT_BUS);
     }
 }

@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.item.crafting;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
@@ -18,15 +19,11 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistryEntry;
 
 /**
  * Only for frames, toggle
  */
 public class UnframingRecipe extends CustomRecipe {
-    public static final Serializer SERIALIZER = new Serializer();
-    public static final ResourceLocation TYPE_ID = new ResourceLocation(Zetter.MOD_ID, "unframing");
-
     private final Ingredient inputFrame;
 
     public UnframingRecipe(ResourceLocation id, Ingredient inputFrame) {
@@ -42,7 +39,7 @@ public class UnframingRecipe extends CustomRecipe {
 
     /**
      * Used to check if a recipe matches current crafting inventory
-     * @todo: Maybe we can just extend ShapelessRecipe
+     * @todo: [LOW] Maybe we can just extend ShapelessRecipe
      */
     public boolean matches(CraftingContainer craftingInventory, Level world) {
         ItemStack frameStack = ItemStack.EMPTY;
@@ -54,10 +51,14 @@ public class UnframingRecipe extends CustomRecipe {
 
             if (this.inputFrame.test(craftingInventory.getItem(i))) {
                 if (!frameStack.isEmpty()) {
+                    // We already found frame
                     return false;
                 }
 
                 frameStack = craftingInventory.getItem(i);
+            } else {
+                // We have something else in the grid
+                return false;
             }
         }
 
@@ -117,7 +118,7 @@ public class UnframingRecipe extends CustomRecipe {
      * @return
      */
     public RecipeSerializer<?> getSerializer() {
-        return SERIALIZER;
+        return ZetterCraftingRecipes.UNFRAMING.get();
     }
 
     /**
@@ -127,12 +128,7 @@ public class UnframingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    private static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<UnframingRecipe> {
-
-        Serializer() {
-            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "unframing"));
-        }
-
+    public static class Serializer implements RecipeSerializer<UnframingRecipe> {
         @Override
         public UnframingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");

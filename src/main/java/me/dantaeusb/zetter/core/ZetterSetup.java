@@ -2,7 +2,8 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
+import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.client.Minecraft;
@@ -11,8 +12,6 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.Item;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
@@ -28,17 +27,19 @@ public class ZetterSetup
     @SuppressWarnings("unused")
     public static void onClientSetupEvent(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
-            MenuScreens.register(ZetterContainerMenus.PAINTING.get(), PaintingScreen::new);
+            // Not registering PaintingScreen as it's client-side only
+
+            MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
+            // @todo: [CRIT] Broke icons with paintings!
             for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
                 ItemProperties.register(frame.get(), new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
                 ItemProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
             }
 
-            ItemBlockRenderTypes.setRenderLayer(ZetterBlocks.EASEL.get(), RenderType.cutout());
-
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
+            new ClientPaintingToolParameters();
         });
     }
 

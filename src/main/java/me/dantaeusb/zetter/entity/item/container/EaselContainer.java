@@ -1,32 +1,48 @@
 package me.dantaeusb.zetter.entity.item.container;
 
-import me.dantaeusb.zetter.core.ItemStackHandlerListener;
-import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import com.google.common.collect.Lists;
+import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.util.CanvasHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
-import java.util.List;
+import javax.annotation.Nullable;
+import java.util.*;
 
 
 public class EaselContainer extends ItemStackHandler {
     public static final int STORAGE_SIZE = 2;
-
     public static final int CANVAS_SLOT = 0;
     public static final int PALETTE_SLOT = 1;
 
-    private EaselEntity boundEasel;
+    /*
+     * Canvas
+     * Practically, this holder used to represent canvas
+     * in Menu screen, because there's no data in item
+     * on client side
+     */
+    private @Nullable CanvasHolder<CanvasData> canvas;
 
+    /*
+     * Entity and listeners
+     */
+
+    private EaselEntity easel;
     private List<ItemStackHandlerListener> listeners;
 
     public EaselContainer(EaselEntity easelEntity) {
         super(STORAGE_SIZE);
 
-        this.boundEasel = easelEntity;
+        this.easel = easelEntity;
     }
 
+    @Deprecated
     public EaselContainer() {
         super(STORAGE_SIZE);
     }
@@ -43,26 +59,88 @@ public class EaselContainer extends ItemStackHandler {
         this.listeners.remove(listener);
     }
 
+    /*
+     * Palette
+     */
+
+    public void damagePalette(int damage) {
+        final int maxDamage = this.getPaletteStack().getMaxDamage() - 1;
+        int newDamage = this.getPaletteStack().getDamageValue() + damage;
+        newDamage = Math.min(newDamage, maxDamage);
+
+        this.getPaletteStack().setDamageValue(newDamage);
+    }
+
+    /*
+     * Canvas
+     */
+
+    public CanvasHolder<CanvasData> getCanvas() {
+        return this.canvas;
+    }
+
     /**
-     * @todo: this
+     * @todo: [MED] Just sync item?
+     * @param canvasCode
+     */
+    public void handleCanvasChange(@Nullable String canvasCode) {
+        if (canvasCode == null || canvasCode.equals(CanvasData.getCanvasCode(0))) {
+            this.canvas = null;
+            return;
+        }
+
+        CanvasTracker canvasTracker;
+
+        if (this.easel.getLevel().isClientSide()) {
+            canvasTracker = this.easel.getLevel().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+        } else {
+            canvasTracker = this.easel.getLevel().getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+        }
+
+        if (canvasTracker == null) {
+            Zetter.LOG.error("Cannot find world canvas capability");
+            this.canvas = null;
+            return;
+        }
+
+        CanvasData canvas = canvasTracker.getCanvasData(canvasCode);
+
+        if (canvas == null) {
+            this.canvas = null;
+            return;
+        }
+
+        this.canvas = new CanvasHolder<>(canvasCode, canvas);
+    }
+
+    /*
+     * Validity
+     */
+
+    /**
      * @return
      */
     public boolean stillValid(Player player) {
-        if (this.boundEasel != null) {
-            return player.distanceToSqr((double)this.boundEasel.getPos().getX() + 0.5D, (double)this.boundEasel.getPos().getY() + 0.5D, (double)this.boundEasel.getPos().getZ() + 0.5D) <= 64.0D;
+        if (this.easel != null && this.easel.isAlive()) {
+            return player.distanceToSqr((double)this.easel.getPos().getX() + 0.5D, (double)this.easel.getPos().getY() + 0.5D, (double)this.easel.getPos().getZ() + 0.5D) <= 64.0D;
         }
 
-        return true;
+        return false;
     }
 
     public boolean isItemValid(int index, ItemStack stack) {
-        return (index == 0 && stack.getItem() == ZetterItems.CANVAS.get())
-                || (index == 1 && stack.getItem() == ZetterItems.PALETTE.get());
+        if (index == 0 && stack.getItem() == ZetterItems.CANVAS.get()) {
+            int[] canvasSize = CanvasItem.getBlockSize(stack);
+            assert canvasSize != null;
+
+            return canvasSize[0] <= 2 && canvasSize[1] <= 2;
+        }
+
+        return index == 1 && stack.getItem() == ZetterItems.PALETTE.get();
     }
 
-    /**
-     * @todo: move all interactions to TE
-     * @return
+    /*
+     * Getter-setters
      */
     public ItemStack getCanvasStack() {
         return this.getStackInSlot(CANVAS_SLOT);
@@ -98,16 +176,22 @@ public class EaselContainer extends ItemStackHandler {
         this.onContentsChanged(0);
     }
 
+    @Override
+    protected void onLoad() {
+        this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
+    }
+
+    @Override
     protected void onContentsChanged(int slot)
     {
         if (this.listeners != null) {
             for(ItemStackHandlerListener listener : this.listeners) {
-                listener.containerChanged(this);
+                listener.containerChanged(this, slot);
             }
         }
-    }
 
-    /**
-     * Conform to native Container interface
-     */
+        if (slot == CANVAS_SLOT) {
+            this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
+        }
+    }
 }

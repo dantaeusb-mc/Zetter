@@ -1,6 +1,7 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
+        maven { url='https://repo.spongepowered.org/repository/maven-public/' }
         mavenCentral()
     }
     dependencies {
@@ -8,14 +9,19 @@ buildscript {
     }
 }
 
+plugins {
+    // Other plugins like maven-publish, idea, eclipse, etc. go here
+    id 'net.minecraftforge.gradle' version '5.1.+'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply from: "https://moddingtutorials.org/applesilicon.gradle"
-apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
-apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
+//apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.15.3-1.18.2-rc'
+version = '0.19.1-1.18.2-rc'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
@@ -28,6 +34,9 @@ minecraft {
     runs {
         client {
             workingDirectory project.file('run')
+
+            // JetBrains hot-swap environment
+            // jvmArg "-XX:+AllowEnhancedClassRedefinition"
 
             // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
@@ -86,17 +95,25 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.1.0'
 }
 
+/*mixin {
+    add sourceSets.main, 'mixins.zetter.refmap.json'
+    config 'mixins.zetter.json'
+
+    debug.verbose = true
+    debug.export = true
+}*/
+
 // Example for how to get properties into the manifest for reading by the runtime..
 jar {
     manifest {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.15.3-rc",
+            "Specification-Version": "0.19.1-rc",
             "Implementation-Title": project.name,
             "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
         ])
     }
 }
