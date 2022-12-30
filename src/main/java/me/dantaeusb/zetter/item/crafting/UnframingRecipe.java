@@ -130,10 +130,6 @@ public class UnframingRecipe extends CustomRecipe {
     }
 
     public static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<UnframingRecipe> {
-        public Serializer() {
-            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "unframing"));
-        }
-
         @Override
         public UnframingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");

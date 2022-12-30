@@ -127,10 +127,6 @@ public class PaletteRechargeRecipe extends CustomRecipe {
     }
 
     public static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<PaletteRechargeRecipe> {
-        public Serializer() {
-            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "palette_recharge"));
-        }
-
         @Override
         public PaletteRechargeRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "palette");

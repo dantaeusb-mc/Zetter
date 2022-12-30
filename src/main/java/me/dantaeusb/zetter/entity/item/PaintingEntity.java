@@ -379,8 +379,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         CRIMSON("crimson", true, true),
         WARPED("warped", true, true),
         IRON("iron", false, false),
-        GOLD("gold", true, true),
-        MANGROVE("mangrove", true, true);
+        GOLD("gold", true, true);
 
         private static final Map<String, Materials> LOOKUP = Maps.uniqueIndex(
                 Arrays.asList(Materials.values()),

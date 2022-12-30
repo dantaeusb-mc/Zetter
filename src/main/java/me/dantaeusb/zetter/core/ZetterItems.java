@@ -33,7 +33,6 @@ public class ZetterItems
     public static final RegistryObject<FrameItem> JUNGLE_FRAME = registerFrame("jungle_basic_frame", PaintingEntity.Materials.JUNGLE, false);
     public static final RegistryObject<FrameItem> OAK_FRAME = registerFrame("oak_basic_frame", PaintingEntity.Materials.OAK, false);
     public static final RegistryObject<FrameItem> SPRUCE_FRAME = registerFrame("spruce_basic_frame", PaintingEntity.Materials.SPRUCE, false);
-    public static final RegistryObject<FrameItem> MANGROVE_FRAME = registerFrame("mangrove_basic_frame", PaintingEntity.Materials.MANGROVE, false);
     public static final RegistryObject<FrameItem> CRIMSON_FRAME = registerFrame("crimson_basic_frame", PaintingEntity.Materials.CRIMSON, false);
     public static final RegistryObject<FrameItem> WARPED_FRAME = registerFrame("warped_basic_frame", PaintingEntity.Materials.WARPED, false);
 
@@ -43,7 +42,6 @@ public class ZetterItems
     public static final RegistryObject<FrameItem> JUNGLE_PLATED_FRAME = registerFrame("jungle_plated_frame", PaintingEntity.Materials.JUNGLE, true);
     public static final RegistryObject<FrameItem> OAK_PLATED_FRAME = registerFrame("oak_plated_frame", PaintingEntity.Materials.OAK, true);
     public static final RegistryObject<FrameItem> SPRUCE_PLATED_FRAME = registerFrame("spruce_plated_frame", PaintingEntity.Materials.SPRUCE, true);
-    public static final RegistryObject<FrameItem> MANGROVE_PLATED_FRAME = registerFrame("mangrove_plated_frame", PaintingEntity.Materials.MANGROVE, true);
     public static final RegistryObject<FrameItem> CRIMSON_PLATED_FRAME = registerFrame("crimson_plated_frame", PaintingEntity.Materials.CRIMSON, true);
     public static final RegistryObject<FrameItem> WARPED_PLATED_FRAME = registerFrame("warped_plated_frame", PaintingEntity.Materials.WARPED, true);
 
