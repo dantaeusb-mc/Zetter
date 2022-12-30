@@ -12,6 +12,7 @@ import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -27,11 +28,11 @@ import java.io.IOException;
  */
 public class ExportCommand {
     private static final DynamicCommandExceptionType ERROR_PAINTING_NOT_FOUND = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.painting_not_found", code);
+        return new TranslatableComponent("console.zetter.error.painting_not_found", code);
     });
 
     private static final DynamicCommandExceptionType ERROR_CANNOT_CREATE_FILE = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.file_write_error", code);
+        return new TranslatableComponent("console.zetter.error.file_write_error", code);
     });
 
     static ArgumentBuilder<CommandSourceStack, ?> register() {

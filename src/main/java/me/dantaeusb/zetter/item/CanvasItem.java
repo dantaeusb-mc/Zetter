@@ -12,6 +12,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
@@ -83,11 +84,11 @@ public class CanvasItem extends Item
             String canvasCode = getCanvasCode(stack);
 
             if (!StringUtil.isNullOrEmpty(canvasCode)) {
-                return Component.translatable("item.zetter.canvas.painted");
+                return new TranslatableComponent("item.zetter.canvas.painted");
             }
         }
 
-        return Component.translatable("item.zetter.canvas.blank");
+        return new TranslatableComponent("item.zetter.canvas.blank");
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -125,7 +126,7 @@ public class CanvasItem extends Item
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        Component blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());

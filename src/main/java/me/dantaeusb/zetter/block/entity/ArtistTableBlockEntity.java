@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.Containers;
@@ -23,7 +24,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -193,12 +193,12 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     }
     @Override
     public Component getDisplayName() {
-        return Component.translatable("container.zetter.artistTable");
+        return new TranslatableComponent("container.zetter.artistTable");
     }
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == ForgeCapabilities.ITEM_HANDLER
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.artistTableContainerOptional.cast();
         }

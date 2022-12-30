@@ -7,13 +7,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.StringUtil;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraftforge.client.gui.ForgeIngameGui;
+import net.minecraftforge.client.gui.IIngameOverlay;
 
-public class PaintingInfoOverlay implements IGuiOverlay {
-    private static final Component BANNED_TEXT = Component.translatable("painting.zetter.banned");
+public class PaintingInfoOverlay implements IIngameOverlay {
+    private static final Component BANNED_TEXT = new TranslatableComponent("painting.zetter.banned");
 
     protected PaintingData paintingData = null;
     protected int overlayMessageTime = 0;
@@ -28,7 +29,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
     }
 
     @Override
-    public void render(ForgeGui gui, PoseStack poseStack, float partialTick, int screenWidth, int screenHeight) {
+    public void render(ForgeIngameGui gui, PoseStack poseStack, float partialTick, int screenWidth, int screenHeight) {
         if (this.paintingData == null) {
             return;
         }
@@ -45,14 +46,14 @@ public class PaintingInfoOverlay implements IGuiOverlay {
             String authorName = this.paintingData.getAuthorName();
 
             if (StringUtil.isNullOrEmpty(paintingName)) {
-                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
             }
 
             if (StringUtil.isNullOrEmpty(authorName)) {
-                authorName = Component.translatable("item.zetter.painting.unknown").getString();
+                authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
             }
 
-            title = Component.translatable("item.zetter.customPaintingByAuthor", paintingName, authorName);
+            title = new TranslatableComponent("item.zetter.customPaintingByAuthor", paintingName, authorName);
         } else {
             title = BANNED_TEXT;
         }

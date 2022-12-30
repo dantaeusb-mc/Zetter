@@ -7,7 +7,8 @@ import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ForgeModelBakery;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -16,9 +17,9 @@ public class ZetterModels
 {
     @SubscribeEvent
     @SuppressWarnings("unused")
-    public static void onModelRegistryEvent(ModelEvent.RegisterAdditional event) {
+    public static void onModelRegistryEvent(ModelRegistryEvent event) {
         for (ModelResourceLocation modelLocation : CustomPaintingRenderer.FRAME_MODELS.values()) {
-            event.register(modelLocation);
+            ForgeModelBakery.addSpecialModel(modelLocation);
         }
     }
 

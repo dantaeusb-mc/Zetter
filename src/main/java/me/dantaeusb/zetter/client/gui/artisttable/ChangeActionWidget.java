@@ -14,9 +14,9 @@ import net.minecraft.network.chat.Component;
 import javax.annotation.Nullable;
 
 public class ChangeActionWidget extends AbstractArtistTableWidget implements Widget {
-    private static final Component DEFAULT_TITLE = Component.translatable("container.zetter.artist_table.change_action");
-    private static final Component CHANGE_TO_SPLIT_TITLE = Component.translatable("container.zetter.artist_table.change_action.to_split");
-    private static final Component CHANGE_TO_COMBINE_TITLE = Component.translatable("container.zetter.artist_table.change_action.to_combine");
+    private static final Component DEFAULT_TITLE = new TranslatableComponent("container.zetter.artist_table.change_action");
+    private static final Component CHANGE_TO_SPLIT_TITLE = new TranslatableComponent("container.zetter.artist_table.change_action.to_split");
+    private static final Component CHANGE_TO_COMBINE_TITLE = new TranslatableComponent("container.zetter.artist_table.change_action.to_combine");
 
     private final static int BUTTON_WIDTH = 20;
     private final static int BUTTON_HEIGHT = 18;

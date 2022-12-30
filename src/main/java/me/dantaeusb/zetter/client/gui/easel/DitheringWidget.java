@@ -28,7 +28,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Widget {
     private final List<DitheringButton> buttons;
 
     public DitheringWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.dithering"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.dithering"));
 
         final int DITHERING_BUTTON_U = 0;
         final int DITHERING_BUTTON_V = 32;

@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -96,7 +97,7 @@ public class PaintingItem extends CanvasItem
         int heightBlocks = paintingData.getHeight() / paintingData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
+        Component blockSizeString = (new TranslatableComponent("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
         stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
@@ -109,10 +110,10 @@ public class PaintingItem extends CanvasItem
             String authorName = getCachedAuthorName(stack);
 
             if (StringUtil.isNullOrEmpty(authorName)) {
-                authorName = Component.translatable("item.zetter.painting.unknown").getString();
+                authorName = new TranslatableComponent("item.zetter.painting.unknown").getString();
             }
 
-            tooltip.add((Component.translatable("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
+            tooltip.add((new TranslatableComponent("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
 
             Component generationLabel = getGenerationLabel(stack);
             String stringSize = getCachedStringSize(stack);
@@ -135,7 +136,7 @@ public class PaintingItem extends CanvasItem
                     return super.getName(stack);
                 }
 
-                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
@@ -143,7 +144,7 @@ public class PaintingItem extends CanvasItem
             }
         }
 
-        return Component.translatable(this.getDescriptionId(stack));
+        return new TranslatableComponent(this.getDescriptionId(stack));
     }
 
     /**
@@ -263,6 +264,6 @@ public class PaintingItem extends CanvasItem
             generation = 1;
         }
 
-        return Component.translatable("item.zetter.painting.generation." + generation);
+        return new TranslatableComponent("item.zetter.painting.generation." + generation);
     }
 }

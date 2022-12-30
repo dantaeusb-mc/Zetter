@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -28,18 +29,18 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
 
     public HistoryWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, Component.translatable("container.zetter.painting.history"));
+        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, new TranslatableComponent("container.zetter.painting.history"));
 
 
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(
                     parentScreen.getMenu()::canUndo, parentScreen.getMenu()::undo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.history.undo"))
+                    new TranslatableComponent("container.zetter.painting.history.undo"))
             );
             add(new HistoryButton(parentScreen.getMenu()::canRedo, parentScreen.getMenu()::redo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V + HISTORY_BUTTON_HEIGHT + 1, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.history.redo"))
+                    new TranslatableComponent("container.zetter.painting.history.redo"))
             );
         }};
     }

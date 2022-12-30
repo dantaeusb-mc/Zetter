@@ -28,7 +28,7 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
     private final List<BlendingButton> buttons;
 
     public BlendingWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.blending"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.blending"));
 
         final int BLENDING_BUTTON_U = 80;
         final int BLENDING_BUTTON_V = 32;

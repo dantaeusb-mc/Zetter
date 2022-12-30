@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Widget {
 
     public ToolsWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * 5 + 2, Component.translatable("container.zetter.painting.tools"));
+        super(parentScreen, x, y, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * 5 + 2, new TranslatableComponent("container.zetter.painting.tools"));
 
         this.buttons = new ArrayList<>() {{
             add(new ToolButton(Tools.PENCIL, TOOL_BUTTONS_U, TOOL_BUTTONS_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));

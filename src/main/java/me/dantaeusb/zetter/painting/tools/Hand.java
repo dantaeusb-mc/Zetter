@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.painting.tools;
 import me.dantaeusb.zetter.painting.parameters.NoParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ public class Hand extends AbstractTool<NoParameters> {
     public static final int HOTKEY = GLFW.GLFW_KEY_H;
     public static final int QUICK_TOOL_KEY = GLFW.GLFW_KEY_SPACE;
 
-    private final Component translatableComponent = Component.translatable("container.zetter.painting.tools.hand");
+    private final Component translatableComponent = new TranslatableComponent("container.zetter.painting.tools.hand");
 
     private final ToolShape shape = new ToolShape();
 

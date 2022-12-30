@@ -13,7 +13,7 @@ public class BucketParametersTab extends AbstractTab {
     private final SliderWidget intensityWidget;
 
     public BucketParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.parameters"));
+        super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;
         final int BLENDING_POSITION_Y = 1;
@@ -24,7 +24,7 @@ public class BucketParametersTab extends AbstractTab {
         this.blendingWidget = new BlendingWidget(this.parentScreen, this.x + BLENDING_POSITION_X, this.y + BLENDING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
                 parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.intensity"),
+                new TranslatableComponent("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 

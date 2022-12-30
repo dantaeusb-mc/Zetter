@@ -10,6 +10,7 @@ import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -19,7 +20,7 @@ import net.minecraft.world.level.Level;
 
 public class RestoreCommand {
     private static final DynamicCommandExceptionType ERROR_PAINTING_NOT_FOUND = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.painting_not_found", code);
+        return new TranslatableComponent("console.zetter.error.painting_not_found", code);
     });
 
     static ArgumentBuilder<CommandSourceStack, ?> register() {
@@ -62,7 +63,7 @@ public class RestoreCommand {
             }
         }
 
-        source.sendSuccess(Component.translatable("commands.give.success.single", 1, paintingItem.getDisplayName(), player.getDisplayName()), true);
+        source.sendSuccess(new TranslatableComponent("commands.give.success.single", 1, paintingItem.getDisplayName(), player.getDisplayName()), true);
 
         return 1;
     }

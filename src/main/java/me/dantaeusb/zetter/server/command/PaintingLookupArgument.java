@@ -7,6 +7,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,7 +20,7 @@ public class PaintingLookupArgument implements ArgumentType<PaintingInput> {
     private static final Pattern CODE = Pattern.compile(PaintingData.CODE_PREFIX + "\\p{javaDigit}+");
 
     private static final DynamicCommandExceptionType ERROR_INVALID_PAINTING_CODE = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.invalid_painting_code", code);
+        return new TranslatableComponent("console.zetter.error.invalid_painting_code", code);
     });
 
     public PaintingLookupArgument() {

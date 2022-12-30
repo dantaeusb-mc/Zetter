@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -31,18 +32,18 @@ public class ZoomWidget extends AbstractPaintingWidget implements Widget {
 
     public ZoomWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTON_HEIGHT, Component.translatable("container.zetter.painting.zoom"));
+        super(parentScreen, x, y, ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTON_HEIGHT, new TranslatableComponent("container.zetter.painting.zoom"));
 
 
         this.buttons = new ArrayList<>() {{
             add(new ZoomButton(
                     parentScreen.getMenu()::canIncreaseCanvasScale, parentScreen.getMenu()::increaseCanvasScale,
                     ZOOM_BUTTONS_U, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.zoom.in"))
+                    new TranslatableComponent("container.zetter.painting.zoom.in"))
             );
             add(new ZoomButton(parentScreen.getMenu()::canDecreaseCanvasScale, parentScreen.getMenu()::decreaseCanvasScale,
                     ZOOM_BUTTONS_U + ZOOM_BUTTON_WIDTH, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.zoom.out"))
+                    new TranslatableComponent("container.zetter.painting.zoom.out"))
             );
         }};
     }

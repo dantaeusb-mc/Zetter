@@ -16,6 +16,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 
@@ -35,7 +36,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Widget {
     private long scrollTimestamp = 0;
 
     public CanvasWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, SIZE, SIZE, Component.translatable("container.zetter.painting.canvas"));
+        super(parentScreen, x, y, SIZE, SIZE, new TranslatableComponent("container.zetter.painting.canvas"));
     }
 
     private int getCanvasScale() {

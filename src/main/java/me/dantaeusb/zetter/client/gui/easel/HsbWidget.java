@@ -28,25 +28,25 @@ public class HsbWidget extends AbstractPaintingWidget implements Widget {
     private final List<SliderWidget> sliders = new ArrayList<>();
 
     public HsbWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.sliders"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.sliders"));
 
         final int sliderOffset = WIDTH - SliderWidget.WIDTH;
 
         this.hueSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y,
-                Component.translatable("container.zetter.painting.sliders.hue"),
+                new TranslatableComponent("container.zetter.painting.sliders.hue"),
                 this::updateHue, null, this::renderHueForeground
         );
 
         this.saturationSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + SliderWidget.HEIGHT + SLIDER_DISTANCE,
-                Component.translatable("container.zetter.painting.sliders.saturation"),
+                new TranslatableComponent("container.zetter.painting.sliders.saturation"),
                 this::updateSaturation, null, this::renderSaturationForeground
         );
 
         this.brightnessSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * 2,
-                Component.translatable("container.zetter.painting.sliders.brightness"),
+                new TranslatableComponent("container.zetter.painting.sliders.brightness"),
                 this::updateBrightness, null, this::renderBrightnessForeground
         );
 

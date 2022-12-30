@@ -24,7 +24,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
     boolean clicked = false;
 
     public HelpWidget(ArtistTableScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.artist_table.help"));
+        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslatableComponent("container.zetter.artist_table.help"));
 
         if (!ClientHelper.openUriAllowed()) {
             this.active = false;

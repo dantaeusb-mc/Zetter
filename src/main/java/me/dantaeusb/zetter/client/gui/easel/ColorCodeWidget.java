@@ -45,7 +45,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     };
 
     public ColorCodeWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT + TEXTBOX_TITLE_HEIGHT, Component.translatable("container.zetter.painting.color_code"));
+        super(parentScreen, x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT + TEXTBOX_TITLE_HEIGHT, new TranslatableComponent("container.zetter.painting.color_code"));
     }
 
     @Override
@@ -61,7 +61,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
                 this.y + TEXTBOX_TITLE_HEIGHT + 4,
                 TEXTBOX_WIDTH - 7,
                 12,
-                Component.translatable("container.zetter.easel")
+                new TranslatableComponent("container.zetter.easel")
         ) {
             public void insertText(String text) {
                 text = text.replaceAll("[^\\p{XDigit}]", "");

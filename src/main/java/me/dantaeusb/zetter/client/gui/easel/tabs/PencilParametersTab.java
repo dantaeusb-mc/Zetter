@@ -16,7 +16,7 @@ public class PencilParametersTab extends AbstractTab {
     private final SliderWidget sizeWidget;
 
     public PencilParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.parameters"));
+        super(parentScreen, windowX, windowY, new TranslatableComponent("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;
         final int BLENDING_POSITION_Y = 1;
@@ -34,13 +34,13 @@ public class PencilParametersTab extends AbstractTab {
         this.ditheringWidget = new DitheringWidget(this.parentScreen, this.x + DITHERING_POSITION_X, this.y + DITHERING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
                 parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.intensity"),
+                new TranslatableComponent("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
         this.sizeWidget = new SliderWidget(
                 parentScreen, this.x + SIZE_POSITION_X, this.y + SIZE_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.size"),
+                new TranslatableComponent("container.zetter.painting.sliders.size"),
                 this::updateSize, this::renderIntensityBackground, this::renderIntensityForeground
         );
 

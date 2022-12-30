@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.nbt.CompoundTag;
@@ -41,18 +42,18 @@ public class FrameItem extends PaintingItem {
 
             if (StringUtil.isNullOrEmpty(paintingName)) {
                 if (StringUtil.isNullOrEmpty(getPaintingCode(stack))) {
-                    return Component.translatable(this.getDescriptionId(stack));
+                    return new TranslatableComponent(this.getDescriptionId(stack));
                 }
 
-                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+                paintingName = new TranslatableComponent("item.zetter.painting.unnamed").getString();
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
-                return Component.translatable(paintingName);
+                return new TranslatableComponent(paintingName);
             }
         }
 
-        return Component.translatable(this.getDescriptionId(stack));
+        return new TranslatableComponent(this.getDescriptionId(stack));
     }
 
     public PaintingEntity.Materials getMaterial() {

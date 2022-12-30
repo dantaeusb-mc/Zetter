@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TranslatableComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -22,7 +23,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Widget {
     public static final int SWAP_HOTKEY = GLFW.GLFW_KEY_X;
 
     public PaletteWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.palette"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslatableComponent("container.zetter.painting.palette"));
     }
 
     @Override
