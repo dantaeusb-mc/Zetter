@@ -20,7 +20,7 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerDisconnected(PlayerEvent.PlayerLoggedOutEvent event) {
-        Player player = event.getEntity();
+        Player player = (Player) event.getEntity();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
 
         canvasTracker.stopTrackingAllCanvases(player.getUUID());
@@ -55,7 +55,7 @@ public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerContainerOpened(PlayerContainerEvent.Open event) {
         if (event.getContainer() instanceof EaselMenu easelMenu) {
-            easelMenu.getState().addPlayer(event.getEntity());
+            easelMenu.getState().addPlayer((Player) event.getEntity());
         }
     }
 
@@ -69,7 +69,7 @@ public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerContainerClosed(PlayerContainerEvent.Close event) {
         if (event.getContainer() instanceof EaselMenu easelMenu) {
-            easelMenu.getState().removePlayer(event.getEntity());
+            easelMenu.getState().removePlayer((Player) event.getEntity());
         }
     }
 }

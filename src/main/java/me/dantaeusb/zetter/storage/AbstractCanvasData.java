@@ -184,7 +184,7 @@ public abstract class AbstractCanvasData extends SavedData {
     }
 
     public CompoundTag save(CompoundTag compoundTag) {
-        compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
+        compoundTag.putString(NBT_TAG_TYPE, this.getType().getRegistryName().toString());
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);
         compoundTag.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());

@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
@@ -119,9 +120,9 @@ public class PaintingItem extends CanvasItem
             String stringSize = getCachedStringSize(stack);
 
             if (StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add(Component.literal(generationLabel.getString()).withStyle(ChatFormatting.GRAY));
+                tooltip.add(new TextComponent(generationLabel.getString()).withStyle(ChatFormatting.GRAY));
             } else {
-                tooltip.add(Component.literal(generationLabel.getString() + ", " + stringSize).withStyle(ChatFormatting.GRAY));
+                tooltip.add(new TextComponent(generationLabel.getString() + ", " + stringSize).withStyle(ChatFormatting.GRAY));
             }
         }
     }
@@ -140,7 +141,7 @@ public class PaintingItem extends CanvasItem
             }
 
             if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
-                return Component.literal(paintingName);
+                return new TextComponent(paintingName);
             }
         }
 

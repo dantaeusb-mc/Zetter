@@ -130,12 +130,12 @@ public class CanvasServerTracker implements CanvasTracker {
 
                     switch (canvasTypeInt) {
                         case 1:
-                            canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().resourceLocation.toString();
+                            canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().getRegistryName().toString();
                             break;
                         case 0:
                         case 2:
                         default:
-                            canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().resourceLocation.toString();
+                            canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().getRegistryName().toString();
                             break;
                     }
                 }
@@ -209,7 +209,7 @@ public class CanvasServerTracker implements CanvasTracker {
         }
 
         if (!canvasData.getType().equals(ZetterCanvasTypes.CANVAS.get())) {
-            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.getType().resourceLocation.toString() + " on server side, not supported yet");
+            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.getType().getRegistryName().toString() + " on server side, not supported yet");
             return;
         }
 

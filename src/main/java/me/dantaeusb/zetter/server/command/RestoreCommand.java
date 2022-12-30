@@ -28,7 +28,7 @@ public class RestoreCommand {
             .requires(cs -> cs.hasPermission(Commands.LEVEL_GAMEMASTERS))
             .then(
                 Commands.argument("painting", PaintingLookupArgument.painting())
-                    .executes(ctx -> execute(ctx.getSource(), ctx.getSource().getPlayer(), ctx.getSource().getLevel(), PaintingLookupArgument.getPaintingInput(ctx, "painting")))
+                    .executes(ctx -> execute(ctx.getSource(), (Player) ctx.getSource().getEntity(), ctx.getSource().getLevel(), PaintingLookupArgument.getPaintingInput(ctx, "painting")))
             );
     }
 

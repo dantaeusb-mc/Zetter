@@ -39,7 +39,7 @@ public class ExportCommand {
         return Commands.literal("export")
             .requires(cs -> cs.hasPermission(Commands.LEVEL_ALL))
             .then(Commands.argument("painting", PaintingLookupArgument.painting()))
-            .executes(ctx -> execute(ctx.getSource(), ctx.getSource().getPlayer(), ctx.getSource().getLevel(), PaintingLookupArgument.getPaintingInput(ctx, "painting")));
+            .executes(ctx -> execute(ctx.getSource(), (Player) ctx.getSource().getEntity(), ctx.getSource().getLevel(), PaintingLookupArgument.getPaintingInput(ctx, "painting")));
     }
 
     private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {

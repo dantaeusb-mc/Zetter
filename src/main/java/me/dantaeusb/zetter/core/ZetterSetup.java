@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.client.gui.OverlayRegistry;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
@@ -31,6 +32,8 @@ public class ZetterSetup
 
             MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
+
+            OverlayRegistry.registerOverlayTop("zetter:painting_info", ZetterOverlays.PAINTING_INFO);
 
             // @todo: [CRIT] Broke icons with paintings!
             for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {

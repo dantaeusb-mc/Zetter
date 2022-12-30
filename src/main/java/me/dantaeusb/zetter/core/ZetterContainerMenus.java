@@ -11,7 +11,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ZetterContainerMenus {
-    private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, Zetter.MOD_ID);
+    private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.CONTAINERS, Zetter.MOD_ID);
 
     public static RegistryObject<MenuType<EaselMenu>> PAINTING = MENUS.register("painting_container", () -> IForgeMenuType.create(EaselMenu::createMenuClientSide));
     public static RegistryObject<MenuType<EaselMenu>> EASEL = MENUS.register("easel_container", () -> IForgeMenuType.create(EaselMenu::createMenuClientSide));

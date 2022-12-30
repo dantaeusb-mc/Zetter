@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.item.crafting;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import net.minecraft.nbt.CompoundTag;
@@ -14,6 +15,7 @@ import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 /**
  * Only for frames, toggle
@@ -124,7 +126,11 @@ public class PaletteRechargeRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<PaletteRechargeRecipe> {
+    public static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<PaletteRechargeRecipe> {
+        public Serializer() {
+            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "palette_recharge"));
+        }
+
         @Override
         public PaletteRechargeRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "palette");

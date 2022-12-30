@@ -11,7 +11,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ZetterBlockEntities
 {
-    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, Zetter.MOD_ID);
+    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, Zetter.MOD_ID);
 
     /**
      * All easels should be converted to entities

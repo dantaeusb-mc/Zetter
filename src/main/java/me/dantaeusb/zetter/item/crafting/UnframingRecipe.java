@@ -19,6 +19,7 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.core.NonNullList;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 /**
  * Only for frames, toggle
@@ -128,7 +129,11 @@ public class UnframingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<UnframingRecipe> {
+    public static class Serializer extends ForgeRegistryEntry<RecipeSerializer<?>> implements RecipeSerializer<UnframingRecipe> {
+        public Serializer() {
+            setRegistryName(new ResourceLocation(Zetter.MOD_ID, "unframing"));
+        }
+
         @Override
         public UnframingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
             final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");

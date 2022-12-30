@@ -1,18 +1,19 @@
 package me.dantaeusb.zetter.storage;
 
+import me.dantaeusb.zetter.core.ZetterRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraftforge.registries.ForgeRegistryEntry;
+import net.minecraftforge.registries.IForgeRegistryEntry;
+import org.jetbrains.annotations.Nullable;
 
-public class CanvasDataType<T extends AbstractCanvasData> {
-    public final ResourceLocation resourceLocation;
+public class CanvasDataType<T extends AbstractCanvasData> extends ForgeRegistryEntry<CanvasDataType<?>> {
     public final CanvasDataBuilder<T> builder;
 
     public CanvasDataType(
-            ResourceLocation resourceLocation,
             CanvasDataBuilder<T> builder
     ) {
-        this.resourceLocation = resourceLocation;
         this.builder = builder;
     }
 

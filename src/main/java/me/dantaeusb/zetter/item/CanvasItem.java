@@ -12,6 +12,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
@@ -97,7 +98,7 @@ public class CanvasItem extends Item
             String stringSize = getCachedStringSize(stack);
 
             if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
+                tooltip.add((new TextComponent(stringSize)).withStyle(ChatFormatting.GRAY));
             }
         }
     }

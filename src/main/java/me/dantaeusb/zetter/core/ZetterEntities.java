@@ -13,7 +13,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ZetterEntities {
-    private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Zetter.MOD_ID);
+    private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITIES, Zetter.MOD_ID);
 
     public static RegistryObject<EntityType<PaintingEntity>> CUSTOM_PAINTING_ENTITY = ENTITIES.register("custom_painting_entity", () -> EntityType.Builder.<PaintingEntity>of(PaintingEntity::new, MobCategory.MISC)
             .sized(1.0F, 1.0F)

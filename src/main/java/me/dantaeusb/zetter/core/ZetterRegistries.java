@@ -15,12 +15,11 @@ public class ZetterRegistries
 
     public static final DeferredRegister<CanvasDataType<?>> CANVAS_TYPE_REGISTRY_TYPE = DeferredRegister.create(CANVAS_TYPE_REGISTRY_NAME, Zetter.MOD_ID);
     public static final Supplier<IForgeRegistry<CanvasDataType<?>>> CANVAS_TYPE = CANVAS_TYPE_REGISTRY_TYPE.makeRegistry(
-            () ->
-            {
-                RegistryBuilder<CanvasDataType<?>> builder = new RegistryBuilder<>();
-                builder.disableOverrides().setDefaultKey(new ResourceLocation(Zetter.MOD_ID, DummyCanvasData.TYPE));
-                return builder;
-            }
+        CANVAS_TYPE_REGISTRY_NAME,
+        () ->
+            new RegistryBuilder<CanvasDataType<?>>()
+                .disableOverrides()
+                .setDefaultKey(new ResourceLocation(Zetter.MOD_ID, DummyCanvasData.TYPE))
     );
 
     public static void init(IEventBus bus) {
