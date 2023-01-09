@@ -82,7 +82,7 @@ public class CanvasClientTracker implements CanvasTracker {
         }
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
-        MinecraftForge.EVENT_BUS.post(preEvent);
+        MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
     @Override
