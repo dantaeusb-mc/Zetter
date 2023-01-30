@@ -8,7 +8,7 @@ import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 
@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlendingWidget extends AbstractPaintingWidget implements Widget {
+public class BlendingWidget extends AbstractPaintingWidget implements Renderable {
     public final static int WIDTH = 60;
     public final static int HEIGHT = 32;
     public final static int FONT_Y_MARGIN = 12;
@@ -57,9 +57,9 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (BlendingButton blendingButton: this.buttons) {
-            int fromX = this.x + i * BLENDING_BUTTON_WIDTH;
+            int fromX = this.getX() + i * BLENDING_BUTTON_WIDTH;
 
-            if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, blendingButton.width, blendingButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(fromX, this.getY() + FONT_Y_MARGIN, blendingButton.width, blendingButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
                 if (parameters instanceof BlendingParameterHolder) {
@@ -94,16 +94,16 @@ public class BlendingWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (BlendingButton blendingButton: this.buttons) {
-            int fromX = this.x + i * BLENDING_BUTTON_WIDTH;
+            int fromX = this.getX() + i * BLENDING_BUTTON_WIDTH;
             int vOffset = blending == blendingButton.blending ? BLENDING_BUTTON_HEIGHT : 0;
 
-            this.blit(matrixStack, fromX, this.y + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
+            this.blit(matrixStack, fromX, this.getY() + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
             i++;
         }
     }
 
     public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        this.parentScreen.getFont().draw(matrixStack, this.getMessage(), (float) this.x - this.parentScreen.getGuiLeft(), (float) this.y - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
+        this.parentScreen.getFont().draw(matrixStack, this.getMessage(), (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
     }
 
     public class BlendingButton {

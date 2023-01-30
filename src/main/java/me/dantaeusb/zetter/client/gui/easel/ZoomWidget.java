@@ -4,7 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -17,7 +19,7 @@ import java.util.function.Supplier;
 /**
  * @todo: [LOW] Add paddings as on history buttons
  */
-public class ZoomWidget extends AbstractPaintingWidget implements Widget {
+public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
     private final List<ZoomButton> buttons;
 
     public static final int ZOOM_OUT_HOTKEY = GLFW.GLFW_KEY_MINUS;
@@ -52,9 +54,9 @@ public class ZoomWidget extends AbstractPaintingWidget implements Widget {
     Component getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
-            int fromX = this.x + i * ZOOM_BUTTON_WIDTH;
+            int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
 
-            if (EaselScreen.isInRect(fromX, this.y, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return zoomButton.getTooltip();
             }
 
@@ -76,9 +78,9 @@ public class ZoomWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
-            int fromX = this.x + i * ZOOM_BUTTON_WIDTH;
+            int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
 
-            if (EaselScreen.isInRect(fromX, this.y, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 zoomButton.action.get();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -90,19 +92,24 @@ public class ZoomWidget extends AbstractPaintingWidget implements Widget {
         return false;
     }
 
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
+    }
+
     public void render(PoseStack matrixStack) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-        this.blit(matrixStack, this.x, this.y, ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
+        this.blit(matrixStack, this.getX(), this.getY(), ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
 
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
-            int fromX = this.x + i * ZOOM_BUTTON_WIDTH;
+            int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
             int uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
 
-            this.blit(matrixStack, fromX, this.y, uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
+            this.blit(matrixStack, fromX, this.getY(), uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
             i++;
         }
     }

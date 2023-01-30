@@ -1,6 +1,8 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
-import com.mojang.math.Matrix4f;
+import com.mojang.math.Axis;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
@@ -11,7 +13,6 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -50,7 +51,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
         poseStack.pushPose();
-        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entityYaw));
+        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
 
         // last are r, g, b, a
         this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
@@ -83,8 +84,8 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         // Scale and prepare
         poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
         poseStack.translate(-8.0D, 12.5D, -4.0D);
-        poseStack.mulPose(Vector3f.XP.rotation(0.1745F));
-        poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+        poseStack.mulPose(Axis.XP.rotation(0.1745F));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
         poseStack.translate(-8.0D - (8.0D * canvasBlockWidth), -16.0D * canvasBlockHeight, 0.0D);
 
         CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getEntityCanvasCode(), canvasData, packedLight);

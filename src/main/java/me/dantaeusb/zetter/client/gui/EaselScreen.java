@@ -128,7 +128,6 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         // Other
 
         assert this.minecraft != null;
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
 
         this.menu.addToolUpdateListener(this::updateCurrentTool);
         this.menu.addColorUpdateListener(this::updateCurrentColor);

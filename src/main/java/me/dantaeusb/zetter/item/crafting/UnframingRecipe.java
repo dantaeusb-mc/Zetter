@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.CustomRecipe;
@@ -27,7 +28,7 @@ public class UnframingRecipe extends CustomRecipe {
     private final Ingredient inputFrame;
 
     public UnframingRecipe(ResourceLocation id, Ingredient inputFrame) {
-        super(id);
+        super(id, CraftingBookCategory.MISC);
 
         this.inputFrame = inputFrame;
     }

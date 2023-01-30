@@ -21,9 +21,9 @@ public class BucketParametersTab extends AbstractTab {
         final int INTENSITY_POSITION_X = 0;
         final int INTENSITY_POSITION_Y = BlendingWidget.HEIGHT + 14;
 
-        this.blendingWidget = new BlendingWidget(this.parentScreen, this.x + BLENDING_POSITION_X, this.y + BLENDING_POSITION_Y);
+        this.blendingWidget = new BlendingWidget(this.parentScreen, this.getX() + BLENDING_POSITION_X, this.getY() + BLENDING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
-                parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
+                parentScreen, this.getX() + INTENSITY_POSITION_X, this.getY() + INTENSITY_POSITION_Y,
                 Component.translatable("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
@@ -41,7 +41,7 @@ public class BucketParametersTab extends AbstractTab {
     @Override
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            fill(matrixStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
+            fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
                 this.blendingWidget.render(matrixStack);
@@ -57,7 +57,7 @@ public class BucketParametersTab extends AbstractTab {
         if (this.visible) {
             this.parentScreen.getFont().draw(
                     matrixStack, this.intensityWidget.getMessage(),
-                    (float) this.x - this.parentScreen.getGuiLeft(), (float) this.y - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
+                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
                     Color.DARK_GRAY.getRGB()
             );
         }

@@ -21,8 +21,8 @@ public class ColorTab extends AbstractTab {
         final int TEXTBOX_POSITION_X = 0;
         final int TEXTBOX_POSITION_Y = 50;
 
-        this.hsbWidget = new HsbWidget(this.parentScreen, this.x + SETTINGS_POSITION_X, this.y + SETTINGS_POSITION_Y);
-        this.colorCodeWidget = new ColorCodeWidget(this.parentScreen, this.x + TEXTBOX_POSITION_X, this.y + TEXTBOX_POSITION_Y);
+        this.hsbWidget = new HsbWidget(this.parentScreen, this.getX() + SETTINGS_POSITION_X, this.getY() + SETTINGS_POSITION_Y);
+        this.colorCodeWidget = new ColorCodeWidget(this.parentScreen, this.getX() + TEXTBOX_POSITION_X, this.getY() + TEXTBOX_POSITION_Y);
 
         this.addTabWidget(this.hsbWidget);
         this.addTabWidget(this.colorCodeWidget);
@@ -48,10 +48,10 @@ public class ColorTab extends AbstractTab {
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            fill(poseStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
+            fill(poseStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
             this.hsbWidget.render(poseStack);
-            this.colorCodeWidget.render(poseStack, this.x, this.y, partialTicks);
+            this.colorCodeWidget.render(poseStack, this.getX(), this.getY(), partialTicks);
         }
     }
 

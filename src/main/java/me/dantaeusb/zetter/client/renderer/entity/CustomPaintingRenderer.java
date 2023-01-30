@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
+import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -30,7 +31,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.math.Vector3f;
+import org.joml.Vector3f;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
@@ -58,8 +59,8 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
         "center_vertical"
     };
 
-    public static final HashMap<String, ModelResourceLocation> FRAME_MODELS = new HashMap<String, ModelResourceLocation>();
-    public static final HashMap<String, ResourceLocation> PLATE_TEXTURES = new HashMap<String, ResourceLocation>();
+    public static final HashMap<String, ModelResourceLocation> FRAME_MODELS = new HashMap<>();
+    public static final HashMap<String, ResourceLocation> PLATE_TEXTURES = new HashMap<>();
 
     private final ModelPart platePart;
 
@@ -72,7 +73,8 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
     static {
         for (String modelCode: CustomPaintingRenderer.MODEL_CODES) {
             for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
-                CustomPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation("zetter:frame/" + material + "/" + modelCode));
+                // I don't know why vanilla uses "inventory" even for non-inventory models, but we copy that
+                CustomPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation(new ResourceLocation(Zetter.MOD_ID, "frame/" + material + "/" + modelCode), ""));
             }
         }
 
@@ -109,7 +111,7 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
         // On directions perpendicular to the facing it would be just 0
         matrixStack.translate((double)facingDirection.getStepX() * offsetAlignment, (double)facingDirection.getStepY() * offsetAlignment, (double)facingDirection.getStepZ() * offsetAlignment);
-        matrixStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entity.getYRot()));
+        matrixStack.mulPose(Axis.YP.rotationDegrees(180.0F - entity.getYRot()));
 
         // Copied from ItemFrameRenderer
         final boolean flag = entity.isInvisible();
@@ -216,7 +218,7 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
             // Scale and prepare
             matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
-            matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+            matrixStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
             matrixStack.translate(-16.0D, -16.0D, 0D);
 
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getPaintingCode(), canvasData, combinedLight);

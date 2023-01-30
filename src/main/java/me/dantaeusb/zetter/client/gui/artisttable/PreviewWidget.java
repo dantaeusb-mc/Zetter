@@ -9,7 +9,8 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.MultiBufferSource;
 import com.mojang.blaze3d.vertex.Tesselator;
@@ -19,7 +20,7 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
-public class PreviewWidget extends AbstractArtistTableWidget implements Widget, GuiEventListener {
+public class PreviewWidget extends AbstractArtistTableWidget implements Renderable, GuiEventListener {
     private static final Component EMPTY_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.empty");
     private static final Component INVALID_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.invalid");
     private static final Component LOADING_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.loading");
@@ -32,7 +33,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Widget, 
 
     public void render(PoseStack matrixStack) {
         matrixStack.pushPose();
-        matrixStack.translate(this.x, this.y, 1.0F);
+        matrixStack.translate(this.getX(), this.getY(), 1.0F);
 
         DummyCanvasData canvasData = this.parentScreen.getMenu().getAction().getCanvasData();
 
@@ -105,7 +106,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Widget, 
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput pNarrationElementOutput) {
-
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.level.Level;
 
 import net.minecraft.world.item.crafting.CustomRecipe;
@@ -26,7 +27,7 @@ public class FramingRecipe extends CustomRecipe {
     private final Ingredient inputPainting;
 
     public FramingRecipe(ResourceLocation id, Ingredient inputFrame, Ingredient inputPainting) {
-        super(id);
+        super(id, CraftingBookCategory.MISC);
 
         this.inputFrame = inputFrame;
         this.inputPainting = inputPainting;

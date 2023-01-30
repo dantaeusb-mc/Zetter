@@ -2,7 +2,8 @@ package me.dantaeusb.zetter.client.renderer.item;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
+import org.joml.Vector3f;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -14,14 +15,12 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.ForgeRegistry;
 
 import java.util.Map;
 import java.util.Objects;
@@ -58,14 +57,14 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
         String canvasCode = CanvasItem.getCanvasCode(itemStack);
 
         if (inHand) {
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
-            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
             poseStack.scale(0.38F, 0.38F, 0.38F);
             poseStack.translate(-0.5D, -0.5D, 0.0D);
             poseStack.scale(0.0078125F, 0.0078125F, 0.0078125F);
         } else {
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
-            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
             poseStack.scale(0.38F, 0.38F, 0.38F);
         }
 

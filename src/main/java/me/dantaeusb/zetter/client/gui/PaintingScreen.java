@@ -99,30 +99,18 @@ public class PaintingScreen extends Screen {
 
     @Override
     public void init() {
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
-
         this.calculatePaintingOffset();
 
-        this.signButton = this.addRenderableWidget(
-            new Button(
-                this.screenOffsetX + this.screenWidth - BUTTON_WIDTH - SCREEN_PADDING,
-                this.paintingOffsetY + this.paintingHeight + SCREEN_PADDING,
-                BUTTON_WIDTH,
-                BUTTON_HEIGHT,
-                Component.translatable("book.signButton"),
-                (button) -> {
-                    this.signPainting();
-                }
-            )
-        );
+        this.signButton = this.addRenderableWidget(Button.builder(Component.translatable("book.signButton"), (p_98177_) -> {
+            this.signPainting();
+        }).bounds(
+            this.screenOffsetX + this.screenWidth - BUTTON_WIDTH - SCREEN_PADDING,
+            this.paintingOffsetY + this.paintingHeight + SCREEN_PADDING,
+            BUTTON_WIDTH,
+            BUTTON_HEIGHT
+        ).build());
 
         this.signButton.visible = this.editable;
-
-        this.initFields();
-    }
-
-    protected void initFields() {
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
     }
 
     private void signPainting() {
@@ -254,11 +242,6 @@ public class PaintingScreen extends Screen {
         this.font.draw(matrixStack, Component.translatable("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
 
         super.render(matrixStack, mouseX, mouseY, partialTick);
-    }
-
-    @Override
-    public void removed() {
-        this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
     }
 
     private void setClipboard(String p_98148_) {

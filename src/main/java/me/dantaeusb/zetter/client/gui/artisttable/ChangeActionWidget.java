@@ -6,14 +6,14 @@ import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 
-public class ChangeActionWidget extends AbstractArtistTableWidget implements Widget {
+public class ChangeActionWidget extends AbstractArtistTableWidget implements Renderable {
     private static final Component DEFAULT_TITLE = Component.translatable("container.zetter.artist_table.change_action");
     private static final Component CHANGE_TO_SPLIT_TITLE = Component.translatable("container.zetter.artist_table.change_action.to_split");
     private static final Component CHANGE_TO_COMBINE_TITLE = Component.translatable("container.zetter.artist_table.change_action.to_combine");
@@ -30,7 +30,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, (int) mouseX, (int) mouseY)) {
+        if (ArtistTableScreen.isInRect(this.getX(), this.getY(), this.width, this.height, (int) mouseX, (int) mouseY)) {
             if (!this.parentScreen.getMenu().canChangeMode()) {
                 return true;
             }
@@ -59,11 +59,11 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
 
         if (!this.parentScreen.getMenu().canChangeMode()) {
             buttonV += BUTTON_HEIGHT * 2;
-        } else if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, mouseX, mouseY)) {
+        } else if (ArtistTableScreen.isInRect(this.getX(), this.getY(), this.width, this.height, mouseX, mouseY)) {
             buttonV += BUTTON_HEIGHT;
         }
 
-        blit(matrixStack, this.x, this.y, BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        blit(matrixStack, this.getX(), this.getY(), BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     public @Nullable
@@ -76,7 +76,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Wid
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput narrationElementOutput) {
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

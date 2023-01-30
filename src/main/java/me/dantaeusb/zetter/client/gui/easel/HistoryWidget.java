@@ -4,7 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
@@ -14,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class HistoryWidget extends AbstractPaintingWidget implements Widget {
+public class HistoryWidget extends AbstractPaintingWidget implements Renderable {
     private final List<HistoryButton> buttons;
 
     public static final int UNDO_HOTKEY = GLFW.GLFW_KEY_Z;
@@ -49,9 +51,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
     Component getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
+            int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (EaselScreen.isInRect(this.x + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(this.getX() + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return historyButton.getTooltip();
             }
 
@@ -73,9 +75,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
+            int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (EaselScreen.isInRect(this.x + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(this.getX() + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 historyButton.action.get();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -88,19 +90,24 @@ public class HistoryWidget extends AbstractPaintingWidget implements Widget {
         return false;
     }
 
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
+    }
+
     public void render(PoseStack matrixStack) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-        this.blit(matrixStack, this.x, this.y, HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+        this.blit(matrixStack, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
+            int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
             int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : HISTORY_BUTTON_WIDTH + 2);
 
-            this.blit(matrixStack, this.x + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
+            this.blit(matrixStack, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
     }
