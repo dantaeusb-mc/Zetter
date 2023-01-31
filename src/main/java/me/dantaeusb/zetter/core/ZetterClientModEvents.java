@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.event.*;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
@@ -8,10 +9,14 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import java.util.Map;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ZetterClientModEvents {
@@ -106,5 +111,38 @@ public class ZetterClientModEvents {
     @SubscribeEvent
     public static void overlayViewEvent(PaintingInfoOverlayEvent event) {
         ZetterOverlays.PAINTING_INFO.hide();
+    }
+
+    /**
+     * Prepare textures for default canvases and load them into memory
+     * for quick reference
+     * @param event
+     */
+    @SubscribeEvent
+    public static void initializeDefaultTextures(ClientPlayerNetworkEvent.LoggingIn event) {
+        for (Map.Entry<Tuple<Integer, Integer>, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
+            Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).registerCanvasData(
+                CanvasData.getDefaultCanvasCode(defaultCanvasDataEntry.getKey()),
+                defaultCanvasDataEntry.getValue()
+            );
+        }
+    }
+
+    /**
+     * We don't need to keep textures when we're in menus
+     * @param event
+     */
+    @SubscribeEvent
+    public static void unloadDefaultTextures(ClientPlayerNetworkEvent.LoggingOut event) {
+        // When minecraft loads world and closes game it triggers event with no player
+        if (event.getPlayer() == null) {
+            return;
+        }
+
+        for (Map.Entry<Tuple<Integer, Integer>, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
+            Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).unregisterCanvasData(
+                CanvasData.getDefaultCanvasCode(defaultCanvasDataEntry.getKey())
+            );
+        }
     }
 }

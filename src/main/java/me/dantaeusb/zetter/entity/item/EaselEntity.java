@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -18,6 +19,7 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.*;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -85,6 +87,11 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return canvasCode;
     }
 
+    /**
+     * Set canvas code for referencing without loading the items to
+     * render canvas on easel
+     * @param canvasCode
+     */
     protected void setEntityCanvasCode(@Nullable String canvasCode) {
         if (canvasCode != null) {
             this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
@@ -136,7 +143,27 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     protected void updateEntityDataFromInventory() {
-        this.setEntityCanvasCode(CanvasItem.getCanvasCode(this.easelContainer.getCanvasStack()));
+        ItemStack canvasStack = this.easelContainer.getCanvasStack();
+
+        if (canvasStack.isEmpty()) {
+            this.setEntityCanvasCode(null);
+            return;
+        }
+
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        if (canvasCode == null) {
+            int[] size = CanvasItem.getBlockSize(canvasStack);
+
+            if (size == null || size.length != 2) {
+                this.setEntityCanvasCode(null);
+                return;
+            }
+
+            canvasCode = CanvasData.getDefaultCanvasCode(new Tuple<>(size[0], size[1]));
+        }
+
+        this.setEntityCanvasCode(canvasCode);
     }
 
     public boolean canPlayerAccessInventory(Player player) {

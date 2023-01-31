@@ -256,7 +256,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      */
 
     public void useTool(float posX, float posY) {
-        this.state.useTool(this.player.getUUID(), this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
+        this.state.useTool(this.player, this.currentTool, posX, posY, this.getCurrentColor(), this.getCurrentToolParameters());
     }
 
     public AbstractToolParameters getCurrentToolParameters() {

@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
+import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
@@ -191,7 +192,27 @@ public class EaselContainer extends ItemStackHandler {
         }
 
         if (slot == CANVAS_SLOT) {
-            this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
+            ItemStack canvasStack = this.getCanvasStack();
+
+            if (canvasStack.isEmpty()) {
+                this.handleCanvasChange(null);
+                return;
+            }
+
+            String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+            if (canvasCode == null) {
+                int[] size = CanvasItem.getBlockSize(canvasStack);
+
+                if (size == null || size.length != 2) {
+                    this.handleCanvasChange(null);
+                    return;
+                }
+
+                canvasCode = CanvasData.getDefaultCanvasCode(new Tuple<>(size[0], size[1]));
+            }
+
+            this.handleCanvasChange(canvasCode);
         }
     }
 }

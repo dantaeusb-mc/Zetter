@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.item.crafting.CopyingRecipe;
 import me.dantaeusb.zetter.item.crafting.FramingRecipe;
 import me.dantaeusb.zetter.item.crafting.PaletteRechargeRecipe;
 import me.dantaeusb.zetter.item.crafting.UnframingRecipe;
@@ -17,6 +18,7 @@ public class ZetterCraftingRecipes
     public static final RegistryObject<RecipeSerializer<FramingRecipe>> FRAMING = RECIPES.register("framing", FramingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<UnframingRecipe>> UNFRAMING = RECIPES.register("unframing", UnframingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<PaletteRechargeRecipe>> PALETTE_RECHARGE = RECIPES.register("palette_recharge", PaletteRechargeRecipe.Serializer::new);
+    public static final RegistryObject<RecipeSerializer<CopyingRecipe>> COPYING = RECIPES.register("copying", CopyingRecipe.Serializer::new);
 
     public static void init(IEventBus bus) {
         RECIPES.register(bus);

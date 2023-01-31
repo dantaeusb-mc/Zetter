@@ -4,10 +4,14 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.Tuple;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * It's not enough to just init data, we need to register it with
@@ -16,11 +20,32 @@ import java.nio.ByteBuffer;
 public class CanvasData extends AbstractCanvasData {
     public static final String TYPE = "canvas";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
-
     public static final CanvasDataBuilder<CanvasData> BUILDER = new CanvasCanvasDataBuilder();
+    public static final HashMap<Tuple<Integer, Integer>, CanvasData> DEFAULTS = new HashMap<>();
+
+    static {
+        for (int[] size : CanvasCombinationAction.paintingShapes) {
+            final int resolution = Helper.getResolution().getNumeric();
+            final int width = size[0];
+            final int height = size[1];
+
+            final CanvasData canvasData = BUILDER.createFresh(
+                Helper.getResolution(),
+                width * resolution,
+                height * resolution
+            );
+            canvasData.setManaged(false);
+
+            DEFAULTS.put(new Tuple<>(width, height), canvasData);
+        }
+    }
 
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
+    }
+
+    public static String getDefaultCanvasCode(Tuple<Integer, Integer> size) {
+        return CODE_PREFIX + "default_" + size.getA() + "x" + size.getB();
     }
 
     protected CanvasData() {}
@@ -30,7 +55,7 @@ public class CanvasData extends AbstractCanvasData {
     }
 
     public boolean isEditable() {
-        return true;
+        return this.managed;
     }
 
     public CanvasDataType<? extends CanvasData> getType() {
