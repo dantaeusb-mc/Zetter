@@ -34,8 +34,9 @@ import java.util.List;
 public class CanvasItem extends Item
 {
     public static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
-    public static final String NBT_TAG_CACHED_STRING_SIZE = "CachedStringSize";
     public static final String NBT_TAG_CACHED_BLOCK_SIZE = "CachedBlockSize";
+    // Because player's settings might've changed
+    public static final String NBT_TAG_CACHED_RESOLUTION = "CachedResolution";
 
     public CanvasItem(Properties properties) {
         super(properties);
@@ -93,7 +94,7 @@ public class CanvasItem extends Item
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
         if (stack.hasTag()) {
-            String stringSize = getCachedStringSize(stack);
+            String stringSize = getStringSize(stack);
 
             if (!StringUtil.isNullOrEmpty(stringSize)) {
                 tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
@@ -125,10 +126,9 @@ public class CanvasItem extends Item
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
-        stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
+        stack.getOrCreateTag().putInt(NBT_TAG_CACHED_RESOLUTION, canvasData.getResolution().getNumeric());
     }
 
     /**
@@ -176,11 +176,6 @@ public class CanvasItem extends Item
         if (canvas instanceof CanvasItem) {
             String canvasCode = getCanvasCode(stack);
 
-            if (canvasCode == null && world instanceof ServerLevel) {
-                createEmpty(stack, world);
-                canvasCode = getCanvasCode(stack);
-            }
-
             CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
             return canvasTracker.getCanvasData(canvasCode);
@@ -190,6 +185,14 @@ public class CanvasItem extends Item
     }
 
     /**
+     * Canvas code only exists when there's data on canvas
+     * It should be able to be displayed even with no data,
+     * just fallback to the default
+     *
+     * This method however does not return the default,
+     * as it is item's logic. This case should be handled
+     * by whatever requests the code.
+     *
      * @see {@link net.minecraft.world.item.MapItem#getMapId(ItemStack)}
      * @return
      */
@@ -237,6 +240,12 @@ public class CanvasItem extends Item
         return Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
     }
 
+    /**
+     * It's not compatible with other items as it has
+     * a fallback that makes sense only for non-initialized canvas
+     * @param stack
+     * @return
+     */
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
         if (!stack.is(ZetterItems.CANVAS.get())) {
@@ -253,14 +262,34 @@ public class CanvasItem extends Item
     }
 
     @Nullable
-    public static String getCachedStringSize(ItemStack stack) {
+    public static String getStringSize(ItemStack stack) {
         CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
         }
 
-        return compoundNBT.getString(NBT_TAG_CACHED_STRING_SIZE);
+        int[] size = getBlockSize(stack);
+
+        if (size == null || size.length != 2) {
+            return Component.translatable("item.zetter.painting.size", "1", "1").getString();
+        }
+
+        return Component.translatable("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
+    }
+
+    public static int getResolution(ItemStack stack) {
+        CompoundTag compoundNBT = stack.getTag();
+
+        if (compoundNBT == null) {
+            return Helper.getResolution().getNumeric();
+        }
+
+        if (!compoundNBT.contains(NBT_TAG_CACHED_RESOLUTION)) {
+            compoundNBT.putInt(NBT_TAG_CACHED_RESOLUTION, Helper.getResolution().getNumeric());
+        }
+
+        return compoundNBT.getInt(NBT_TAG_CACHED_RESOLUTION);
     }
 
     /**

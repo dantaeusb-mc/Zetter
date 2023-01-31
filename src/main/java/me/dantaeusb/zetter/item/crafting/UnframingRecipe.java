@@ -114,7 +114,6 @@ public class UnframingRecipe extends CustomRecipe {
     }
 
     /**
-     * @todo: Not sure if that's the right thing use CRAFTING_SPECIAL_BOOKCLONING here
      * @return
      */
     public RecipeSerializer<?> getSerializer() {
