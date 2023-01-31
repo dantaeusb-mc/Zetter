@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -96,10 +97,8 @@ public class PaintingItem extends CanvasItem
         int heightBlocks = paintingData.getHeight() / paintingData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
-        Component blockSizeString = (Component.translatable("item.zetter.painting.size", Integer.toString(widthBlocks), Integer.toString(heightBlocks)));
 
         stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
-        stack.getOrCreateTag().putString(NBT_TAG_CACHED_STRING_SIZE, blockSizeString.getString());
         stack.getOrCreateTag().putInt(NBT_TAG_GENERATION, generation);
     }
 
@@ -115,7 +114,7 @@ public class PaintingItem extends CanvasItem
             tooltip.add((Component.translatable("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
 
             Component generationLabel = getGenerationLabel(stack);
-            String stringSize = getCachedStringSize(stack);
+            String stringSize = getStringSize(stack);
 
             if (StringUtil.isNullOrEmpty(stringSize)) {
                 tooltip.add(Component.literal(generationLabel.getString()).withStyle(ChatFormatting.GRAY));
@@ -236,14 +235,24 @@ public class PaintingItem extends CanvasItem
     }
 
     @Nullable
-    public static String getCachedStringSize(ItemStack stack) {
+    public static String getStringSize(ItemStack stack) {
         CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
         }
 
-        return compoundNBT.getString(NBT_TAG_CACHED_STRING_SIZE);
+        int[] size = getBlockSize(stack);
+
+        if (size == null || size.length != 2) {
+            return Component.translatable("item.zetter.painting.size.unknown").getString();
+        }
+
+        return Component.translatable("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
+    }
+
+    public static void setGeneration(ItemStack stack, int generation) {
+        stack.getOrCreateTag().putInt(NBT_TAG_GENERATION, generation);
     }
 
     public static int getGeneration(ItemStack stack) {
