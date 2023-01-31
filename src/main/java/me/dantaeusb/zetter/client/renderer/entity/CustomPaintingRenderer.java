@@ -80,7 +80,8 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
         for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
             if (material.canHavePlate()) {
-                CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "entity/frame/plate/" + material + ".png"));
+                // @todo: [HIGH] Use baked parts
+                CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
             }
         }
     }

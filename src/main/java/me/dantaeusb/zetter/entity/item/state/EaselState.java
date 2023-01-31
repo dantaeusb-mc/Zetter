@@ -263,11 +263,11 @@ public class EaselState {
      * @param posX
      * @param posY
      */
-    public void useTool(UUID playerId, Tools tool, float posX, float posY, int color, AbstractToolParameters parameters) {
+    public void useTool(Player player, Tools tool, float posX, float posY, int color, AbstractToolParameters parameters) {
         ItemStack paletteStack = this.easel.getEaselContainer().getPaletteStack();
 
-        // No palette or no paints left
-        if (paletteStack.isEmpty() || paletteStack.getDamageValue() >= paletteStack.getMaxDamage() - 1) {
+        // No palette or no paints left and player is not creative mode player
+        if (!player.isCreative() && (paletteStack.isEmpty() || paletteStack.getDamageValue() >= paletteStack.getMaxDamage() - 1)) {
             return;
         }
 
@@ -295,7 +295,7 @@ public class EaselState {
             this.unfreeze();
 
             if (tool.getTool().publishable()) {
-                this.recordAction(playerId, tool, color, parameters, posX, posY);
+                this.recordAction(player.getUUID(), tool, color, parameters, posX, posY);
             }
 
             CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
@@ -1247,7 +1247,11 @@ public class EaselState {
                 }
             } else {
                 if (!action.isSync()) {
-                    this.easel.getEaselContainer().damagePalette(damage);
+                    Optional<Player> author = this.players.stream().filter(player -> player.getUUID().equals(action.authorId)).findFirst();
+
+                    if (author.isEmpty() || !author.get().isCreative()) {
+                        this.easel.getEaselContainer().damagePalette(damage);
+                    }
                 }
             }
         });

@@ -84,7 +84,7 @@ public abstract class AbstractCanvasData extends SavedData {
 
     public final boolean updateCanvasPixel(int index, int color) {
         if (!this.isEditable()) {
-            Zetter.LOG.warn("Tried to update sealed canvas " + this);
+            Zetter.LOG.warn("Tried to update sealed canvas");
             return false;
         }
 

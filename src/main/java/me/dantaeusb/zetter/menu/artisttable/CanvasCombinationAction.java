@@ -202,8 +202,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                         }
                     }
                 } else {
-                    // Use canvas color as background if canvas data is not initialized
-                    // @todo: [LOW] Maybe there's a better way to do that
                     for (int smallY = 0; smallY < Helper.getResolution().getNumeric(); smallY++) {
                         for (int smallX = 0; smallX < Helper.getResolution().getNumeric(); smallX++) {
                             final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
