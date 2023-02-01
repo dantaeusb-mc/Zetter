@@ -267,7 +267,11 @@ public class EaselState {
         ItemStack paletteStack = this.easel.getEaselContainer().getPaletteStack();
 
         // No palette or no paints left and player is not creative mode player
-        if (!player.isCreative() && (paletteStack.isEmpty() || paletteStack.getDamageValue() >= paletteStack.getMaxDamage() - 1)) {
+        if (paletteStack.isEmpty() ||
+            (!player.isCreative() &&
+                (paletteStack.getDamageValue() >= paletteStack.getMaxDamage() - 1)
+            )
+        ) {
             return;
         }
 
@@ -290,6 +294,10 @@ public class EaselState {
 
         if (tool.getTool().shouldAddAction(this.getCanvasData(), parameters, posX, posY, lastX, lastY)) {
             this.wipeCanceledActionsAndDiscardSnapshots();
+
+            if (this.easel.getEaselContainer().isCanvasReady()) {
+
+            }
 
             int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
             this.unfreeze();
