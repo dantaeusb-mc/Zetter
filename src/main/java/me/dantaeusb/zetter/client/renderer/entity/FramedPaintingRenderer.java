@@ -30,13 +30,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
-import com.mojang.math.Vector3f;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
 
-public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
+public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
     public static ModelLayerLocation PAINTING_PLATE_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "custom_painting"), "plate_layer");
 
     public static final String[] MODEL_CODES = {
@@ -63,22 +62,23 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
     private final ModelPart platePart;
 
-    public CustomPaintingRenderer(EntityRendererProvider.Context context) {
+    public FramedPaintingRenderer(EntityRendererProvider.Context context) {
         super(context);
 
-        this.platePart = context.bakeLayer(CustomPaintingRenderer.PAINTING_PLATE_LAYER);
+        this.platePart = context.bakeLayer(FramedPaintingRenderer.PAINTING_PLATE_LAYER);
     }
 
     static {
-        for (String modelCode: CustomPaintingRenderer.MODEL_CODES) {
+        for (String modelCode: FramedPaintingRenderer.MODEL_CODES) {
             for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
-                CustomPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation("zetter:frame/" + material + "/" + modelCode));
+                // I don't know why vanilla uses "inventory" even for non-inventory models, but we copy that
+                FramedPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation(new ResourceLocation(Zetter.MOD_ID, "frame/" + material + "/" + modelCode), ""));
             }
         }
 
         for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
             if (material.canHavePlate()) {
-                CustomPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
+                FramedPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
             }
         }
     }
@@ -128,7 +128,7 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
                 for (int v = 0; v < blockHeight; v++) {
                     matrixStack.translate(0, -v, 0D);
 
-                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, 0, v));
+                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, FramedPaintingRenderer.getOffsetBlockPos(entity, 0, v));
 
                     if (v == 0) {
                         this.renderModel(entity, "top_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -144,7 +144,7 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
                 for (int h = 0; h < blockWidth; h++) {
                     matrixStack.translate(-h, 0, 0D);
 
-                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, 0));
+                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, FramedPaintingRenderer.getOffsetBlockPos(entity, h, 0));
 
                     if (h == 0) {
                         this.renderModel(entity, "left_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -164,7 +164,7 @@ public class CustomPaintingRenderer extends EntityRenderer<PaintingEntity> {
                     for (int h = 0; h < blockWidth; h++) {
                         matrixStack.translate(-h, -v, 0D);
 
-                        int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, CustomPaintingRenderer.getOffsetBlockPos(entity, h, v));
+                        int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, FramedPaintingRenderer.getOffsetBlockPos(entity, h, v));
 
                         if (v == 0) {
                             if (h == 0) {

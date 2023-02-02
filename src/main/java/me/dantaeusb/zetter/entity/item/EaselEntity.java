@@ -39,7 +39,6 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -160,7 +159,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 return;
             }
 
-            canvasCode = CanvasData.getDefaultCanvasCode(new Tuple<>(size[0], size[1]));
+            canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
         }
 
         this.setEntityCanvasCode(canvasCode);

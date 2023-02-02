@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Tuple;
@@ -120,9 +121,9 @@ public class ZetterClientModEvents {
      */
     @SubscribeEvent
     public static void initializeDefaultTextures(ClientPlayerNetworkEvent.LoggingIn event) {
-        for (Map.Entry<Tuple<Integer, Integer>, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
+        for (Map.Entry<String, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
             Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).registerCanvasData(
-                CanvasData.getDefaultCanvasCode(defaultCanvasDataEntry.getKey()),
+                defaultCanvasDataEntry.getKey(),
                 defaultCanvasDataEntry.getValue()
             );
         }
@@ -139,9 +140,9 @@ public class ZetterClientModEvents {
             return;
         }
 
-        for (Map.Entry<Tuple<Integer, Integer>, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
+        for (Map.Entry<String, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
             Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).unregisterCanvasData(
-                CanvasData.getDefaultCanvasCode(defaultCanvasDataEntry.getKey())
+                defaultCanvasDataEntry.getKey()
             );
         }
     }

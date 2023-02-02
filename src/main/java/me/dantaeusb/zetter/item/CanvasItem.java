@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -33,9 +34,20 @@ import java.util.List;
 
 public class CanvasItem extends Item
 {
+    /*
+     * How to find actual painting data
+     */
     public static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
+
+    /*
+     * For placement check and tooltips
+     */
     public static final String NBT_TAG_CACHED_BLOCK_SIZE = "CachedBlockSize";
-    // Because player's settings might've changed
+
+    /*
+     * Because player's settings might've changed,
+     * and we need resolution for crafting, i.e. copying a painting
+     */
     public static final String NBT_TAG_CACHED_RESOLUTION = "CachedResolution";
 
     public CanvasItem(Properties properties) {
@@ -93,24 +105,22 @@ public class CanvasItem extends Item
 
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        if (stack.hasTag()) {
-            String stringSize = getStringSize(stack);
+        String stringSize = getStringSize(stack);
 
-            if (!StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
-            }
+        if (!StringUtil.isNullOrEmpty(stringSize)) {
+            tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
         }
     }
 
     /**
      * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
      */
-    public static void createEmpty(ItemStack stack, Level world) {
+    public static void createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level world) {
         if (world.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }
 
-        String canvasCode = createNewCanvasData(world);
+        String canvasCode = createNewCanvasData(resolution, widthBlock, heightBlock, world);
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         CanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
@@ -125,9 +135,7 @@ public class CanvasItem extends Item
         int widthBlocks = canvasData.getWidth() / canvasData.getResolution().getNumeric();
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
-        final int[] size = new int[]{widthBlocks, heightBlocks};
-
-        stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
+        CanvasItem.setBlockSize(stack, widthBlocks, heightBlocks);
         stack.getOrCreateTag().putInt(NBT_TAG_CACHED_RESOLUTION, canvasData.getResolution().getNumeric());
     }
 
@@ -240,7 +248,16 @@ public class CanvasItem extends Item
         return Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
     }
 
+    public static void setBlockSize(ItemStack stack, int widthBlocks, int heightBlocks) {
+        final int[] size = new int[]{widthBlocks, heightBlocks};
+
+        stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
+    }
+
     /**
+     * Keeps track of canvas size even if it's not initialized
+     * with color data
+     *
      * It's not compatible with other items as it has
      * a fallback that makes sense only for non-initialized canvas
      * @param stack
@@ -261,14 +278,7 @@ public class CanvasItem extends Item
         return compoundNBT.getIntArray(NBT_TAG_CACHED_BLOCK_SIZE);
     }
 
-    @Nullable
     public static String getStringSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
-
-        if (compoundNBT == null) {
-            return null;
-        }
-
         int[] size = getBlockSize(stack);
 
         if (size == null || size.length != 2) {
@@ -298,15 +308,19 @@ public class CanvasItem extends Item
      * @param level
      * @return
      */
-    private static String createNewCanvasData(Level level) {
+    private static String createNewCanvasData(AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level level) {
         if (level.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }
 
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
-        final int numericResolution = Helper.getResolution().getNumeric();
 
-        CanvasData canvasData = CanvasData.BUILDER.createFresh(Helper.getResolution(), numericResolution, numericResolution);
+        CanvasData canvasData = CanvasData.BUILDER.createFresh(
+            resolution,
+            widthBlock * resolution.getNumeric(),
+            heightBlock * resolution.getNumeric()
+        );
+
         String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
         canvasTracker.registerCanvasData(canvasCode, canvasData);
 
