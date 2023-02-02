@@ -1,17 +1,22 @@
 package me.dantaeusb.zetter.entity.item.container;
 
-import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.network.packet.SEaselCanvasInitializationPacket;
+import me.dantaeusb.zetter.network.packet.SEaselResetPacket;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.network.PacketDistributor;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -81,6 +86,67 @@ public class EaselContainer extends ItemStackHandler {
     }
 
     /**
+     * Check if we can draw on canvas or we should initialize
+     * canvas data first
+     * @return
+     */
+    public boolean isCanvasInitialized() {
+        ItemStack canvasStack = this.getCanvasStack();
+
+        if (canvasStack == null) {
+            throw new IllegalStateException("Cannot check canvas initialization: no item in container");
+        }
+
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+        return canvasCode != null;
+    }
+
+    /**
+     * When canvas is empty, ask canvas item
+     * to initialize data before start drawing
+     *
+     * Server-only
+     *
+     * @return boolean True if initialization is successful
+     */
+    public boolean initializeCanvas() {
+        ItemStack canvasStack = this.getCanvasStack();
+
+        if (canvasStack == null) {
+            throw new IllegalStateException("Cannot initialize canvas: no item in container");
+        }
+
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        if (canvasCode != null) {
+            // Already
+            return false;
+        }
+
+        int resolution = CanvasItem.getResolution(canvasStack);
+        int[] size = CanvasItem.getBlockSize(canvasStack);
+
+        if (size == null || size.length != 2) {
+            throw new IllegalArgumentException("Cannot initialize canvas: can't read item size");
+        }
+
+        // @todo: Incorrect size, not reading original size
+        CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.getLevel());
+        canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode);
+
+        for (Player player : this.easel.getPlayersUsing()) {
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), initPacket);
+        }
+
+        this.onContentsChanged(CANVAS_SLOT);
+        this.handleCanvasChange(canvasCode);
+
+        return true;
+    }
+
+    /**
      * @todo: [MED] Just sync item?
      * @param canvasCode
      */
@@ -96,12 +162,6 @@ public class EaselContainer extends ItemStackHandler {
             canvasTracker = this.easel.getLevel().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
         } else {
             canvasTracker = this.easel.getLevel().getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        }
-
-        if (canvasTracker == null) {
-            Zetter.LOG.error("Cannot find world canvas capability");
-            this.canvas = null;
-            return;
         }
 
         CanvasData canvas = canvasTracker.getCanvasData(canvasCode);
@@ -209,7 +269,7 @@ public class EaselContainer extends ItemStackHandler {
                     return;
                 }
 
-                canvasCode = CanvasData.getDefaultCanvasCode(new Tuple<>(size[0], size[1]));
+                canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
             }
 
             this.handleCanvasChange(canvasCode);

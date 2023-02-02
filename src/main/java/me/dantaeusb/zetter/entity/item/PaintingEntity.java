@@ -3,7 +3,6 @@ package me.dantaeusb.zetter.entity.item;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
@@ -67,7 +66,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
     }
 
     public PaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
-        super(ZetterEntities.CUSTOM_PAINTING_ENTITY.get(), world, pos);
+        super(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), world, pos);
 
         this.material = material;
         this.hasPlate = hasPlate;

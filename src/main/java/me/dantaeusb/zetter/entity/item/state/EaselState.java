@@ -174,6 +174,8 @@ public class EaselState {
             }
         }
 
+        this.updateSnapshots();
+
         this.onStateChanged();
     }
 
@@ -295,20 +297,20 @@ public class EaselState {
         if (tool.getTool().shouldAddAction(this.getCanvasData(), parameters, posX, posY, lastX, lastY)) {
             this.wipeCanceledActionsAndDiscardSnapshots();
 
-            if (this.easel.getEaselContainer().isCanvasReady()) {
+            if (tool.getTool().hasEffect()) {
+                this.unfreeze();
 
-            }
+                if (this.easel.getEaselContainer().isCanvasInitialized()) {
+                    int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
+                    this.easel.getEaselContainer().damagePalette(damage);
 
-            int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
-            this.unfreeze();
+                    CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
+                }
 
-            if (tool.getTool().publishable()) {
                 this.recordAction(player.getUUID(), tool, color, parameters, posX, posY);
+            } else {
+                tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
             }
-
-            CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
-
-            this.easel.getEaselContainer().damagePalette(damage);
         }
     }
 
@@ -447,7 +449,7 @@ public class EaselState {
     private CanvasAction createAction(UUID playerId, Tools tool, int color, AbstractToolParameters parameters) {
         final CanvasAction lastAction = this.getLastAction();
 
-        if (!tool.getTool().publishable()) {
+        if (!tool.getTool().hasEffect()) {
             throw new IllegalStateException("Cannot create non-publishable action");
         }
 
@@ -1130,7 +1132,6 @@ public class EaselState {
         final UUID lastSyncedSnapshotUuid = this.playerLastSyncedSnapshot.get(player.getUUID());
         final ListIterator<CanvasSnapshot> snapshotIterator = this.snapshots.listIterator();
 
-        ArrayList<CanvasAction> unsyncedActions = new ArrayList<>();
         boolean foundLastSynced = false;
 
         while(snapshotIterator.hasNext()) {
@@ -1217,6 +1218,10 @@ public class EaselState {
             if (newAction.isCanceled()) {
                 this.historyDirty = true;
             }
+        }
+
+        if (!this.easel.getEaselContainer().isCanvasInitialized()) {
+            this.easel.getEaselContainer().initializeCanvas();
         }
 
         this.unfreeze();

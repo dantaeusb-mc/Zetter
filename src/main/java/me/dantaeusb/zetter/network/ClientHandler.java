@@ -134,6 +134,26 @@ public class ClientHandler {
     }
 
     /**
+     * When the canvas
+     * @param packetIn
+     * @param world
+     */
+    public static void processEaselCanvasInitialization(final SEaselCanvasInitializationPacket packetIn, Level world) {
+        try {
+            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+
+            if (easel != null) {
+                easel.getEaselContainer().handleCanvasChange(packetIn.canvasCode);
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
      * When canvas combined on server, we need to cleanup
      * our canvas data if loaded to request the new data
      * if canvas id was reused.

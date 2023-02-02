@@ -395,8 +395,8 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
             this.container.handleCanvasChange(canvasCode);
 
             if (this.getCanvasData() != null) {
-                this.canvasOffsetX = (CanvasWidget.SIZE - (this.getCanvasData().getWidth() * this.getCanvasScaleFactor())) / 2;
-                this.canvasOffsetY = (CanvasWidget.SIZE - (this.getCanvasData().getHeight() * this.getCanvasScaleFactor())) / 2;
+                // Make sure we're in bounds if canvas size changed
+                this.updateCanvasOffset(this.canvasOffsetX, this.canvasOffsetY);
             }
 
             return false;
@@ -517,6 +517,9 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
 
     /**
      * Update Canvas offset - usually with Hand tool
+     * Makes sure that new position is within bounds where
+     * canvas is visible.
+     *
      * @param offsetX
      * @param offsetY
      */

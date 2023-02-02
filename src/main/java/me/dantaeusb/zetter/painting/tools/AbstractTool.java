@@ -19,9 +19,10 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
     }
 
     /**
-     * Should be added to the action stack
+     * If action changes canvas contents (affects pixels)
+     * and should be added to the action stack
      */
-    public boolean publishable() {
+    public boolean hasEffect() {
         return true;
     }
 
@@ -71,7 +72,7 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      * @param localIntensity Local localIntensity! Used for brush smoothing, do not mix with blending localIntensity!
      */
     protected void pixelChange(CanvasData canvas, T parameters, int color, int index, float localIntensity) {
-        if (!this.publishable()) {
+        if (!this.hasEffect()) {
             throw new IllegalStateException("Non-publishable tools cannot change pixels!");
         }
 

@@ -40,7 +40,7 @@ public class Eyedropper extends AbstractTool<NoParameters> {
      * no need to add it to action stack
      * @return
      */
-    public boolean publishable() {
+    public boolean hasEffect() {
         return false;
     }
 }

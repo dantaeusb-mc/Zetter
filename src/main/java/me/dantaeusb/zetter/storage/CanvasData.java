@@ -21,7 +21,7 @@ public class CanvasData extends AbstractCanvasData {
     public static final String TYPE = "canvas";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
     public static final CanvasDataBuilder<CanvasData> BUILDER = new CanvasCanvasDataBuilder();
-    public static final HashMap<Tuple<Integer, Integer>, CanvasData> DEFAULTS = new HashMap<>();
+    public static final HashMap<String, CanvasData> DEFAULTS = new HashMap<>();
 
     static {
         for (int[] size : CanvasCombinationAction.paintingShapes) {
@@ -36,7 +36,7 @@ public class CanvasData extends AbstractCanvasData {
             );
             canvasData.setManaged(false);
 
-            DEFAULTS.put(new Tuple<>(width, height), canvasData);
+            DEFAULTS.put(CanvasData.getDefaultCanvasCode(width, height), canvasData);
         }
     }
 
@@ -44,8 +44,14 @@ public class CanvasData extends AbstractCanvasData {
         return CODE_PREFIX + canvasId;
     }
 
-    public static String getDefaultCanvasCode(Tuple<Integer, Integer> size) {
-        return CODE_PREFIX + "default_" + size.getA() + "x" + size.getB();
+    /**
+     * Default canvases indexed by size NxM
+     * @param widthBlocks
+     * @param heightBlocks
+     * @return
+     */
+    public static String getDefaultCanvasCode(int widthBlocks, int heightBlocks) {
+        return CODE_PREFIX + "default_" + widthBlocks + "x" + heightBlocks;
     }
 
     protected CanvasData() {}

@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.model.EaselModel;
-import me.dantaeusb.zetter.client.renderer.entity.CustomPaintingRenderer;
+import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -17,7 +17,7 @@ public class ZetterModels
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onModelRegistryEvent(ModelEvent.RegisterAdditional event) {
-        for (ModelResourceLocation modelLocation : CustomPaintingRenderer.FRAME_MODELS.values()) {
+        for (ModelResourceLocation modelLocation : FramedPaintingRenderer.FRAME_MODELS.values()) {
             event.register(modelLocation);
         }
     }
@@ -25,7 +25,7 @@ public class ZetterModels
     @SubscribeEvent
     @SuppressWarnings("unused")
     public static void onEntityRenderersRegistryEvent(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(ZetterEntities.CUSTOM_PAINTING_ENTITY.get(), CustomPaintingRenderer::new);
+        event.registerEntityRenderer(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), FramedPaintingRenderer::new);
         event.registerEntityRenderer(ZetterEntities.EASEL_ENTITY.get(), EaselRenderer::new);
     }
 
@@ -34,6 +34,6 @@ public class ZetterModels
     public static void registerLayer(EntityRenderersEvent.RegisterLayerDefinitions event)
     {
         event.registerLayerDefinition(EaselModel.EASEL_BODY_LAYER, EaselModel::createBodyLayer);
-        event.registerLayerDefinition(CustomPaintingRenderer.PAINTING_PLATE_LAYER, CustomPaintingRenderer::createPlateLayer);
+        event.registerLayerDefinition(FramedPaintingRenderer.PAINTING_PLATE_LAYER, FramedPaintingRenderer::createPlateLayer);
     }
 }

@@ -15,7 +15,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class ZetterEntities {
     private static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, Zetter.MOD_ID);
 
-    public static RegistryObject<EntityType<PaintingEntity>> CUSTOM_PAINTING_ENTITY = ENTITIES.register("custom_painting_entity", () -> EntityType.Builder.<PaintingEntity>of(PaintingEntity::new, MobCategory.MISC)
+    public static RegistryObject<EntityType<PaintingEntity>> FRAMED_PAINTING_ENTITY = ENTITIES.register("custom_painting_entity", () -> EntityType.Builder.<PaintingEntity>of(PaintingEntity::new, MobCategory.MISC)
             .sized(1.0F, 1.0F)
             .build(Zetter.MOD_ID + "_custom_painting_entity"));
     public static RegistryObject<EntityType<EaselEntity>> EASEL_ENTITY = ENTITIES.register("easel_entity", () -> EntityType.Builder.<EaselEntity>of(EaselEntity::new, MobCategory.MISC)

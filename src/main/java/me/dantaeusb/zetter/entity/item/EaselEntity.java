@@ -101,24 +101,6 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
     }
 
-    public void onSyncedDataUpdated(EntityDataAccessor<?> entityDataAccessor) {
-        super.onSyncedDataUpdated(entityDataAccessor);
-
-        /**
-         * As canvas is not synced on client side, we need to handle the situation
-         * where canvas is automatically initialized when placed on easel,
-         * and update canvas code on canvas item on client side accordingly
-         */
-        if (
-            this.level.isClientSide
-            && DATA_ID_CANVAS_CODE.equals(entityDataAccessor)
-            && this.getEntityCanvasCode() != null
-        ) {
-            final ItemStack canvasStack = this.easelContainer.getCanvasStack();
-            CanvasItem.setCanvasCode(canvasStack, this.getEntityCanvasCode());
-        }
-    }
-
     public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
@@ -161,7 +143,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 return;
             }
 
-            canvasCode = CanvasData.getDefaultCanvasCode(new Tuple<>(size[0], size[1]));
+            canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
         }
 
         this.setEntityCanvasCode(canvasCode);

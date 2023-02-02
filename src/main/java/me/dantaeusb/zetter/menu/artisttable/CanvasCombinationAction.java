@@ -51,11 +51,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     public Rectangle rectangle;
 
-    /*
-     * This needed to stop sending canvas update requests
-     * when we are emptying
-     */
-    private boolean ignoreUpdateEvents = false;
+    private boolean hasColorData = false;
 
     public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
         super(menu, level);
@@ -172,12 +168,38 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         this.state = State.READY;
         this.rectangle = rectangle;
-        this.canvasData = CanvasCombinationAction.createCanvasData(combinationContainer, rectangle, this.level);
+        this.canvasData = this.createCanvasData(combinationContainer, rectangle, this.level);
     }
 
-    private static DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
+    private DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
         final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
         final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
+        this.hasColorData = false;
+
+        for (int i = 0; i < artistTableContainer.getSlots(); i++) {
+            if (CanvasItem.getCanvasData(artistTableContainer.getStackInSlot(i), world) != null) {
+                this.hasColorData = true;
+                break;
+            }
+        }
+
+        // Return default canvas instead
+        if (!this.hasColorData) {
+            CanvasData defaultCanvasData = CanvasData.DEFAULTS.get(CanvasData.getDefaultCanvasCode(rectangle.width, rectangle.height));
+
+            DummyCanvasData combinedCanvasData = DummyCanvasData.BUILDER.createWrap(
+                defaultCanvasData.getResolution(),
+                defaultCanvasData.getWidth(),
+                defaultCanvasData.getHeight(),
+                defaultCanvasData.getColorData()
+            );
+
+            if (world.isClientSide()) {
+                Helper.getLevelCanvasTracker(world).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
+            }
+
+            return combinedCanvasData;
+        }
 
         ByteBuffer color = ByteBuffer.allocate(pixelWidth * pixelHeight * 4);
 
@@ -257,18 +279,23 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         if (!player.getLevel().isClientSide()) {
             CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
-            CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
+
+            if (this.hasColorData) {
+                CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
                     this.canvasData.getResolution(),
                     this.canvasData.getWidth(),
                     this.canvasData.getHeight(),
                     this.canvasData.getColorData()
-            );
+                );
 
-            final int newId = canvasTracker.getFreeCanvasId();
-            final String newCode = CanvasData.getCanvasCode(newId);
+                final int newId = canvasTracker.getFreeCanvasId();
+                final String newCode = CanvasData.getCanvasCode(newId);
 
-            canvasTracker.registerCanvasData(newCode, combinedCanvasData);
-            CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
+                canvasTracker.registerCanvasData(newCode, combinedCanvasData);
+                CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);
+            } else {
+                CanvasItem.setBlockSize(stack, this.rectangle.width, this.rectangle.height);
+            }
 
             for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
                 ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
@@ -277,8 +304,13 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                     continue;
                 }
 
+                String canvasCode = CanvasItem.getCanvasCode(combinationStack);
+
                 // Cleanup IDs and grid
-                canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinationStack));
+                if (canvasCode != null) {
+                    canvasTracker.unregisterCanvasData(canvasCode);
+                }
+
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
         } else {
@@ -297,7 +329,11 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 }
 
                 String canvasCode = CanvasItem.getCanvasCode(combinationStack);
-                canvasTracker.unregisterCanvasData(canvasCode);
+
+                // Cleanup IDs and grid
+                if (canvasCode != null) {
+                    canvasTracker.unregisterCanvasData(canvasCode);
+                }
             }
         }
     }

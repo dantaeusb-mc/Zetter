@@ -33,6 +33,7 @@ public class ZetterNetwork {
     public static final byte ARTIST_TABLE_MODE = 32;
     public static final byte HISTORY_SYNC = 33;
     public static final byte HISTORY_RESET = 34;
+    public static final byte EASEL_CANVAS_INIT = 35;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -112,6 +113,11 @@ public class ZetterNetwork {
         simpleChannel.registerMessage(HISTORY_RESET, SEaselResetPacket.class,
             SEaselResetPacket::writePacketData, SEaselResetPacket::readPacketData,
             SEaselResetPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(EASEL_CANVAS_INIT, SEaselCanvasInitializationPacket.class,
+            SEaselCanvasInitializationPacket::writePacketData, SEaselCanvasInitializationPacket::readPacketData,
+            SEaselCanvasInitializationPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
     }
 
