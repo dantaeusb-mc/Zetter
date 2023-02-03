@@ -7,6 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -21,12 +22,22 @@ import java.util.stream.Stream;
  * it's complicated and not yet worth it
  */
 public class CanvasAction {
+    private static final Random RANDOM = new Random();
+
     private static final int MAX_ACTIONS_IN_BUFFER = 100;
     private static final long MAX_TIME = 5000L;
     private static final long MAX_INACTIVE_TIME = 750L;
 
-    public final UUID uuid;
-    public final UUID authorId;
+    public final int id;
+
+    /**
+     * We do not trust client author id.
+     * It will be overwritten when server
+     * recieves an action from player with
+     * sendingPlayer UUID.
+     */
+    private UUID authorUUID;
+
     public final Tools tool;
 
     public final int color;
@@ -62,8 +73,8 @@ public class CanvasAction {
     }
 
     private CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
-        this.uuid = UUID.randomUUID(); // is it too much?
-        this.authorId = authorId;
+        this.id = RANDOM.nextInt(); // is it too much?
+        this.authorUUID = authorId;
         this.tool = tool;
         this.color = color;
         this.parameters = parameters;
@@ -72,9 +83,19 @@ public class CanvasAction {
         this.subActionBuffer = actionBuffer;
     }
 
-    private CanvasAction(UUID actionId, UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, Long commitTime, ByteBuffer actionBuffer, boolean canceled) {
-        this.uuid = actionId;
-        this.authorId = authorId;
+    /**
+     * Create from network without AuthorID
+     * @param actionId
+     * @param tool
+     * @param color
+     * @param parameters
+     * @param startTime
+     * @param commitTime
+     * @param actionBuffer
+     * @param canceled
+     */
+    private CanvasAction(int actionId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, Long commitTime, ByteBuffer actionBuffer, boolean canceled) {
+        this.id = actionId;
         this.tool = tool;
         this.color = color;
         this.parameters = parameters;
@@ -86,6 +107,18 @@ public class CanvasAction {
         this.commitTime = commitTime;
         this.sent = true;
         this.canceled = canceled;
+    }
+
+    public void setAuthorUUID(UUID authorUUID) {
+        if (this.authorUUID != null) {
+            throw new IllegalStateException("This action already has Author UUID set");
+        }
+
+        this.authorUUID = authorUUID;
+    }
+
+    public @Nullable UUID getAuthorUUID() {
+        return this.authorUUID;
     }
 
     public Long getStartTime() {
@@ -117,7 +150,7 @@ public class CanvasAction {
      * @return
      */
     public boolean isActionCompatible(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
-        return this.authorId == authorId && this.tool == tool && this.color == color;
+        return this.authorUUID == authorId && this.tool == tool && this.color == color;
     }
 
     /**
@@ -317,8 +350,7 @@ public class CanvasAction {
     }
 
     public static void writePacketData(CanvasAction actionBuffer, FriendlyByteBuf buffer) {
-        buffer.writeUUID(actionBuffer.uuid);
-        buffer.writeUUID(actionBuffer.authorId);
+        buffer.writeInt(actionBuffer.id);
         buffer.writeUtf(actionBuffer.tool.toString(), 32);
         buffer.writeInt(actionBuffer.color);
         buffer.writeLong(actionBuffer.startTime);
@@ -331,8 +363,7 @@ public class CanvasAction {
     }
 
     public static CanvasAction readPacketData(FriendlyByteBuf buffer) {
-        UUID actionId = buffer.readUUID();
-        UUID authorId = buffer.readUUID();
+        int actionId = buffer.readInt();
         Tools tool = Tools.valueOf(buffer.readUtf(32));
         int color = buffer.readInt();
         Long startTime = buffer.readLong();
@@ -346,7 +377,6 @@ public class CanvasAction {
 
             return new CanvasAction(
                     actionId,
-                    authorId,
                     tool,
                     color,
                     parameters,

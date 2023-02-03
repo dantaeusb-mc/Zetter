@@ -1,5 +1,8 @@
 package me.dantaeusb.zetter.entity.item.state.representation;
 
+import net.minecraft.world.item.crafting.Ingredient;
+
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -9,13 +12,15 @@ import java.util.UUID;
  * state restoration
  */
 public class CanvasSnapshot {
-    public final UUID uuid;
+    private static final Random RANDOM = new Random();
+
+    public final int id;
     public final Long timestamp;
     public final byte[] colors;
     public final boolean weak;
 
-    private CanvasSnapshot(UUID uuid, byte[] colors, Long snapshotTime, boolean weak) {
-        this.uuid = uuid;
+    private CanvasSnapshot(int id, byte[] colors, Long snapshotTime, boolean weak) {
+        this.id = id;
         this.timestamp = snapshotTime;
         this.colors = colors;
         this.weak = weak;
@@ -26,21 +31,37 @@ public class CanvasSnapshot {
      * sends regular canvas sync message (not a snapshot)
      */
     public static CanvasSnapshot createWeakSnapshot(byte[] colors, Long snapshotTime) {
-        return new CanvasSnapshot(UUID.randomUUID(), colors, snapshotTime, true);
+        return new CanvasSnapshot(RANDOM.nextInt(), colors, snapshotTime, true);
     }
 
     /**
-     * Client-only regular snapshot sent over the network
-     * @param uuid
+     * Client-only regular snapshot sent over the network,
+     * made from server snapshot copy
+     * @param id
      * @param colors
      * @param snapshotTime
      * @return
      */
-    public static CanvasSnapshot createNetworkSnapshot(UUID uuid, byte[] colors, Long snapshotTime) {
-        return new CanvasSnapshot(uuid, colors, snapshotTime, false);
+    public static CanvasSnapshot createNetworkSnapshot(int id, byte[] colors, Long snapshotTime) {
+        return new CanvasSnapshot(id, colors, snapshotTime, false);
     }
 
+    /**
+     * Server snapshot (created on server, right now)
+     * @param colors
+     * @return
+     */
     public static CanvasSnapshot createServerSnapshot(byte[] colors) {
-        return new CanvasSnapshot(UUID.randomUUID(), colors, System.currentTimeMillis(), false);
+        return new CanvasSnapshot(RANDOM.nextInt(), colors, System.currentTimeMillis(), false);
+    }
+
+    /**
+     * When canvas initialized, we have to put snapshot time
+     * before the first action
+     * @param colors
+     * @return
+     */
+    public static CanvasSnapshot createServerInitializationSnapshot(byte[] colors, long timestamp) {
+        return new CanvasSnapshot(RANDOM.nextInt(), colors, timestamp, false);
     }
 }

@@ -62,12 +62,12 @@ public class SEaselStateSyncPacket {
             final boolean hasSnapshot = networkBuffer.readBoolean();
 
             if (hasSnapshot) {
-                final UUID snapshotUuid = networkBuffer.readUUID();
+                final int snapshotId = networkBuffer.readInt();
                 final int snapshotColorLength = networkBuffer.readInt();
                 final byte[] snapshotColor = networkBuffer.readByteArray(snapshotColorLength);
                 final long snapshotTimestamp = networkBuffer.readLong();
 
-                snapshot = CanvasSnapshot.createNetworkSnapshot(snapshotUuid, snapshotColor, snapshotTimestamp);
+                snapshot = CanvasSnapshot.createNetworkSnapshot(snapshotId, snapshotColor, snapshotTimestamp);
             }
 
             int actionBuffersCount = networkBuffer.readInt();
@@ -106,7 +106,7 @@ public class SEaselStateSyncPacket {
         networkBuffer.writeBoolean(this.snapshot != null);
 
         if (this.snapshot != null) {
-            networkBuffer.writeUUID(this.snapshot.uuid);
+            networkBuffer.writeInt(this.snapshot.id);
             networkBuffer.writeInt(this.snapshot.colors.length);
             networkBuffer.writeByteArray(this.snapshot.colors);
             networkBuffer.writeLong(this.snapshot.timestamp);

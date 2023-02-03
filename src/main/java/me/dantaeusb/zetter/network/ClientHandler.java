@@ -24,12 +24,11 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSync(final SCanvasSyncPacket packetIn, Level world) {
+    public static void processCanvasSync(final SCanvasSyncPacket<?> packetIn, Level world) {
         try {
-            final String canvasCode = packetIn.getCanvasCode();
-
-            final AbstractCanvasData canvasData = packetIn.getCanvasData();
-            final long timestamp = packetIn.getTimestamp();
+            final String canvasCode = packetIn.canvasCode;
+            final AbstractCanvasData canvasData = packetIn.canvasData;
+            final long timestamp = packetIn.timestamp;
 
             CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
                 .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
@@ -50,9 +49,8 @@ public class ClientHandler {
     public static void processCanvasSyncView(final SCanvasSyncViewPacket packetIn, Level world) {
         try {
             final LocalPlayer player = Minecraft.getInstance().player;
-            final String canvasCode = packetIn.getCanvasCode();
-
-            final AbstractCanvasData canvasData = packetIn.getCanvasData();
+            final String canvasCode = packetIn.canvasCode;
+            final AbstractCanvasData canvasData = packetIn.canvasData;
 
             CanvasViewEvent event = new CanvasViewEvent(player, canvasCode, canvasData, packetIn.getHand());
 
@@ -144,9 +142,14 @@ public class ClientHandler {
 
             if (easel != null) {
                 easel.getEaselContainer().handleCanvasChange(packetIn.canvasCode);
+                easel.getStateHandler().reset();
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
             }
+
+            // Save fresh canvas data to avoid requests
+            // We're saving after updating to have the snapshot saved
+            ClientHandler.processCanvasSync(packetIn, world);
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
             throw e;

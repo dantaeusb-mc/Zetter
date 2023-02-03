@@ -8,14 +8,9 @@
 
 #### Pre-release tasks:
 
-* \[HIGH\] Check carefully that CanvasServerTracker#deserializeNBT data migration works fine, and canvas id is not reset!
-* \[HIGH\] Not saving current palette selection and pixel buffer in Easel Entity;
-* \[HIGH\] Requested non-existent canvas errors because of synceddata desync;
-* \[HIGH\] If you put non-initialized canvas on artist table, it will be loading forever;
-* \[HIGH\] Central piece of iron frame actually has no model (except back which it lacks for some reason);
-* \[HIGH\] When you change shape quickly after drawing, packet is sent with new shape;
-* \[HIGH\] Combined canvas unloaded on server somehow;
-* \[MED\] Slider setting for color and actual color are different, it's noticeable in multiplayer simultaneous color edit;
+* \[HIGH\] Check that I do `this.minecraft.getTextureManager().release`
+* \[HIGH\] * Not saving current palette selection and pixel buffer in Easel Entity;
+* \[HIGH\] ? Central piece of iron frame actually has no model (except back which it lacks for some reason);
 * \[MED\] If painting has some problems, just remove it instead of crashing or throwing errors (i.e. requesting non-existent canvas);
 
 #### Release tasks:

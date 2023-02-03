@@ -262,6 +262,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         if (this.isReady()) {
             if (combinedStack.isEmpty()) {
                 combinedStack = new ItemStack(ZetterItems.CANVAS.get());
+                CanvasItem.setBlockSize(combinedStack, this.rectangle.width, this.rectangle.height);
             }
         } else {
             combinedStack = ItemStack.EMPTY;

@@ -11,10 +11,10 @@ import java.util.function.Supplier;
 
 public class CCanvasHistoryActionPacket {
     public final int easelEntityId;
-    public final UUID actionId;
+    public final int actionId;
     public final boolean canceled;
 
-    public CCanvasHistoryActionPacket(int easelEntityId, UUID actionId, boolean canceled) {
+    public CCanvasHistoryActionPacket(int easelEntityId, int actionId, boolean canceled) {
         this.easelEntityId = easelEntityId;
         this.actionId = actionId;
         this.canceled = canceled;
@@ -26,7 +26,7 @@ public class CCanvasHistoryActionPacket {
      */
     public static CCanvasHistoryActionPacket readPacketData(FriendlyByteBuf buffer) {
         final int easelEntityId = buffer.readInt();
-        final UUID actionId = buffer.readUUID();
+        final int actionId = buffer.readInt();
         final boolean canceled = buffer.readBoolean();
 
         return new CCanvasHistoryActionPacket(easelEntityId, actionId, canceled);
@@ -37,7 +37,7 @@ public class CCanvasHistoryActionPacket {
      */
     public void writePacketData(FriendlyByteBuf buffer) {
         buffer.writeInt(this.easelEntityId);
-        buffer.writeUUID(this.actionId);
+        buffer.writeInt(this.actionId);
         buffer.writeBoolean(this.canceled);
     }
 
