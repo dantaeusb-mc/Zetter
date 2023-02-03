@@ -336,6 +336,20 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
     }
 
     /*
+     * Canvas initialization: wait for packet to
+     * be sent and not propagate stack updates
+     * until then
+     */
+
+    public void stateCanvasInitializationStart(EaselState state) {
+        this.suppressRemoteUpdates();
+    }
+
+    public void stateCanvasInitializationEnd(EaselState state) {
+        this.resumeRemoteUpdates();
+    }
+
+    /*
      * History
      */
 
@@ -595,6 +609,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         super.removed(player);
 
         this.state.removeListener(this);
+        this.container.removeListener(this);
 
         // PlayerContainerEvent are not happening on client
         if (this.player.getLevel().isClientSide()) {

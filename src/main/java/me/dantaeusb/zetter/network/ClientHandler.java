@@ -140,16 +140,15 @@ public class ClientHandler {
         try {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
+            // Save canvas information in texture manager
+            ClientHandler.processCanvasSync(packetIn, world);
+
             if (easel != null) {
-                easel.getEaselContainer().handleCanvasChange(packetIn.canvasCode);
                 easel.getStateHandler().reset();
+                easel.getEaselContainer().handleCanvasChange(packetIn.canvasCode);
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
             }
-
-            // Save fresh canvas data to avoid requests
-            // We're saving after updating to have the snapshot saved
-            ClientHandler.processCanvasSync(packetIn, world);
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
             throw e;

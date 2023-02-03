@@ -125,6 +125,11 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         //this.updateDataFromInventory();
     }
 
+    /**
+     * If canvas does not exist, set to null
+     * If exists but not initialized, set to default
+     * If exists and initialized, use code
+     */
     protected void updateEntityDataFromInventory() {
         ItemStack canvasStack = this.easelContainer.getCanvasStack();
 
@@ -137,11 +142,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
         if (canvasCode == null) {
             int[] size = CanvasItem.getBlockSize(canvasStack);
-
-            if (size == null || size.length != 2) {
-                this.setEntityCanvasCode(null);
-                return;
-            }
+            assert size != null && size.length == 2;
 
             canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
         }
@@ -466,6 +467,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
+        this.playersUsing.add(playerEntity);
         return EaselMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
     }
 

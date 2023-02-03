@@ -201,6 +201,10 @@ public class CanvasAction {
         CanvasSubAction.writeToBuffer(action, this.subActionBuffer);
 
         this.lastAction = action;
+
+        if (Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug(this.id + ": added frame");
+        }
     }
 
     public Stream<CanvasSubAction> getSubActionStream() {
@@ -243,6 +247,10 @@ public class CanvasAction {
 
         this.sealBuffer();
         this.commitTime = System.currentTimeMillis();
+
+        if (Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug(this.id + ": committed");
+        }
     }
 
     public boolean isCommitted() {
@@ -255,6 +263,10 @@ public class CanvasAction {
         }
 
         this.sent = true;
+
+        if (Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug(this.id + ": sent");
+        }
     }
 
     public boolean isSent() {
@@ -274,8 +286,11 @@ public class CanvasAction {
             this.commit();
         }
 
-        this.commit();
         this.canceled = canceled;
+
+        if (Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug(this.id + ": canceled");
+        }
     }
 
     public boolean isCanceled() {
