@@ -83,7 +83,7 @@ public class CopyingRecipe extends CustomRecipe {
         }
 
         // Check that we actually have items
-        if (paintingStack.isEmpty() || paintingStack.isEmpty() || paletteStack.isEmpty()) {
+        if (paintingStack.isEmpty() || canvasStack.isEmpty() || paletteStack.isEmpty()) {
             return false;
         }
 

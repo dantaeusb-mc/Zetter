@@ -115,7 +115,7 @@ public class CanvasItem extends Item
     /**
      * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
      */
-    public static void createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level world) {
+    public static CanvasData createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level world) {
         if (world.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }
@@ -127,6 +127,8 @@ public class CanvasItem extends Item
         assert canvasData != null;
 
         storeCanvasData(stack, canvasCode, canvasData);
+
+        return canvasData;
     }
 
     public static void storeCanvasData(ItemStack stack, String canvasCode, CanvasData canvasData) {

@@ -8,6 +8,7 @@
 
 #### Pre-release tasks:
 
+* \[HIGH\] Check that I do `this.minecraft.getTextureManager().release`
 * \[HIGH\] * Not saving current palette selection and pixel buffer in Easel Entity;
 * \[HIGH\] ? Central piece of iron frame actually has no model (except back which it lacks for some reason);
 * \[MED\] If painting has some problems, just remove it instead of crashing or throwing errors (i.e. requesting non-existent canvas);

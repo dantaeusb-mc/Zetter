@@ -25,38 +25,12 @@ import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 
 /**
- * For some reason, network executor suppresses exceptions,
+ * Handle network packets on logical server side
+ *
+ * N.B. For some reason, network executor suppresses exceptions,
  * so we catch all of those manually
  */
 public class ServerHandler {
-    /**
-     * Update canvas on server-side and send update to other tracking players
-     * @param packetIn
-     * @param sendingPlayer
-     */
-    public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
-        try {
-            EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
-
-            // @todo: [MED] Check if player can access entity
-
-            if (easelEntity != null) {
-                easelEntity.getStateHandler().processActionServer(packetIn.paintingActions);
-
-                for (CanvasAction actionBuffer : packetIn.paintingActions) {
-                    if (!actionBuffer.authorId.equals(sendingPlayer.getUUID())) {
-                        Zetter.LOG.warn("Received action from player claimed another player UUID, ignoring");
-                        return;
-                    }
-                }
-            } else {
-                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
-            }
-        } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
-        }
-    }
 
     /**
      * When client requests a canvas, we need to load data
@@ -109,6 +83,15 @@ public class ServerHandler {
         }
     }
 
+    /**
+     * When player right-clicks canvas item to preview it
+     * but does not have texture data for that item.
+     * Send the data in specific packet that will open
+     * a GUI on requesting player's side.
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processCanvasViewRequest(final CCanvasRequestViewPacket packetIn, ServerPlayer sendingPlayer) {
         try {
             AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
@@ -158,6 +141,13 @@ public class ServerHandler {
         }
     }
 
+    /**
+     * When another color picked, notify server to
+     * update palette item's saved colors
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
         try {
             if (sendingPlayer.containerMenu instanceof EaselMenu) {
@@ -170,6 +160,13 @@ public class ServerHandler {
         }
     }
 
+    /**
+     * Proces player's request to sign a painting
+     * (create painting item from canvas)
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processSignPainting(final CSignPaintingPacket packetIn, ServerPlayer sendingPlayer) {
         try {
             int slot = packetIn.getSlot();
@@ -197,6 +194,15 @@ public class ServerHandler {
         }
     }
 
+    /**
+     * Give player signed painting instead of canvas item
+     * internal method, not a handler
+     *
+     * @param player
+     * @param paintingTitle
+     * @param canvasData
+     * @return
+     */
     private static ItemStack createPainting(Player player, String paintingTitle, CanvasData canvasData) {
         try {
             if (player.getLevel().isClientSide()) {
@@ -230,6 +236,32 @@ public class ServerHandler {
             throw e;
         }
     }
+    /**
+     * Update canvas on server-side and send update to other tracking players
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
+
+            // We don't trust client and writing our UUIDs
+            for (CanvasAction actionBuffer : packetIn.paintingActions) {
+                actionBuffer.setAuthorUUID(sendingPlayer.getUUID());
+            }
+
+            // @todo: [MED] Check if player can access entity
+
+            if (easelEntity != null) {
+                easelEntity.getStateHandler().processActionServer(packetIn.paintingActions);
+            } else {
+                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+            }
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
 
     /**
      * Undo and redo packets
@@ -257,6 +289,11 @@ public class ServerHandler {
         }
     }
 
+    /**
+     * Update server when we press Mode button on Artist Table
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processArtistTableModeChange(final CArtistTableModeChangePacket packetIn, ServerPlayer sendingPlayer) {
         try {
             if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {

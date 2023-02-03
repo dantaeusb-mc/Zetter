@@ -10,6 +10,7 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -32,7 +33,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      */
     public boolean mayPlaceCombined(ItemStack stack) {
         if (stack.is(ZetterItems.CANVAS.get())) {
-            if (CanvasItem.isEmpty(stack) || !CanvasItem.isCompound(stack)) {
+            if (!CanvasItem.isCompound(stack)) {
                 return false;
             }
 
@@ -47,11 +48,6 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * should populate the grid with preview
      * of the result, empty non-compound canvases
      * without data
-     *
-     * When canvas removed, if we see canvases
-     * without data (empty), that means we had
-     * preview here in place before, so it's safe
-     * to remove all canvases from the grid
      *
      * @param combinedHandler
      */
@@ -88,9 +84,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
                     this.menu.getSplitHandler().setStackInSlot(slotNumber, new ItemStack(ZetterItems.CANVAS.get()));
                 } else {
+                    // Just make sure we will not ever remove painted canvas
                     if (
-                            !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
-                                    !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
+                        !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
+                        !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
                     ) {
                         this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
                     }
@@ -110,7 +107,28 @@ public class CanvasSplitAction extends AbstractCanvasAction {
     public void updateCanvasData(ItemStackHandler combinedHandler) {
         ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
-        // it's empty??
+        String combinedStackCanvasCode = CanvasItem.getCanvasCode(combinedStack);
+
+        if (combinedStackCanvasCode == null) {
+            int[] size = CanvasItem.getBlockSize(combinedStack);
+
+            assert size != null && size.length == 2;
+            CanvasData defaultCanvasData = CanvasData.DEFAULTS.get(CanvasData.getDefaultCanvasCode(size[0], size[1]));
+
+            DummyCanvasData combinedCanvasData = DummyCanvasData.BUILDER.createWrap(
+                defaultCanvasData.getResolution(),
+                defaultCanvasData.getWidth(),
+                defaultCanvasData.getHeight(),
+                defaultCanvasData.getColorData()
+            );
+
+            if (this.level.isClientSide()) {
+                Helper.getLevelCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
+            }
+
+            return;
+        }
+
         CanvasData combinedStackCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         if (combinedStackCanvasData != null) {
@@ -151,7 +169,27 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
-        if (combinedStack.isEmpty() || !combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
+        if (!combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
+            return;
+        }
+
+        int[] compoundCanvasSize = CanvasItem.getBlockSize(combinedStack);
+        assert compoundCanvasSize != null;
+
+        final int compoundCanvasWidth = compoundCanvasSize[0];
+        final int compoundCanvasHeight = compoundCanvasSize[1];
+
+        final int numericResolution = CanvasItem.getResolution(combinedStack);
+
+        int missingX = 0;
+        int missingY = 0;
+
+        // Canvas is empty, so split items are empty, too
+        // There's no need to assign data
+        if(CanvasItem.isEmpty(combinedStack)) {
+            // Remove split canvas item
+            this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
+
             return;
         }
 
@@ -165,24 +203,13 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             return;
         }
 
-        int[] compoundCanvasSize = CanvasItem.getBlockSize(combinedStack);
-        assert compoundCanvasSize != null;
-
-        final int compoundCanvasWidth = compoundCanvasSize[0];
-        final int compoundCanvasHeight = compoundCanvasSize[1];
-
-        final int numericResolution = combinedCanvasData.getResolution().getNumeric();
-
-        int missingX = 0;
-        int missingY = 0;
-
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                 int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
                 ItemStack splitStack = this.menu.getSplitHandler().getStackInSlot(slotNumber);
 
                 if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
-                    if (splitStack.isEmpty()/* || !CanvasItem.isEmpty(gridStack, this.level)*/) {
+                    if (splitStack.isEmpty()) {
                         missingX = x;
                         missingY = y;
                         continue;

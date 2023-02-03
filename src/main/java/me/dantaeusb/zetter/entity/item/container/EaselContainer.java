@@ -126,32 +126,34 @@ public class EaselContainer extends ItemStackHandler {
         int resolution = CanvasItem.getResolution(canvasStack);
         int[] size = CanvasItem.getBlockSize(canvasStack);
 
-        if (size == null || size.length != 2) {
-            throw new IllegalArgumentException("Cannot initialize canvas: can't read item size");
-        }
+        assert size != null && size.length == 2;
 
-        // @todo: Incorrect size, not reading original size
-        CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.getLevel());
+        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.getLevel());
         canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
-        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode);
+        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode,canvasData, System.currentTimeMillis());
 
         for (Player player : this.easel.getPlayersUsing()) {
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), initPacket);
         }
 
         this.onContentsChanged(CANVAS_SLOT);
-        this.handleCanvasChange(canvasCode);
 
         return true;
     }
 
     /**
-     * @todo: [MED] Just sync item?
+     * When canvas code is changed in Easel entity's container
+     *
+     * Keep in mind that default canvases are only existing on client
+     * logical side! Canvases like default_2x1 will not work on server
+     * side and will be considered empty, which is actually useful
+     * and it is how it's supposed to work
+     *
      * @param canvasCode
      */
     public void handleCanvasChange(@Nullable String canvasCode) {
-        if (canvasCode == null || canvasCode.equals(CanvasData.getCanvasCode(0))) {
+        if (canvasCode == null/* || canvasCode.equals(CanvasData.getCanvasCode(0))*/) {
             this.canvas = null;
             return;
         }
@@ -245,34 +247,29 @@ public class EaselContainer extends ItemStackHandler {
     @Override
     protected void onContentsChanged(int slot)
     {
-        if (this.listeners != null) {
-            for(ItemStackHandlerListener listener : this.listeners) {
-                listener.containerChanged(this, slot);
-            }
-        }
-
         if (slot == CANVAS_SLOT) {
             ItemStack canvasStack = this.getCanvasStack();
 
             if (canvasStack.isEmpty()) {
                 this.handleCanvasChange(null);
-                return;
-            }
+            } else {
+                String canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
-            String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+                if (canvasCode == null) {
+                    int[] size = CanvasItem.getBlockSize(canvasStack);
+                    assert size != null && size.length == 2;
 
-            if (canvasCode == null) {
-                int[] size = CanvasItem.getBlockSize(canvasStack);
-
-                if (size == null || size.length != 2) {
-                    this.handleCanvasChange(null);
-                    return;
+                    canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
                 }
 
-                canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
+                this.handleCanvasChange(canvasCode);
             }
+        }
 
-            this.handleCanvasChange(canvasCode);
+        if (this.listeners != null) {
+            for(ItemStackHandlerListener listener : this.listeners) {
+                listener.containerChanged(this, slot);
+            }
         }
     }
 }

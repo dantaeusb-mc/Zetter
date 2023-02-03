@@ -15,9 +15,9 @@ import java.util.function.Supplier;
 import java.util.Optional;
 
 public class SCanvasSyncPacket<T extends AbstractCanvasData> {
-    protected final String canvasCode;
-    protected final long timestamp;
-    protected final T canvasData;
+    public final String canvasCode;
+    public final long timestamp;
+    public final T canvasData;
 
     public SCanvasSyncPacket(String canvasCode, T canvasData, long timestamp) {
         this.canvasCode = canvasCode;
@@ -25,26 +25,14 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
         this.canvasData = canvasData;
     }
 
-    public String getCanvasCode() {
-        return this.canvasCode;
-    }
-
-    public T getCanvasData() {
-        return this.canvasData;
-    }
-
-    public long getTimestamp() {
-        return this.timestamp;
-    }
-
     /**
      * Reads the raw packet data from the data stream.
      */
     public static SCanvasSyncPacket<?> readPacketData(FriendlyByteBuf networkBuffer) {
         try {
-            String type = networkBuffer.readUtf(128);
-            String canvasCode = networkBuffer.readUtf(128);
-            long timestamp = networkBuffer.readLong();
+            final String type = networkBuffer.readUtf(128);
+            final String canvasCode = networkBuffer.readUtf(128);
+            final long timestamp = networkBuffer.readLong();
 
             CanvasDataType<?> canvasDataType = ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(type));
 

@@ -2,7 +2,11 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.network.ClientHandler;
+import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LogicalSidedProvider;
@@ -20,13 +24,13 @@ import java.util.function.Supplier;
  * @todo: [MED] Do we need that since we can track on client
  * if canvas item was changed
  */
-public class SEaselCanvasInitializationPacket {
+public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasData> {
     public final int easelEntityId;
-    public final String canvasCode;
 
-    public SEaselCanvasInitializationPacket(int easelEntityId, String canvasCode) {
+    public SEaselCanvasInitializationPacket(int easelEntityId, String canvasCode, CanvasData canvasData, long timestamp) {
+        super(canvasCode, canvasData, timestamp);
+
         this.easelEntityId = easelEntityId;
-        this.canvasCode = canvasCode;
     }
 
     /**
@@ -36,8 +40,11 @@ public class SEaselCanvasInitializationPacket {
         try {
             final int easelEntityId = networkBuffer.readInt();
             final String canvasCode = networkBuffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+            final long timestamp = networkBuffer.readLong();
 
-            return new SEaselCanvasInitializationPacket(easelEntityId, canvasCode);
+            final CanvasData canvasData = ZetterCanvasTypes.CANVAS.get().readPacketData(networkBuffer);
+
+            return new SEaselCanvasInitializationPacket(easelEntityId, canvasCode, canvasData, timestamp);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading SEaselCanvasInitializationPacket: " + e);
             return null;
@@ -50,6 +57,9 @@ public class SEaselCanvasInitializationPacket {
     public void writePacketData(FriendlyByteBuf networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode, Helper.CANVAS_CODE_MAX_LENGTH);
+        networkBuffer.writeLong(this.timestamp);
+
+        ZetterCanvasTypes.CANVAS.get().writePacketData(this.canvasData, networkBuffer);
     }
 
     public static void handle(final SEaselCanvasInitializationPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -69,6 +79,6 @@ public class SEaselCanvasInitializationPacket {
     @Override
     public String toString()
     {
-        return "SEaselCanvasInitializationPacket[easel=" + this.easelEntityId + ",canvasCode=" + this.canvasCode + "]";
+        return "SEaselCanvasInitializationPacket[easel=" + this.easelEntityId + ",canvasCode=" + this.canvasCode + ",timestamp=" + this.timestamp + "]";
     }
 }
