@@ -10,9 +10,11 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
+import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -42,6 +44,7 @@ public class EaselState {
     private final int MAX_ACTIONS_BEFORE_SNAPSHOT = ACTION_HISTORY_SIZE / SNAPSHOT_HISTORY_SIZE;
 
     public static int CLIENT_SNAPSHOT_HISTORY_SIZE = 50;
+    private static int MAX_LATENCY = 500;
 
     private final EaselEntity easel;
     private List<EaselStateListener> listeners;
@@ -136,7 +139,6 @@ public class EaselState {
         this.players.remove(player);
 
         if (this.easel.getLevel().isClientSide()) {
-            this.performHistorySyncClient(true);
             this.freeze();
         } else {
             this.playerLastSyncedAction.remove(player.getUUID());
@@ -161,6 +163,11 @@ public class EaselState {
      * i.e. when canvas removed
      */
     public void reset(boolean sync) {
+        // To avoid removing data from current stroke
+        if (this.easel.getLevel().isClientSide()) {
+            this.performHistorySyncClient(true);
+        }
+
         this.actions.clear();
         this.snapshots.clear();
         this.playerLastSyncedAction.clear();
@@ -175,7 +182,6 @@ public class EaselState {
         }
 
         this.updateSnapshots();
-
         this.onStateChanged();
     }
 
@@ -303,7 +309,7 @@ public class EaselState {
 
             if (tool.getTool().hasEffect()) {
                 this.unfreeze();
-                final boolean initialized = this.easel.getEaselContainer().isCanvasInitialized();
+                final boolean initialized = this.isCanvasInitialized();
 
                 if (initialized) {
                     int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
@@ -478,6 +484,89 @@ public class EaselState {
         this.onStateChanged();
 
         return newAction;
+    }
+
+    /*
+     * Initialization
+     */
+
+    /**
+     * Check if we can draw on canvas or we should initialize
+     * canvas data first
+     *
+     * As it checks item, it will work on both client and server
+     *
+     * @return
+     */
+    public boolean isCanvasInitialized() {
+        ItemStack canvasStack = this.easel.getEaselContainer().getCanvasStack();
+
+        if (canvasStack == null) {
+            throw new IllegalStateException("Cannot check canvas initialization: no item in container");
+        }
+
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        return canvasCode != null;
+    }
+
+    /**
+     * When canvas is empty, ask canvas item
+     * to initialize data before start drawing
+     *
+     * Server-only
+     *
+     * @return boolean True if initialization is successful
+     */
+    public boolean initializeCanvas(long timestamp) {
+        ItemStack canvasStack = this.easel.getEaselContainer().getCanvasStack();
+
+        if (canvasStack == null) {
+            throw new IllegalStateException("Cannot initialize canvas: no item in container");
+        }
+
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        if (canvasCode != null) {
+            // Already
+            return false;
+        }
+
+        if (this.listeners != null) {
+            for(EaselStateListener listener : this.listeners) {
+                listener.stateCanvasInitializationStart(this);
+            }
+        }
+
+        int resolution = CanvasItem.getResolution(canvasStack);
+        int[] size = CanvasItem.getBlockSize(canvasStack);
+
+        assert size != null && size.length == 2; // @todo: Stop menu updates to prevent sending change before initialization packet
+
+        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.getLevel());
+        canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode,canvasData, System.currentTimeMillis());
+
+        for (Player player : this.easel.getPlayersUsing()) {
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), initPacket);
+        }
+
+        // Drop things but not sync yet
+        this.reset(false);
+
+        this.snapshots.add(CanvasSnapshot.createServerInitializationSnapshot(canvasData.getColorData(), timestamp - MAX_LATENCY - 1L));
+
+        if (this.listeners != null) {
+            for(EaselStateListener listener : this.listeners) {
+                listener.stateCanvasInitializationEnd(this);
+            }
+        }
+
+        this.easel.getEaselContainer().handleCanvasChange(canvasCode);
+        this.easel.getEaselContainer().changed();
+
+        return true;
     }
 
     /*
@@ -712,6 +801,23 @@ public class EaselState {
         return this.applyHistoryTraversing(tillAction, false);
     }
 
+    private @Nullable CanvasAction findAndReplaceAction(int actionId, CanvasAction action) {
+        ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
+        @Nullable CanvasAction tillAction = null;
+
+        while(actionsIterator.hasPrevious()) {
+            CanvasAction currentAction = actionsIterator.previous();
+
+            if (currentAction.id == actionId) {
+                tillAction = currentAction;
+                actionsIterator.set(action);
+                break;
+            }
+        }
+
+        return tillAction;
+    }
+
     private @Nullable CanvasAction findAction(int actionId) {
         ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
         @Nullable CanvasAction tillAction = null;
@@ -748,7 +854,7 @@ public class EaselState {
             ClientPacketListener connection = Minecraft.getInstance().getConnection();
             assert connection != null;
             assert Minecraft.getInstance().player != null;
-            latency = Math.max(500, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency()) * 2;
+            latency = Math.max(MAX_LATENCY, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency());
         }
 
         if (firstCanceledAction != null) {
@@ -1175,8 +1281,8 @@ public class EaselState {
             return;
         }
 
-        if (!this.easel.getEaselContainer().isCanvasInitialized()) {
-            this.initializeCanvas(newActions.peek().getStartTime() - 1L);
+        if (!this.isCanvasInitialized()) {
+            this.initializeCanvas(newActions.peek().getStartTime());
         }
 
         this.wipeCanceledActionsAndDiscardSnapshots();
@@ -1248,14 +1354,6 @@ public class EaselState {
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_SERVER) {
             Zetter.LOG.debug("Processed actions sync from client");
         }
-    }
-
-    protected void initializeCanvas(long timestamp) {
-        // Drop things but not sync yet
-        this.reset(false);
-
-        this.easel.getEaselContainer().initializeCanvas();
-        this.snapshots.add(CanvasSnapshot.createServerInitializationSnapshot(this.getCanvasData().getColorData(), timestamp));
     }
 
     /**
@@ -1386,8 +1484,8 @@ public class EaselState {
                 clientAction.setSync();
                 clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             } else {
-                if (this.findAction(unsyncedAction.id) != null) {
-                    Zetter.LOG.warn("Duplicating action! Ignoring.");
+                if (this.findAndReplaceAction(unsyncedAction.id, unsyncedAction) != null) {
+                    Zetter.LOG.warn("Duplicating action! Replacing.");
                     clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
                     continue;
                 }

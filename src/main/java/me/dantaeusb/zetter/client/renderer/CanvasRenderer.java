@@ -189,7 +189,9 @@ public class CanvasRenderer implements AutoCloseable {
      * @param canvasCode
      */
     private void unloadCanvas(String canvasCode) {
-        Zetter.LOG.debug("Unloading canvas " + canvasCode);
+        if (Zetter.DEBUG_CLIENT) {
+            Zetter.LOG.debug("Unloading canvas " + canvasCode);
+        }
 
         this.textureRequestTimeout.remove(canvasCode);
 

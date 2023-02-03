@@ -29,9 +29,16 @@ public class EaselContainer extends ItemStackHandler {
 
     /*
      * Canvas
+     *
      * Practically, this holder used to represent canvas
      * in Menu screen, because there's no data in item
-     * on client side
+     * on client side.
+     *
+     * Can reference default canvas on client only
+     *
+     * On server it should be synced with entity
+     * data slot for the canvas code (we don't necessarily
+     * load inventory for easel entity)
      */
     private @Nullable CanvasHolder<CanvasData> canvas;
 
@@ -86,63 +93,6 @@ public class EaselContainer extends ItemStackHandler {
     }
 
     /**
-     * Check if we can draw on canvas or we should initialize
-     * canvas data first
-     * @return
-     */
-    public boolean isCanvasInitialized() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack == null) {
-            throw new IllegalStateException("Cannot check canvas initialization: no item in container");
-        }
-
-        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
-        return canvasCode != null;
-    }
-
-    /**
-     * When canvas is empty, ask canvas item
-     * to initialize data before start drawing
-     *
-     * Server-only
-     *
-     * @return boolean True if initialization is successful
-     */
-    public boolean initializeCanvas() {
-        ItemStack canvasStack = this.getCanvasStack();
-
-        if (canvasStack == null) {
-            throw new IllegalStateException("Cannot initialize canvas: no item in container");
-        }
-
-        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-        if (canvasCode != null) {
-            // Already
-            return false;
-        }
-
-        int resolution = CanvasItem.getResolution(canvasStack);
-        int[] size = CanvasItem.getBlockSize(canvasStack);
-
-        assert size != null && size.length == 2;
-
-        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.getLevel());
-        canvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode,canvasData, System.currentTimeMillis());
-
-        for (Player player : this.easel.getPlayersUsing()) {
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), initPacket);
-        }
-
-        this.onContentsChanged(CANVAS_SLOT);
-
-        return true;
-    }
-
-    /**
      * When canvas code is changed in Easel entity's container
      *
      * Keep in mind that default canvases are only existing on client
@@ -153,7 +103,7 @@ public class EaselContainer extends ItemStackHandler {
      * @param canvasCode
      */
     public void handleCanvasChange(@Nullable String canvasCode) {
-        if (canvasCode == null/* || canvasCode.equals(CanvasData.getCanvasCode(0))*/) {
+        if (canvasCode == null) {
             this.canvas = null;
             return;
         }
@@ -236,7 +186,7 @@ public class EaselContainer extends ItemStackHandler {
     }
 
     public void changed() {
-        this.onContentsChanged(0);
+        this.onContentsChanged(CANVAS_SLOT);
     }
 
     @Override
