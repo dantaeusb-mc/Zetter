@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
+import com.mojang.math.Vector3f;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;

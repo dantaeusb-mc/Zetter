@@ -16,7 +16,6 @@ import net.minecraft.util.GsonHelper;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -33,7 +32,7 @@ public class CopyingRecipe extends CustomRecipe {
     private final Ingredient inputPalette;
 
     public CopyingRecipe(ResourceLocation id, Ingredient inputPainting, Ingredient inputCanvas, Ingredient inputPalette) {
-        super(id, CraftingBookCategory.MISC);
+        super(id);
 
         this.inputPainting = inputPainting;
         this.inputCanvas = inputCanvas;
