@@ -1,8 +1,9 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
+import com.google.common.collect.Lists;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
@@ -10,20 +11,18 @@ import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -46,7 +45,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         return this.layers.add(layer);
     }
 
-    public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, MatrixStack poseStack, MultiBufferSource buffer, int packedLight) {
         Minecraft minecraft = Minecraft.getInstance();
         VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
@@ -70,7 +69,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         poseStack.popPose();
     }
 
-    private void renderCanvas(EaselEntity easelEntity, CanvasData canvasData, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    private void renderCanvas(EaselEntity easelEntity, CanvasData canvasData, float partialTicks, MatrixStack poseStack, MultiBufferSource buffer, int packedLight) {
         /**
          * Rendering front side
          * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
@@ -261,7 +260,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
     }
 
     @Nullable
-    public static CanvasData getCanvasData(Level world, String canvasName) {
+    public static CanvasData getCanvasData(World world, String canvasName) {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         if (canvasTracker == null) {

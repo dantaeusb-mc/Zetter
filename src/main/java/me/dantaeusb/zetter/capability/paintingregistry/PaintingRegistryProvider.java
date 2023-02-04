@@ -1,10 +1,10 @@
 package me.dantaeusb.zetter.capability.paintingregistry;
 
 import me.dantaeusb.zetter.core.ZetterCapabilities;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.world.level.Level;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.util.Direction;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
@@ -12,12 +12,12 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class PaintingRegistryProvider implements ICapabilitySerializable<CompoundTag> {
+public class PaintingRegistryProvider implements ICapabilitySerializable<CompoundNBT> {
     private final PaintingRegistry paintingRegistryCapability;
 
     private final String TAG_NAME_PAINTING_REGISTRY = "PaintingRegistry";
 
-    public PaintingRegistryProvider(Level world) {
+    public PaintingRegistryProvider(World world) {
         if (!world.isClientSide()) {
             this.paintingRegistryCapability = new PaintingRegistry(world);
         } else {
@@ -48,14 +48,14 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
      * Write all the capability state information to NBT
      * We need to save data only for Server Implementation of the capability
      */
-    public CompoundTag serializeNBT() {
-        CompoundTag compoundTag = new CompoundTag();
+    public CompoundNBT serializeNBT() {
+        CompoundNBT compoundTag = new CompoundNBT();
 
         if (this.paintingRegistryCapability.getWorld() == null || this.paintingRegistryCapability.getWorld().isClientSide()) {
             return compoundTag;
         }
 
-        Tag paintingRegistryTag = this.paintingRegistryCapability.serializeNBT();
+        INBT paintingRegistryTag = this.paintingRegistryCapability.serializeNBT();
         compoundTag.put(TAG_NAME_PAINTING_REGISTRY, paintingRegistryTag);
 
         return compoundTag;
@@ -65,12 +65,12 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
      * Read the capability state information out of NBT
      * We need to get the data only for Server Implementation of the capability
      */
-    public void deserializeNBT(CompoundTag compoundTag) {
+    public void deserializeNBT(CompoundNBT compoundTag) {
         if (this.paintingRegistryCapability.getWorld() == null || this.paintingRegistryCapability.getWorld().isClientSide()) {
             return;
         }
 
-        Tag paintingRegistryTag = compoundTag.get(TAG_NAME_PAINTING_REGISTRY);
+        INBT paintingRegistryTag = compoundTag.get(TAG_NAME_PAINTING_REGISTRY);
         this.paintingRegistryCapability.deserializeNBT(paintingRegistryTag);
     }
 }

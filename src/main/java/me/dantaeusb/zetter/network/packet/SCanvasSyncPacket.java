@@ -5,14 +5,15 @@ import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.network.ClientHandler;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.network.NetworkEvent;
-import java.util.function.Supplier;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
+
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class SCanvasSyncPacket<T extends AbstractCanvasData> {
     public final String canvasCode;
@@ -28,7 +29,7 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SCanvasSyncPacket<?> readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SCanvasSyncPacket<?> readPacketData(PacketBuffer networkBuffer) {
         try {
             final String type = networkBuffer.readUtf(128);
             final String canvasCode = networkBuffer.readUtf(128);
@@ -52,12 +53,12 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
-        networkBuffer.writeUtf(this.canvasData.getType().resourceLocation.toString(), 128);
+    public void writePacketData(PacketBuffer networkBuffer) {
+        networkBuffer.writeUtf(this.canvasData.getType().getRegistryName().toString(), 128);
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
 
-        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.getType().resourceLocation);
+        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.getType().getRegistryName());
 
         assert canvasDataType != null;
         canvasDataType.writePacketData(this.canvasData, networkBuffer);
@@ -68,7 +69,7 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (clientWorld.isEmpty()) {
             Zetter.LOG.error("SCanvasSyncMessage context could not provide a ClientWorld.");
             return;

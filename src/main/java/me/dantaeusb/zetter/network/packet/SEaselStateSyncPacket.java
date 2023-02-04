@@ -4,14 +4,15 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
 import me.dantaeusb.zetter.network.ClientHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -52,7 +53,7 @@ public class SEaselStateSyncPacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SEaselStateSyncPacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SEaselStateSyncPacket readPacketData(PacketBuffer networkBuffer) {
         try {
             final int easelEntityId = networkBuffer.readInt();
             final String canvasCode = networkBuffer.readUtf(128);
@@ -98,7 +99,7 @@ public class SEaselStateSyncPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeBoolean(this.sync);
@@ -128,7 +129,7 @@ public class SEaselStateSyncPacket {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SEaselStateSync context could not provide a ClientWorld.");
             return;

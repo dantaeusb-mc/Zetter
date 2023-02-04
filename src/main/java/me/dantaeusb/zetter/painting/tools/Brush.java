@@ -5,8 +5,9 @@ import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.painting.tools.brush.Bezier;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.Component;
 import net.minecraft.util.Tuple;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -16,7 +17,7 @@ import java.util.List;
 public class Brush extends AbstractTool<BrushParameters> {
     public static final int HOTKEY = GLFW.GLFW_KEY_B;
 
-    private final Component translatableComponent = Component.translatable("container.zetter.painting.tools.brush");
+    private final ITextComponent translatableComponent = new TranslationTextComponent("container.zetter.painting.tools.brush");
 
     private final Bezier brushBezier = new Bezier(0.455, 0.030, 0.515, 0.955);
 
@@ -33,7 +34,7 @@ public class Brush extends AbstractTool<BrushParameters> {
     }
 
     @Override
-    public Component getTranslatableComponent() {
+    public ITextComponent getTranslatableComponent() {
         return this.translatableComponent;
     }
 

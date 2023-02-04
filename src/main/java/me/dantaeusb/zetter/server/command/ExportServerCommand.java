@@ -8,9 +8,9 @@ import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
+import net.minecraft.network.chat.ITextComponent;
+import net.minecraft.world.entity.player.PlayerEntity;
+import net.minecraft.world.level.World;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -26,11 +26,11 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
  */
 public class ExportServerCommand {
     private static final DynamicCommandExceptionType ERROR_PAINTING_NOT_FOUND = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.painting_not_found", code);
+        return new TranslationTextComponent("console.zetter.error.painting_not_found", code);
     });
 
     private static final DynamicCommandExceptionType ERROR_CANNOT_CREATE_FILE = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.file_write_error", code);
+        return new TranslationTextComponent("console.zetter.error.file_write_error", code);
     });
 
     static ArgumentBuilder<CommandSourceStack, ?> register() {
@@ -50,7 +50,7 @@ public class ExportServerCommand {
             );
     }
 
-    private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
+    private static int execute(CommandSourceStack source, PlayerEntity player, World level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
         if (!paintingInput.hasPaintingData(level)) {
             throw ERROR_PAINTING_NOT_FOUND.create(paintingInput.getPaintingCode());
         }

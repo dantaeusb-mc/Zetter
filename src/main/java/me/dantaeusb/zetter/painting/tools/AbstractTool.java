@@ -3,7 +3,7 @@ package me.dantaeusb.zetter.painting.tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
         return Math.floor(lastPosX) != Math.floor(newPosX) || Math.floor(lastPosY) != Math.floor(newPosY);
     }
 
-    public abstract Component getTranslatableComponent();
+    public abstract ITextComponent getTranslatableComponent();
 
     /**
      * Apply current tool to the canvas

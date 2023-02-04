@@ -9,26 +9,34 @@ import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.IContainerListener;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ITextComponent;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
-public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> implements ContainerListener {
-    public static final Component TITLE = Component.translatable("container.zetter.artist_table");
+public class ArtistTableScreen extends ContainerScreen<ArtistTableMenu> implements IContainerListener {
+    public static final ITextComponent TITLE = new TranslationTextComponent("container.zetter.artist_table");
 
-    private static final Component SPLIT_MODE_TITLE = Component.translatable("container.zetter.artist_table.mode.split");
-    private static final Component COMBINE_MODE_TITLE = Component.translatable("container.zetter.artist_table.mode.combine");
+    private static final ITextComponent SPLIT_MODE_TITLE = new TranslationTextComponent("container.zetter.artist_table.mode.split");
+    private static final ITextComponent COMBINE_MODE_TITLE = new TranslationTextComponent("container.zetter.artist_table.mode.combine");
 
-    protected final Component titleLabel = TITLE;
+    protected final ITextComponent titleLabel = TITLE;
 
     // This is the resource location for the background image
     private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
@@ -50,7 +58,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     final int COMBINED_CANVAS_POSITION_SPLIT_X = 17;
     final int COMBINED_CANVAS_POSITION_SPLIT_Y = 23;
 
-    public ArtistTableScreen(ArtistTableMenu artistTableMenu, Inventory playerInventory, Component title) {
+    public ArtistTableScreen(ArtistTableMenu artistTableMenu, PlayerInventory playerInventory, ITextComponent title) {
         super(artistTableMenu, playerInventory, title);
 
         this.imageWidth = WIDTH;
@@ -99,7 +107,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     // Listener interface - to track name field availability
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(matrixStack);
 
         super.render(matrixStack, mouseX, mouseY, partialTicks);
@@ -114,9 +122,9 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
 
         blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
@@ -221,12 +229,12 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     }
 
     @Override
-    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
+    protected void renderTooltip(MatrixStack matrixStack, int x, int y) {
         super.renderTooltip(matrixStack, x, y);
 
         for (AbstractArtistTableWidget widget : this.artistTableWidgets) {
             if (widget.isMouseOver(x, y)) {
-                Component tooltip = widget.getTooltip(x, y);
+                ITextComponent tooltip = widget.getTooltip(x, y);
 
                 if (tooltip != null) {
                     this.renderTooltip(matrixStack, tooltip, x, y);
@@ -241,13 +249,13 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
      * @param mouseY
      */
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
         final int LABEL_XPOS = 5;
         final int LABEL_YPOS = 5;
 
-        Component artistTableModelLabel = this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE ? COMBINE_MODE_TITLE : SPLIT_MODE_TITLE;
+        ITextComponent artistTableModelLabel = this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE ? COMBINE_MODE_TITLE : SPLIT_MODE_TITLE;
 
-        Component artistTableLabel = Component.translatable("container.zetter.artist_table.mode", this.titleLabel, artistTableModelLabel);
+        ITextComponent artistTableLabel = new TranslationTextComponent("container.zetter.artist_table.mode", this.titleLabel, artistTableModelLabel);
 
         this.font.draw(matrixStack, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
 
@@ -261,7 +269,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     }
 
     @Override
-    public void slotChanged(AbstractContainerMenu menu, int slotId, ItemStack stack) {
+    public void slotChanged(Container menu, int slotId, ItemStack stack) {
 
     }
 
@@ -272,7 +280,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
      * @param value
      */
     @Override
-    public void dataChanged(AbstractContainerMenu menu, int dataSlotIndex, int value) {
+    public void dataChanged(Container menu, int dataSlotIndex, int value) {
         if (dataSlotIndex == ArtistTableBlockEntity.DATA_MODE) {
             this.updateCombinedCanvasPosition();
         }

@@ -15,14 +15,13 @@ import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.*;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -36,11 +35,11 @@ import java.util.function.Consumer;
  * actual scale (by times 2) and makes a lot of confusion
  * @todo: [LOW] Rework scale factor to avoid confusion
  */
-public class EaselMenu extends AbstractContainerMenu implements EaselStateListener, ItemStackHandlerListener {
+public class EaselMenu extends Container implements EaselStateListener, ItemStackHandlerListener {
     /*
      * Object references
      */
-    private final Player player;
+    private final PlayerEntity player;
     private final EaselContainer container;
     private final EaselState state;
 
@@ -88,7 +87,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * Initializing
      *
      */
-    public EaselMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
+    public EaselMenu(int windowID, PlayerInventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
         super(ZetterContainerMenus.EASEL.get(), windowID);
 
         this.player = invPlayer.player;
@@ -163,13 +162,13 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         }
     }
 
-    public static EaselMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
+    public static EaselMenu createMenuServerSide(int windowID, PlayerInventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
         EaselMenu easelMenu = new EaselMenu(windowID, playerInventory, easelContainer, stateHandler);
 
         return easelMenu;
     }
 
-    public static EaselMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+    public static EaselMenu createMenuClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
         EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
@@ -605,7 +604,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * Called when the ONLY when container is closed.
      * Push painting frames so it will be saved.
      */
-    public void removed(@NotNull Player player) {
+    public void removed(@NotNull PlayerEntity player) {
         super.removed(player);
 
         this.state.removeListener(this);
@@ -624,7 +623,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(@NotNull Player playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(@NotNull PlayerEntity playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -672,7 +671,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(@NotNull Player player) {
+    public boolean stillValid(@NotNull PlayerEntity player) {
         return this.container.stillValid(player);
     }
 }

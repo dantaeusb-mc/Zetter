@@ -3,10 +3,10 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -22,7 +22,7 @@ public class CArtistTableModeChangePacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static CArtistTableModeChangePacket readPacketData(FriendlyByteBuf buf) {
+    public static CArtistTableModeChangePacket readPacketData(PacketBuffer buf) {
         int windowId = buf.readInt();
         byte modeId = buf.readByte();
 
@@ -34,7 +34,7 @@ public class CArtistTableModeChangePacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf buf) {
+    public void writePacketData(PacketBuffer buf) {
         buf.writeInt(this.windowId);
         buf.writeByte(this.mode.getId());
     }
@@ -57,7 +57,7 @@ public class CArtistTableModeChangePacket {
             return;
         }
 
-        final ServerPlayer sendingPlayer = ctx.getSender();
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when ArtistTableModeChange was received");
         }

@@ -1,14 +1,12 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.narration.NarratedElementType;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.IRenderable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -19,7 +17,7 @@ import java.util.function.Supplier;
 /**
  * @todo: [LOW] Add paddings as on history buttons
  */
-public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
+public class ZoomWidget extends AbstractPaintingWidget implements IRenderable {
     private final List<ZoomButton> buttons;
 
     public static final int ZOOM_OUT_HOTKEY = GLFW.GLFW_KEY_MINUS;
@@ -33,30 +31,30 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
 
     public ZoomWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTON_HEIGHT, Component.translatable("container.zetter.painting.zoom"));
+        super(parentScreen, x, y, ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTON_HEIGHT, new TranslationTextComponent("container.zetter.painting.zoom"));
 
 
         this.buttons = new ArrayList<>() {{
             add(new ZoomButton(
                     parentScreen.getMenu()::canIncreaseCanvasScale, parentScreen.getMenu()::increaseCanvasScale,
                     ZOOM_BUTTONS_U, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.zoom.in"))
+                    new TranslationTextComponent("container.zetter.painting.zoom.in"))
             );
             add(new ZoomButton(parentScreen.getMenu()::canDecreaseCanvasScale, parentScreen.getMenu()::decreaseCanvasScale,
                     ZOOM_BUTTONS_U + ZOOM_BUTTON_WIDTH, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.zoom.out"))
+                    new TranslationTextComponent("container.zetter.painting.zoom.out"))
             );
         }};
     }
 
     @Override
     public @Nullable
-    Component getTooltip(int mouseX, int mouseY) {
+    ITextComponent getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
-            int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
+            int fromX = this.x + i * ZOOM_BUTTON_WIDTH;
 
-            if (EaselScreen.isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(fromX, this.y, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return zoomButton.getTooltip();
             }
 
@@ -78,9 +76,9 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
 
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
-            int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
+            int fromX = this.x + i * ZOOM_BUTTON_WIDTH;
 
-            if (EaselScreen.isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(fromX, this.y, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 zoomButton.action.get();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -92,24 +90,18 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
         return false;
     }
 
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
+    public void render(MatrixStack matrixStack) {
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-    public void render(PoseStack matrixStack) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
-        this.blit(matrixStack, this.getX(), this.getY(), ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
+        this.blit(matrixStack, this.x, this.y, ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
 
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
-            int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
+            int fromX = this.x + i * ZOOM_BUTTON_WIDTH;
             int uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
 
-            this.blit(matrixStack, fromX, this.getY(), uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
+            this.blit(matrixStack, fromX, this.y, uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
             i++;
         }
     }
@@ -129,9 +121,9 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
         public final int vPosition;
         public final int height;
         public final int width;
-        public final Component label;
+        public final ITextComponent label;
 
-        ZoomButton(Supplier<Boolean> active, Supplier<Boolean> action, int uPosition, int vPosition, int width, int height, Component label) {
+        ZoomButton(Supplier<Boolean> active, Supplier<Boolean> action, int uPosition, int vPosition, int width, int height, ITextComponent label) {
             this.active = active;
             this.action = action;
             this.uPosition = uPosition;
@@ -141,7 +133,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
             this.label = label;
         }
 
-        public Component getTooltip() {
+        public ITextComponent getTooltip() {
             return this.label;
         }
     }

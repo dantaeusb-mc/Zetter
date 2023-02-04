@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.entity.item;
 
+import com.google.common.collect.Maps;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -7,36 +8,33 @@ import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
-import com.google.common.collect.Maps;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityDimensions;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.decoration.HangingEntity;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntitySize;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.Pose;
+import net.minecraft.entity.item.HangingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
+import net.minecraftforge.fml.common.registry.IEntityAdditionalSpawnData;
+import net.minecraftforge.fml.network.NetworkHooks;
 import org.apache.commons.lang3.Validate;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Map;
-
-import net.minecraft.core.Direction;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 
 public class PaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
     public static final String NBT_TAG_FACING = "Facing";
@@ -61,11 +59,11 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
 
     protected Materials material;
 
-    public PaintingEntity(EntityType<? extends PaintingEntity> type, Level world) {
+    public PaintingEntity(EntityType<? extends PaintingEntity> type, World world) {
         super(type, world);
     }
 
-    public PaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
+    public PaintingEntity(World world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
         super(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), world, pos);
 
         this.material = material;
@@ -105,7 +103,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         return this.hasPlate;
     }
 
-    protected float getEyeHeight(Pose poseIn, EntityDimensions sizeIn) {
+    protected float getEyeHeight(Pose poseIn, EntitySize sizeIn) {
         return 0.0F;
     }
 
@@ -116,15 +114,15 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         Validate.notNull(facingDirectionIn);
         this.direction = facingDirectionIn;
         if (facingDirectionIn.getAxis().isHorizontal()) {
-            this.setXRot(0.0F);
-            this.setYRot((float)(this.direction.get2DDataValue() * 90));
+            this.xRot = 0.0F;
+            this.yRot = (float)(this.direction.get2DDataValue() * 90);
         } else {
-            this.setXRot(-90 * facingDirectionIn.getAxisDirection().getStep());
-            this.setYRot(0.0F);
+            this.xRot = -90 * facingDirectionIn.getAxisDirection().getStep();
+            this.yRot = 0.0F;
         }
 
-        this.xRotO = this.getXRot();
-        this.yRotO = this.getYRot();
+        this.xRotO = this.xRot;
+        this.yRotO = this.yRot;
         this.recalculateBoundingBox();
     }
 
@@ -168,7 +166,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
             yHeight = yHeight / 16.0D / 2.0D;
             zWidth = zWidth / 16.0D / 2.0D;
 
-            this.setBoundingBox(new AABB(
+            this.setBoundingBox(new AxisAlignedBB(
                 xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
                 xCenter + xWidth, yCenter + yHeight, zCenter + zWidth
             ));
@@ -197,19 +195,19 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
     }
 
     @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
+    public ActionResultType interact(PlayerEntity player, Hand hand) {
         if (!this.hasPlate()) {
-            return InteractionResult.PASS;
+            return ActionResultType.PASS;
         }
 
         if (!player.getCommandSenderWorld().isClientSide()) {
-            return InteractionResult.CONSUME;
+            return ActionResultType.CONSUME;
         }
 
         PaintingData paintingData = Helper.getLevelCanvasTracker(this.level).getCanvasData(this.paintingCode);
 
         if (paintingData == null) {
-            return InteractionResult.FAIL;
+            return ActionResultType.FAIL;
         }
 
         PaintingInfoOverlayEvent viewEvent = new PaintingInfoOverlayEvent(paintingData.getOverlay());
@@ -217,10 +215,10 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
 
         paintingData.getOverlay().setPainting(paintingData);
 
-        return InteractionResult.CONSUME;
+        return ActionResultType.CONSUME;
     }
 
-    public void addAdditionalSaveData(CompoundTag compoundTag) {
+    public void addAdditionalSaveData(CompoundNBT compoundTag) {
         compoundTag.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
         compoundTag.putString(PaintingItem.NBT_TAG_PAINTING_CODE, this.paintingCode);
         compoundTag.putIntArray(NBT_TAG_BLOCK_SIZE, new int[]{this.blockWidth, this.blockHeight});
@@ -234,7 +232,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
     /**
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
-    public void readAdditionalSaveData(CompoundTag compound) {
+    public void readAdditionalSaveData(CompoundNBT compound) {
         this.direction = Direction.from2DDataValue(compound.getByte(NBT_TAG_FACING));
         this.paintingCode = compound.getString(PaintingItem.NBT_TAG_PAINTING_CODE);
 
@@ -268,7 +266,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         this.setDirection(this.direction);
     }
 
-    public void writeSpawnData(FriendlyByteBuf buffer) {
+    public void writeSpawnData(PacketBuffer buffer) {
         buffer.writeBlockPos(this.pos);
         buffer.writeByte((byte)this.direction.get2DDataValue());
 
@@ -281,7 +279,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         buffer.writeBoolean(this.hasPlate);
     }
 
-    public void readSpawnData(FriendlyByteBuf buffer) {
+    public void readSpawnData(PacketBuffer buffer) {
         this.pos = buffer.readBlockPos();
         this.direction = Direction.from2DDataValue(buffer.readByte());
 
@@ -358,14 +356,9 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         this.playSound(SoundEvents.PAINTING_PLACE, 1.0F, 1.0F);
     }
 
-    @Override
-    public ItemStack getPickResult() {
-        return new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.getMaterial(), this.hasPlate())).get());
-    }
-
     @Nonnull
     @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+    public IPacket<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -379,8 +372,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         CRIMSON("crimson", true, true),
         WARPED("warped", true, true),
         IRON("iron", false, false),
-        GOLD("gold", true, true),
-        MANGROVE("mangrove", true, true);
+        GOLD("gold", true, true);
 
         private static final Map<String, Materials> LOOKUP = Maps.uniqueIndex(
                 Arrays.asList(Materials.values()),

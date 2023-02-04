@@ -4,11 +4,11 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.network.ClientHandler;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -21,7 +21,7 @@ public class SCanvasSyncExportPacket extends SCanvasSyncPacket<PaintingData> {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SCanvasSyncExportPacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SCanvasSyncExportPacket readPacketData(PacketBuffer networkBuffer) {
         try {
             String canvasCode = networkBuffer.readUtf(128);
             long timestamp = networkBuffer.readLong();
@@ -38,7 +38,7 @@ public class SCanvasSyncExportPacket extends SCanvasSyncPacket<PaintingData> {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
 
@@ -50,7 +50,7 @@ public class SCanvasSyncExportPacket extends SCanvasSyncPacket<PaintingData> {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SCanvasSyncExportPacket context could not provide a ClientWorld.");
             return;

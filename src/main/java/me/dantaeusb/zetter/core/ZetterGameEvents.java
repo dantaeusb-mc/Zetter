@@ -5,22 +5,20 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.Util;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Util;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerDisconnected(PlayerEvent.PlayerLoggedOutEvent event) {
-        Player player = event.getEntity();
+        PlayerEntity player = (PlayerEntity) event.getEntity();
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
 
         canvasTracker.stopTrackingAllCanvases(player.getUUID());
@@ -55,7 +53,7 @@ public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerContainerOpened(PlayerContainerEvent.Open event) {
         if (event.getContainer() instanceof EaselMenu easelMenu) {
-            easelMenu.getState().addPlayer(event.getEntity());
+            easelMenu.getState().addPlayer((PlayerEntity) event.getEntity());
         }
     }
 
@@ -69,7 +67,7 @@ public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerContainerClosed(PlayerContainerEvent.Close event) {
         if (event.getContainer() instanceof EaselMenu easelMenu) {
-            easelMenu.getState().removePlayer(event.getEntity());
+            easelMenu.getState().removePlayer((PlayerEntity) event.getEntity());
         }
     }
 }

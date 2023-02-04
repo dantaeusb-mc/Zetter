@@ -1,17 +1,17 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.Mth;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
-public class SliderWidget extends AbstractPaintingWidget implements Renderable {
+public class SliderWidget extends AbstractPaintingWidget implements IRenderable {
     final static int WIDTH = 150;
     final static int HEIGHT = 9;
 
@@ -28,7 +28,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
      */
 
     public SliderWidget(
-            EaselScreen parentScreen, int x, int y, Component translatableComponent,
+            EaselScreen parentScreen, int x, int y, ITextComponent translatableComponent,
             Consumer<Float> positionConsumer,
             @Nullable BackgroundConsumer backgroundLambda, @Nullable ForegroundColorFunction foregroundLambda
     ) {
@@ -48,7 +48,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     @Override
-    public @Nullable Component getTooltip(int mouseX, int mouseY) {
+    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
@@ -90,17 +90,16 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+    public void render(MatrixStack matrixStack) {
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         this.drawSliderBackground(matrixStack);
         this.drawSliderForeground(matrixStack);
         this.drawHandler(matrixStack);
     }
 
-    protected void drawSliderBackground(PoseStack matrixStack) {
+    protected void drawSliderBackground(MatrixStack matrixStack) {
         final int SLIDER_POSITION_U = 5;
         final int SLIDER_POSITION_V = 80;
 
@@ -110,12 +109,12 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             sliderV += HEIGHT;
         }
 
-        this.blit(matrixStack, this.getX(), this.getY(), SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
+        this.blit(matrixStack, this.x, this.y, SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
     }
 
-    protected void drawSliderForeground(PoseStack matrixStack) {
-        int sliderContentGlobalLeft = this.getX() + 3;
-        int sliderContentGlobalTop = this.getY() + 3;
+    protected void drawSliderForeground(MatrixStack matrixStack) {
+        int sliderContentGlobalLeft = this.x + 3;
+        int sliderContentGlobalTop = this.y + 3;
 
         int sliderContentWidth = WIDTH - 6;
         int sliderContentHeight = 3;
@@ -147,8 +146,8 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     protected void handleSliderInteraction(final int mouseX, final int mouseY) {
         this.sliderDragging = true;
 
-        float percent = (float) (mouseX - this.getX() - 3) / (WIDTH - 7);
-        percent = Mth.clamp(percent, 0.0f, 1.0f);
+        float percent = (float) (mouseX - this.x - 3) / (WIDTH - 7);
+        percent = MathHelper.clamp(percent, 0.0f, 1.0f);
 
         this.sliderState = percent;
 
@@ -159,7 +158,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
      * Handlers
      */
 
-    protected void drawHandler(PoseStack matrixStack) {
+    protected void drawHandler(MatrixStack matrixStack) {
         final int HANDLER_POSITION_U = 0;
         final int HANDLER_POSITION_V = 79;
         final int HANDLER_WIDTH = 5;
@@ -167,8 +166,8 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
 
         int sliderContentWidth = WIDTH - 7;
 
-        int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * this.sliderState) + 3 - 2;
-        int sliderGlobalTop = this.getY() - 1;
+        int sliderGlobalLeft = this.x + (int) (sliderContentWidth * this.sliderState) + 3 - 2;
+        int sliderGlobalTop = this.y - 1;
 
         int sliderV = HANDLER_POSITION_V;
 
@@ -181,7 +180,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
 
     @FunctionalInterface
     public interface BackgroundConsumer {
-        public void accept(PoseStack matrixStack, int x, int y, int width, int height);
+        public void accept(MatrixStack matrixStack, int x, int y, int width, int height);
     }
 
     /**

@@ -1,34 +1,33 @@
 package me.dantaeusb.zetter.item.crafting;
 
-import me.dantaeusb.zetter.Zetter;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.core.NonNullList;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.SpecialRecipe;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 /**
  * Only for frames, toggle
  */
-public class UnframingRecipe extends CustomRecipe {
+public class UnframingRecipe extends SpecialRecipe {
     private final Ingredient inputFrame;
 
     public UnframingRecipe(ResourceLocation id, Ingredient inputFrame) {
-        super(id, CraftingBookCategory.MISC);
+        super(id);
 
         this.inputFrame = inputFrame;
     }
@@ -42,7 +41,7 @@ public class UnframingRecipe extends CustomRecipe {
      * Used to check if a recipe matches current crafting inventory
      * @todo: [LOW] Maybe we can just extend ShapelessRecipe
      */
-    public boolean matches(CraftingContainer craftingInventory, Level world) {
+    public boolean matches(CraftingInventory craftingInventory, World world) {
         ItemStack frameStack = ItemStack.EMPTY;
 
         for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
@@ -66,7 +65,7 @@ public class UnframingRecipe extends CustomRecipe {
         return !frameStack.isEmpty() && PaintingItem.getPaintingCode(frameStack) != null;
     }
 
-    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inv) {
+    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
         NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
 
         for(int i = 0; i < remainingItems.size(); ++i) {
@@ -91,7 +90,7 @@ public class UnframingRecipe extends CustomRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingContainer craftingInventory) {
+    public ItemStack assemble(CraftingInventory craftingInventory) {
         ItemStack frameStack = ItemStack.EMPTY;
 
         for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
@@ -106,7 +105,7 @@ public class UnframingRecipe extends CustomRecipe {
 
         if (!frameStack.isEmpty() && frameStack.hasTag()) {
             ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
-            CompoundTag compoundnbt = frameStack.getTag().copy();
+            CompoundNBT compoundnbt = frameStack.getTag().copy();
             outStack.setTag(compoundnbt);
             return outStack;
         } else {
@@ -117,7 +116,7 @@ public class UnframingRecipe extends CustomRecipe {
     /**
      * @return
      */
-    public RecipeSerializer<?> getSerializer() {
+    public IRecipeSerializer<?> getSerializer() {
         return ZetterCraftingRecipes.UNFRAMING.get();
     }
 
@@ -128,23 +127,23 @@ public class UnframingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<UnframingRecipe> {
+    public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<UnframingRecipe> {
         @Override
         public UnframingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");
+            final JsonElement inputFrameJson = JSONUtils.getAsJsonObject(json, "frame");
             final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
 
             return new UnframingRecipe(recipeId, inputFrame);
         }
 
         @Override
-        public UnframingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
+        public UnframingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
             return new UnframingRecipe(recipeId, frameIngredient);
         }
 
         @Override
-        public void toNetwork(FriendlyByteBuf buffer, UnframingRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, UnframingRecipe recipe) {
             recipe.inputFrame.toNetwork(buffer);
         }
     }

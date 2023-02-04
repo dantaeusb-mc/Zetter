@@ -8,7 +8,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelLayerLocation;
@@ -31,7 +31,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.World;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -92,8 +92,8 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
         return LayerDefinition.create(meshdefinition, 16, 16);
     }
 
-    public void render(PaintingEntity entity, float entityYaw, float partialTicks, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
-        Level world = entity.getCommandSenderWorld();
+    public void render(PaintingEntity entity, float entityYaw, float partialTicks, MatrixStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
+        World world = entity.getCommandSenderWorld();
 
         matrixStack.pushPose();
 
@@ -245,10 +245,10 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
         super.render(entity, entityYaw, partialTicks, matrixStack, renderBuffers, combinedLight);
     }
 
-    private void renderModel(PaintingEntity entity, String key, PoseStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
+    private void renderModel(PaintingEntity entity, String key, MatrixStack matrixStack, MultiBufferSource renderBuffers, int combinedLight) {
         ModelResourceLocation modelResourceLocation = FRAME_MODELS.get(entity.getMaterial() + "/" + key);
 
-        PoseStack.Pose currentMatrix = matrixStack.last();
+        MatrixStack.Pose currentMatrix = matrixStack.last();
         VertexConsumer vertexBuffer = renderBuffers.getBuffer(RenderType.solid());
 
         BakedModel frameModel = Minecraft.getInstance().getModelManager().getModel(modelResourceLocation);
@@ -277,7 +277,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
     }
 
     @Nullable
-    public static PaintingData getCanvasData(Level world, String canvasName) {
+    public static PaintingData getCanvasData(World world, String canvasName) {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         if (canvasTracker == null) {

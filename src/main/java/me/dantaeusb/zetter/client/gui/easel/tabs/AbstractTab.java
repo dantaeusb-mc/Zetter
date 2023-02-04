@@ -1,10 +1,10 @@
 package me.dantaeusb.zetter.client.gui.easel.tabs;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.AbstractPaintingWidget;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.ITextComponent;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public class AbstractTab extends AbstractPaintingWidget {
 
     protected final List<AbstractPaintingWidget> tabWidgets = Lists.newArrayList();
 
-    public AbstractTab(EaselScreen parentScreen, int windowX, int windowY, Component title) {
+    public AbstractTab(EaselScreen parentScreen, int windowX, int windowY, ITextComponent title) {
         super(parentScreen, windowX + POSITION_X, windowY + POSITION_Y, WIDTH, HEIGHT, title);
     }
 
@@ -24,7 +24,7 @@ public class AbstractTab extends AbstractPaintingWidget {
         this.tabWidgets.add(widget);
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    public void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
         for (AbstractPaintingWidget widget : this.tabWidgets) {
             widget.renderLabels(matrixStack, mouseX, mouseY);
         }

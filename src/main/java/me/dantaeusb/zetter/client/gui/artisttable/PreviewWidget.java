@@ -7,31 +7,28 @@ import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.narration.NarratedElementType;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.MultiBufferSource;
-import com.mojang.blaze3d.vertex.Tesselator;
-import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.IRenderable;
 import net.minecraft.util.Tuple;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class PreviewWidget extends AbstractArtistTableWidget implements Renderable, GuiEventListener {
-    private static final Component EMPTY_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.empty");
-    private static final Component INVALID_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.invalid");
-    private static final Component LOADING_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.loading");
+public class PreviewWidget extends AbstractArtistTableWidget implements IRenderable, IGuiEventListener {
+    private static final ITextComponent EMPTY_TITLE = new TranslationTextComponent("container.zetter.artist_table.combined_canvas.empty");
+    private static final ITextComponent INVALID_TITLE = new TranslationTextComponent("container.zetter.artist_table.combined_canvas.invalid");
+    private static final ITextComponent LOADING_TITLE = new TranslationTextComponent("container.zetter.artist_table.combined_canvas.loading");
 
     private static final int size = 64;
 
     public PreviewWidget(ArtistTableScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, size, size, Component.translatable("container.zetter.artist_table.combined_canvas"));
+        super(parentScreen, x, y, size, size, new TranslationTextComponent("container.zetter.artist_table.combined_canvas"));
     }
 
-    public void render(PoseStack matrixStack) {
+    public void render(MatrixStack matrixStack) {
         matrixStack.pushPose();
         matrixStack.translate(this.getX(), this.getY(), 1.0F);
 
@@ -42,7 +39,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
         matrixStack.popPose();
     }
 
-    private void drawCanvas(PoseStack matrixStack, @Nullable DummyCanvasData canvasData) {
+    private void drawCanvas(MatrixStack matrixStack, @Nullable DummyCanvasData canvasData) {
         if (canvasData != null) {
             int scale = getScale(canvasData);
             Tuple<Integer, Integer> displacement = getDisplacement(canvasData, scale);
@@ -85,14 +82,14 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
     }
 
     @Nullable
-    public static CanvasData getCanvasData(Level world, String canvasName) {
+    public static CanvasData getCanvasData(World world, String canvasName) {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         return canvasTracker.getCanvasData(canvasName);
     }
 
     public @Nullable
-    Component getTooltip(int mouseX, int mouseY) {
+    ITextComponent getTooltip(int mouseX, int mouseY) {
         switch (this.parentScreen.getMenu().getActionState()) {
             case EMPTY:
                 return EMPTY_TITLE;
@@ -103,10 +100,5 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
         }
 
         return this.getMessage();
-    }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

@@ -10,12 +10,17 @@ import me.dantaeusb.zetter.menu.artisttable.CanvasSplitAction;
 import me.dantaeusb.zetter.network.packet.CArtistTableModeChangePacket;
 import me.dantaeusb.zetter.network.packet.SArtistTableMenuCreatePacket;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.*;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.IContainerListener;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.IIntArray;
+import net.minecraft.util.IWorldPosCallable;
+import net.minecraft.util.IntArray;
+import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
@@ -30,7 +35,7 @@ import static me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity.DATA_MODE;
  * but at least we have single source of truth and transparent sync
  * with data slots
  */
-public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackHandlerListener, ContainerListener {
+public class ArtistTableMenu extends Container implements ItemStackHandlerListener, IContainerListener {
     private static final int HOTBAR_SLOT_COUNT = 9;
 
     private static final int PLAYER_INVENTORY_ROW_COUNT = 3;
@@ -40,8 +45,8 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     public static final int CANVAS_COLUMN_COUNT = 4;
     public static final int CANVAS_SLOT_COUNT = CANVAS_ROW_COUNT * CANVAS_COLUMN_COUNT;
 
-    private final Player player;
-    private final Level level;
+    private final PlayerEntity player;
+    private final World level;
 
     /**
      * Three containers:
@@ -60,7 +65,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     private final Slot combinedSlot;
 
     private AbstractCanvasAction action;
-    private final ContainerLevelAccess access;
+    private final IWorldPosCallable access;
 
     /*
      * Active only in combination mode, large
@@ -105,7 +110,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     };
 
     // Mode
-    private final ContainerData containerData;
+    private final IIntArray containerData;
 
     // gui position of the player inventory grid
     public static final int PLAYER_INVENTORY_XPOS = 36;
@@ -123,10 +128,10 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     final int SLOT_X_SPACING = 18;
     final int SLOT_Y_SPACING = 18;
 
-    public ArtistTableMenu(int windowID, Inventory invPlayer,
-                           ArtistTableGridContainer artistTableContainer, ContainerData containerData,
-                           final ContainerLevelAccess access) {
-        super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
+    public ArtistTableMenu(int windowID, PlayerInventory invPlayer,
+                           ArtistTableGridContainer artistTableContainer, IIntArray containerData,
+                           final IWorldPosCallable access) {
+        super(ZetterContainerMenus.ARTIST_TABLE, windowID);
 
         this.player = invPlayer.player;
         this.level = invPlayer.player.getLevel();
@@ -199,21 +204,21 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
     }
 
-    public static ArtistTableMenu createMenuServerSide(int windowID, Inventory playerInventory,
+    public static ArtistTableMenu createMenuServerSide(int windowID, PlayerInventory playerInventory,
                                                        ArtistTableGridContainer artistTableContainer,
-                                                       ContainerData containerData,
-                                                       ContainerLevelAccess access) {
+                                                       IIntArray containerData,
+                                                       IWorldPosCallable access) {
         return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, containerData, access);
     }
 
-    public static ArtistTableMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
+    public static ArtistTableMenu createMenuClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         SArtistTableMenuCreatePacket packet = SArtistTableMenuCreatePacket.readPacketData(networkBuffer);
         ArtistTableGridContainer artistTableContainer = new ArtistTableGridContainer();
 
-        ContainerData clientData = new SimpleContainerData(1);
+        IIntArray clientData = new IntArray(1);
         clientData.set(ArtistTableBlockEntity.DATA_MODE, packet.getMode().getId());
 
-        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, new SimpleContainerData(1), ContainerLevelAccess.NULL);
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, new IntArray(1), IWorldPosCallable.NULL);
     }
 
     public ItemStackHandler getCombinationContainer() {
@@ -348,12 +353,12 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     }
 
     @Override
-    public void slotChanged(AbstractContainerMenu containerMenu, int slotInd, ItemStack stack) {
+    public void slotChanged(Container containerMenu, int slotInd, ItemStack stack) {
 
     }
 
     @Override
-    public void dataChanged(AbstractContainerMenu containerMenu, int dataSlotIndex, int value) {
+    public void setContainerData(Container containerMenu, int dataSlotIndex, int value) {
         if (dataSlotIndex == DATA_MODE) {
             if (this.getMode() == Mode.COMBINE && !(this.action instanceof CanvasCombinationAction)) {
                 this.action = new CanvasCombinationAction(this, this.level);
@@ -380,7 +385,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      *
      * @param player
      */
-    public void removed(Player player) {
+    public void removed(PlayerEntity player) {
         super.removed(player);
         this.combinationContainer.removeListener(this);
 
@@ -417,7 +422,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(Player playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(PlayerEntity playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -464,7 +469,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(Player player) {
+    public boolean stillValid(PlayerEntity player) {
         return this.combinationContainer.stillValid(player);
     }
 
@@ -472,8 +477,8 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * Helper
      */
 
-    protected void discardSplitGrid(Player player) {
-        if (!player.isAlive() || player instanceof ServerPlayer && ((ServerPlayer)player).hasDisconnected()) {
+    protected void discardSplitGrid(PlayerEntity player) {
+        if (!player.isAlive() || player instanceof ServerPlayerEntity && ((ServerPlayerEntity)player).hasDisconnected()) {
             for(int i = 0; i < this.splitHandler.getSlots(); ++i) {
                 ItemStack extractedStack = this.splitHandler.extractItem(i, this.splitHandler.getSlotLimit(i), false);
 
@@ -484,9 +489,9 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
         } else {
             for(int i = 0; i < this.splitHandler.getSlots(); ++i) {
-                Inventory inventory = player.getInventory();
+                PlayerInventory inventory = player.inventory;
 
-                if (inventory.player instanceof ServerPlayer) {
+                if (inventory.player instanceof ServerPlayerEntity) {
                     ItemStack extractedStack = this.splitHandler.extractItem(i, this.splitHandler.getSlotLimit(i), false);
 
                     if (!extractedStack.isEmpty() && !CanvasItem.isEmpty(extractedStack)) {
@@ -497,15 +502,15 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
     }
 
-    protected void clearHandler(Player player, ItemStackHandler stackHandler) {
-        if (!player.isAlive() || player instanceof ServerPlayer && ((ServerPlayer)player).hasDisconnected()) {
+    protected void clearHandler(PlayerEntity player, ItemStackHandler stackHandler) {
+        if (!player.isAlive() || player instanceof ServerPlayerEntity && ((ServerPlayerEntity)player).hasDisconnected()) {
             for(int i = 0; i < stackHandler.getSlots(); ++i) {
                 player.drop(stackHandler.extractItem(i, stackHandler.getSlotLimit(i), false), false);
             }
         } else {
             for(int i = 0; i < stackHandler.getSlots(); ++i) {
-                Inventory inventory = player.getInventory();
-                if (inventory.player instanceof ServerPlayer) {
+                PlayerInventory inventory = player.inventory;
+                if (inventory.player instanceof ServerPlayerEntity) {
                     inventory.placeItemBackInInventory(stackHandler.extractItem(i, stackHandler.getSlotLimit(i), false));
                 }
             }
@@ -540,7 +545,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
 
         @Override
-        public void onTake(Player player, ItemStack stack) {
+        public void onTake(PlayerEntity player, ItemStack stack) {
             ArtistTableMenu.this.getAction().onTakeCombination(player, stack);
         }
     }
@@ -566,7 +571,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
 
         @Override
-        public void onTake(Player player, ItemStack stack) {
+        public void onTake(PlayerEntity player, ItemStack stack) {
             ArtistTableMenu.this.getAction().onTakeSplit(player, stack);
         }
     }
@@ -582,7 +587,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         }
 
         @Override
-        public void onTake(Player player, ItemStack stack) {
+        public void onTake(PlayerEntity player, ItemStack stack) {
             ArtistTableMenu.this.getAction().onTakeCombined(player, stack);
         }
     }

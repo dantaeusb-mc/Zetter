@@ -3,9 +3,9 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
@@ -29,7 +29,7 @@ public class CSignPaintingPacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static CSignPaintingPacket readPacketData(FriendlyByteBuf buf) {
+    public static CSignPaintingPacket readPacketData(PacketBuffer buf) {
         CSignPaintingPacket packet = new CSignPaintingPacket();
 
         try {
@@ -46,7 +46,7 @@ public class CSignPaintingPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf buf) {
+    public void writePacketData(PacketBuffer buf) {
         buf.writeByte(this.slot);
         buf.writeUtf(this.paintingTitle, Helper.PAINTING_TITLE_MAX_LENGTH);
     }
@@ -63,7 +63,7 @@ public class CSignPaintingPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
-        final ServerPlayer sendingPlayer = ctx.getSender();
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCreatePaintingPacket was received");
         }

@@ -2,10 +2,10 @@ package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
-import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.WorldSavedData;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -17,7 +17,7 @@ import java.util.Map;
  * It's not enough to just init data, we need to register it with
  * @see CanvasServerTracker ::registerCanvasData();
  */
-public abstract class AbstractCanvasData extends SavedData {
+public abstract class AbstractCanvasData extends WorldSavedData {
     public static final String NBT_TAG_TYPE = "CanvasDataType";
     @Deprecated
     public static final String NBT_TAG_TYPE_DEPRECATED = "type";
@@ -43,6 +43,10 @@ public abstract class AbstractCanvasData extends SavedData {
      * this data will have to be collected manually.
      */
     protected boolean managed = true;
+
+    public AbstractCanvasData(String canvasCode) {
+        super(canvasCode);
+    }
 
     /**
      * Returns type of this canvas, which can return
@@ -169,8 +173,8 @@ public abstract class AbstractCanvasData extends SavedData {
      * @return
      */
     public final int getPixelIndex(int pixelX, int pixelY) {
-        pixelX = Mth.clamp(pixelX, 0, this.width - 1);
-        pixelY = Mth.clamp(pixelY, 0, this.height - 1);
+        pixelX = MathHelper.clamp(pixelX, 0, this.width - 1);
+        pixelY = MathHelper.clamp(pixelY, 0, this.height - 1);
 
         return pixelY * this.width + pixelX;
     }
@@ -179,12 +183,12 @@ public abstract class AbstractCanvasData extends SavedData {
      * Loading and syncing
      */
 
-    public void correctData(ServerLevel level) {
+    public void correctData(ServerWorld level) {
         // Do nothing
     }
 
-    public CompoundTag save(CompoundTag compoundTag) {
-        compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
+    public CompoundNBT save(CompoundNBT compoundTag) {
+        compoundTag.putString(NBT_TAG_TYPE, this.getType().getRegistryName().toString());
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);
         compoundTag.putInt(NBT_TAG_RESOLUTION, this.resolution.ordinal());

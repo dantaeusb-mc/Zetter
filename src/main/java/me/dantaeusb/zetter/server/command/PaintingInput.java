@@ -4,7 +4,7 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
 
 public class PaintingInput {
     private String code;
@@ -36,7 +36,7 @@ public class PaintingInput {
         return new PaintingInput(title);
     }
 
-    public void lookup(Level level) {
+    public void lookup(World level) {
         this.didLookup = true;
 
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
@@ -61,7 +61,7 @@ public class PaintingInput {
         }
     }
 
-    public boolean hasPaintingData(Level level) {
+    public boolean hasPaintingData(World level) {
         if (!this.didLookup) {
             this.lookup(level);
         }

@@ -1,22 +1,22 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.components.IRenderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ITextComponent;
 
 import javax.annotation.Nullable;
 
-public class ChangeActionWidget extends AbstractArtistTableWidget implements Renderable {
-    private static final Component DEFAULT_TITLE = Component.translatable("container.zetter.artist_table.change_action");
-    private static final Component CHANGE_TO_SPLIT_TITLE = Component.translatable("container.zetter.artist_table.change_action.to_split");
-    private static final Component CHANGE_TO_COMBINE_TITLE = Component.translatable("container.zetter.artist_table.change_action.to_combine");
+public class ChangeActionWidget extends AbstractArtistTableWidget implements IRenderable {
+    private static final ITextComponent DEFAULT_TITLE = new TranslationTextComponent("container.zetter.artist_table.change_action");
+    private static final ITextComponent CHANGE_TO_SPLIT_TITLE = new TranslationTextComponent("container.zetter.artist_table.change_action.to_split");
+    private static final ITextComponent CHANGE_TO_COMBINE_TITLE = new TranslationTextComponent("container.zetter.artist_table.change_action.to_combine");
 
     private final static int BUTTON_WIDTH = 20;
     private final static int BUTTON_HEIGHT = 18;
@@ -50,7 +50,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) {
             return;
         }
@@ -67,7 +67,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
     }
 
     public @Nullable
-    Component getTooltip(int mouseX, int mouseY) {
+    ITextComponent getTooltip(int mouseX, int mouseY) {
         if (this.parentScreen.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
             return CHANGE_TO_SPLIT_TITLE;
         } else {

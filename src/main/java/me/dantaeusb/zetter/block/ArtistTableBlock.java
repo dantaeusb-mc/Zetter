@@ -2,31 +2,27 @@ package me.dantaeusb.zetter.block;
 
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.network.packet.SArtistTableMenuCreatePacket;
-import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.block.*;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.StateDefinition;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.Level;
+import net.minecraft.block.*;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.BlockItemUseContext;
+import net.minecraft.state.DirectionProperty;
+import net.minecraft.state.StateContainer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ActionResultType;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Rotation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.world.IBlockReader;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.network.NetworkHooks;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.core.Direction;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.NetworkHooks;
-
-import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
-
-public class ArtistTableBlock extends BaseEntityBlock {
-    public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+public class ArtistTableBlock extends ContainerBlock {
+    public static final DirectionProperty FACING = HorizontalBlock.FACING;
 
     public ArtistTableBlock(Properties properties) {
         super(properties);
@@ -35,16 +31,21 @@ public class ArtistTableBlock extends BaseEntityBlock {
     }
 
     @Nullable
-    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+    public TileEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new ArtistTableBlockEntity(pos, state);
     }
 
-    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+    @Nullable
+    public TileEntity newBlockEntity(IBlockReader reader) {
+        return new ArtistTableBlockEntity();
+    }
+
+    public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
         if (worldIn.isClientSide) {
-            return InteractionResult.SUCCESS;
+            return ActionResultType.SUCCESS;
         } else {
             this.interactWith(worldIn, pos, player);
-            return InteractionResult.CONSUME;
+            return ActionResultType.CONSUME;
         }
     }
 
@@ -52,12 +53,12 @@ public class ArtistTableBlock extends BaseEntityBlock {
      * Interface for handling interaction with blocks that impliment AbstractFurnaceBlock. Called in onBlockActivated
      * inside AbstractFurnaceBlock.
      */
-    protected void interactWith(Level level, BlockPos pos, Player player) {
-        BlockEntity currentTileEntity = level.getBlockEntity(pos);
+    protected void interactWith(World level, BlockPos pos, PlayerEntity player) {
+        TileEntity currentTileEntity = level.getBlockEntity(pos);
 
         if (currentTileEntity instanceof ArtistTableBlockEntity) {
             if (!level.isClientSide()) {
-                NetworkHooks.openScreen((ServerPlayer) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
+                NetworkHooks.openGui((ServerPlayerEntity) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
                     SArtistTableMenuCreatePacket packet = new SArtistTableMenuCreatePacket(currentTileEntity.getBlockPos(), ((ArtistTableBlockEntity) currentTileEntity).getMode());
                     packet.writePacketData(packetBuffer);
                 });
@@ -65,13 +66,13 @@ public class ArtistTableBlock extends BaseEntityBlock {
         }
     }
 
-    public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+    public BlockRenderType getRenderShape(BlockState state) {
+        return BlockRenderType.MODEL;
     }
 
-    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean isMoving) {
+    public void onRemove(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            BlockEntity tileEntity = world.getBlockEntity(pos);
+            TileEntity tileEntity = world.getBlockEntity(pos);
             if (tileEntity instanceof ArtistTableBlockEntity) {
                 ((ArtistTableBlockEntity) tileEntity).dropAllContents(world, pos);
             }
@@ -80,7 +81,7 @@ public class ArtistTableBlock extends BaseEntityBlock {
         }
     }
 
-    public BlockState getStateForPlacement(BlockPlaceContext context) {
+    public BlockState getStateForPlacement(BlockItemUseContext context) {
         return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection());
     }
 
@@ -88,7 +89,7 @@ public class ArtistTableBlock extends BaseEntityBlock {
         return state.setValue(FACING, rot.rotate(state.getValue(FACING)));
     }
 
-    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(FACING);
     }
 }

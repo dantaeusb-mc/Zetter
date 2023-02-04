@@ -11,9 +11,12 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.Level;
+import net.minecraft.client.entity.player.ClientPlayerEntity;
+import net.minecraft.network.chat.ITextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
+import net.minecraft.world.level.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.io.IOException;
@@ -30,7 +33,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSync(final SCanvasSyncPacket<?> packetIn, Level world) {
+    public static void processCanvasSync(final SCanvasSyncPacket<?> packetIn, World world) {
         try {
             final String canvasCode = packetIn.canvasCode;
             final AbstractCanvasData canvasData = packetIn.canvasData;
@@ -52,9 +55,9 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSyncView(final SCanvasSyncViewPacket packetIn, Level world) {
+    public static void processCanvasSyncView(final SCanvasSyncViewPacket packetIn, World world) {
         try {
-            final LocalPlayer player = Minecraft.getInstance().player;
+            final ClientPlayerEntity player = Minecraft.getInstance().player;
             final String canvasCode = packetIn.canvasCode;
             final AbstractCanvasData canvasData = packetIn.canvasData;
 
@@ -75,7 +78,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSyncExportError(final SCanvasSyncExportPacket packetIn, Level world) {
+    public static void processCanvasSyncExportError(final SCanvasSyncExportPacket packetIn, World world) {
         try {
             final String canvasCode = packetIn.canvasCode;
             final PaintingData paintingData = packetIn.canvasData;
@@ -83,7 +86,7 @@ public class ClientHandler {
             Helper.exportPainting(Minecraft.getInstance().gameDirectory, canvasCode, paintingData);
 
             Minecraft.getInstance().getChatListener().handleSystemMessage(
-                Component.translatable("console.zetter.result.exported_painting_client", paintingData.getPaintingName()),
+                new TranslationTextComponent("console.zetter.result.exported_painting_client", paintingData.getPaintingName()),
                 false
             );
         } catch (IOException e) {
@@ -94,7 +97,7 @@ public class ClientHandler {
 
             // Send message that we were unable to write file
             Minecraft.getInstance().getChatListener().handleSystemMessage(
-                Component.translatable("console.zetter.error.file_write_error", e.getMessage()).withStyle(ChatFormatting.RED),
+                new TranslationTextComponent("console.zetter.error.file_write_error", e.getMessage()).withStyle(TextFormatting.RED),
                 false
             );
         } catch (Exception e) {
@@ -110,7 +113,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasSyncExportError(final SCanvasSyncExportErrorPacket packetIn, Level world) {
+    public static void processCanvasSyncExportError(final SCanvasSyncExportErrorPacket packetIn, World world) {
         if (Minecraft.getInstance().getConnection() == null) {
             Zetter.LOG.error(packetIn.errorCode);
             return;
@@ -118,7 +121,7 @@ public class ClientHandler {
 
         // Send message about result of player's request
         Minecraft.getInstance().getChatListener().handleSystemMessage(
-            Component.translatable(packetIn.errorCode, packetIn.errorMessage).withStyle(ChatFormatting.RED),
+            new TranslationTextComponent(packetIn.errorCode, packetIn.errorMessage).withStyle(TextFormatting.RED),
             false
         );
     }
@@ -128,7 +131,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processEaselStateSync(final SEaselStateSyncPacket packetIn, Level world) {
+    public static void processEaselStateSync(final SEaselStateSyncPacket packetIn, World world) {
         try {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
@@ -148,7 +151,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, Level world) {
+    public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, World world) {
         try {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
             // @todo: [MED] Check if player can access entity
@@ -176,7 +179,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, Level world) {
+    public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, World world) {
         try {
             final String canvasCode = packetIn.canvasCode();
             final long timestamp = packetIn.timestamp();
@@ -196,7 +199,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processEaselCanvasInitialization(final SEaselCanvasInitializationPacket packetIn, Level world) {
+    public static void processEaselCanvasInitialization(final SEaselCanvasInitializationPacket packetIn, World world) {
         try {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 
@@ -223,7 +226,7 @@ public class ClientHandler {
      * @param packetIn
      * @param world
      */
-    public static void processEaselReset(final SEaselResetPacket packetIn, Level world) {
+    public static void processEaselReset(final SEaselResetPacket packetIn, World world) {
         try {
             EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
 

@@ -1,37 +1,30 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.components.AbstractWidget;
-import net.minecraft.client.gui.narration.NarratedElementType;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.widget.Widget;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.ITextComponent;
 
 import javax.annotation.Nullable;
 
-abstract public class AbstractPaintingWidget extends AbstractWidget implements GuiEventListener {
+abstract public class AbstractPaintingWidget extends Widget implements IGuiEventListener {
     // This is the resource location for the background image
     public static final ResourceLocation PAINTING_WIDGETS_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel/widgets.png");
 
     protected final EaselScreen parentScreen;
 
-    public AbstractPaintingWidget(EaselScreen parentScreen, int x, int y, int width, int height, Component title) {
+    public AbstractPaintingWidget(EaselScreen parentScreen, int x, int y, int width, int height, ITextComponent title) {
         super(x, y, width, height, title);
 
         this.parentScreen = parentScreen;
     }
 
-    public @Nullable Component getTooltip(int mouseX, int mouseY) {
+    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
         return this.getMessage();
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {}
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
+    public void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {}
 }

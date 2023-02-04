@@ -9,45 +9,37 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Tuple;
+import net.minecraft.block.BlockState;
+import net.minecraft.command.impl.data.EntityDataAccessor;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.MoverType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.IPacket;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.*;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.*;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameRules;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.DiodeBlock;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
-public class   EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
+public class  EaselEntity extends Entity implements ItemStackHandlerListener, INamedContainerProvider {
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
     private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
@@ -55,7 +47,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return entity instanceof EaselEntity;
     };
 
-    private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(EaselEntity.class, EntityDataSerializers.STRING);
+    private static final DataParameter<String> DATA_ID_CANVAS_CODE = EntityDataManager.defineId(EaselEntity.class, DataSerializers.STRING);
 
     protected BlockPos pos;
     protected EaselContainer easelContainer;
@@ -64,11 +56,11 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
     /** The list of players currently using this easel */
-    private ArrayList<Player> playersUsing = new ArrayList<>();
+    private ArrayList<PlayerEntity> playersUsing = new ArrayList<>();
 
     private int tick;
 
-    public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
+    public EaselEntity(EntityType<? extends EaselEntity> type, World world) {
         super(type, world);
         this.createInventory();
         this.stateHandler = new EaselState(this);
@@ -101,7 +93,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
     }
 
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+    public IPacket<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -150,7 +142,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         this.setEntityCanvasCode(canvasCode);
     }
 
-    public boolean canPlayerAccessInventory(Player player) {
+    public boolean canPlayerAccessInventory(PlayerEntity player) {
         // @todo: [HIGH] Implement check
         return true;
     }
@@ -177,7 +169,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return this.easelContainer;
     }
 
-    public void addAdditionalSaveData(CompoundTag compoundTag) {
+    public void addAdditionalSaveData(CompoundNBT compoundTag) {
         compoundTag.put(NBT_TAG_EASEL_STORAGE, this.easelContainer.serializeNBT());
 
         if (this.getEntityCanvasCode() != null) {
@@ -185,7 +177,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
     }
 
-    public void readAdditionalSaveData(CompoundTag compoundTag) {
+    public void readAdditionalSaveData(CompoundNBT compoundTag) {
         this.createInventory();
 
         this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_EASEL_STORAGE));
@@ -202,7 +194,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @return
      */
     public boolean isPickable() {
-        return !this.isRemoved();
+        return this.isAlive();
     }
 
     public boolean isPushable() {
@@ -210,13 +202,13 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
+    public ActionResultType interact(PlayerEntity player, Hand hand) {
         ItemStack heldItem = player.getItemInHand(hand);
 
         if (player.isCrouching() && heldItem.isEmpty()) {
             ItemStack canvasStack = this.easelContainer.extractCanvasStack();
             player.setItemInHand(hand, canvasStack);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return ActionResultType.sidedSuccess(this.level.isClientSide);
         }
 
         final boolean isCanvas = heldItem.is(ZetterItems.CANVAS.get());
@@ -227,7 +219,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 this.easelContainer.setCanvasStack(heldItem);
                 player.setItemInHand(hand, ItemStack.EMPTY);
 
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return ActionResultType.sidedSuccess(this.level.isClientSide);
             }
         } else if (isPalette) {
             if (this.easelContainer.getPaletteStack().isEmpty()) {
@@ -238,12 +230,12 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
         this.openInventory(player);
 
-        return InteractionResult.sidedSuccess(this.level.isClientSide);
+        return ActionResultType.sidedSuccess(this.level.isClientSide);
     }
 
-    public void openInventory(Player player) {
+    public void openInventory(PlayerEntity player) {
         if (!this.level.isClientSide) {
-            NetworkHooks.openScreen((ServerPlayer) player, this, (packetBuffer) -> {
+            NetworkHooks.openScreen((ServerPlayerEntity) player, this, (packetBuffer) -> {
                 SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
                 packet.writePacketData(packetBuffer);
             });
@@ -263,14 +255,17 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return;
         }
 
-        this.checkOutOfWorld();
+        if (this.getY() < -64.0D) {
+            this.outOfWorld();
+        }
+
         if (this.tick % 200 == 0) {
             this.playersUsing = this.calculatePlayersUsing();
         }
 
         if (this.tick % 100 == 0) {
-            if (!this.isRemoved() && !this.survives()) {
-                this.discard();
+            if (this.isAlive() && !this.survives()) {
+                this.remove();
                 this.dropItem(null);
                 this.dropAllContents(this.level, this.getPos());
             }
@@ -355,10 +350,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     /**
      * @return
      */
-    public ArrayList<Player> calculatePlayersUsing() {
-        ArrayList<Player> usingPlayers = new ArrayList<>();
+    public ArrayList<PlayerEntity> calculatePlayersUsing() {
+        ArrayList<PlayerEntity> usingPlayers = new ArrayList<>();
 
-        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
+        for(PlayerEntity player : this.level.getEntitiesOfClass(PlayerEntity.class, new AxisAlignedBB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
             if (player.containerMenu instanceof EaselMenu) {
                 EaselContainer storage = ((EaselMenu)player.containerMenu).getContainer();
 
@@ -371,7 +366,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         return usingPlayers;
     }
 
-    public ArrayList<Player> getPlayersUsing() {
+    public ArrayList<PlayerEntity> getPlayersUsing() {
         return this.playersUsing;
     }
 
@@ -395,7 +390,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             return false;
         } else {
             if (!this.level.isClientSide) {
-                if (!this.isRemoved()) {
+                if (this.isAlive()) {
                     this.kill();
                     this.markHurt();
                     this.dropItem(damageSource.getEntity());
@@ -406,8 +401,9 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         }
     }
 
-    public void move(MoverType mover, Vec3 move) {
-        if (!this.level.isClientSide && !this.isRemoved() && move.lengthSqr() > 0.0D) {
+    @Override
+    public void move(MoverType mover, Vector3d move) {
+        if (!this.level.isClientSide && this.isAlive() && move.lengthSqr() > 0.0D) {
             this.kill();
             this.dropItem(null);
             this.dropAllContents(this.level, this.pos);
@@ -421,7 +417,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @param z
      */
     public void push(double x, double y, double z) {
-        if (!this.level.isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
+        if (!this.level.isClientSide && this.isAlive() && x * x + y * y + z * z > 0.0D) {
             this.kill();
             this.dropItem(null);
             this.dropAllContents(this.level, this.pos);
@@ -435,9 +431,9 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public void dropItem(@Nullable Entity entity) {
         if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
-            if (entity instanceof Player) {
-                Player player = (Player)entity;
-                if (player.getAbilities().instabuild) {
+            if (entity instanceof PlayerEntity) {
+                PlayerEntity player = (PlayerEntity)entity;
+                if (player.abilities.instabuild) {
                     return;
                 }
             }
@@ -451,7 +447,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @param world
      * @param blockPos
      */
-    public void dropAllContents(Level world, BlockPos blockPos) {
+    public void dropAllContents(World world, BlockPos blockPos) {
         for (int i = 0; i < this.easelContainer.getSlots(); i++) {
             Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
         }
@@ -466,7 +462,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      */
     @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
+    public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
         this.playersUsing.add(playerEntity);
         return EaselMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
     }

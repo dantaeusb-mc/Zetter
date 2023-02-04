@@ -1,22 +1,22 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.IRenderable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DitheringWidget extends AbstractPaintingWidget implements Renderable {
+public class DitheringWidget extends AbstractPaintingWidget implements IRenderable {
     private final static int WIDTH = 80;
     private final static int HEIGHT = 32;
     private final static int FONT_Y_MARGIN = 12;
@@ -28,7 +28,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
     private final List<DitheringButton> buttons;
 
     public DitheringWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.dithering"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslationTextComponent("container.zetter.painting.dithering"));
 
         final int DITHERING_BUTTON_U = 0;
         final int DITHERING_BUTTON_V = 32;
@@ -40,7 +40,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
     }
 
     @Override
-    public @Nullable Component getTooltip(int mouseX, int mouseY) {
+    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
@@ -56,9 +56,9 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
 
         int i = 0;
         for (DitheringButton ditheringButton: this.buttons) {
-            int fromX = this.getX() + i * DITHERING_BUTTON_WIDTH;
+            int fromX = this.x + i * DITHERING_BUTTON_WIDTH;
 
-            if (EaselScreen.isInRect(fromX, this.getY() + FONT_Y_MARGIN, ditheringButton.width, ditheringButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(fromX, this.y + FONT_Y_MARGIN, ditheringButton.width, ditheringButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
 
                 if (parameters instanceof DitheringParameterHolder) {
@@ -77,10 +77,9 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
         return false;
     }
 
-    public void render(PoseStack matrixStack) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+    public void render(MatrixStack matrixStack) {
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         DitheringPipe.DitheringOption dithering = null;
@@ -93,16 +92,16 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
 
         int i = 0;
         for (DitheringButton ditheringButton: this.buttons) {
-            int fromX = this.getX() + i * DITHERING_BUTTON_WIDTH;
+            int fromX = this.x + i * DITHERING_BUTTON_WIDTH;
             int vOffset = dithering == ditheringButton.dithering ? DITHERING_BUTTON_HEIGHT : 0;
 
-            this.blit(matrixStack, fromX, this.getY() + FONT_Y_MARGIN, ditheringButton.uPosition, ditheringButton.vPosition + vOffset, ditheringButton.width, ditheringButton.height);
+            this.blit(matrixStack, fromX, this.y + FONT_Y_MARGIN, ditheringButton.uPosition, ditheringButton.vPosition + vOffset, ditheringButton.width, ditheringButton.height);
             i++;
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        this.parentScreen.getFont().draw(matrixStack, this.getMessage(), (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
+    public void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
+        this.parentScreen.getFont().draw(matrixStack, this.getMessage(), (float) this.x - this.parentScreen.getGuiLeft(), (float) this.y - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
     }
 
     public class DitheringButton {
@@ -120,7 +119,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
             this.width = width;
         }
 
-        public Component getTooltip() {
+        public ITextComponent getTooltip() {
             return this.dithering.translatableComponent;
         }
     }

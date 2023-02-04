@@ -2,18 +2,18 @@ package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.easel.tabs.AbstractTab;
 import me.dantaeusb.zetter.core.tools.Color;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.gui.IRenderable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HsbWidget extends AbstractPaintingWidget implements Renderable {
+public class HsbWidget extends AbstractPaintingWidget implements IRenderable {
     final static int SLIDER_DISTANCE = 5; // distance between sliders
 
     final static int WIDTH = AbstractTab.WIDTH;
@@ -28,25 +28,25 @@ public class HsbWidget extends AbstractPaintingWidget implements Renderable {
     private final List<SliderWidget> sliders = new ArrayList<>();
 
     public HsbWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("container.zetter.painting.sliders"));
+        super(parentScreen, x, y, WIDTH, HEIGHT, new TranslationTextComponent("container.zetter.painting.sliders"));
 
         final int sliderOffset = WIDTH - SliderWidget.WIDTH;
 
         this.hueSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y,
-                Component.translatable("container.zetter.painting.sliders.hue"),
+                new TranslationTextComponent("container.zetter.painting.sliders.hue"),
                 this::updateHue, null, this::renderHueForeground
         );
 
         this.saturationSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + SliderWidget.HEIGHT + SLIDER_DISTANCE,
-                Component.translatable("container.zetter.painting.sliders.saturation"),
+                new TranslationTextComponent("container.zetter.painting.sliders.saturation"),
                 this::updateSaturation, null, this::renderSaturationForeground
         );
 
         this.brightnessSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * 2,
-                Component.translatable("container.zetter.painting.sliders.brightness"),
+                new TranslationTextComponent("container.zetter.painting.sliders.brightness"),
                 this::updateBrightness, null, this::renderBrightnessForeground
         );
 
@@ -65,7 +65,7 @@ public class HsbWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     @Override
-    public @Nullable Component getTooltip(int mouseX, int mouseY) {
+    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
         return null;
     }
 
@@ -98,25 +98,24 @@ public class HsbWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+    public void render(MatrixStack matrixStack) {
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         for (SliderWidget slider : this.sliders) {
             slider.render(matrixStack);
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int posX, int posY) {
+    public void renderLabels(MatrixStack matrixStack, int posX, int posY) {
         int i = 0;
 
         for (SliderWidget slider : this.sliders) {
             this.parentScreen.getFont().draw(
                     matrixStack,
                     slider.getMessage().getString().substring(0, 1).concat("."),
-                    this.getX() - this.parentScreen.getGuiLeft(),
-                    this.getY() + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * i++ - this.parentScreen.getGuiTop() + 1,
+                    this.x - this.parentScreen.getGuiLeft(),
+                    this.y + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * i++ - this.parentScreen.getGuiTop() + 1,
                     Color.DARK_GRAY.getRGB()
             );
         }

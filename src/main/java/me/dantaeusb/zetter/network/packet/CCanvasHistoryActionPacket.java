@@ -2,11 +2,10 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
 public class CCanvasHistoryActionPacket {
@@ -24,7 +23,7 @@ public class CCanvasHistoryActionPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buffer is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CCanvasHistoryActionPacket readPacketData(FriendlyByteBuf buffer) {
+    public static CCanvasHistoryActionPacket readPacketData(PacketBuffer buffer) {
         final int easelEntityId = buffer.readInt();
         final int actionId = buffer.readInt();
         final boolean canceled = buffer.readBoolean();
@@ -35,7 +34,7 @@ public class CCanvasHistoryActionPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf buffer) {
+    public void writePacketData(PacketBuffer buffer) {
         buffer.writeInt(this.easelEntityId);
         buffer.writeInt(this.actionId);
         buffer.writeBoolean(this.canceled);
@@ -45,7 +44,7 @@ public class CCanvasHistoryActionPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
-        final ServerPlayer sendingPlayer = ctx.getSender();
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCanvasHistoryPacket was received");
         }

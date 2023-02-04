@@ -1,10 +1,10 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
 
 public interface CanvasTracker {
-    Level getLevel();
+    World getLevel();
 
     <T extends AbstractCanvasData> T getCanvasData(String canvasCode);
 

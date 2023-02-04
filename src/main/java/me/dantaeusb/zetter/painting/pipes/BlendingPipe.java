@@ -7,8 +7,10 @@ import me.dantaeusb.zetter.painting.parameters.IntensityParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.painting.tools.Brush;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.Component;
-import org.apache.commons.lang3.function.TriFunction;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+
+import java.util.function.BiFunction;
 
 
 public class BlendingPipe implements Pipe {
@@ -185,16 +187,16 @@ public class BlendingPipe implements Pipe {
     }
 
     public enum BlendingOption {
-        RGB(BlendingPipe::blendRGB, Component.translatable("container.zetter.painting.blending.additive")),
-        RYB(BlendingPipe::blendRYB, Component.translatable("container.zetter.painting.blending.subtractive")),
-        RGBC(BlendingPipe::blendRGBC, Component.translatable("container.zetter.painting.blending.realistic"));
+        RGB(BlendingPipe::blendRGB, new TranslationTextComponent("container.zetter.painting.blending.additive")),
+        RYB(BlendingPipe::blendRYB, new TranslationTextComponent("container.zetter.painting.blending.subtractive")),
+        RGBC(BlendingPipe::blendRGBC, new TranslationTextComponent("container.zetter.painting.blending.realistic"));
 
         public static final BlendingOption DEFAULT = RYB;
-        public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;
+        public final BiFunction<Integer, Integer, Float, Integer> blendingFunction;
 
-        public final Component translatableComponent;
+        public final ITextComponent translatableComponent;
 
-        BlendingOption(TriFunction<Integer, Integer, Float, Integer> blendingFunction, Component translatableComponent) {
+        BlendingOption(TriFunction<Integer, Integer, Float, Integer> blendingFunction, ITextComponent translatableComponent) {
             this.blendingFunction = blendingFunction;
             this.translatableComponent = translatableComponent;
         }

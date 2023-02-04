@@ -4,28 +4,27 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.core.ZetterItems;
-import net.minecraft.data.recipes.RecipeCategory;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.level.Level;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.SpecialRecipe;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 /**
  * Only for frames, toggle
  */
-public class PaletteRechargeRecipe extends CustomRecipe {
+public class PaletteRechargeRecipe extends SpecialRecipe {
     private final Ingredient inputPalette;
     private final Ingredient inputRecharge;
 
     public PaletteRechargeRecipe(ResourceLocation id, Ingredient inputPalette, Ingredient inputRecharge) {
-        super(id, CraftingBookCategory.MISC);
+        super(id);
 
         this.inputPalette = inputPalette;
         this.inputRecharge = inputRecharge;
@@ -39,7 +38,7 @@ public class PaletteRechargeRecipe extends CustomRecipe {
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingContainer craftingInventory, Level world) {
+    public boolean matches(CraftingInventory craftingInventory, World world) {
         ItemStack paletteStack = ItemStack.EMPTY;
         ItemStack rechargeStack = ItemStack.EMPTY;
 
@@ -69,7 +68,7 @@ public class PaletteRechargeRecipe extends CustomRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingContainer craftingInventory) {
+    public ItemStack assemble(CraftingInventory craftingInventory) {
         ItemStack paletteStack = ItemStack.EMPTY;
         ItemStack rechargeStack = ItemStack.EMPTY;
 
@@ -101,7 +100,7 @@ public class PaletteRechargeRecipe extends CustomRecipe {
                 newDamage = 0;
             }
 
-            CompoundTag compoundnbt = paletteStack.getTag().copy();
+            CompoundNBT compoundnbt = paletteStack.getTag().copy();
             outStack.setTag(compoundnbt);
             outStack.setDamageValue(newDamage);
 
@@ -115,7 +114,7 @@ public class PaletteRechargeRecipe extends CustomRecipe {
      * @todo: Not sure if that's the right thing use CRAFTING_SPECIAL_BOOKCLONING here
      * @return
      */
-    public RecipeSerializer<?> getSerializer() {
+    public IRecipeSerializer<?> getSerializer() {
         return ZetterCraftingRecipes.PALETTE_RECHARGE.get();
     }
 
@@ -126,27 +125,27 @@ public class PaletteRechargeRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<PaletteRechargeRecipe> {
+    public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<PaletteRechargeRecipe> {
         @Override
         public PaletteRechargeRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "palette");
+            final JsonElement inputFrameJson = JSONUtils.getAsJsonObject(json, "palette");
             final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
 
-            final JsonElement inputPaintingJson = GsonHelper.getAsJsonObject(json, "recharge");
+            final JsonElement inputPaintingJson = JSONUtils.getAsJsonObject(json, "recharge");
             final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
 
             return new PaletteRechargeRecipe(recipeId, inputFrame, inputPainting);
         }
 
         @Override
-        public PaletteRechargeRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
+        public PaletteRechargeRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
             Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
             return new PaletteRechargeRecipe(recipeId, frameIngredient, paintingIngredient);
         }
 
         @Override
-        public void toNetwork(FriendlyByteBuf buffer, PaletteRechargeRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, PaletteRechargeRecipe recipe) {
             recipe.inputPalette.toNetwork(buffer);
             recipe.inputRecharge.toNetwork(buffer);
         }

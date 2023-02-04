@@ -1,11 +1,8 @@
 package me.dantaeusb.zetter.item;
 
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-
-import net.minecraft.world.item.Item.Properties;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 
 public class PaletteItem extends Item
 {
@@ -28,7 +25,7 @@ public class PaletteItem extends Item
 
     public static int[] getPaletteColors(ItemStack stack)
     {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         int[] paletteColors;
         if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_PALETTE_COLORS)) {
@@ -92,7 +89,7 @@ public class PaletteItem extends Item
             return;
         }
 
-        CompoundTag compoundNBT = stack.getOrCreateTag();
+        CompoundNBT compoundNBT = stack.getOrCreateTag();
         compoundNBT.putIntArray(NBT_TAG_NAME_PALETTE_COLORS, paletteColors);
     }
 

@@ -3,15 +3,13 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
-import me.dantaeusb.zetter.core.ZetterRegistries;
 import me.dantaeusb.zetter.network.ClientHandler;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.CanvasDataType;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -36,7 +34,7 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SEaselCanvasInitializationPacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SEaselCanvasInitializationPacket readPacketData(PacketBuffer networkBuffer) {
         try {
             final int easelEntityId = networkBuffer.readInt();
             final String canvasCode = networkBuffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
@@ -54,7 +52,7 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeUtf(this.canvasCode, Helper.CANVAS_CODE_MAX_LENGTH);
         networkBuffer.writeLong(this.timestamp);
@@ -67,7 +65,7 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SEaselReset context could not provide a ClientWorld.");
             return;

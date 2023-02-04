@@ -4,7 +4,8 @@ import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 /**
  * Dithering is a method of mixing colors with limited color
@@ -40,17 +41,17 @@ public class DitheringPipe implements Pipe {
     }
 
     public enum DitheringOption {
-        NO_DITHERING(1, 0, Component.translatable("container.zetter.painting.dithering.no")),
-        DENSE_DITHERING(2, 0, Component.translatable("container.zetter.painting.dithering.dense"));
+        NO_DITHERING(1, 0, new TranslationTextComponent("container.zetter.painting.dithering.no")),
+        DENSE_DITHERING(2, 0, new TranslationTextComponent("container.zetter.painting.dithering.dense"));
 
         public static final DitheringOption DEFAULT = NO_DITHERING;
 
         public final int size;
         public final int shift;
 
-        public final Component translatableComponent;
+        public final ITextComponent translatableComponent;
 
-        DitheringOption(int size, int shift, Component translatableComponent) {
+        DitheringOption(int size, int shift, ITextComponent translatableComponent) {
             this.size = size;
             this.shift = shift;
             this.translatableComponent = translatableComponent;

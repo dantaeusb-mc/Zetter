@@ -1,9 +1,8 @@
 package me.dantaeusb.zetter.network.packet;
 
-import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.math.BlockPos;
 
 public class SArtistTableMenuCreatePacket {
     private final BlockPos artistTablePos;
@@ -25,7 +24,7 @@ public class SArtistTableMenuCreatePacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SArtistTableMenuCreatePacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SArtistTableMenuCreatePacket readPacketData(PacketBuffer networkBuffer) {
         BlockPos artistTablePos = networkBuffer.readBlockPos();
         byte modeId = networkBuffer.readByte();
         ArtistTableMenu.Mode mode = ArtistTableMenu.Mode.getById(modeId);
@@ -36,7 +35,7 @@ public class SArtistTableMenuCreatePacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeBlockPos(this.artistTablePos);
         networkBuffer.writeByte(this.mode.getId());
     }

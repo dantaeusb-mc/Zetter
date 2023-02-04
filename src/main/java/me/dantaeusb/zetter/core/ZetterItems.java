@@ -3,27 +3,26 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.item.*;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 import java.util.HashMap;
 
+import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 
 public class ZetterItems
 {
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Zetter.MOD_ID);
 
-    public static final RegistryObject<EaselItem> EASEL = ITEMS.register("easel", () -> new EaselItem());
+    public static final RegistryObject<EaselItem> EASEL = ITEMS.register("easel", EaselItem::new);
     public static final RegistryObject<BlockItem> ARTIST_TABLE = ITEMS.register("artist_table", () -> new BlockItem(ZetterBlocks.ARTIST_TABLE.get(), new Item.Properties()));
     public static final RegistryObject<CanvasItem> CANVAS = ITEMS.register("canvas", () -> new CanvasItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<PaintingItem> PAINTING = ITEMS.register("painting", () -> new PaintingItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<PaintsItem> PAINTS = ITEMS.register("paints", () -> new PaintsItem());
-    public static final RegistryObject<PaletteItem> PALETTE = ITEMS.register("palette", () -> new PaletteItem());
+    public static final RegistryObject<PaintsItem> PAINTS = ITEMS.register("paints", PaintsItem::new);
+    public static final RegistryObject<PaletteItem> PALETTE = ITEMS.register("palette", PaletteItem::new);
 
     public static final HashMap<String, RegistryObject<FrameItem>> FRAMES = new HashMap<>();
 
@@ -33,7 +32,6 @@ public class ZetterItems
     public static final RegistryObject<FrameItem> JUNGLE_FRAME = registerFrame("jungle_basic_frame", PaintingEntity.Materials.JUNGLE, false);
     public static final RegistryObject<FrameItem> OAK_FRAME = registerFrame("oak_basic_frame", PaintingEntity.Materials.OAK, false);
     public static final RegistryObject<FrameItem> SPRUCE_FRAME = registerFrame("spruce_basic_frame", PaintingEntity.Materials.SPRUCE, false);
-    public static final RegistryObject<FrameItem> MANGROVE_FRAME = registerFrame("mangrove_basic_frame", PaintingEntity.Materials.MANGROVE, false);
     public static final RegistryObject<FrameItem> CRIMSON_FRAME = registerFrame("crimson_basic_frame", PaintingEntity.Materials.CRIMSON, false);
     public static final RegistryObject<FrameItem> WARPED_FRAME = registerFrame("warped_basic_frame", PaintingEntity.Materials.WARPED, false);
 
@@ -43,7 +41,6 @@ public class ZetterItems
     public static final RegistryObject<FrameItem> JUNGLE_PLATED_FRAME = registerFrame("jungle_plated_frame", PaintingEntity.Materials.JUNGLE, true);
     public static final RegistryObject<FrameItem> OAK_PLATED_FRAME = registerFrame("oak_plated_frame", PaintingEntity.Materials.OAK, true);
     public static final RegistryObject<FrameItem> SPRUCE_PLATED_FRAME = registerFrame("spruce_plated_frame", PaintingEntity.Materials.SPRUCE, true);
-    public static final RegistryObject<FrameItem> MANGROVE_PLATED_FRAME = registerFrame("mangrove_plated_frame", PaintingEntity.Materials.MANGROVE, true);
     public static final RegistryObject<FrameItem> CRIMSON_PLATED_FRAME = registerFrame("crimson_plated_frame", PaintingEntity.Materials.CRIMSON, true);
     public static final RegistryObject<FrameItem> WARPED_PLATED_FRAME = registerFrame("warped_plated_frame", PaintingEntity.Materials.WARPED, true);
 

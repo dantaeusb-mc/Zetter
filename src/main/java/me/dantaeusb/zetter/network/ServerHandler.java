@@ -4,22 +4,22 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
+import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
-import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
@@ -39,9 +39,9 @@ public class ServerHandler {
      * @param canvasName
      * @param sendingPlayer
      */
-    private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final String canvasName, ServerPlayer sendingPlayer) {
+    private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final String canvasName, ServerPlayerEntity sendingPlayer) {
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
-        final Level world = server.overworld();
+        final World world = server.overworld();
         final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
 
         if (canvasTracker == null) {
@@ -55,7 +55,7 @@ public class ServerHandler {
         AbstractCanvasData canvasData = canvasTracker.getCanvasData(canvasName);
 
         if (canvasData == null) {
-            Zetter.LOG.error("Player " + sendingPlayer + " requested non-existent canvas: " + canvasName);
+            Zetter.LOG.error("PlayerEntity " + sendingPlayer + " requested non-existent canvas: " + canvasName);
             return null;
         }
 
@@ -68,7 +68,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn.canvasName, sendingPlayer);
             final String canvasName = packetIn.canvasName;
@@ -96,7 +96,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processCanvasViewRequest(final CCanvasRequestViewPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processCanvasViewRequest(final CCanvasRequestViewPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn.canvasName, sendingPlayer);
             final String canvasName = packetIn.canvasName;
@@ -125,10 +125,10 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processCanvasExportRequest(final CCanvasRequestExportPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processCanvasExportRequest(final CCanvasRequestExportPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             final MinecraftServer server = sendingPlayer.getLevel().getServer();
-            final Level world = server.overworld();
+            final World world = server.overworld();
             final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
 
             if (canvasTracker == null) {
@@ -183,11 +183,11 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             // Get overworld world instance
             MinecraftServer server = sendingPlayer.getLevel().getServer();
-            Level world = server.overworld();
+            World world = server.overworld();
             CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
 
             Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName() + " from " + sendingPlayer.getUUID());
@@ -211,7 +211,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             if (sendingPlayer.containerMenu instanceof EaselMenu) {
                 EaselMenu paintingContainer = (EaselMenu)sendingPlayer.containerMenu;
@@ -230,11 +230,11 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processSignPainting(final CSignPaintingPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processSignPainting(final CSignPaintingPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             int slot = packetIn.getSlot();
-            if (Inventory.isHotbarSlot(slot) || slot == 40) {
-                ItemStack canvasStack = sendingPlayer.getInventory().getItem(slot);
+            if (PlayerInventory.isHotbarSlot(slot) || slot == 40) {
+                ItemStack canvasStack = sendingPlayer.inventory.getItem(slot);
 
                 if (!canvasStack.is(ZetterItems.CANVAS.get())) {
                     Zetter.LOG.error("Unable to process painting signature - item in slot is not a canvas");
@@ -249,7 +249,7 @@ public class ServerHandler {
                 }
 
                 ItemStack paintingStack = ServerHandler.createPainting(sendingPlayer, packetIn.getPaintingTitle(), canvasData);
-                sendingPlayer.getInventory().setItem(slot, paintingStack);
+                sendingPlayer.inventory.setItem(slot, paintingStack);
             }
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
@@ -266,13 +266,13 @@ public class ServerHandler {
      * @param canvasData
      * @return
      */
-    private static ItemStack createPainting(Player player, String paintingTitle, CanvasData canvasData) {
+    private static ItemStack createPainting(PlayerEntity player, String paintingTitle, CanvasData canvasData) {
         try {
-            if (player.getLevel().isClientSide()) {
+            if (player.level.isClientSide()) {
                 throw new InvalidParameterException("Create painting called on client");
             }
 
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
             ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
 
             /**
@@ -304,7 +304,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processAction(final CCanvasActionPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
@@ -331,7 +331,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
 
@@ -357,7 +357,7 @@ public class ServerHandler {
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processArtistTableModeChange(final CArtistTableModeChangePacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processArtistTableModeChange(final CArtistTableModeChangePacket packetIn, ServerPlayerEntity sendingPlayer) {
         try {
             if (sendingPlayer.containerMenu instanceof ArtistTableMenu) {
                 ArtistTableMenu artistTableMenu = (ArtistTableMenu)sendingPlayer.containerMenu;

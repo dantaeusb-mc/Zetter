@@ -2,10 +2,11 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.network.NetworkEvent;
+
 import java.util.function.Supplier;
 
 public class CPaletteUpdatePacket {
@@ -23,7 +24,7 @@ public class CPaletteUpdatePacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static CPaletteUpdatePacket readPacketData(FriendlyByteBuf buf) {
+    public static CPaletteUpdatePacket readPacketData(PacketBuffer buf) {
         CPaletteUpdatePacket packet = new CPaletteUpdatePacket();
 
         packet.slotIndex = buf.readInt();
@@ -35,7 +36,7 @@ public class CPaletteUpdatePacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf buf) {
+    public void writePacketData(PacketBuffer buf) {
         buf.writeInt(this.slotIndex);
         buf.writeInt(this.color);
     }
@@ -58,7 +59,7 @@ public class CPaletteUpdatePacket {
             return;
         }
 
-        final ServerPlayer sendingPlayer = ctx.getSender();
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when PaletteUpdatePacket was received");
         }

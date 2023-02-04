@@ -10,25 +10,24 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.ChatFormatting;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
-import net.minecraft.util.StringUtil;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
-
-import javax.annotation.Nullable;
-
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.StringUtils;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
+import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 import java.util.List;
 
@@ -56,16 +55,16 @@ public class CanvasItem extends Item
 
     // @todo: [HIGH] Canvas data could be null!!!
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         if (world.isClientSide()) {
             ItemStack canvas = player.getItemInHand(hand);
 
             if (isEmpty(canvas)) {
-                return InteractionResultHolder.consume(canvas);
+                return ActionResult.consume(canvas);
             }
 
             String canvasCode = getCanvasCode(canvas);
-            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
+            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.level);
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -87,35 +86,35 @@ public class CanvasItem extends Item
         player.openItemGui(itemstack, hand);
 
         player.awardStat(Stats.ITEM_USED.get(this));
-        return InteractionResultHolder.sidedSuccess(itemstack, world.isClientSide());
+        return ActionResult.sidedSuccess(itemstack, world.isClientSide());
     }
 
     @Override
-    public Component getName(ItemStack stack) {
+    public ITextComponent getName(ItemStack stack) {
         if (stack.hasTag()) {
             String canvasCode = getCanvasCode(stack);
 
-            if (!StringUtil.isNullOrEmpty(canvasCode)) {
-                return Component.translatable("item.zetter.canvas.painted");
+            if (!StringUtils.isNullOrEmpty(canvasCode)) {
+                return new TranslationTextComponent("item.zetter.canvas.painted");
             }
         }
 
-        return Component.translatable("item.zetter.canvas.blank");
+        return new TranslationTextComponent("item.zetter.canvas.blank");
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         String stringSize = getStringSize(stack);
 
-        if (!StringUtil.isNullOrEmpty(stringSize)) {
-            tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
+        if (!StringUtils.isNullOrEmpty(stringSize)) {
+            tooltip.add((new StringTextComponent(stringSize)).withStyle(TextFormatting.GRAY));
         }
     }
 
     /**
-     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
+     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, World)}
      */
-    public static CanvasData createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level world) {
+    public static CanvasData createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, World world) {
         if (world.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }
@@ -174,13 +173,13 @@ public class CanvasItem extends Item
 
     /**
      *
-     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
+     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, World)}
      * @param stack
      * @param world
      * @return
      */
     @Nullable
-    public static CanvasData getCanvasData(ItemStack stack, Level world) {
+    public static CanvasData getCanvasData(ItemStack stack, World world) {
         Item canvas = stack.getItem();
 
         if (canvas instanceof CanvasItem) {
@@ -211,7 +210,7 @@ public class CanvasItem extends Item
             return null;
         }
 
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         String canvasCode = null;
 
@@ -271,7 +270,7 @@ public class CanvasItem extends Item
             return null;
         }
 
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null || !compoundNBT.contains(NBT_TAG_CACHED_BLOCK_SIZE)) {
             return new int[]{1, 1};
@@ -284,14 +283,14 @@ public class CanvasItem extends Item
         int[] size = getBlockSize(stack);
 
         if (size == null || size.length != 2) {
-            return Component.translatable("item.zetter.painting.size", "1", "1").getString();
+            return new TranslationTextComponent("item.zetter.painting.size", "1", "1").getString();
         }
 
-        return Component.translatable("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
+        return new TranslationTextComponent("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
     }
 
     public static int getResolution(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return Helper.getResolution().getNumeric();
@@ -306,11 +305,11 @@ public class CanvasItem extends Item
 
     /**
      *
-     * @see {net.minecraft.world.item.MapItem#createNewSavedData(Level, int, int, int, boolean, boolean, ResourceKey)}
+     * @see {net.minecraft.world.item.MapItem#createNewSavedData(World, int, int, int, boolean, boolean, ResourceKey)}
      * @param level
      * @return
      */
-    private static String createNewCanvasData(AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level level) {
+    private static String createNewCanvasData(AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, World level) {
         if (level.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }

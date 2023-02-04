@@ -6,9 +6,9 @@ import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterOverlays;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.server.ServerWorld;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -37,7 +37,9 @@ public class PaintingData extends AbstractCanvasData {
     protected String name;
     protected boolean banned = false;
 
-    protected PaintingData() {}
+    protected PaintingData(String canvasCode) {
+        super(canvasCode);
+    }
 
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
@@ -92,7 +94,7 @@ public class PaintingData extends AbstractCanvasData {
      * @param level
      */
     @Override
-    public void correctData(ServerLevel level) {
+    public void correctData(ServerWorld level) {
         if (this.authorUuid == null || this.authorUuid.equals(FALLBACK_UUID)) {
             UUID authorUuid = Helper.tryToRestoreAuthorUuid(level, this.authorName);
 
@@ -107,7 +109,7 @@ public class PaintingData extends AbstractCanvasData {
         }
     }
 
-    public CompoundTag save(CompoundTag compoundTag) {
+    public CompoundNBT save(CompoundNBT compoundTag) {
         super.save(compoundTag);
 
         compoundTag.putUUID(NBT_TAG_AUTHOR_UUID, this.authorUuid);
@@ -153,7 +155,7 @@ public class PaintingData extends AbstractCanvasData {
          * Serialization
          */
 
-        public PaintingData load(CompoundTag compoundTag) {
+        public PaintingData load(CompoundNBT compoundTag) {
             final PaintingData newPainting = new PaintingData();
 
             newPainting.width = compoundTag.getInt(NBT_TAG_WIDTH);
@@ -181,7 +183,7 @@ public class PaintingData extends AbstractCanvasData {
          * Networking
          */
 
-        public PaintingData readPacketData(FriendlyByteBuf networkBuffer) {
+        public PaintingData readPacketData(PacketBuffer networkBuffer) {
             final PaintingData newPainting = new PaintingData();
 
             final byte resolutionOrdinal = networkBuffer.readByte();
@@ -215,7 +217,7 @@ public class PaintingData extends AbstractCanvasData {
             return newPainting;
         }
 
-        public void writePacketData(PaintingData canvasData, FriendlyByteBuf networkBuffer) {
+        public void writePacketData(PaintingData canvasData, PacketBuffer networkBuffer) {
             networkBuffer.writeByte(canvasData.resolution.ordinal());
             networkBuffer.writeInt(canvasData.width);
             networkBuffer.writeInt(canvasData.height);

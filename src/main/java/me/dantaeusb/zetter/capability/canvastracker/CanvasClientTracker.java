@@ -1,24 +1,25 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
+import com.google.common.collect.Maps;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.event.*;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import com.google.common.collect.Maps;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
 public class CanvasClientTracker implements CanvasTracker {
-    private final Level level;
+    private final World level;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
 
-    public CanvasClientTracker(Level level) {
+    public CanvasClientTracker(World level) {
         super();
 
         this.level = level;
@@ -86,7 +87,7 @@ public class CanvasClientTracker implements CanvasTracker {
     }
 
     @Override
-    public Level getLevel() {
+    public World getLevel() {
         return this.level;
     }
 }

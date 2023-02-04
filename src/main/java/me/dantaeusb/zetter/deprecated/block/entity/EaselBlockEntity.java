@@ -1,27 +1,27 @@
 package me.dantaeusb.zetter.deprecated.block.entity;
 
-import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
+import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.deprecated.block.EaselBlock;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
-import net.minecraft.util.Mth;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
-public class EaselBlockEntity extends BlockEntity {
+public class EaselBlockEntity extends TileEntity {
     private final EaselContainer easelContainer; // two items: canvas and palette
 
     // @todo: [LOW] Normalize: CapitalCase for tags
@@ -33,7 +33,7 @@ public class EaselBlockEntity extends BlockEntity {
         this.easelContainer = new EaselContainer();
     }
 
-    public static void serverTick(Level world, BlockPos pos, BlockState state, EaselBlockEntity easelBlockEntity) {
+    public static void serverTick(World world, BlockPos pos, BlockState state, EaselBlockEntity easelBlockEntity) {
         if (world.getBlockEntity(pos).getType() == ZetterBlockEntities.EASEL_BLOCK_ENTITY.get()) {
             final ItemStack canvasStack = easelBlockEntity.getEaselContainer().getCanvasStack();
             final ItemStack paletteStack = easelBlockEntity.getEaselContainer().getPaletteStack();
@@ -41,9 +41,9 @@ public class EaselBlockEntity extends BlockEntity {
             BlockState blockState = Blocks.AIR.defaultBlockState();
             world.setBlock(pos, blockState, 1 & 2);
 
-            float f = Mth.abs(180.0F - state.getValue(EaselBlock.FACING).toYRot());
+            float f = MathHelper.abs(180.0F - state.getValue(EaselBlock.FACING).toYRot());
 
-            Vec3 vec3 = Vec3.atBottomCenterOf(pos);
+            Vector3d vec3 = Vector3d.atBottomCenterOf(pos);
             EaselEntity easelEntity = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
             easelEntity.setPos(vec3);
             easelEntity.setYRot(f);
@@ -64,9 +64,9 @@ public class EaselBlockEntity extends BlockEntity {
     // render
 
     @Override
-    public AABB getRenderBoundingBox()
+    public AxisAlignedBB getRenderBoundingBox()
     {
-        return new AABB(this.getBlockPos(), this.getBlockPos().offset(1, 2, 1));
+        return new AxisAlignedBB(this.getBlockPos(), this.getBlockPos().offset(1, 2, 1));
     }
 
     // NBT stack
@@ -77,18 +77,22 @@ public class EaselBlockEntity extends BlockEntity {
      */
 
     @Override
-    public void saveAdditional(CompoundTag compoundTag)
+    public CompoundNBT save(CompoundNBT compoundTag)
     {
-        CompoundTag easelStorage = this.easelContainer.serializeNBT();
-        compoundTag.put(NBT_TAG_EASEL_STORAGE, easelStorage);
+        super.save(compoundTag); // The super call is required to save and load the tileEntity's location
+
+        CompoundNBT inventoryNBT = this.easelContainer.serializeNBT();
+        compoundTag.put(NBT_TAG_EASEL_STORAGE, inventoryNBT);
+
+        return compoundTag;
     }
 
     @Override
-    public void load(CompoundTag compoundTag)
+    public void load(BlockState blockState, CompoundNBT compoundTag)
     {
-        super.load(compoundTag);
+        super.load(blockState, compoundTag);
 
-        CompoundTag easelStorage = compoundTag.getCompound(NBT_TAG_EASEL_STORAGE);
+        CompoundNBT easelStorage = compoundTag.getCompound(NBT_TAG_EASEL_STORAGE);
         this.easelContainer.deserializeNBT(easelStorage);
     }
 
@@ -96,27 +100,32 @@ public class EaselBlockEntity extends BlockEntity {
 
     @Override
     @Nullable
-    public ClientboundBlockEntityDataPacket getUpdatePacket()
+    public SUpdateTileEntityPacket getUpdatePacket()
     {
-        return ClientboundBlockEntityDataPacket.create(this);
+        CompoundNBT nbtTagCompound = new CompoundNBT();
+        save(nbtTagCompound);
+
+        int tileEntityType = 42;
+        return new SUpdateTileEntityPacket(this.worldPosition, tileEntityType, nbtTagCompound);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket packet) {
-        load(packet.getTag());
+    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet) {
+        BlockState blockState = level.getBlockState(worldPosition);
+        load(blockState, packet.getTag());
     }
 
     @Override
-    public CompoundTag getUpdateTag()
+    public CompoundNBT getUpdateTag()
     {
-        CompoundTag nbtTagCompound = new CompoundTag();
+        CompoundNBT nbtTagCompound = new CompoundNBT();
         this.saveAdditional(nbtTagCompound);
         return nbtTagCompound;
     }
 
     @Override
-    public void handleUpdateTag(CompoundTag tag)
+    public void handleUpdateTag(BlockState blockState, CompoundNBT tag)
     {
-        this.load(tag);
+        this.load(blockState, tag);
     }
 }

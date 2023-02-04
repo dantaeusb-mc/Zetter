@@ -6,8 +6,8 @@ import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.List;
@@ -44,7 +44,7 @@ public class ArtistTableGridContainer extends ItemStackHandler {
     /**
      * @return
      */
-    public boolean stillValid(Player player) {
+    public boolean stillValid(PlayerEntity player) {
         if (this.boundTable != null) {
             return player.distanceToSqr((double)this.boundTable.getBlockPos().getX() + 0.5D, (double)this.boundTable.getBlockPos().getY() + 0.5D, (double)this.boundTable.getBlockPos().getZ() + 0.5D) <= 64.0D;
         }

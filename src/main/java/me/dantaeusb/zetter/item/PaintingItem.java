@@ -1,25 +1,27 @@
 package me.dantaeusb.zetter.item;
 
+import io.netty.util.internal.StringUtil;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.client.util.ITooltipFlag;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.util.StringUtil;
-import net.minecraft.network.chat.Component;
-import net.minecraft.ChatFormatting;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.StringUtils;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -44,7 +46,7 @@ public class PaintingItem extends CanvasItem
 
     // @todo: [HIGH] Canvas data could be null!!!
     @Override
-    public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
+    public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand) {
         ItemStack paintingStack = player.getItemInHand(hand);
 
         if (world.isClientSide()) {
@@ -52,10 +54,10 @@ public class PaintingItem extends CanvasItem
             String paintingCode = getPaintingCode(paintingStack);
 
             if (paintingCode == null) {
-                return InteractionResultHolder.fail(paintingStack);
+                return ActionResult.fail(paintingStack);
             }
 
-            PaintingData canvasData = getPaintingData(paintingStack, player.getLevel());
+            PaintingData canvasData = getPaintingData(paintingStack, player.level);
 
             if (canvasData != null) {
                 // If data is loaded, just show screen
@@ -75,7 +77,7 @@ public class PaintingItem extends CanvasItem
 
         player.awardStat(Stats.ITEM_USED.get(this));
 
-        return InteractionResultHolder.sidedSuccess(paintingStack, world.isClientSide());
+        return ActionResult.sidedSuccess(paintingStack, world.isClientSide());
     }
 
     /**
@@ -103,29 +105,29 @@ public class PaintingItem extends CanvasItem
     }
 
     @OnlyIn(Dist.CLIENT)
-    public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+    public void appendHoverText(ItemStack stack, @Nullable World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn) {
         if (stack.hasTag()) {
             String authorName = getCachedAuthorName(stack);
 
             if (StringUtil.isNullOrEmpty(authorName)) {
-                authorName = Component.translatable("item.zetter.painting.unknown").getString();
+                authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
             }
 
-            tooltip.add((Component.translatable("book.byAuthor", authorName)).withStyle(ChatFormatting.GRAY));
+            tooltip.add((new TranslationTextComponent("book.byAuthor", authorName)).withStyle(TextFormatting.GRAY));
 
-            Component generationLabel = getGenerationLabel(stack);
+            ITextComponent generationLabel = getGenerationLabel(stack);
             String stringSize = getStringSize(stack);
 
             if (StringUtil.isNullOrEmpty(stringSize)) {
-                tooltip.add(Component.literal(generationLabel.getString()).withStyle(ChatFormatting.GRAY));
+                tooltip.add(new StringTextComponent(generationLabel.getString()).withStyle(TextFormatting.GRAY));
             } else {
-                tooltip.add(Component.literal(generationLabel.getString() + ", " + stringSize).withStyle(ChatFormatting.GRAY));
+                tooltip.add(new StringTextComponent(generationLabel.getString() + ", " + stringSize).withStyle(TextFormatting.GRAY));
             }
         }
     }
 
     @Override
-    public Component getName(ItemStack stack) {
+    public ITextComponent getName(ItemStack stack) {
         if (stack.hasTag()) {
             String paintingName = getCachedPaintingName(stack);
 
@@ -134,15 +136,15 @@ public class PaintingItem extends CanvasItem
                     return super.getName(stack);
                 }
 
-                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+                paintingName = new TranslationTextComponent("item.zetter.painting.unnamed").getString();
             }
 
-            if (!net.minecraft.util.StringUtil.isNullOrEmpty(paintingName)) {
-                return Component.literal(paintingName);
+            if (!StringUtils.isNullOrEmpty(paintingName)) {
+                return new StringTextComponent(paintingName);
             }
         }
 
-        return Component.translatable(this.getDescriptionId(stack));
+        return new TranslationTextComponent(this.getDescriptionId(stack));
     }
 
     /**
@@ -152,7 +154,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getPaintingCode(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -177,13 +179,13 @@ public class PaintingItem extends CanvasItem
 
     /**
      *
-     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
+     * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, World)}
      * @param stack
      * @param world
      * @return
      */
     @Nullable
-    public static PaintingData getPaintingData(ItemStack stack, Level world) {
+    public static PaintingData getPaintingData(ItemStack stack, World world) {
         Item painting = stack.getItem();
 
         if (painting instanceof PaintingItem || painting instanceof FrameItem) {
@@ -203,7 +205,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getCachedAuthorName(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -214,7 +216,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getCachedPaintingName(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -225,7 +227,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -236,7 +238,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getStringSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return null;
@@ -245,10 +247,10 @@ public class PaintingItem extends CanvasItem
         int[] size = getBlockSize(stack);
 
         if (size == null || size.length != 2) {
-            return Component.translatable("item.zetter.painting.size.unknown").getString();
+            return new TranslationTextComponent("item.zetter.painting.size.unknown").getString();
         }
 
-        return Component.translatable("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
+        return new TranslationTextComponent("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
     }
 
     public static void setGeneration(ItemStack stack, int generation) {
@@ -256,7 +258,7 @@ public class PaintingItem extends CanvasItem
     }
 
     public static int getGeneration(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundNBT compoundNBT = stack.getTag();
 
         if (compoundNBT == null) {
             return 0;
@@ -265,13 +267,13 @@ public class PaintingItem extends CanvasItem
         return compoundNBT.getInt(NBT_TAG_GENERATION);
     }
 
-    public static Component getGenerationLabel(ItemStack stack) {
+    public static ITextComponent getGenerationLabel(ItemStack stack) {
         int generation = getGeneration(stack);
 
         if (generation < 0 || generation > 2) {
             generation = 1;
         }
 
-        return Component.translatable("item.zetter.painting.generation." + generation);
+        return new TranslationTextComponent("item.zetter.painting.generation." + generation);
     }
 }

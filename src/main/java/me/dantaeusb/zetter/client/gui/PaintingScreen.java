@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.Tesselator;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
@@ -14,24 +14,32 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.font.TextFieldHelper;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.widget.button.Button;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.network.chat.Component;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.chat.ITextComponent;
 import net.minecraft.network.chat.Style;
 import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.util.Hand;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.Style;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.Hand;
+import net.minecraft.world.entity.player.PlayerEntity;
 import org.lwjgl.glfw.GLFW;
 
 public class PaintingScreen extends Screen {
-    private static final Component DEFAULT_TITLE = Component.translatable("item.zetter.painting.unnamed");
+    private static final ITextComponent DEFAULT_TITLE = new TranslationTextComponent("item.zetter.painting.unnamed");
 
-    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
-    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
+    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(TextFormatting.BLACK));
+    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(TextFormatting.GRAY));
 
-    private final Player owner;
-    private final InteractionHand hand;
+    private final PlayerEntity owner;
+    private final Hand hand;
 
     private final String canvasCode;
     private final AbstractCanvasData canvasData;
@@ -63,17 +71,17 @@ public class PaintingScreen extends Screen {
         return input.length() <= Helper.PAINTING_TITLE_MAX_LENGTH;
     });
 
-    public static PaintingScreen createScreenForCanvas(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
+    public static PaintingScreen createScreenForCanvas(PlayerEntity player, String canvasCode, CanvasData canvasData, Hand hand) {
         return new PaintingScreen(player, hand, canvasCode, canvasData, player.getName().getString(), "", true);
     }
 
-    public static PaintingScreen createScreenForPainting(Player player, String canvasCode, PaintingData paintingData, InteractionHand hand) {
+    public static PaintingScreen createScreenForPainting(PlayerEntity player, String canvasCode, PaintingData paintingData, Hand hand) {
         return new PaintingScreen(player, hand, canvasCode, paintingData, paintingData.getAuthorName(), paintingData.getPaintingName(), false);
     }
 
     // @todo: [HIGH] Canvas data could be null!!!
-    private PaintingScreen(Player player, InteractionHand hand, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, boolean editable) {
-        super(Component.translatable("container.zetter.painting"));
+    private PaintingScreen(PlayerEntity player, Hand hand, String canvasCode, AbstractCanvasData canvasData, String authorName, String paintingTitle, boolean editable) {
+        super(new TranslationTextComponent("container.zetter.painting"));
 
         this.owner = player;
         this.hand = hand;
@@ -101,7 +109,7 @@ public class PaintingScreen extends Screen {
     public void init() {
         this.calculatePaintingOffset();
 
-        this.signButton = this.addRenderableWidget(Button.builder(Component.translatable("book.signButton"), (p_98177_) -> {
+        this.signButton = this.addRenderableWidget(Button.builder(new TranslationTextComponent("book.signButton"), (p_98177_) -> {
             this.signPainting();
         }).bounds(
             this.screenOffsetX + this.screenWidth - BUTTON_WIDTH - SCREEN_PADDING,
@@ -114,7 +122,7 @@ public class PaintingScreen extends Screen {
     }
 
     private void signPainting() {
-        int slot = this.hand == InteractionHand.MAIN_HAND ? this.owner.getInventory().selected : 40;
+        int slot = this.hand == Hand.MAIN_HAND ? this.owner.getInventory().selected : 40;
 
         CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
         ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
@@ -192,12 +200,12 @@ public class PaintingScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTick) {
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(matrixStack);
         this.setFocused((GuiEventListener)null);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         // Border
         fill(
@@ -239,7 +247,7 @@ public class PaintingScreen extends Screen {
         }
 
         this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
-        this.font.draw(matrixStack, Component.translatable("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
+        this.font.draw(matrixStack, new TranslationTextComponent("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
 
         super.render(matrixStack, mouseX, mouseY, partialTick);
     }

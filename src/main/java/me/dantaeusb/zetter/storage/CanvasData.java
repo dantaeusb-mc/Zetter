@@ -5,8 +5,8 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Tuple;
 
 import java.nio.ByteBuffer;
@@ -68,7 +68,7 @@ public class CanvasData extends AbstractCanvasData {
         return ZetterCanvasTypes.CANVAS.get();
     }
 
-    public CompoundTag save(CompoundTag compoundTag) {
+    public CompoundNBT save(CompoundNBT compoundTag) {
         return super.save(compoundTag);
     }
 
@@ -109,7 +109,7 @@ public class CanvasData extends AbstractCanvasData {
             return newCanvas;
         }
 
-        public CanvasData load(CompoundTag compoundTag) {
+        public CanvasData load(CompoundNBT compoundTag) {
             final CanvasData newCanvas = new CanvasData();
 
             newCanvas.width = compoundTag.getInt(NBT_TAG_WIDTH);
@@ -131,7 +131,7 @@ public class CanvasData extends AbstractCanvasData {
          * Networking
          */
 
-        public CanvasData readPacketData(FriendlyByteBuf networkBuffer) {
+        public CanvasData readPacketData(PacketBuffer networkBuffer) {
             final CanvasData newCanvas = new CanvasData();
 
             final byte resolutionOrdinal = networkBuffer.readByte();
@@ -155,7 +155,7 @@ public class CanvasData extends AbstractCanvasData {
             return newCanvas;
         }
 
-        public void writePacketData(CanvasData canvasData, FriendlyByteBuf networkBuffer) {
+        public void writePacketData(CanvasData canvasData, PacketBuffer networkBuffer) {
             networkBuffer.writeByte(canvasData.resolution.ordinal());
             networkBuffer.writeInt(canvasData.width);
             networkBuffer.writeInt(canvasData.height);

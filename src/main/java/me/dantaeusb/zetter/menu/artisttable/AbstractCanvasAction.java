@@ -3,9 +3,9 @@ package me.dantaeusb.zetter.menu.artisttable;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -13,12 +13,12 @@ import javax.annotation.Nullable;
 public abstract class AbstractCanvasAction {
     public State state = State.EMPTY;
     protected final ArtistTableMenu menu;
-    protected final Level level;
+    protected final World level;
 
     @Nullable
     protected DummyCanvasData canvasData;
 
-    protected AbstractCanvasAction(ArtistTableMenu menu, Level level) {
+    protected AbstractCanvasAction(ArtistTableMenu menu, World level) {
         this.menu = menu;
         this.level = level;
     }
@@ -29,7 +29,7 @@ public abstract class AbstractCanvasAction {
 
     public void onChangedCombination(ItemStackHandler container) { }
 
-    public void onTakeCombination(Player player, ItemStack stack) { }
+    public void onTakeCombination(PlayerEntity player, ItemStack stack) { }
 
     public boolean mayPlaceCombined(ItemStack stack) {
         return false;
@@ -37,11 +37,11 @@ public abstract class AbstractCanvasAction {
 
     public void onChangedCombined(ItemStackHandler container) { }
 
-    public void onTakeCombined(Player player, ItemStack stack) { }
+    public void onTakeCombined(PlayerEntity player, ItemStack stack) { }
 
     public void onChangedSplit(ItemStackHandler container) { }
 
-    public void onTakeSplit(Player player, ItemStack stack) { }
+    public void onTakeSplit(PlayerEntity player, ItemStack stack) { }
 
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) { }
 

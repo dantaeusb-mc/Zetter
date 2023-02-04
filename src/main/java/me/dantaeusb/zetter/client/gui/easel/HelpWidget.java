@@ -3,14 +3,14 @@ package me.dantaeusb.zetter.client.gui.easel;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.Component;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import net.minecraft.client.gui.IRenderable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import javax.annotation.Nullable;
 
-public class HelpWidget extends AbstractPaintingWidget implements Renderable {
+public class HelpWidget extends AbstractPaintingWidget implements IRenderable {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#painting";
 
     final static int BUTTON_WIDTH = 11;
@@ -22,7 +22,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
     boolean clicked = false;
 
     public HelpWidget(EaselScreen parentScreen, int x, int y) {
-        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.painting.help"));
+        super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, new TranslationTextComponent("container.zetter.painting.help"));
 
         if (!ClientHelper.openUriAllowed()) {
             this.active = false;
@@ -31,8 +31,8 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     @Override
-    public @Nullable Component getTooltip(int mouseX, int mouseY) {
-        return Component.translatable("container.zetter.painting.help");
+    public @Nullable ITextComponent getTooltip(int mouseX, int mouseY) {
+        return new TranslationTextComponent("container.zetter.painting.help");
     }
 
     @Override
@@ -41,7 +41,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
             int iMouseX = (int) mouseX;
             int iMouseY = (int) mouseY;
 
-            if (EaselScreen.isInRect(this.getX(), this.getY(), BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
                 ClientHelper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
@@ -53,10 +53,9 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         if (!this.visible) {
             return;
@@ -65,15 +64,15 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
         drawButton(matrixStack, mouseX, mouseY);
     }
 
-    protected void drawButton(PoseStack matrixStack, int mouseX, int mouseY) {
+    protected void drawButton(MatrixStack matrixStack, int mouseX, int mouseY) {
         int buttonU = BUTTON_POSITION_U;
 
         if (this.clicked) {
             buttonU += BUTTON_WIDTH * 2;
-        } else if (EaselScreen.isInRect(this.getX(), this.getY(), BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
+        } else if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
             buttonU += BUTTON_WIDTH;
         }
 
-        this.blit(matrixStack, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
+        this.blit(matrixStack, this.x, this.y, buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 }

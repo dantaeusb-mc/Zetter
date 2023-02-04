@@ -3,7 +3,7 @@ package me.dantaeusb.zetter.entity.item.state.representation;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
 
 import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
@@ -364,7 +364,7 @@ public class CanvasAction {
         }
     }
 
-    public static void writePacketData(CanvasAction actionBuffer, FriendlyByteBuf buffer) {
+    public static void writePacketData(CanvasAction actionBuffer, PacketBuffer buffer) {
         buffer.writeInt(actionBuffer.id);
         buffer.writeUtf(actionBuffer.tool.toString(), 32);
         buffer.writeInt(actionBuffer.color);
@@ -377,7 +377,7 @@ public class CanvasAction {
         buffer.writeBytes(actionBuffer.subActionBuffer);
     }
 
-    public static CanvasAction readPacketData(FriendlyByteBuf buffer) {
+    public static CanvasAction readPacketData(PacketBuffer buffer) {
         int actionId = buffer.readInt();
         Tools tool = Tools.valueOf(buffer.readUtf(32));
         int color = buffer.readInt();

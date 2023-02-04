@@ -3,10 +3,14 @@ package me.dantaeusb.zetter.painting.tools;
 import me.dantaeusb.zetter.painting.parameters.BucketParameters;
 import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 import java.util.stream.Stream;
 
 public class Bucket extends AbstractTool<BucketParameters> {
@@ -14,7 +18,7 @@ public class Bucket extends AbstractTool<BucketParameters> {
 
     public static final int HOTKEY = GLFW.GLFW_KEY_F;
 
-    private final Component translatableComponent = Component.translatable("container.zetter.painting.tools.bucket");
+    private final ITextComponent translatableComponent = new TranslationTextComponent("container.zetter.painting.tools.bucket");
 
     private final ToolShape shape = new ToolShape();
 
@@ -28,7 +32,7 @@ public class Bucket extends AbstractTool<BucketParameters> {
     }
 
     @Override
-    public Component getTranslatableComponent() {
+    public ITextComponent getTranslatableComponent() {
         return this.translatableComponent;
     }
 

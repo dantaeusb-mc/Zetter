@@ -6,30 +6,21 @@ import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.ConfirmLinkScreen;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.Util;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.entity.player.Player;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
+import net.minecraft.client.gui.screen.ConfirmOpenLinkScreen;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Hand;
+import net.minecraft.util.Util;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.Locale;
 import java.util.Set;
-
-import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 public class ClientHelper {
     private static final Set<String> ALLOWED_PROTOCOLS = Sets.newHashSet("http", "https");
 
     public static boolean openUriAllowed() {
-        return Minecraft.getInstance().options.chatLinks().get();
+        return Minecraft.getInstance().options.chatLinks;
     }
 
     /**
@@ -60,8 +51,8 @@ public class ClientHelper {
                 throw new URISyntaxException(href, "Unsupported protocol: " + s.toLowerCase(Locale.ROOT));
             }
 
-            if (mc.options.chatLinksPrompt().get()) {
-                mc.setScreen(new ConfirmLinkScreen((result) -> {
+            if (mc.options.chatLinksPrompt) {
+                mc.setScreen(new ConfirmOpenLinkScreen((result) -> {
                     if (result) {
                         ClientHelper.openUri(uri);
                     }
@@ -86,7 +77,7 @@ public class ClientHelper {
      * @param canvasData
      * @param hand
      */
-    public static void openCanvasScreen(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
+    public static void openCanvasScreen(PlayerEntity player, String canvasCode, CanvasData canvasData, Hand hand) {
         Minecraft.getInstance().setScreen(
                 PaintingScreen.createScreenForCanvas(
                         player,
@@ -105,7 +96,7 @@ public class ClientHelper {
      * @param canvasData
      * @param hand
      */
-    public static void openPaintingScreen(Player player, String canvasCode, PaintingData canvasData, InteractionHand hand) {
+    public static void openPaintingScreen(PlayerEntity player, String canvasCode, PaintingData canvasData, Hand hand) {
         Minecraft.getInstance().setScreen(
                 PaintingScreen.createScreenForPainting(
                         player,

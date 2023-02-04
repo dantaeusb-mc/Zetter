@@ -8,15 +8,16 @@ import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
-import me.dantaeusb.zetter.storage.*;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.CanvasDataType;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.network.PacketDistributor;
+import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -26,7 +27,7 @@ public class CanvasServerTracker implements CanvasTracker {
     private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
     private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
 
-    private final ServerLevel level;
+    private final ServerWorld level;
 
     protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
@@ -35,14 +36,14 @@ public class CanvasServerTracker implements CanvasTracker {
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
 
-    public CanvasServerTracker(ServerLevel level) {
+    public CanvasServerTracker(ServerWorld level) {
         super();
 
         this.level = level;
     }
 
     @Override
-    public Level getLevel() {
+    public World getLevel() {
         return this.level;
     }
 
@@ -187,7 +188,7 @@ public class CanvasServerTracker implements CanvasTracker {
         CanvasRegisterEvent.Pre preEvent = new CanvasRegisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
-        this.level.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
+        this.level.getServer().overworld().getDataStorage().set(canvasData);
 
         CanvasRegisterEvent.Post postEvent = new CanvasRegisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
@@ -209,7 +210,7 @@ public class CanvasServerTracker implements CanvasTracker {
         }
 
         if (!canvasData.getType().equals(ZetterCanvasTypes.CANVAS.get())) {
-            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.getType().resourceLocation.toString() + " on server side, not supported yet");
+            Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.getType().getRegistryName().toString() + " on server side, not supported yet");
             return;
         }
 
@@ -228,7 +229,7 @@ public class CanvasServerTracker implements CanvasTracker {
                 SCanvasRemovalPacket canvasRemovalPacket = new SCanvasRemovalPacket(canvasCode, System.currentTimeMillis());
 
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(
-                    () -> (ServerPlayer) this.level.getPlayerByUUID(trackingPlayer.playerId)),
+                    () -> (ServerPlayerEntity) this.level.getPlayerByUUID(trackingPlayer.playerId)),
                     canvasRemovalPacket
                 );
             }
@@ -257,7 +258,7 @@ public class CanvasServerTracker implements CanvasTracker {
 
         for (String canvasCode : this.desyncCanvases) {
             for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
-                ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
+                ServerPlayerEntity playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
                 SCanvasSyncPacket<?> canvasSyncMessage = new SCanvasSyncPacket(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
@@ -314,8 +315,8 @@ public class CanvasServerTracker implements CanvasTracker {
      * Saving data
      */
 
-    public Tag serializeNBT() {
-        CompoundTag compound = new CompoundTag();
+    public CompoundNBT serializeNBT() {
+        CompoundNBT compound = new CompoundNBT();
 
         compound.putByteArray(NBT_TAG_CANVAS_IDS, this.getCanvasIds().toByteArray());
         compound.putInt(NBT_TAG_CANVAS_LAST_ID, this.getLastCanvasId());
@@ -324,9 +325,9 @@ public class CanvasServerTracker implements CanvasTracker {
         return compound;
     }
 
-    public void deserializeNBT(Tag tag) {
-        if (tag.getType() == CompoundTag.TYPE) {
-            CompoundTag compoundTag = (CompoundTag) tag;
+    public void deserializeNBT(CompoundNBT tag) {
+        if (tag.getType() == CompoundNBT.TYPE) {
+            CompoundNBT compoundTag = (CompoundNBT) tag;
 
             // Backward compat for pre-16
             if (compoundTag.contains(NBT_TAG_CANVAS_IDS)) {

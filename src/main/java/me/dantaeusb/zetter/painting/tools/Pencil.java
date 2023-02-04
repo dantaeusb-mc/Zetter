@@ -1,11 +1,11 @@
 package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -15,7 +15,7 @@ import java.util.HashMap;
 public class Pencil extends AbstractTool<PencilParameters> {
     public static final int HOTKEY = GLFW.GLFW_KEY_P;
 
-    private final Component translatableComponent = Component.translatable("container.zetter.painting.tools.pencil");
+    private final ITextComponent translatableComponent = new TranslationTextComponent("container.zetter.painting.tools.pencil");
 
     public Pencil() {
         super(new ArrayList<>() {{
@@ -30,7 +30,7 @@ public class Pencil extends AbstractTool<PencilParameters> {
     }
 
     @Override
-    public Component getTranslatableComponent() {
+    public ITextComponent getTranslatableComponent() {
         return this.translatableComponent;
     }
 

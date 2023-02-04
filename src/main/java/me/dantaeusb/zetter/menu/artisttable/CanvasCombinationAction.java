@@ -4,17 +4,17 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.core.ZetterCanvasTypes;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.nio.ByteBuffer;
@@ -53,7 +53,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     private boolean hasColorData = false;
 
-    public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
+    public CanvasCombinationAction(ArtistTableMenu menu, World level) {
         super(menu, level);
 
         this.updateCanvasData(menu.getCombinationContainer());
@@ -171,7 +171,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         this.canvasData = this.createCanvasData(combinationContainer, rectangle, this.level);
     }
 
-    private DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, Level world) {
+    private DummyCanvasData createCanvasData(ItemStackHandler artistTableContainer, Rectangle rectangle, World world) {
         final int pixelWidth = rectangle.width * Helper.getResolution().getNumeric();
         final int pixelHeight = rectangle.height * Helper.getResolution().getNumeric();
         this.hasColorData = false;
@@ -272,14 +272,14 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     }
 
     @Override
-    public void onTakeCombined(Player player, ItemStack stack) {
+    public void onTakeCombined(PlayerEntity player, ItemStack stack) {
         if (this.canvasData == null || !this.isReady()) {
             Zetter.LOG.error("Cannot find combined canvas data");
             return;
         }
 
-        if (!player.getLevel().isClientSide()) {
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
+        if (!player.level.isClientSide()) {
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
 
             if (this.hasColorData) {
                 CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
@@ -315,7 +315,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
             }
         } else {
-            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.getLevel());
+            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.level);
 
             for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
                 // First we are removing item to avoid loading it's canvas on update

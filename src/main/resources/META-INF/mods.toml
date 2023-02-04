@@ -66,13 +66,13 @@ Core values of this mod:
 [[dependencies.zetter]]
     modId="forge"
     mandatory=true
-    versionRange="[43,)"
+    versionRange="[36.2.34,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.zetter]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.3]"
+    versionRange="[1.16.5]"
     ordering="NONE"
     side="BOTH"

@@ -4,33 +4,33 @@ import me.dantaeusb.zetter.block.entity.container.ArtistTableGridContainer;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
-import net.minecraft.core.Direction;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.Containers;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.MenuProvider;
-import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.ContainerLevelAccess;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.Level;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.IIntArray;
+import net.minecraft.util.IWorldPosCallable;
+import net.minecraft.util.IntArray;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
-public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHandlerListener, MenuProvider {
+public class ArtistTableBlockEntity extends TileEntity implements ItemStackHandlerListener, INamedContainerProvider {
     // @todo: [LOW] Remove before release: transition 0.16 - 0.17
     private static final String NBT_TAG_DEPRECATED_ARTIST_TABLE_CANVAS_STORAGE = "canvas_storage";
     private static final String NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE = "CanvasStorage";
@@ -38,7 +38,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
 
     public static final int DATA_MODE = 0;
 
-    private final ContainerData dataAccess = new ContainerData() {
+    private final IIntArray dataAccess = new IntArray(1) {
         public int get(int slot) {
             if (slot == DATA_MODE) {
                 return ArtistTableBlockEntity.this.mode.getId();
@@ -64,7 +64,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     private ArtistTableMenu.Mode mode = ArtistTableMenu.Mode.COMBINE;
 
     public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
-        super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(), pos, state);
+        super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY, pos, state);
         this.createInventory();
     }
 
@@ -94,7 +94,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
         this.artistTableGridContainer.addListener(this);
     }
 
-    public boolean canPlayerAccessInventory(Player player) {
+    public boolean canPlayerEntityAccessInventory(PlayerEntity player) {
         if (this.level.getBlockEntity(this.worldPosition) != this) {
             return false;
         } else {
@@ -112,26 +112,26 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     }
 
     @Override
-    public AABB getRenderBoundingBox()
+    public AxisAlignedBB getRenderBoundingBox()
     {
-        return new AABB(this.getBlockPos(), this.getBlockPos().offset(1, 1, 1));
+        return new AxisAlignedBB(this.getBlockPos(), this.getBlockPos().offset(1, 1, 1));
     }
 
     // NBT stack
 
     @Override
-    public void saveAdditional(CompoundTag compoundTag)
+    public void saveAdditional(CompoundNBT compoundTag)
     {
-        CompoundTag gridContainer = this.artistTableGridContainer.serializeNBT();
+        CompoundNBT gridContainer = this.artistTableGridContainer.serializeNBT();
         compoundTag.put(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE, gridContainer);
         compoundTag.putByte(NBT_TAG_ARTIST_TABLE_MODE, this.mode.getId());
     }
 
     @Override
-    public void load(CompoundTag compoundTag) {
-        super.load(compoundTag);
+    public void load(BlockState blockState, CompoundNBT compoundTag) {
+        super.load(blockState, compoundTag);
 
-        CompoundTag canvasStorageTag;
+        CompoundNBT canvasStorageTag;
 
         if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE)) {
             canvasStorageTag = compoundTag.getCompound(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE);
@@ -157,26 +157,31 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
 
     @Override
     @Nullable
-    public ClientboundBlockEntityDataPacket getUpdatePacket()
+    public SUpdateTileEntityPacket getUpdatePacket()
     {
-        return ClientboundBlockEntityDataPacket.create(this);
+        CompoundNBT nbtTagCompound = new CompoundNBT();
+        save(nbtTagCompound);
+
+        int tileEntityType = 43;
+        return new SUpdateTileEntityPacket(this.worldPosition, tileEntityType, nbtTagCompound);
     }
 
     @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket packet) {
-        this.load(packet.getTag());
+    public void onDataPacket(NetworkManager net, SUpdateTileEntityPacket packet) {
+        BlockState blockState = level.getBlockState(worldPosition);
+        load(blockState, packet.getTag());
     }
 
     @Override
-    public CompoundTag getUpdateTag()
+    public CompoundNBT getUpdateTag()
     {
-        CompoundTag nbtTagCompound = new CompoundTag();
+        CompoundNBT nbtTagCompound = new CompoundNBT();
         this.saveAdditional(nbtTagCompound);
         return nbtTagCompound;
     }
 
     @Override
-    public void handleUpdateTag(CompoundTag tag)
+    public void handleUpdateTag(CompoundNBT tag)
     {
         this.load(tag);
     }
@@ -186,14 +191,14 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
      * @param world
      * @param blockPos
      */
-    public void dropAllContents(Level world, BlockPos blockPos) {
+    public void dropAllContents(World world, BlockPos blockPos) {
         for (int i = 0; i < this.artistTableGridContainer.getSlots(); i++) {
             Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.artistTableGridContainer.getStackInSlot(i));
         }
     }
     @Override
-    public Component getDisplayName() {
-        return Component.translatable("container.zetter.artistTable");
+    public ITextComponent getDisplayName() {
+        return new TranslationTextComponent("container.zetter.artistTable");
     }
 
     @Override
@@ -214,10 +219,10 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
      */
     @Nullable
     @Override
-    public AbstractContainerMenu createMenu(int windowID, Inventory playerInventory, Player playerEntity) {
+    public Container createMenu(int windowID, PlayerInventory playerInventory, PlayerEntity playerEntity) {
         return ArtistTableMenu.createMenuServerSide(
                 windowID, playerInventory, this.artistTableGridContainer,
-                this.dataAccess, ContainerLevelAccess.create(this.level, this.getBlockPos())
+                this.dataAccess, IWorldPosCallable.create(this.level, this.getBlockPos())
         );
     }
 }

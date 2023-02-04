@@ -2,11 +2,11 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ClientHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -24,7 +24,7 @@ public class SCanvasSyncExportErrorPacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SCanvasSyncExportErrorPacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SCanvasSyncExportErrorPacket readPacketData(PacketBuffer networkBuffer) {
         try {
             String errorCode = networkBuffer.readUtf(32767);
             String errorMessage = null;
@@ -42,7 +42,7 @@ public class SCanvasSyncExportErrorPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeUtf(this.errorCode, 32767);
         networkBuffer.writeBoolean(this.errorMessage != null);
 
@@ -56,7 +56,7 @@ public class SCanvasSyncExportErrorPacket {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SCanvasSyncExportErrorPacket context could not provide a ClientWorld.");
             return;

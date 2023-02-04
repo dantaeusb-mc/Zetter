@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -86,7 +86,7 @@ public class CanvasRenderer implements AutoCloseable {
      * @param canvas
      * @param combinedLight
      */
-    public void renderCanvas(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
+    public void renderCanvas(MatrixStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
         // 0 is a reserved fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
 
@@ -322,10 +322,10 @@ public class CanvasRenderer implements AutoCloseable {
                    ((x & 0x00FF0000) >> 16) | //______RR
                    ((x & 0x0000FF00)) |       //____GG__
                    ((x & 0x000000FF) << 16);  //__BB____
-            // Return value is in format:  0xAABBGGRR
+            // Return value is in format:  0xAxisAlignedBBGGRR
         }
 
-        private void render(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, int combinedLight) {
+        private void render(MatrixStack matrixStack, MultiBufferSource renderTypeBuffer, int combinedLight) {
             Matrix4f matrix4f = matrixStack.last().pose();
             VertexConsumer ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 

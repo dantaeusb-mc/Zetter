@@ -6,20 +6,27 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.client.audio.SoundSource;
 import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.chat.ITextComponent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.SoundEvents;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.player.PlayerEntity;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.level.World;
 
 public class RestoreCommand {
     private static final DynamicCommandExceptionType ERROR_PAINTING_NOT_FOUND = new DynamicCommandExceptionType((code) -> {
-        return Component.translatable("console.zetter.error.painting_not_found", code);
+        return new TranslationTextComponent("console.zetter.error.painting_not_found", code);
     });
 
     static ArgumentBuilder<CommandSourceStack, ?> register() {
@@ -36,7 +43,7 @@ public class RestoreCommand {
             );
     }
 
-    private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
+    private static int execute(CommandSourceStack source, PlayerEntity player, World level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
         ItemStack paintingItem = new ItemStack(ZetterItems.PAINTING.get());
 
         if (!paintingInput.hasPaintingData(level)) {
@@ -67,7 +74,7 @@ public class RestoreCommand {
             }
         }
 
-        source.sendSuccess(Component.translatable("commands.give.success.single", 1, paintingItem.getDisplayName(), player.getDisplayName()), true);
+        source.sendSuccess(new TranslationTextComponent("commands.give.success.single", 1, paintingItem.getDisplayName(), player.getDisplayName()), true);
 
         return 1;
     }

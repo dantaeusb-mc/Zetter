@@ -1,9 +1,9 @@
 package me.dantaeusb.zetter.capability.paintingregistry;
 
 import me.dantaeusb.zetter.Zetter;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
-import net.minecraft.world.level.Level;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.world.World;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -24,10 +24,10 @@ public class PaintingRegistry {
     private static final String SEPARATOR = new String(new byte[] {0}, StandardCharsets.UTF_8);
     private static final byte BYTE_SEPARATOR = SEPARATOR.getBytes(StandardCharsets.UTF_8)[0];
 
-    private final Level world;
+    private final World world;
     private ArrayList<String> paintingCanvasCodeList = new ArrayList<>();
 
-    public PaintingRegistry(Level world) {
+    public PaintingRegistry(World world) {
         super();
 
         this.world = world;
@@ -37,7 +37,7 @@ public class PaintingRegistry {
      * World accessor for canvas tracker
      * @return
      */
-    public Level getWorld() {
+    public World getWorld() {
         return this.world;
     }
 
@@ -53,8 +53,8 @@ public class PaintingRegistry {
      * Saving data
      */
 
-    public Tag serializeNBT() {
-        CompoundTag compound = new CompoundTag();
+    public CompoundNBT serializeNBT() {
+        CompoundNBT compound = new CompoundNBT();
 
         StringBuilder canvasCodeListBuilder = new StringBuilder();
 
@@ -68,36 +68,32 @@ public class PaintingRegistry {
         return compound;
     }
 
-    public void deserializeNBT(Tag tag) {
-        if (tag.getType() == CompoundTag.TYPE) {
-            CompoundTag compoundTag = (CompoundTag) tag;
+    public void deserializeNBT(INBT compoundTag) {
+        this.paintingCanvasCodeList = new ArrayList<>();
 
-            this.paintingCanvasCodeList = new ArrayList<>();
+        if (!compoundTag.contains(NBT_TAG_PAINTING_LIST)) {
+            return;
+        }
 
-            if (!compoundTag.contains(NBT_TAG_PAINTING_LIST)) {
-                return;
+        ByteBuffer canvasCodesBuffer = ByteBuffer.wrap(compoundTag.getByteArray(NBT_TAG_PAINTING_LIST));
+        int lastZeroBytePosition = 0;
+
+        while (canvasCodesBuffer.hasRemaining()) {
+            if (canvasCodesBuffer.get() != BYTE_SEPARATOR) {
+                continue;
             }
 
-            ByteBuffer canvasCodesBuffer = ByteBuffer.wrap(compoundTag.getByteArray(NBT_TAG_PAINTING_LIST));
-            int lastZeroBytePosition = 0;
+            // Do not get byte[], it'll share the reference to the full array I suppose
+            ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
+            String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
 
-            while (canvasCodesBuffer.hasRemaining()) {
-                if (canvasCodesBuffer.get() != BYTE_SEPARATOR) {
-                    continue;
-                }
-
-                // Do not get byte[], it'll share the reference to the full array I suppose
-                ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
-                String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
-
-                if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
-                    Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
-                } else {
-                    this.paintingCanvasCodeList.add(canvasCode);
-                }
-
-                lastZeroBytePosition = canvasCodesBuffer.position();
+            if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
+                Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
+            } else {
+                this.paintingCanvasCodeList.add(canvasCode);
             }
+
+            lastZeroBytePosition = canvasCodesBuffer.position();
         }
     }
 }

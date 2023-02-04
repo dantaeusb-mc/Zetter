@@ -5,35 +5,34 @@ import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.item.PaletteItem;
-import net.minecraft.core.NonNullList;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraft.world.level.Level;
+import net.minecraft.inventory.CraftingInventory;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.IRecipeSerializer;
+import net.minecraft.item.crafting.Ingredient;
+import net.minecraft.item.crafting.SpecialRecipe;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.JSONUtils;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
 import java.util.Arrays;
 
 /**
  * Only for frames, toggle
  */
-public class CopyingRecipe extends CustomRecipe {
+public class CopyingRecipe extends SpecialRecipe {
     private final Ingredient inputPainting;
     private final Ingredient inputCanvas;
     private final Ingredient inputPalette;
 
     public CopyingRecipe(ResourceLocation id, Ingredient inputPainting, Ingredient inputCanvas, Ingredient inputPalette) {
-        super(id, CraftingBookCategory.MISC);
+        super(id);
 
         this.inputPainting = inputPainting;
         this.inputCanvas = inputCanvas;
@@ -48,7 +47,7 @@ public class CopyingRecipe extends CustomRecipe {
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingContainer craftingInventory, Level world) {
+    public boolean matches(CraftingInventory craftingInventory, World world) {
         ItemStack paintingStack = ItemStack.EMPTY;
         ItemStack canvasStack = ItemStack.EMPTY;
         ItemStack paletteStack = ItemStack.EMPTY;
@@ -120,7 +119,7 @@ public class CopyingRecipe extends CustomRecipe {
     /**
      * Returns an Item that is the result of this recipe
      */
-    public ItemStack assemble(CraftingContainer craftingInventory) {
+    public ItemStack assemble(CraftingInventory craftingInventory) {
         ItemStack paintingStack = ItemStack.EMPTY;
         ItemStack canvasStack = ItemStack.EMPTY;
         ItemStack paletteStack = ItemStack.EMPTY;
@@ -180,7 +179,7 @@ public class CopyingRecipe extends CustomRecipe {
         ItemStack outStack = paintingStack.copy();
         outStack.setCount(1);
 
-        CompoundTag compoundTag = paintingStack.getTag().copy();
+        CompoundNBT compoundTag = paintingStack.getTag().copy();
         outStack.setTag(compoundTag);
 
         int generation = Math.min(PaintingItem.GENERATION_COPY_OF_COPY, PaintingItem.getGeneration(paintingStack) + 1);
@@ -190,7 +189,7 @@ public class CopyingRecipe extends CustomRecipe {
     }
 
     @Override
-    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inv) {
+    public NonNullList<ItemStack> getRemainingItems(CraftingInventory inv) {
         NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
         ItemStack originalPaintingStack = null;
         ItemStack paletteStack = null;
@@ -205,7 +204,7 @@ public class CopyingRecipe extends CustomRecipe {
                 originalPaintingStack = new ItemStack(originalPainting);
                 originalPaintingStack.setCount(1);
 
-                CompoundTag compoundTag = stackInSlot.getTag().copy();
+                CompoundNBT compoundTag = stackInSlot.getTag().copy();
 
                 originalPaintingStack.setTag(compoundTag);
 
@@ -217,7 +216,7 @@ public class CopyingRecipe extends CustomRecipe {
                 paletteStack = new ItemStack(palette);
                 paletteStack.setCount(1);
 
-                CompoundTag compoundTag = stackInSlot.getTag().copy();
+                CompoundNBT compoundTag = stackInSlot.getTag().copy();
 
                 paletteStack.setTag(compoundTag);
                 paletteStack.setDamageValue(stackInSlot.getDamageValue());
@@ -251,7 +250,7 @@ public class CopyingRecipe extends CustomRecipe {
     /**
      * @return
      */
-    public RecipeSerializer<?> getSerializer() {
+    public IRecipeSerializer<?> getSerializer() {
         return ZetterCraftingRecipes.COPYING.get();
     }
 
@@ -262,23 +261,23 @@ public class CopyingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<CopyingRecipe> {
+    public static class Serializer extends ForgeRegistryEntry<IRecipeSerializer<?>> implements IRecipeSerializer<CopyingRecipe> {
         @Override
         public CopyingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputPaintingJson = GsonHelper.getAsJsonObject(json, "painting");
+            final JsonElement inputPaintingJson = JSONUtils.getAsJsonObject(json, "painting");
             final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
 
-            final JsonElement inputCanvasJson = GsonHelper.getAsJsonObject(json, "canvas");
+            final JsonElement inputCanvasJson = JSONUtils.getAsJsonObject(json, "canvas");
             final Ingredient inputCanvas = Ingredient.fromJson(inputCanvasJson);
 
-            final JsonElement inputPaletteJson = GsonHelper.getAsJsonObject(json, "palette");
+            final JsonElement inputPaletteJson = JSONUtils.getAsJsonObject(json, "palette");
             final Ingredient inputPalette = Ingredient.fromJson(inputPaletteJson);
 
             return new CopyingRecipe(recipeId, inputPainting, inputCanvas, inputPalette);
         }
 
         @Override
-        public CopyingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
+        public CopyingRecipe fromNetwork(ResourceLocation recipeId, PacketBuffer buffer) {
             Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
             Ingredient canvasIngredient = Ingredient.fromNetwork(buffer);
             Ingredient paletteIngredient = Ingredient.fromNetwork(buffer);
@@ -286,7 +285,7 @@ public class CopyingRecipe extends CustomRecipe {
         }
 
         @Override
-        public void toNetwork(FriendlyByteBuf buffer, CopyingRecipe recipe) {
+        public void toNetwork(PacketBuffer buffer, CopyingRecipe recipe) {
             recipe.inputPainting.toNetwork(buffer);
             recipe.inputCanvas.toNetwork(buffer);
             recipe.inputPalette.toNetwork(buffer);

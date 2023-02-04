@@ -1,12 +1,12 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerProvider;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerProvider;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistryProvider;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
@@ -25,12 +25,12 @@ public class ZetterCapabilities
     public static Capability<PaintingRegistry> PAINTING_REGISTRY = CapabilityManager.get(new CapabilityToken<>(){});
 
     @SubscribeEvent
-    public static void attachCapabilityToWorldHandler(AttachCapabilitiesEvent<Level> event) {
-        Level world = event.getObject();
+    public static void attachCapabilityToWorldHandler(AttachCapabilitiesEvent<World> event) {
+        World world = event.getObject();
 
         // For client, it doesn't matter which world we're attaching to.
         // For server, it's always saved with overworld.
-        if (world.isClientSide() || world.dimension() == Level.OVERWORLD) {
+        if (world.isClientSide() || world.dimension() == World.OVERWORLD) {
             event.addCapability(CANVAS_TRACKER_CAPABILITY_LOCATION, new CanvasTrackerProvider(world));
 
             if (!world.isClientSide()) {

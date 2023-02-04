@@ -1,11 +1,7 @@
 package me.dantaeusb.zetter.painting.parameters;
 
 import me.dantaeusb.zetter.painting.Tools;
-import me.dantaeusb.zetter.painting.tools.Brush;
-import me.dantaeusb.zetter.painting.tools.Bucket;
-import me.dantaeusb.zetter.painting.tools.Pencil;
-import net.minecraft.core.NonNullList;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.Tuple;
 import org.apache.commons.lang3.SerializationException;
 
@@ -39,7 +35,7 @@ public abstract class AbstractToolParameters implements Cloneable {
         return copy;
     }
 
-    public static void writePacketData(AbstractToolParameters toolParameters, FriendlyByteBuf buffer) {
+    public static void writePacketData(AbstractToolParameters toolParameters, PacketBuffer buffer) {
         buffer.writeCollection(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
     }
 
@@ -52,7 +48,7 @@ public abstract class AbstractToolParameters implements Cloneable {
      * @param entry
      * @todo: fix that wasteful serializer
      */
-    private static void writeEntry(FriendlyByteBuf buffer, Map.Entry<String, Object> entry) {
+    private static void writeEntry(PacketBuffer buffer, Map.Entry<String, Object> entry) {
         try {
             buffer.writeUtf(entry.getKey(), 128);
             ByteArrayOutputStream streamOutput = new ByteArrayOutputStream();
@@ -70,7 +66,7 @@ public abstract class AbstractToolParameters implements Cloneable {
         }
     }
 
-    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer, Tools tool) {
+    public static AbstractToolParameters readPacketData(PacketBuffer buffer, Tools tool) {
         // @todo: varies!
         AbstractToolParameters toolParameters;
 
@@ -106,7 +102,7 @@ public abstract class AbstractToolParameters implements Cloneable {
      * @param buffer
      * @return
      */
-    private static Tuple<String, Object> readEntry(FriendlyByteBuf buffer) {
+    private static Tuple<String, Object> readEntry(PacketBuffer buffer) {
         final String key = buffer.readUtf(128);
         final int length = buffer.readInt();
 

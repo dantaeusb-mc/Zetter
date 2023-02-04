@@ -3,9 +3,9 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
@@ -33,7 +33,7 @@ public class CCanvasActionPacket {
      * Reads the raw packet data from the data stream.
      * Seems like buffer is always at least 256 bytes, so we have to process written buffer size
      */
-    public static CCanvasActionPacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static CCanvasActionPacket readPacketData(PacketBuffer networkBuffer) {
         int entityId = networkBuffer.readInt();
         int actionBuffersCount = networkBuffer.readInt();
 
@@ -57,7 +57,7 @@ public class CCanvasActionPacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
         networkBuffer.writeInt(this.paintingActions.size());
 
@@ -70,7 +70,7 @@ public class CCanvasActionPacket {
         NetworkEvent.Context ctx = ctxSupplier.get();
         ctx.setPacketHandled(true);
 
-        final ServerPlayer sendingPlayer = ctx.getSender();
+        final ServerPlayerEntity sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
         }

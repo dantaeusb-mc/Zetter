@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.renderer.item;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.math.Axis;
 import org.joml.Vector3f;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -35,7 +35,7 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
     }
 
     @Override
-    public void renderByItem(ItemStack itemStack, ItemTransforms.TransformType transformType, PoseStack poseStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay)
+    public void renderByItem(ItemStack itemStack, ItemTransforms.TransformType transformType, MatrixStack poseStack, MultiBufferSource buffer, int combinedLight, int combinedOverlay)
     {
         if (renderer == null) { renderer = Minecraft.getInstance().getItemRenderer(); }
 

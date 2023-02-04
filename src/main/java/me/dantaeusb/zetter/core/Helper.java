@@ -7,11 +7,10 @@ import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.Util;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
@@ -20,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -53,7 +54,7 @@ public class Helper {
         return AbstractCanvasData.Resolution.x16;
     }
 
-    public static CanvasTracker getLevelCanvasTracker(Level level) {
+    public static CanvasTracker getLevelCanvasTracker(World level) {
         CanvasTracker canvasTracker;
 
         if (!level.isClientSide()) {
@@ -66,7 +67,7 @@ public class Helper {
         return canvasTracker;
     }
 
-    public static PaintingRegistry getLevelPaintingRegistry(Level world) {
+    public static PaintingRegistry getLevelPaintingRegistry(World world) {
         PaintingRegistry paintingRegistry;
 
         if (!world.isClientSide()) {
@@ -97,8 +98,8 @@ public class Helper {
      * @param authorNickname
      * @return
      */
-    public static @Nullable UUID tryToRestoreAuthorUuid(ServerLevel level, String authorNickname) {
-        List<ServerPlayer> playersWithAuthorNickname = level.getPlayers(serverPlayer -> {
+    public static @Nullable UUID tryToRestoreAuthorUuid(ServerWorld level, String authorNickname) {
+        List<ServerPlayerEntity> playersWithAuthorNickname = level.getPlayers(serverPlayer -> {
             return serverPlayer.getName().getString().equals(authorNickname);
         });
 
@@ -122,10 +123,10 @@ public class Helper {
 
         if (!exportDirectory.exists()) {
             if (!exportDirectory.mkdir()) {
-                throw new IOException(Component.translatable("console.zetter.error.file_write_folder_unable").getString());
+                throw new IOException(new TranslationTextComponent("console.zetter.error.file_write_folder_unable").getString());
             }
         } else if (!exportDirectory.isDirectory()) {
-            throw new IOException(Component.translatable("console.zetter.error.file_write_folder_exists").getString());
+            throw new IOException(new TranslationTextComponent("console.zetter.error.file_write_folder_exists").getString());
         }
 
         String name = paintingData.getPaintingName().replaceAll("\s", "-");
@@ -135,7 +136,7 @@ public class Helper {
         }
 
         int maxLength = Math.min(name.length(), 32);
-        name = name.substring(0, maxLength) + "_" + Util.getFilenameFormattedDateTime();
+        name = name.substring(0, maxLength) + "_" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date());
 
         File exportFile = new File(exportDirectory, name + ".png");
 
@@ -159,7 +160,7 @@ public class Helper {
         try {
             ImageIO.write(bufferedImage, "PNG", exportFile);
         } catch (IOException e) {
-            throw new IOException(Component.translatable("console.zetter.error.file_write_file").getString());
+            throw new IOException(new TranslationTextComponent("console.zetter.error.file_write_file").getString());
         }
     }
 
@@ -170,14 +171,14 @@ public class Helper {
      * @param level
      * @return
      */
-    public static @Nullable String lookupPaintingCodeByName(String paintingName, Level level) {
+    public static @Nullable String lookupPaintingCodeByName(String paintingName, World level) {
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
         for (int id = 0; id < canvasTracker.getLastPaintingId() + 1; id++) {
             final String code = PaintingData.getCanvasCode(id);
             PaintingData paintingData = canvasTracker.getCanvasData(code);
 
-            if (paintingData == null || !paintingData.getType().equals(ZetterCanvasTypes.PAINTING.get())) {
+            if (paintingData == null || !paintingData.getType().equals(ZetterCanvasTypes.PAINTING)) {
                 continue;
             }
 

@@ -11,15 +11,15 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.nio.ByteBuffer;
 
 public class CanvasSplitAction extends AbstractCanvasAction {
-    public CanvasSplitAction(ArtistTableMenu artistTableMenu, Level level) {
+    public CanvasSplitAction(ArtistTableMenu artistTableMenu, World level) {
         super(artistTableMenu, level);
     }
 
@@ -161,7 +161,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * @param takenStack
      */
     @Override
-    public void onTakeSplit(Player player, ItemStack takenStack) {
+    public void onTakeSplit(PlayerEntity player, ItemStack takenStack) {
         if (this.level.isClientSide()) {
             // Nothing to do on client
             return;

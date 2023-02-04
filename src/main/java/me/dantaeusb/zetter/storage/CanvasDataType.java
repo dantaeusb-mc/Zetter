@@ -1,18 +1,16 @@
 package me.dantaeusb.zetter.storage;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.registries.ForgeRegistryEntry;
 
-public class CanvasDataType<T extends AbstractCanvasData> {
-    public final ResourceLocation resourceLocation;
+
+public class CanvasDataType<T extends AbstractCanvasData> extends ForgeRegistryEntry<CanvasDataType<?>> {
     public final CanvasDataBuilder<T> builder;
 
     public CanvasDataType(
-            ResourceLocation resourceLocation,
             CanvasDataBuilder<T> builder
     ) {
-        this.resourceLocation = resourceLocation;
         this.builder = builder;
     }
 
@@ -24,15 +22,15 @@ public class CanvasDataType<T extends AbstractCanvasData> {
         return this.builder.createWrap(resolution, width, height, color);
     }
 
-    public T loadFromNbt(CompoundTag compoundTag) {
+    public T loadFromNbt(CompoundNBT compoundTag) {
         return this.builder.load(compoundTag);
     }
 
-    public T readPacketData(FriendlyByteBuf byteBuf) {
+    public T readPacketData(PacketBuffer byteBuf) {
         return this.builder.readPacketData(byteBuf);
     }
 
-    public void writePacketData(T canvasData, FriendlyByteBuf byteBuf) {
+    public void writePacketData(T canvasData, PacketBuffer byteBuf) {
         this.builder.writePacketData(canvasData, byteBuf);
     }
 }

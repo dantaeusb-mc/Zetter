@@ -1,13 +1,13 @@
 package me.dantaeusb.zetter.client.gui.easel.tabs;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.BlendingWidget;
 import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.TranslationTextComponent;
 
 public class PencilParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
@@ -16,7 +16,7 @@ public class PencilParametersTab extends AbstractTab {
     private final SliderWidget sizeWidget;
 
     public PencilParametersTab(EaselScreen parentScreen, int windowX, int windowY) {
-        super(parentScreen, windowX, windowY, Component.translatable("container.zetter.painting.tabs.parameters"));
+        super(parentScreen, windowX, windowY, new TranslationTextComponent("container.zetter.painting.tabs.parameters"));
 
         final int BLENDING_POSITION_X = 0;
         final int BLENDING_POSITION_Y = 1;
@@ -30,17 +30,17 @@ public class PencilParametersTab extends AbstractTab {
         final int SIZE_POSITION_X = 0;
         final int SIZE_POSITION_Y = 67;
 
-        this.blendingWidget = new BlendingWidget(this.parentScreen, this.getX() + BLENDING_POSITION_X, this.getY() + BLENDING_POSITION_Y);
-        this.ditheringWidget = new DitheringWidget(this.parentScreen, this.getX() + DITHERING_POSITION_X, this.getY() + DITHERING_POSITION_Y);
+        this.blendingWidget = new BlendingWidget(this.parentScreen, this.x + BLENDING_POSITION_X, this.y + BLENDING_POSITION_Y);
+        this.ditheringWidget = new DitheringWidget(this.parentScreen, this.x + DITHERING_POSITION_X, this.y + DITHERING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
-                parentScreen, this.getX() + INTENSITY_POSITION_X, this.getY() + INTENSITY_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.intensity"),
+                parentScreen, this.x + INTENSITY_POSITION_X, this.y + INTENSITY_POSITION_Y,
+                new TranslationTextComponent("container.zetter.painting.sliders.intensity"),
                 this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
         this.sizeWidget = new SliderWidget(
-                parentScreen, this.getX() + SIZE_POSITION_X, this.getY() + SIZE_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.size"),
+                parentScreen, this.x + SIZE_POSITION_X, this.y + SIZE_POSITION_Y,
+                new TranslationTextComponent("container.zetter.painting.sliders.size"),
                 this::updateSize, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
@@ -62,9 +62,9 @@ public class PencilParametersTab extends AbstractTab {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+            fill(matrixStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
                 this.blendingWidget.render(matrixStack);
@@ -84,17 +84,17 @@ public class PencilParametersTab extends AbstractTab {
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    public void renderLabels(MatrixStack matrixStack, int mouseX, int mouseY) {
         if (this.visible) {
             this.parentScreen.getFont().draw(
                     matrixStack, this.intensityWidget.getMessage(),
-                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
+                    (float) this.x - this.parentScreen.getGuiLeft(), (float) this.y - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
                     Color.DARK_GRAY.getRGB()
             );
 
             this.parentScreen.getFont().draw(
                     matrixStack, this.sizeWidget.getMessage(),
-                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + 57,
+                    (float) this.x - this.parentScreen.getGuiLeft(), (float) this.y - this.parentScreen.getGuiTop() + 57,
                     Color.DARK_GRAY.getRGB()
             );
         }
@@ -118,7 +118,7 @@ public class PencilParametersTab extends AbstractTab {
         return false;
     }
 
-    public void renderIntensityBackground(PoseStack matrixStack, int x, int y, int width, int height) {
+    public void renderIntensityBackground(MatrixStack matrixStack, int x, int y, int width, int height) {
         final int INTENSITY_BACKGROUND_U = 8;
         final int INTENSITY_BACKGROUND_V = 99;
 

@@ -2,11 +2,11 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ClientHandler;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.fml.LogicalSidedProvider;
+import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -15,7 +15,7 @@ public record SCanvasRemovalPacket(String canvasCode, long timestamp) {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SCanvasRemovalPacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SCanvasRemovalPacket readPacketData(PacketBuffer networkBuffer) {
         try {
             String canvasCode = networkBuffer.readUtf(128);
             long timestamp = networkBuffer.readLong();
@@ -30,7 +30,7 @@ public record SCanvasRemovalPacket(String canvasCode, long timestamp) {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
     }
@@ -40,7 +40,7 @@ public record SCanvasRemovalPacket(String canvasCode, long timestamp) {
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+        Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
         if (clientWorld.isEmpty()) {
             Zetter.LOG.error("SCanvasRemovalMessage context could not provide a ClientWorld.");
             return;

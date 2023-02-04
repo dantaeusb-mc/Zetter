@@ -1,19 +1,23 @@
 package me.dantaeusb.zetter.client.gui.overlay;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ITextComponent;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.StringUtil;
+import net.minecraft.util.StringUtils;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 public class PaintingInfoOverlay implements IGuiOverlay {
-    private static final Component BANNED_TEXT = Component.translatable("painting.zetter.banned");
+    private static final ITextComponent BANNED_TEXT = new TranslationTextComponent("painting.zetter.banned");
 
     protected PaintingData paintingData = null;
     protected int overlayMessageTime = 0;
@@ -28,7 +32,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
     }
 
     @Override
-    public void render(ForgeGui gui, PoseStack poseStack, float partialTick, int screenWidth, int screenHeight) {
+    public void render(ForgeGui gui, MatrixStack poseStack, float partialTick, int screenWidth, int screenHeight) {
         if (this.paintingData == null) {
             return;
         }
@@ -38,21 +42,21 @@ public class PaintingInfoOverlay implements IGuiOverlay {
             return;
         }
 
-        Component title;
+        ITextComponent title;
 
         if (!this.paintingData.isBanned()) {
             String paintingName = this.paintingData.getPaintingName();
             String authorName = this.paintingData.getAuthorName();
 
-            if (StringUtil.isNullOrEmpty(paintingName)) {
-                paintingName = Component.translatable("item.zetter.painting.unnamed").getString();
+            if (StringUtils.isNullOrEmpty(paintingName)) {
+                paintingName = new TranslationTextComponent("item.zetter.painting.unnamed").getString();
             }
 
-            if (StringUtil.isNullOrEmpty(authorName)) {
-                authorName = Component.translatable("item.zetter.painting.unknown").getString();
+            if (StringUtils.isNullOrEmpty(authorName)) {
+                authorName = new TranslationTextComponent("item.zetter.painting.unknown").getString();
             }
 
-            title = Component.translatable("item.zetter.customPaintingByAuthor", paintingName, authorName);
+            title = new TranslationTextComponent("item.zetter.customPaintingByAuthor", paintingName, authorName);
         } else {
             title = BANNED_TEXT;
         }
@@ -89,7 +93,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
      * @param messageWidth
      * @param color
      */
-    protected void drawBackdrop(PoseStack poseStack, Font font, int heightOffset, int messageWidth, int color) {
+    protected void drawBackdrop(MatrixStack poseStack, FontRenderer font, int heightOffset, int messageWidth, int color) {
         int backgroundColor = Minecraft.getInstance().options.getBackgroundColor(0.0F);
 
         if (backgroundColor != 0) {

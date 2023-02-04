@@ -4,8 +4,8 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.network.PacketBuffer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -92,23 +92,23 @@ public class DummyCanvasData extends AbstractCanvasData {
          * @param compoundTag
          * @return
          */
-        public DummyCanvasData load(CompoundTag compoundTag) {
+        public DummyCanvasData load(CompoundNBT compoundTag) {
             Zetter.LOG.error("Trying to read into dummy canvas!");
 
             return DummyCanvasData.createDummy();
         }
 
-        public CompoundTag save(CompoundTag compoundTag) {
+        public CompoundNBT save(CompoundNBT compoundTag) {
             Zetter.LOG.error("Trying to save dummy canvas!");
 
             return compoundTag;
         }
 
-        public DummyCanvasData readPacketData(FriendlyByteBuf networkBuffer) {
+        public DummyCanvasData readPacketData(PacketBuffer networkBuffer) {
             throw new IllegalStateException("Trying to read Dummy Canvas from network!");
         }
 
-        public void writePacketData(DummyCanvasData canvasData, FriendlyByteBuf networkBuffer) {
+        public void writePacketData(DummyCanvasData canvasData, PacketBuffer networkBuffer) {
             throw new IllegalStateException("Trying to write Dummy Canvas to network!");
         }
     }

@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.PacketBuffer;
 
 import javax.annotation.Nullable;
 
@@ -17,7 +17,7 @@ public class SEaselMenuCreatePacket {
     /**
      * Reads the raw packet data from the data stream.
      */
-    public static SEaselMenuCreatePacket readPacketData(FriendlyByteBuf networkBuffer) {
+    public static SEaselMenuCreatePacket readPacketData(PacketBuffer networkBuffer) {
         try {
             int easelEntityId = networkBuffer.readInt();
             boolean hasCanvasCode = networkBuffer.readBoolean();
@@ -37,7 +37,7 @@ public class SEaselMenuCreatePacket {
     /**
      * Writes the raw packet data to the data stream.
      */
-    public void writePacketData(FriendlyByteBuf networkBuffer) {
+    public void writePacketData(PacketBuffer networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
 
         if (this.canvasCode != null) {

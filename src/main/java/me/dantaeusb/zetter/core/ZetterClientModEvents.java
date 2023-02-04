@@ -1,17 +1,16 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.event.*;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasViewEvent;
+import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Tuple;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -56,7 +55,7 @@ public class ZetterClientModEvents {
         AbstractCanvasData canvasData = event.canvasData;
         long timestamp = event.timestamp;
 
-        Player player = Minecraft.getInstance().player;
+        PlayerEntity player = Minecraft.getInstance().player;
 
         if (canvasData instanceof CanvasData canvasCanvasData) {
             // Initialize canvas if client had no canvas loaded when it was updated
@@ -93,7 +92,7 @@ public class ZetterClientModEvents {
         AbstractCanvasData canvasData = event.canvasData;
         long timestamp = event.timestamp;
 
-        Player player = Minecraft.getInstance().player;
+        PlayerEntity player = Minecraft.getInstance().player;
 
         if (canvasData instanceof CanvasData canvasCanvasData) {
             if  (player.containerMenu instanceof ArtistTableMenu artistTableMenu) {
@@ -120,9 +119,9 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void initializeDefaultTextures(ClientPlayerNetworkEvent.LoggingIn event) {
+    public static void initializeDefaultTextures(ClientPlayerNetworkEvent.LoggedInEvent event) {
         for (Map.Entry<String, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
-            Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).registerCanvasData(
+            Helper.getLevelCanvasTracker(event.getPlayer().level).registerCanvasData(
                 defaultCanvasDataEntry.getKey(),
                 defaultCanvasDataEntry.getValue()
             );
@@ -134,14 +133,14 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void unloadDefaultTextures(ClientPlayerNetworkEvent.LoggingOut event) {
+    public static void unloadDefaultTextures(ClientPlayerNetworkEvent.LoggedOutEvent event) {
         // When minecraft loads world and closes game it triggers event with no player
         if (event.getPlayer() == null) {
             return;
         }
 
         for (Map.Entry<String, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
-            Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).unregisterCanvasData(
+            Helper.getLevelCanvasTracker(event.getPlayer().level).unregisterCanvasData(
                 defaultCanvasDataEntry.getKey()
             );
         }

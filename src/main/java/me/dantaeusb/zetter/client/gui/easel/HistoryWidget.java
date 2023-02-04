@@ -1,14 +1,13 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.gui.narration.NarratedElementType;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.network.chat.Component;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -16,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class HistoryWidget extends AbstractPaintingWidget implements Renderable {
+public class HistoryWidget extends AbstractPaintingWidget implements IRenderable {
     private final List<HistoryButton> buttons;
 
     public static final int UNDO_HOTKEY = GLFW.GLFW_KEY_Z;
@@ -30,30 +29,30 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
 
     public HistoryWidget(EaselScreen parentScreen, int x, int y) {
         // Add borders
-        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, Component.translatable("container.zetter.painting.history"));
+        super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, new TranslationTextComponent("container.zetter.painting.history"));
 
 
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(
                     parentScreen.getMenu()::canUndo, parentScreen.getMenu()::undo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.history.undo"))
+                    new TranslationTextComponent("container.zetter.painting.history.undo"))
             );
             add(new HistoryButton(parentScreen.getMenu()::canRedo, parentScreen.getMenu()::redo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V + HISTORY_BUTTON_HEIGHT + 1, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
-                    Component.translatable("container.zetter.painting.history.redo"))
+                    new TranslationTextComponent("container.zetter.painting.history.redo"))
             );
         }};
     }
 
     @Override
     public @Nullable
-    Component getTooltip(int mouseX, int mouseY) {
+    ITextComponent getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
+            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (EaselScreen.isInRect(this.getX() + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(this.x + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return historyButton.getTooltip();
             }
 
@@ -75,9 +74,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
+            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (EaselScreen.isInRect(this.getX() + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(this.x + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 historyButton.action.get();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -90,24 +89,18 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         return false;
     }
 
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
+    public void render(MatrixStack matrixStack) {
+        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-    public void render(PoseStack matrixStack) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
-        this.blit(matrixStack, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+        this.blit(matrixStack, this.x, this.y, HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
-            int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
+            int fromY = this.y + 1 + i * HISTORY_BUTTON_HEIGHT + i;
             int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : HISTORY_BUTTON_WIDTH + 2);
 
-            this.blit(matrixStack, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
+            this.blit(matrixStack, this.x + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
     }
@@ -127,9 +120,9 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         public final int vPosition;
         public final int height;
         public final int width;
-        public final Component label;
+        public final ITextComponent label;
 
-        HistoryButton(Supplier<Boolean> active, Supplier<Boolean> action, int uPosition, int vPosition, int width, int height, Component label) {
+        HistoryButton(Supplier<Boolean> active, Supplier<Boolean> action, int uPosition, int vPosition, int width, int height, ITextComponent label) {
             this.active = active;
             this.action = action;
             this.uPosition = uPosition;
@@ -139,7 +132,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
             this.label = label;
         }
 
-        public Component getTooltip() {
+        public ITextComponent getTooltip() {
             return this.label;
         }
     }
