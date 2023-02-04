@@ -10,7 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class CCanvasRequestPacket {
-    protected String canvasName;
+    public final String canvasName;
 
     public CCanvasRequestPacket(String canvasName) {
         this.canvasName = canvasName;
@@ -31,10 +31,6 @@ public class CCanvasRequestPacket {
      */
     public void writePacketData(FriendlyByteBuf buf) {
         buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_LENGTH);
-    }
-
-    public String getCanvasName() {
-        return this.canvasName;
     }
 
     public static void handle(final CCanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

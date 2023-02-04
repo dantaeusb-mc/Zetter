@@ -41,10 +41,6 @@ public class CCanvasRequestViewPacket extends CCanvasRequestPacket {
         buf.writeByte(this.hand.ordinal());
     }
 
-    public String getCanvasName() {
-        return this.canvasName;
-    }
-
     public InteractionHand getHand() {
         return this.hand;
     }

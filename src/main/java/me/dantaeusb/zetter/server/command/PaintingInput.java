@@ -73,6 +73,10 @@ public class PaintingInput {
         return this.code;
     }
 
+    public String getPaintingTitle() {
+        return this.title;
+    }
+
     public PaintingData getPaintingData() {
         return this.paintingData;
     }
