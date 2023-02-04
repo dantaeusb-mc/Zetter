@@ -2,10 +2,12 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.server.command.PaintingLookupArgument;
-import me.dantaeusb.zetter.server.command.ZetterCommand;
+import me.dantaeusb.zetter.server.command.ZetterClientCommand;
+import me.dantaeusb.zetter.server.command.ZetterServerCommand;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
+import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -26,7 +28,12 @@ public class ZetterConsoleCommands {
     @SubscribeEvent
     public static void onCommandsRegister(RegisterCommandsEvent event)
     {
-        new ZetterCommand(event.getDispatcher());
+        new ZetterServerCommand(event.getDispatcher());
+    }
+
+    @SubscribeEvent
+    public static void onClientCommandsRegister(RegisterClientCommandsEvent event) {
+        new ZetterClientCommand(event.getDispatcher());
     }
 
     public static void init(IEventBus bus) {

@@ -31,27 +31,25 @@ import java.security.InvalidParameterException;
  * so we catch all of those manually
  */
 public class ServerHandler {
-
     /**
      * When client requests a canvas, we need to load data
      * about that canvas, and send according type of canvas in
      * sync packet
      *
-     * @param packetIn
+     * @param canvasName
      * @param sendingPlayer
      */
-    private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
+    private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final String canvasName, ServerPlayer sendingPlayer) {
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
         final Level world = server.overworld();
         final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        final String canvasName = packetIn.getCanvasName();
 
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
             return null;
         }
 
-        // Notify canvas manager that player is tracking canvas from no ow
+        // Notify canvas manager that player is tracking canvas from now on
         canvasTracker.trackCanvas(sendingPlayer.getUUID(), canvasName);
 
         AbstractCanvasData canvasData = canvasTracker.getCanvasData(canvasName);
@@ -64,10 +62,16 @@ public class ServerHandler {
         return canvasData;
     }
 
+    /**
+     * Client asked for abstract canvas data
+     * Could be just canvas, could be painting
+     * @param packetIn
+     * @param sendingPlayer
+     */
     public static void processCanvasRequest(final CCanvasRequestPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
-            final String canvasName = packetIn.getCanvasName();
+            AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn.canvasName, sendingPlayer);
+            final String canvasName = packetIn.canvasName;
 
             if (canvasData == null) {
                 Zetter.LOG.warn("No canvas data found, not answering request for " + canvasName);
@@ -94,8 +98,8 @@ public class ServerHandler {
      */
     public static void processCanvasViewRequest(final CCanvasRequestViewPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn, sendingPlayer);
-            final String canvasName = packetIn.getCanvasName();
+            AbstractCanvasData canvasData = getAndTrackCanvasDataFromRequest(packetIn.canvasName, sendingPlayer);
+            final String canvasName = packetIn.canvasName;
 
             if (canvasData == null) {
                 Zetter.LOG.warn("No canvas data found, not answering view request for " + canvasName);
@@ -107,6 +111,65 @@ public class ServerHandler {
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncViewMessage);
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * When player enters export client command
+     * attempt to find canvas and return in similar
+     * packet so data can be saved on client
+     *
+     * @todo: [LOW] Check that found item is a painting
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    public static void processCanvasExportRequest(final CCanvasRequestExportPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            final MinecraftServer server = sendingPlayer.getLevel().getServer();
+            final Level world = server.overworld();
+            final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+
+            if (canvasTracker == null) {
+                Zetter.LOG.error("Cannot find world canvas capability");
+
+                SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.unknown", null);
+                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
+
+                return;
+            }
+
+            String canvasCode = packetIn.requestCode;
+
+            if (canvasCode == null) {
+                canvasCode = Helper.lookupPaintingCodeByName(packetIn.requestTitle, world);
+            }
+
+            if (canvasCode == null) {
+                SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.painting_not_found", packetIn.requestTitle);
+                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
+
+                return;
+            }
+
+            PaintingData paintingData = canvasTracker.getCanvasData(canvasCode);
+
+            if (paintingData == null) {
+                SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.painting_not_found", canvasCode);
+                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
+
+                return;
+            }
+
+            SCanvasSyncExportPacket canvasSyncExportMessage = new SCanvasSyncExportPacket(canvasCode, paintingData, System.currentTimeMillis());
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportMessage);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+
+            SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.unknown", null);
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
+
             throw e;
         }
     }

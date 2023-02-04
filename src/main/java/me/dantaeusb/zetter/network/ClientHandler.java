@@ -2,15 +2,21 @@ package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
+
+import java.io.IOException;
 
 /**
  * For some reason, network executor suppresses exceptions,
@@ -61,6 +67,60 @@ public class ClientHandler {
             Zetter.LOG.error(e.getMessage());
             throw e;
         }
+    }
+
+    /**
+     * Process SCanvasSyncViewMessage, open screen depending on
+     * the type of canvas (basic or painting)
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasSyncExportError(final SCanvasSyncExportPacket packetIn, Level world) {
+        try {
+            final String canvasCode = packetIn.canvasCode;
+            final PaintingData paintingData = packetIn.canvasData;
+
+            Helper.exportPainting(Minecraft.getInstance().gameDirectory, canvasCode, paintingData);
+
+            Minecraft.getInstance().getChatListener().handleSystemMessage(
+                Component.translatable("console.zetter.result.exported_painting_client", paintingData.getPaintingName()),
+                false
+            );
+        } catch (IOException e) {
+            if (Minecraft.getInstance().getConnection() == null) {
+                Zetter.LOG.error(e);
+                return;
+            }
+
+            // Send message that we were unable to write file
+            Minecraft.getInstance().getChatListener().handleSystemMessage(
+                Component.translatable("console.zetter.error.file_write_error", e.getMessage()).withStyle(ChatFormatting.RED),
+                false
+            );
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Process SCanvasSyncExportErrorPacket, show
+     * player corresponding error
+     *
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasSyncExportError(final SCanvasSyncExportErrorPacket packetIn, Level world) {
+        if (Minecraft.getInstance().getConnection() == null) {
+            Zetter.LOG.error(packetIn.errorCode);
+            return;
+        }
+
+        // Send message about result of player's request
+        Minecraft.getInstance().getChatListener().handleSystemMessage(
+            Component.translatable(packetIn.errorCode, packetIn.errorMessage).withStyle(ChatFormatting.RED),
+            false
+        );
     }
 
     /**
