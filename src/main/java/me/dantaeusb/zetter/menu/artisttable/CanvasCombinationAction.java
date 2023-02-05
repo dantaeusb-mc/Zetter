@@ -338,7 +338,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
     }
-
     /**
      * Call changed container to update output slot
      * @param canvasCode

@@ -21,14 +21,13 @@
 * \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel;
 * \[MED\] Make sure bucket tool has decent performance;
 * \[MED\] Add data format validation;
-* \[MED\] There's still some desync happening time to time - could be just pixel not written to the buffer;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);
 * \[MED\] It is said that capability (getCapability) should be cached by modders, we may need to do that here: Helper#getWorldCanvasTracker()
   
 #### Would-be-nice-to-do:
 
 * \[HIGH\] I don't like how different classes of canvas data created, would be nice to invent something better;
-* \[HIGH\] Check that nothing breaks if player tries to draw to not loaded canvas;
+* \[HIGH\] ? Check that nothing breaks if player tries to draw to not loaded canvas;
 * \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern (`public final`);
