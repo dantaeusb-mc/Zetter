@@ -313,7 +313,10 @@ public class EaselState {
 
                 if (initialized) {
                     int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
-                    this.easel.getEaselContainer().damagePalette(damage);
+
+                    if (!player.isCreative()) {
+                        this.easel.getEaselContainer().damagePalette(damage);
+                    }
 
                     CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
                 }
