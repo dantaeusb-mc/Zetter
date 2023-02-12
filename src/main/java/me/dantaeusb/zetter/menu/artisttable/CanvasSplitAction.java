@@ -32,7 +32,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * @return
      */
     public boolean mayPlaceCombined(ItemStack stack) {
-        if (stack.is(ZetterItems.CANVAS.get())) {
+        if (stack.getItem() == ZetterItems.CANVAS.get()) {
             if (!CanvasItem.isCompound(stack)) {
                 return false;
             }
@@ -56,7 +56,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
         // No item - clean the contents of split grid
-        if (combinedStack.isEmpty() || !combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
+        if (combinedStack.isEmpty() || combinedStack.getItem() != ZetterItems.CANVAS.get() || !CanvasItem.isCompound(combinedStack)) {
             for (int i = 0; i < this.menu.getSplitHandler().getSlots(); i++) {
                 ItemStack stackInSlot = this.menu.getSplitHandler().getStackInSlot(i);
 
@@ -86,7 +86,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 } else {
                     // Just make sure we will not ever remove painted canvas
                     if (
-                        !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
+                        this.menu.getSplitHandler().getStackInSlot(slotNumber).getItem() != ZetterItems.CANVAS.get() ||
                         !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
                     ) {
                         this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
@@ -169,7 +169,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
-        if (!combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
+        if (combinedStack.getItem() != ZetterItems.CANVAS.get() || !CanvasItem.isCompound(combinedStack)) {
             return;
         }
 
@@ -194,7 +194,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Get data from split canvas
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
         final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
         // Don't need that data for client, it'll request if needed

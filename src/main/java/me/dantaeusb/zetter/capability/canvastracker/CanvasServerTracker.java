@@ -13,6 +13,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
@@ -131,12 +132,12 @@ public class CanvasServerTracker implements CanvasTracker {
 
                     switch (canvasTypeInt) {
                         case 1:
-                            canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().resourceLocation.toString();
+                            canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().getRegistryName().toString();
                             break;
                         case 0:
                         case 2:
                         default:
-                            canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().resourceLocation.toString();
+                            canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().getRegistryName().toString();
                             break;
                     }
                 }
@@ -325,7 +326,7 @@ public class CanvasServerTracker implements CanvasTracker {
         return compound;
     }
 
-    public void deserializeNBT(CompoundNBT tag) {
+    public void deserializeNBT(INBT tag) {
         if (tag.getType() == CompoundNBT.TYPE) {
             CompoundNBT compoundTag = (CompoundNBT) tag;
 

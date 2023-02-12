@@ -93,7 +93,7 @@ public class PaletteRechargeRecipe extends SpecialRecipe {
 
             int newDamage = paletteStack.getDamageValue();
 
-            if (rechargeStack.is(ZetterItems.PALETTE.get()) && rechargeStack.getDamageValue() > 0) {
+            if (rechargeStack.getItem() == ZetterItems.PALETTE.get() && rechargeStack.getDamageValue() > 0) {
                 newDamage -= (rechargeStack.getMaxDamage() - rechargeStack.getDamageValue());
                 newDamage = Math.max(newDamage, 0);
             } else {

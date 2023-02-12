@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
-import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import me.dantaeusb.zetter.Zetter;
@@ -13,9 +12,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.client.renderer.entity.model.EntityModel;
+import net.minecraft.client.renderer.entity.EntityRendererManager;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
@@ -24,24 +21,18 @@ import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
-import java.util.List;
 
 public class EaselRenderer extends EntityRenderer<EaselEntity> {
     public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
     public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
 
-    protected EaselModel model;
-    protected final List<RenderLayer<EaselEntity, EntityModel<EaselEntity>>> layers = Lists.newArrayList();
+    protected final EaselModel model;
     protected int canvasRequestTimeout = 0;
 
-    public EaselRenderer(EntityRendererProvider.Context context) {
-        super(context);
+    public EaselRenderer(EntityRendererManager rendererManager) {
+        super(rendererManager);
 
-        this.model = new EaselModel<>(context.bakeLayer(EaselModel.EASEL_BODY_LAYER));
-    }
-
-    public final boolean addLayer(RenderLayer<EaselEntity, EntityModel<EaselEntity>> layer) {
-        return this.layers.add(layer);
+        this.model = new EaselModel();
     }
 
     public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, MatrixStack poseStack, IRenderTypeBuffer buffer, int packedLight) {

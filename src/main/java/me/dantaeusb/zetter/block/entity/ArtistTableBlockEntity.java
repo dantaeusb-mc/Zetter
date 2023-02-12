@@ -5,6 +5,8 @@ import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.ZetterBlockEntities;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
@@ -188,12 +190,24 @@ public class ArtistTableBlockEntity extends TileEntity implements ItemStackHandl
 
     /**
      * When this tile entity is destroyed, drop all of its contents into the world
-     * @param world
+     * @param level
      * @param blockPos
      */
-    public void dropAllContents(World world, BlockPos blockPos) {
+    public void dropAllContents(World level, BlockPos blockPos) {
         for (int i = 0; i < this.artistTableGridContainer.getSlots(); i++) {
-            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.artistTableGridContainer.getStackInSlot(i));
+            ItemStack stack = this.artistTableGridContainer.getStackInSlot(i);
+
+            double d0 = (double) EntityType.ITEM.getWidth();
+            double d1 = 1.0D - d0;
+            double d2 = d0 / 2.0D;
+            double d3 = Math.floor(blockPos.getX()) + level.random.nextDouble() * d1 + d2;
+            double d4 = Math.floor(blockPos.getY()) + level.random.nextDouble() * d1;
+            double d5 = Math.floor(blockPos.getZ()) + level.random.nextDouble() * d1 + d2;
+
+            while(!stack.isEmpty()) {
+                ItemEntity itementity = new ItemEntity(level, d3, d4, d5, stack.split(level.random.nextInt(21) + 10));
+                level.addFreshEntity(itementity);
+            }
         }
     }
     @Override

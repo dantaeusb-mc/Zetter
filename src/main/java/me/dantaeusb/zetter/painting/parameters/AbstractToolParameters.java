@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.painting.parameters;
 
 import me.dantaeusb.zetter.painting.Tools;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.Tuple;
 import org.apache.commons.lang3.SerializationException;
 
@@ -84,7 +85,7 @@ public abstract class AbstractToolParameters implements Cloneable {
         }
 
         final List<Tuple<String, Object>> rawParameters = buffer.readCollection(
-            NonNullList::createWithCapacity,
+            NonNullList::create,
             AbstractToolParameters::readEntry
         );
 

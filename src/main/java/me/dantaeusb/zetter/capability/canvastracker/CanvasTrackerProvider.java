@@ -42,7 +42,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
     @Nonnull
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
-        if (ZetterCapabilities.CANVAS_TRACKER == capability) {
+        if (CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER == capability) {
             return (LazyOptional<T>)LazyOptional.of(()-> this.canvasTrackerCapability);
         }
 

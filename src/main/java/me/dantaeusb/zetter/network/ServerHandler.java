@@ -41,8 +41,8 @@ public class ServerHandler {
      */
     private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final String canvasName, ServerPlayerEntity sendingPlayer) {
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
-        final World world = server.overworld();
-        final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+        final World level = server.overworld();
+        final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
@@ -116,65 +116,6 @@ public class ServerHandler {
     }
 
     /**
-     * When player enters export client command
-     * attempt to find canvas and return in similar
-     * packet so data can be saved on client
-     *
-     * @todo: [LOW] Check that found item is a painting
-     *
-     * @param packetIn
-     * @param sendingPlayer
-     */
-    public static void processCanvasExportRequest(final CCanvasRequestExportPacket packetIn, ServerPlayerEntity sendingPlayer) {
-        try {
-            final MinecraftServer server = sendingPlayer.getLevel().getServer();
-            final World world = server.overworld();
-            final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-
-            if (canvasTracker == null) {
-                Zetter.LOG.error("Cannot find world canvas capability");
-
-                SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.unknown", null);
-                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
-
-                return;
-            }
-
-            String canvasCode = packetIn.requestCode;
-
-            if (canvasCode == null) {
-                canvasCode = Helper.lookupPaintingCodeByName(packetIn.requestTitle, world);
-            }
-
-            if (canvasCode == null) {
-                SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.painting_not_found", packetIn.requestTitle);
-                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
-
-                return;
-            }
-
-            PaintingData paintingData = canvasTracker.getCanvasData(canvasCode);
-
-            if (paintingData == null) {
-                SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.painting_not_found", canvasCode);
-                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
-
-                return;
-            }
-
-            SCanvasSyncExportPacket canvasSyncExportMessage = new SCanvasSyncExportPacket(canvasCode, paintingData, System.currentTimeMillis());
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportMessage);
-        } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-
-            SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.unknown", null);
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
-
-            throw e;
-        }
-    }
-
-    /**
      * @todo: [MED] Think about removing this
      * Not sure if it's needed, this can cause condition when canvas is unloaded while
      * other players would like to track it. Unloading on back-end should happen
@@ -187,8 +128,8 @@ public class ServerHandler {
         try {
             // Get overworld world instance
             MinecraftServer server = sendingPlayer.getLevel().getServer();
-            World world = server.overworld();
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            final World level = server.overworld();
+            final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
             Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName() + " from " + sendingPlayer.getUUID());
 
@@ -236,7 +177,7 @@ public class ServerHandler {
             if (PlayerInventory.isHotbarSlot(slot) || slot == 40) {
                 ItemStack canvasStack = sendingPlayer.inventory.getItem(slot);
 
-                if (!canvasStack.is(ZetterItems.CANVAS.get())) {
+                if (canvasStack.getItem() != ZetterItems.CANVAS.get()) {
                     Zetter.LOG.error("Unable to process painting signature - item in slot is not a canvas");
                     return;
                 }

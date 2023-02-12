@@ -132,11 +132,6 @@ public class ZetterNetwork {
             SEaselCanvasInitializationPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
 
-        simpleChannel.registerMessage(CANVAS_REQUEST_EXPORT, CCanvasRequestExportPacket.class,
-            CCanvasRequestExportPacket::writePacketData, CCanvasRequestExportPacket::readPacketData,
-            CCanvasRequestExportPacket::handle,
-            Optional.of(PLAY_TO_SERVER));
-
         simpleChannel.registerMessage(CANVAS_EXPORT, SCanvasSyncExportPacket.class,
             SCanvasSyncExportPacket::writePacketData, SCanvasSyncExportPacket::readPacketData,
             SCanvasSyncExportPacket::handle,

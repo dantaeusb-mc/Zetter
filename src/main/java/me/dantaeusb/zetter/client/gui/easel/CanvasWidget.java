@@ -14,6 +14,9 @@ import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GameRenderer;
 import me.dantaeusb.zetter.storage.CanvasData;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraft.util.text.ITextComponent;
@@ -185,7 +188,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable 
         matrixStack.translate(this.x + this.parentScreen.getMenu().getCanvasOffsetX(), this.y + this.parentScreen.getMenu().getCanvasOffsetY(), 1.0F);
         matrixStack.scale(this.getCanvasScale(), this.getCanvasScale(), 1.0F);
 
-        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        IRenderTypeBuffer.Impl renderTypeBufferImpl = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
         CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
@@ -238,17 +241,18 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable 
 
         matrixStack.pushPose();
         Matrix4f matrix = matrixStack.last().pose();
-
-        this.parentScreen.getMinecraft().getTextureManager().bind(PAINTING_CHECKER_RESOURCE);
+        
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.getBuilder();
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        this.parentScreen.getMinecraft().getTextureManager().bind(PAINTING_CHECKER_RESOURCE);
 
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferBuilder.begin(7, DefaultVertexFormats.POSITION_TEX);
         bufferBuilder.vertex(matrix, x1, y2, this.getBlitOffset()).uv(u1, v2).endVertex();
         bufferBuilder.vertex(matrix, x2, y2, this.getBlitOffset()).uv(u2, v2).endVertex();
         bufferBuilder.vertex(matrix, x2, y1, this.getBlitOffset()).uv(u2, v1).endVertex();
         bufferBuilder.vertex(matrix, x1, y1, this.getBlitOffset()).uv(u1, v1).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        tessellator.end();
 
         matrixStack.popPose();
     }

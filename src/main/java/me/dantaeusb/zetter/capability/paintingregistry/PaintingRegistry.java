@@ -68,32 +68,36 @@ public class PaintingRegistry {
         return compound;
     }
 
-    public void deserializeNBT(INBT compoundTag) {
+    public void deserializeNBT(INBT tag) {
         this.paintingCanvasCodeList = new ArrayList<>();
 
-        if (!compoundTag.contains(NBT_TAG_PAINTING_LIST)) {
-            return;
-        }
+        if (tag.getType() == CompoundNBT.TYPE) {
+            CompoundNBT compoundTag = (CompoundNBT) tag;
 
-        ByteBuffer canvasCodesBuffer = ByteBuffer.wrap(compoundTag.getByteArray(NBT_TAG_PAINTING_LIST));
-        int lastZeroBytePosition = 0;
-
-        while (canvasCodesBuffer.hasRemaining()) {
-            if (canvasCodesBuffer.get() != BYTE_SEPARATOR) {
-                continue;
+            if (!compoundTag.contains(NBT_TAG_PAINTING_LIST)) {
+                return;
             }
 
-            // Do not get byte[], it'll share the reference to the full array I suppose
-            ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
-            String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
+            ByteBuffer canvasCodesBuffer = ByteBuffer.wrap(compoundTag.getByteArray(NBT_TAG_PAINTING_LIST));
+            int lastZeroBytePosition = 0;
 
-            if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
-                Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
-            } else {
-                this.paintingCanvasCodeList.add(canvasCode);
+            while (canvasCodesBuffer.hasRemaining()) {
+                if (canvasCodesBuffer.get() != BYTE_SEPARATOR) {
+                    continue;
+                }
+
+                // Do not get byte[], it'll share the reference to the full array I suppose
+                ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
+                String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
+
+                if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {
+                    Zetter.LOG.warn("Cannot deserialize canvas code from painting registry");
+                } else {
+                    this.paintingCanvasCodeList.add(canvasCode);
+                }
+
+                lastZeroBytePosition = canvasCodesBuffer.position();
             }
-
-            lastZeroBytePosition = canvasCodesBuffer.position();
         }
     }
 }

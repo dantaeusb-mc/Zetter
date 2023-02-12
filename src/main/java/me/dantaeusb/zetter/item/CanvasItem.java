@@ -180,17 +180,15 @@ public class CanvasItem extends Item
      */
     @Nullable
     public static CanvasData getCanvasData(ItemStack stack, World world) {
-        Item canvas = stack.getItem();
-
-        if (canvas instanceof CanvasItem) {
-            String canvasCode = getCanvasCode(stack);
-
-            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
-
-            return canvasTracker.getCanvasData(canvasCode);
+        if (stack.getItem() != ZetterItems.CANVAS.get()) {
+            return null;
         }
 
-        return null;
+        String canvasCode = getCanvasCode(stack);
+
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
+
+        return canvasTracker.getCanvasData(canvasCode);
     }
 
     /**
@@ -206,7 +204,7 @@ public class CanvasItem extends Item
      * @return
      */
     public static @Nullable String getCanvasCode(ItemStack stack) {
-        if (!stack.is(ZetterItems.CANVAS.get())) {
+        if (stack.getItem() != ZetterItems.CANVAS.get()) {
             return null;
         }
 
@@ -266,7 +264,7 @@ public class CanvasItem extends Item
      */
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
-        if (!stack.is(ZetterItems.CANVAS.get())) {
+        if (stack.getItem() != ZetterItems.CANVAS.get()) {
             return null;
         }
 

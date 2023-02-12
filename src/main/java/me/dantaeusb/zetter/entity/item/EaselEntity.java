@@ -3,17 +3,17 @@ package me.dantaeusb.zetter.entity.item;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.entity.item.state.EaselState;
-import me.dantaeusb.zetter.menu.EaselMenu;
-import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
+import me.dantaeusb.zetter.entity.item.state.EaselState;
+import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.menu.EaselMenu;
+import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.block.BlockState;
-import net.minecraft.command.impl.data.EntityDataAccessor;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MoverType;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
@@ -29,7 +29,8 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.world.*;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
@@ -215,8 +216,8 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
             return ActionResultType.sidedSuccess(this.level.isClientSide);
         }
 
-        final boolean isCanvas = heldItem.is(ZetterItems.CANVAS.get());
-        final boolean isPalette = heldItem.is(ZetterItems.PALETTE.get());
+        final boolean isCanvas = heldItem.getItem() == ZetterItems.CANVAS.get();
+        final boolean isPalette = heldItem.getItem() == ZetterItems.PALETTE.get();
 
         if (isCanvas) {
             if (this.easelContainer.getCanvasStack().isEmpty() && this.easelContainer.isItemValid(EaselContainer.CANVAS_SLOT, heldItem)) {
@@ -239,7 +240,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
 
     public void openInventory(PlayerEntity player) {
         if (!this.level.isClientSide) {
-            NetworkHooks.openScreen((ServerPlayerEntity) player, this, (packetBuffer) -> {
+            NetworkHooks.openGui((ServerPlayerEntity) player, this, (packetBuffer) -> {
                 SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
                 packet.writePacketData(packetBuffer);
             });
@@ -271,7 +272,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
             if (this.isAlive() && !this.survives()) {
                 this.remove();
                 this.dropItem(null);
-                this.dropAllContents(this.level, this.getPos());
+                this.dropAllContents(this.level, this.pos);
             }
         }
     }
@@ -280,7 +281,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
         if (!this.level.noCollision(this)) {
             return false;
         } else {
-            BlockPos posBelow = this.getPos().below();
+            BlockPos posBelow = this.pos.below();
             BlockState blockBelowState = this.level.getBlockState(posBelow);
 
             if (!blockBelowState.getMaterial().isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
@@ -307,7 +308,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
             return true;
         }
 
-        if (!itemStack.is(ZetterItems.CANVAS.get())) {
+        if (itemStack.getItem() != ZetterItems.CANVAS.get()) {
             Zetter.LOG.error("Trying to put non-canvas on easel, item likely will be removed");
             return false;
         }
@@ -374,6 +375,17 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
         return this.playersUsing;
     }
 
+    public void setPos(double x, double y, double z) {
+        this.pos = new BlockPos(x, y, z);
+        this.setPosRaw(x, y, z);
+        this.setBoundingBox(this.makeBoundingBox());
+        this.hasImpulse = true;
+    }
+
+    public BlockPos getPos() {
+        return this.pos;
+    }
+
     /**
      * Drop contents and item then die when moved or hurt
      */
@@ -437,12 +449,24 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
 
     /**
      * When this tile entity is destroyed, drop all of its contents into the world
-     * @param world
+     * @param level
      * @param blockPos
      */
-    public void dropAllContents(World world, BlockPos blockPos) {
+    public void dropAllContents(World level, BlockPos blockPos) {
         for (int i = 0; i < this.easelContainer.getSlots(); i++) {
-            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
+            ItemStack stack = this.easelContainer.getStackInSlot(i);
+
+            double d0 = (double)EntityType.ITEM.getWidth();
+            double d1 = 1.0D - d0;
+            double d2 = d0 / 2.0D;
+            double d3 = Math.floor(blockPos.getX()) + level.random.nextDouble() * d1 + d2;
+            double d4 = Math.floor(blockPos.getY()) + level.random.nextDouble() * d1;
+            double d5 = Math.floor(blockPos.getZ()) + level.random.nextDouble() * d1 + d2;
+
+            while(!stack.isEmpty()) {
+                ItemEntity itementity = new ItemEntity(this.level, d3, d4, d5, stack.split(level.random.nextInt(21) + 10));
+                level.addFreshEntity(itementity);
+            }
         }
     }
 
@@ -460,11 +484,6 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
         return EaselMenu.createMenuServerSide(windowID, playerInventory, this.easelContainer, this.stateHandler);
     }
 
-    @Override
-    public ItemStack getPickResult() {
-        return new ItemStack(ZetterItems.EASEL.get());
-    }
-
     /**
      * Copied from armor stand
      * @return
@@ -472,5 +491,9 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
 
     public SoundEvent getRemoveItemSound() {
         return SoundEvents.ARMOR_STAND_BREAK;
+    }
+
+    public World getLevel() {
+        return this.level;
     }
 }

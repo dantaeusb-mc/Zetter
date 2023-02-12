@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.item;
 
 import io.netty.util.internal.StringUtil;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -68,7 +69,7 @@ public class FrameItem extends PaintingItem {
      * @param livingEntity
      * @return
      */
-    public static byte getHasPaintingPropertyOverride(ItemStack stack, @Nullable World world, @Nullable LivingEntity livingEntity, int weirdInt)
+    public static byte getHasPaintingPropertyOverride(ItemStack stack, @Nullable ClientWorld world, @Nullable LivingEntity livingEntity)
     {
         EnumFrameStyle hasPainting;
 

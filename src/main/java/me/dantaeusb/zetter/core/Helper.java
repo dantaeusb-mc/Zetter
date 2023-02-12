@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerCapability;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
@@ -59,9 +60,9 @@ public class Helper {
 
         if (!level.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = level.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = level.getServer().overworld().getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
         } else {
-            canvasTracker = level.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = level.getCapability(CanvasTrackerCapability.CAPABILITY_CANVAS_TRACKER).orElse(null);
         }
 
         return canvasTracker;

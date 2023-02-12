@@ -1,15 +1,17 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import net.minecraft.client.gui.IGuiEventListener;
 import net.minecraft.client.gui.IRenderable;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.Tuple;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -30,7 +32,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements IRendera
 
     public void render(MatrixStack matrixStack) {
         matrixStack.pushPose();
-        matrixStack.translate(this.getX(), this.getY(), 1.0F);
+        matrixStack.translate(this.x, this.y, 1.0F);
 
         DummyCanvasData canvasData = this.parentScreen.getMenu().getAction().getCanvasData();
 
@@ -48,7 +50,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements IRendera
             matrixStack.translate(displacement.getA(), displacement.getB(), 1.0F);
             matrixStack.scale(scale, scale, 1.0F);
 
-            MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            IRenderTypeBuffer.Impl renderTypeBufferImpl = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, Helper.COMBINED_CANVAS_CODE, canvasData, 0xF000F0);
             renderTypeBufferImpl.endBatch();
 

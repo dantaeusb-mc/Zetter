@@ -17,6 +17,7 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.IContainerListener;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -276,6 +277,11 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableMenu> implemen
         if (dataSlotIndex == ArtistTableBlockEntity.DATA_MODE) {
             this.updateCombinedCanvasPosition();
         }
+    }
+
+    @Override
+    public void refreshContainer(Container container, NonNullList<ItemStack> itemStacks) {
+        this.updateCombinedCanvasPosition();
     }
 
     @Override

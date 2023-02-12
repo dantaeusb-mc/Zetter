@@ -7,43 +7,37 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.audio.SoundSource;
-import net.minecraft.commands.CommandRuntimeException;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
+import net.minecraft.command.CommandException;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.chat.ITextComponent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.PlayerEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.World;
 
 public class RestoreCommand {
     private static final DynamicCommandExceptionType ERROR_PAINTING_NOT_FOUND = new DynamicCommandExceptionType((code) -> {
         return new TranslationTextComponent("console.zetter.error.painting_not_found", code);
     });
 
-    static ArgumentBuilder<CommandSourceStack, ?> register() {
+    static ArgumentBuilder<CommandSource, ?> register() {
         return Commands.literal("restore")
-            .requires(cs -> cs.hasPermission(Commands.LEVEL_GAMEMASTERS))
+            .requires(cs -> cs.hasPermission(2))
             .then(
                 Commands.argument("painting", PaintingLookupArgument.painting())
                     .executes(ctx -> execute(
                         ctx.getSource(),
-                        ctx.getSource().getPlayer(),
+                        (PlayerEntity) ctx.getSource().getEntity(),
                         ctx.getSource().getLevel(),
                         PaintingLookupArgument.getPaintingInput(ctx, "painting")
                     ))
             );
     }
 
-    private static int execute(CommandSourceStack source, PlayerEntity player, World level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
+    private static int execute(CommandSource source, PlayerEntity player, World level, PaintingInput paintingInput) throws CommandException, CommandSyntaxException {
         ItemStack paintingItem = new ItemStack(ZetterItems.PAINTING.get());
 
         if (!paintingInput.hasPaintingData(level)) {
@@ -55,7 +49,7 @@ public class RestoreCommand {
 
         PaintingItem.storePaintingData(paintingItem, paintingCode, paintingData, 1);
 
-        boolean flag = player.getInventory().add(paintingItem);
+        boolean flag = player.inventory.add(paintingItem);
         if (flag && paintingItem.isEmpty()) {
             paintingItem.setCount(1);
             ItemEntity itemEntity = player.drop(paintingItem, false);
@@ -63,7 +57,7 @@ public class RestoreCommand {
                 itemEntity.makeFakeItem();
             }
 
-            player.level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, ((player.getRandom().nextFloat() - player.getRandom().nextFloat()) * 0.7F + 1.0F) * 2.0F);
+            player.level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, ((player.getRandom().nextFloat() - player.getRandom().nextFloat()) * 0.7F + 1.0F) * 2.0F);
             player.containerMenu.broadcastChanges();
         } else {
             ItemEntity itemEntity = player.drop(paintingItem, false);
