@@ -1,18 +1,14 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.IRenderable;
-import net.minecraft.client.gui.components.IRenderable;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.util.StringUtil;
-import net.minecraft.network.chat.ITextComponent;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.util.StringUtils;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
@@ -36,10 +32,10 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("\\p{XDigit}{1,6}");
     private static final Pattern HEX_COLOR_STRICT_PATTERN = Pattern.compile("(\\p{XDigit}{3}|\\p{XDigit}{6})");
 
-    EditBox textField;
+    TextFieldWidget textField;
 
     Predicate<String> hexColorValidator = (text) -> {
-        if (StringUtil.isNullOrEmpty(text)) {
+        if (StringUtils.isNullOrEmpty(text)) {
             return true;
         } else {
             Matcher matcher = HEX_COLOR_PATTERN.matcher(text);
@@ -58,7 +54,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements IRenderab
     }
 
     public void initFields() {
-        this.textField = new EditBox(
+        this.textField = new TextFieldWidget(
                 this.parentScreen.getFont(),
                 this.x + TEXTBOX_TEXT_OFFSET + 4,
                 this.y + TEXTBOX_TITLE_HEIGHT + 4,

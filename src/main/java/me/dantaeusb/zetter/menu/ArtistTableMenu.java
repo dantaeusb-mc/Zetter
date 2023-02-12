@@ -20,6 +20,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IIntArray;
 import net.minecraft.util.IWorldPosCallable;
 import net.minecraft.util.IntArray;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
@@ -131,10 +132,10 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
     public ArtistTableMenu(int windowID, PlayerInventory invPlayer,
                            ArtistTableGridContainer artistTableContainer, IIntArray containerData,
                            final IWorldPosCallable access) {
-        super(ZetterContainerMenus.ARTIST_TABLE, windowID);
+        super(ZetterContainerMenus.ARTIST_TABLE.get(), windowID);
 
         this.player = invPlayer.player;
-        this.level = invPlayer.player.getLevel();
+        this.level = invPlayer.player.level;
 
         this.access = access;
 
@@ -255,7 +256,7 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         // @todo: [HIGH]: Eject all slots
         this.setData(ArtistTableBlockEntity.DATA_MODE, mode.getId());
 
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.level.isClientSide()) {
             CArtistTableModeChangePacket unloadPacket = new CArtistTableModeChangePacket(this.containerId, mode);
             ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
         }
@@ -350,6 +351,11 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
     public boolean handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
         this.action.handleCanvasSync(canvasCode, canvasData, timestamp);
         return false;
+    }
+
+    @Override
+    public void refreshContainer(Container containerMenu, NonNullList<ItemStack> items) {
+
     }
 
     @Override
@@ -495,7 +501,7 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
                     ItemStack extractedStack = this.splitHandler.extractItem(i, this.splitHandler.getSlotLimit(i), false);
 
                     if (!extractedStack.isEmpty() && !CanvasItem.isEmpty(extractedStack)) {
-                        inventory.placeItemBackInInventory(extractedStack);
+                        inventory.placeItemBackInInventory(player.level, extractedStack);
                     }
                 }
             }
@@ -511,7 +517,7 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
             for(int i = 0; i < stackHandler.getSlots(); ++i) {
                 PlayerInventory inventory = player.inventory;
                 if (inventory.player instanceof ServerPlayerEntity) {
-                    inventory.placeItemBackInInventory(stackHandler.extractItem(i, stackHandler.getSlotLimit(i), false));
+                    inventory.placeItemBackInInventory(player.level, stackHandler.extractItem(i, stackHandler.getSlotLimit(i), false));
                 }
             }
 
@@ -545,8 +551,9 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         }
 
         @Override
-        public void onTake(PlayerEntity player, ItemStack stack) {
+        public ItemStack onTake(PlayerEntity player, ItemStack stack) {
             ArtistTableMenu.this.getAction().onTakeCombination(player, stack);
+            return stack;
         }
     }
 
@@ -571,8 +578,9 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         }
 
         @Override
-        public void onTake(PlayerEntity player, ItemStack stack) {
+        public ItemStack onTake(PlayerEntity player, ItemStack stack) {
             ArtistTableMenu.this.getAction().onTakeSplit(player, stack);
+            return stack;
         }
     }
 
@@ -587,8 +595,9 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         }
 
         @Override
-        public void onTake(PlayerEntity player, ItemStack stack) {
+        public ItemStack onTake(PlayerEntity player, ItemStack stack) {
             ArtistTableMenu.this.getAction().onTakeCombined(player, stack);
+            return stack;
         }
     }
 

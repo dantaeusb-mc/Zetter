@@ -2,8 +2,7 @@ package me.dantaeusb.zetter.client.renderer.entity;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
@@ -11,8 +10,7 @@ import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -22,6 +20,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Direction;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.vector.Matrix4f;
+import net.minecraft.util.math.vector.Vector3f;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
@@ -45,12 +44,11 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         return this.layers.add(layer);
     }
 
-    public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, MatrixStack poseStack, MultiBufferSource buffer, int packedLight) {
-        Minecraft minecraft = Minecraft.getInstance();
-        VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
+    public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, MatrixStack poseStack, IRenderTypeBuffer buffer, int packedLight) {
+        IVertexBuilder vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
         poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
+        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entityYaw));
 
         // last are r, g, b, a
         this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
@@ -69,7 +67,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         poseStack.popPose();
     }
 
-    private void renderCanvas(EaselEntity easelEntity, CanvasData canvasData, float partialTicks, MatrixStack poseStack, MultiBufferSource buffer, int packedLight) {
+    private void renderCanvas(EaselEntity easelEntity, CanvasData canvasData, float partialTicks, MatrixStack poseStack, IRenderTypeBuffer buffer, int packedLight) {
         /**
          * Rendering front side
          * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
@@ -83,8 +81,8 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         // Scale and prepare
         poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
         poseStack.translate(-8.0D, 12.5D, -4.0D);
-        poseStack.mulPose(Axis.XP.rotation(0.1745F));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
+        poseStack.mulPose(Vector3f.XP.rotation(0.1745F));
+        poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
         poseStack.translate(-8.0D - (8.0D * canvasBlockWidth), -16.0D * canvasBlockHeight, 0.0D);
 
         CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getEntityCanvasCode(), canvasData, packedLight);
@@ -95,7 +93,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         final RenderType renderType = RenderType.text(CANVAS_TEXTURE);
 
-        VertexConsumer vertexConsumer = buffer.getBuffer(renderType);
+        IVertexBuilder vertexConsumer = buffer.getBuffer(renderType);
 
         Matrix4f matrix4f = poseStack.last().pose();
 
@@ -104,7 +102,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         this.renderSidesV(matrix4f, vertexConsumer, canvasBlockWidth, canvasBlockHeight, packedLight);
     }
 
-    private void renderBack(Matrix4f matrix4f, VertexConsumer vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
+    private void renderBack(Matrix4f matrix4f, IVertexBuilder vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
 
         for (int x = 0; x < canvasBlockWidth; x++) {
             for (int y = 0; y < canvasBlockHeight; y++) {
@@ -122,7 +120,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         }
     }
 
-    private void renderSidesH(Matrix4f matrix4f, VertexConsumer vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
+    private void renderSidesH(Matrix4f matrix4f, IVertexBuilder vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
         final float canvasPixelWidth = canvasBlockWidth * 16.0F;
 
         for (int y = 0; y < canvasBlockHeight; y++) {
@@ -151,7 +149,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
             );
         }
     }
-    private void renderSidesV(Matrix4f matrix4f, VertexConsumer vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
+    private void renderSidesV(Matrix4f matrix4f, IVertexBuilder vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
         final float canvasPixelHeight = canvasBlockHeight * 16.0F;
 
         for (int x = 0; x < canvasBlockWidth; x++) {
@@ -181,7 +179,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         }
     }
 
-    private void renderFace(Matrix4f matrix4f, VertexConsumer vertexConsumer, float x0, float x1, float y0, float y1, float z0, float z1, float z2, float z3, float u0, float u1, float v0, float v1, int packedLight) {
+    private void renderFace(Matrix4f matrix4f, IVertexBuilder vertexConsumer, float x0, float x1, float y0, float y1, float z0, float z1, float z2, float z3, float u0, float u1, float v0, float v1, int packedLight) {
         vertexConsumer.vertex(matrix4f, x0, y0, z0).color(255, 255, 255, 255).uv(u0, v1).uv2(packedLight).endVertex();
         vertexConsumer.vertex(matrix4f, x1, y0, z1).color(255, 255, 255, 255).uv(u1, v1).uv2(packedLight).endVertex();
         vertexConsumer.vertex(matrix4f, x1, y1, z2).color(255, 255, 255, 255).uv(u1, v0).uv2(packedLight).endVertex();

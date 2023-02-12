@@ -7,10 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.Direction;
-import net.minecraft.util.Hand;
-import net.minecraft.util.StringUtils;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -126,7 +123,7 @@ public class FrameItem extends PaintingItem {
         return !directionIn.getAxis().isVertical() && playerIn.mayUseItemAt(posIn, directionIn, itemStackIn);
     }
 
-    public enum EnumFrameStyle implements IStringRepresentable
+    public enum EnumFrameStyle implements IStringSerializable
     {
         EMPTY(0, "empty", "Missing painting"),
         PAINTING(1, "painting", "Framed painting");

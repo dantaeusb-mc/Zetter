@@ -3,6 +3,8 @@ package me.dantaeusb.zetter.client.renderer.item;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.math.Axis;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.vector.Vector3f;
 import org.joml.Vector3f;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -53,18 +55,18 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
 
         //renderer.render(itemStack, transformType, offHand == rightMain, poseStack, buffer, combinedLight, combinedOverlay, bakedModel);
 
-        ClientLevel hahaLevelInWithoutLevelRenderer = Minecraft.getInstance().level;
+        ClientWorld hahaLevelInWithoutLevelRenderer = Minecraft.getInstance().level;
         String canvasCode = CanvasItem.getCanvasCode(itemStack);
 
         if (inHand) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
+            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
             poseStack.scale(0.38F, 0.38F, 0.38F);
             poseStack.translate(-0.5D, -0.5D, 0.0D);
             poseStack.scale(0.0078125F, 0.0078125F, 0.0078125F);
         } else {
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
+            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
             poseStack.scale(0.38F, 0.38F, 0.38F);
         }
 

@@ -6,8 +6,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -15,8 +13,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
-import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.server.ServerWorld;
 
 public class EaselItem extends Item
@@ -35,9 +31,8 @@ public class EaselItem extends Item
         if (direction == Direction.DOWN || (player != null && !this.canPlace(player, direction, easelItem, facePos))) {
             return ActionResultType.FAIL;
         } else {
-            World world = context.getLevel();
-            BlockPlaceContext placeContext = new BlockPlaceContext(context);
-            BlockPos pos = placeContext.getClickedPos();
+            World world = context.getLevel();;
+            BlockPos pos = context.getClickedPos();
             Vector3d vec3 = Vector3d.atBottomCenterOf(pos);
             AxisAlignedBB aabb = ZetterEntities.EASEL_ENTITY.get().getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
 
@@ -50,8 +45,8 @@ public class EaselItem extends Item
                             (ServerWorld)world, easelItem.getTag(), (ITextComponent)null, context.getPlayer(), pos, MobSpawnType.SPAWN_EGG, true, true
                     );*/
 
+                    // @todo: [HIGH] Could have bounding box issues
                     EaselEntity easel = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
-                    easel.setPos(vec3);
 
                     if (easel == null) {
                         return ActionResultType.FAIL;
@@ -59,13 +54,11 @@ public class EaselItem extends Item
 
                     // Rotate properly
                     float f = (float) MathHelper.floor((MathHelper.wrapDegrees(context.getRotation() - 180.0F) + 22.5F) / 45.0F) * 45.0F;
-                    easel.setPos(vec3);
-                    easel.setYRot(f);
+                    easel.setPos(vec3.x, vec3.y, vec3.z);
+                    easel.yRot = f;
 
                     world.addFreshEntity(easel);
-
-                    world.playSound(null, easel.getX(), easel.getY(), easel.getZ(), SoundEvents.ARMOR_STAND_PLACE, SoundSource.BLOCKS, 0.75F, 0.8F);
-                    easel.gameEvent(GameEvent.ENTITY_PLACE, context.getPlayer());
+                    easel.playPlacementSound();
                 }
 
                 easelItem.shrink(1);

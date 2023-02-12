@@ -4,19 +4,14 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiComponent;
-import net.minecraft.network.chat.ITextComponent;
-import net.minecraft.util.FastColor;
-import net.minecraft.util.StringUtil;
+import net.minecraft.client.gui.IRenderable;
 import net.minecraft.util.StringUtils;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
-public class PaintingInfoOverlay implements IGuiOverlay {
+public class PaintingInfoOverlay extends AbstractGui implements IRenderable {
     private static final ITextComponent BANNED_TEXT = new TranslationTextComponent("painting.zetter.banned");
 
     protected PaintingData paintingData = null;
@@ -32,7 +27,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
     }
 
     @Override
-    public void render(ForgeGui gui, MatrixStack poseStack, float partialTick, int screenWidth, int screenHeight) {
+    public void render(MatrixStack poseStack, int mouseX, int mouseY, float partialTick) {
         if (this.paintingData == null) {
             return;
         }
@@ -76,9 +71,11 @@ public class PaintingInfoOverlay implements IGuiOverlay {
             int textColor = 0xFFFFFF;
             int transparencyMask = msLeft << 24 & 0xFF000000;
 
-            int titleLength = gui.getFont().width(title);
-            this.drawBackdrop(poseStack, gui.getFont(), -4, titleLength, 0xFFFFFF | transparencyMask);
-            gui.getFont().drawShadow(poseStack, title, (float)(-titleLength / 2), -4.0F, textColor | transparencyMask);
+            FontRenderer fontRenderer = Minecraft.getInstance().gui.getFont();
+
+            int titleLength = fontRenderer.width(title);
+            this.drawBackdrop(poseStack, fontRenderer, -4, titleLength, 0xFFFFFF | transparencyMask);
+            fontRenderer.drawShadow(poseStack, title, (float)(-titleLength / 2), -4.0F, textColor | transparencyMask);
             RenderSystem.disableBlend();
 
             poseStack.popPose();
@@ -98,13 +95,46 @@ public class PaintingInfoOverlay implements IGuiOverlay {
 
         if (backgroundColor != 0) {
             int horizontalOffset = -messageWidth / 2;
-            GuiComponent.fill(poseStack, horizontalOffset - 2, heightOffset - 2, horizontalOffset + messageWidth + 2, heightOffset + 9 + 2, FastColor.ARGB32.multiply(backgroundColor, color));
+            fill(
+                poseStack,
+                horizontalOffset - 2,
+                heightOffset - 2,
+                horizontalOffset + messageWidth + 2,
+                heightOffset + 9 + 2,
+                ARGB32.multiply(backgroundColor, color)
+            );
         }
     }
 
     public void tick() {
         if (this.overlayMessageTime > 0) {
             --this.overlayMessageTime;
+        }
+    }
+
+    public static class ARGB32 {
+        public static int alpha(int packedColor) {
+            return packedColor >>> 24;
+        }
+
+        public static int red(int packedColor) {
+            return packedColor >> 16 & 255;
+        }
+
+        public static int green(int packedColor) {
+            return packedColor >> 8 & 255;
+        }
+
+        public static int blue(int packedColor) {
+            return packedColor & 255;
+        }
+
+        public static int color(int alpha, int red, int green, int blue) {
+            return alpha << 24 | red << 16 | green << 8 | blue;
+        }
+
+        public static int multiply(int packedColourA, int packedColorB) {
+            return color(alpha(packedColourA) * alpha(packedColorB) / 255, red(packedColourA) * red(packedColorB) / 255, green(packedColourA) * green(packedColorB) / 255, blue(packedColourA) * blue(packedColorB) / 255);
         }
     }
 }

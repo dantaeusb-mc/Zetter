@@ -23,6 +23,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
@@ -157,7 +158,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
         this.container.addListener(this);
 
         // PlayerContainerEvent are not happening on client
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.level.isClientSide()) {
             this.state.addPlayer(player);
         }
     }
@@ -171,7 +172,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
     public static EaselMenu createMenuClientSide(int windowID, PlayerInventory playerInventory, net.minecraft.network.PacketBuffer networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
-        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
+        EaselEntity easelEntity = (EaselEntity) playerInventory.player.level.getEntity(createPacket.easelEntityId);
         assert easelEntity != null;
 
         EaselContainer easelContainer = easelEntity.getEaselContainer();
@@ -289,7 +290,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
         if (slot == EaselContainer.PALETTE_SLOT) {
             this.notifyColorUpdateListeners();
         } else if (slot == EaselContainer.CANVAS_SLOT) {
-            if (this.player.getLevel().isClientSide()) {
+            if (this.player.level.isClientSide()) {
                 this.resetCanvasPositioning();
             }
         }
@@ -456,7 +457,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
 
         this.notifyColorUpdateListeners();
 
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.level.isClientSide()) {
             this.sendPaletteUpdatePacket();
         }
 
@@ -604,14 +605,14 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
      * Called when the ONLY when container is closed.
      * Push painting frames so it will be saved.
      */
-    public void removed(@NotNull PlayerEntity player) {
+    public void removed(@Nonnull PlayerEntity player) {
         super.removed(player);
 
         this.state.removeListener(this);
         this.container.removeListener(this);
 
         // PlayerContainerEvent are not happening on client
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.level.isClientSide()) {
             this.state.removePlayer(player);
         }
     }
@@ -623,7 +624,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(@NotNull PlayerEntity playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(@Nonnull PlayerEntity playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -671,7 +672,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(@NotNull PlayerEntity player) {
+    public boolean stillValid(@Nonnull PlayerEntity player) {
         return this.container.stillValid(player);
     }
 }

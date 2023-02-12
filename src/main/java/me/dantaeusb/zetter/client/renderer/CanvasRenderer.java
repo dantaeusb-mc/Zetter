@@ -1,21 +1,21 @@
 package me.dantaeusb.zetter.client.renderer;
 
+import com.google.common.collect.Maps;
+import com.mojang.blaze3d.matrix.MatrixStack;
+import com.mojang.blaze3d.vertex.IVertexBuilder;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import com.google.common.collect.Maps;
-import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.client.Timer;
-import org.joml.Matrix4f;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Timer;
+import net.minecraft.util.math.vector.Matrix4f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 
@@ -86,7 +86,7 @@ public class CanvasRenderer implements AutoCloseable {
      * @param canvas
      * @param combinedLight
      */
-    public void renderCanvas(MatrixStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
+    public void renderCanvas(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
         // 0 is a reserved fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
 
@@ -325,9 +325,9 @@ public class CanvasRenderer implements AutoCloseable {
             // Return value is in format:  0xAxisAlignedBBGGRR
         }
 
-        private void render(MatrixStack matrixStack, MultiBufferSource renderTypeBuffer, int combinedLight) {
+        private void render(MatrixStack matrixStack, IRenderTypeBuffer renderTypeBuffer, int combinedLight) {
             Matrix4f matrix4f = matrixStack.last().pose();
-            VertexConsumer ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
+            IVertexBuilder ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 
             ivertexbuilder.vertex(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(0.0F, 1.0F).uv2(combinedLight).endVertex();
             ivertexbuilder.vertex(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(1.0F, 1.0F).uv2(combinedLight).endVertex();

@@ -9,14 +9,11 @@ import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.player.ClientPlayerEntity;
-import net.minecraft.network.chat.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.World;
-import net.minecraft.world.level.World;
 import net.minecraftforge.common.MinecraftForge;
 
 import java.io.IOException;
@@ -39,7 +36,7 @@ public class ClientHandler {
             final AbstractCanvasData canvasData = packetIn.canvasData;
             final long timestamp = packetIn.timestamp;
 
-            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
+            CanvasTracker canvasTracker = world.getCapability(CanvasTrackerCapability.CA)
                 .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
 
             canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
@@ -85,7 +82,7 @@ public class ClientHandler {
 
             Helper.exportPainting(Minecraft.getInstance().gameDirectory, canvasCode, paintingData);
 
-            Minecraft.getInstance().getChatListener().handleSystemMessage(
+            Minecraft.getInstance().player.displayClientMessage(
                 new TranslationTextComponent("console.zetter.result.exported_painting_client", paintingData.getPaintingName()),
                 false
             );
@@ -96,7 +93,7 @@ public class ClientHandler {
             }
 
             // Send message that we were unable to write file
-            Minecraft.getInstance().getChatListener().handleSystemMessage(
+            Minecraft.getInstance().player.displayClientMessage(
                 new TranslationTextComponent("console.zetter.error.file_write_error", e.getMessage()).withStyle(TextFormatting.RED),
                 false
             );
@@ -120,7 +117,7 @@ public class ClientHandler {
         }
 
         // Send message about result of player's request
-        Minecraft.getInstance().getChatListener().handleSystemMessage(
+        Minecraft.getInstance().player.displayClientMessage(
             new TranslationTextComponent(packetIn.errorCode, packetIn.errorMessage).withStyle(TextFormatting.RED),
             false
         );

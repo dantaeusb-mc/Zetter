@@ -1,8 +1,7 @@
 package me.dantaeusb.zetter.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
@@ -10,33 +9,26 @@ import me.dantaeusb.zetter.network.packet.CSignPaintingPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.font.TextFieldHelper;
+import net.minecraft.client.gui.IGuiEventListener;
+import net.minecraft.client.gui.fonts.TextInputUtil;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.widget.button.Button;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.IRenderTypeBuffer;
+import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.chat.ITextComponent;
-import net.minecraft.network.chat.Style;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Hand;
+import net.minecraft.util.IReorderingProcessor;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.Style;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.Hand;
-import net.minecraft.world.entity.player.PlayerEntity;
 import org.lwjgl.glfw.GLFW;
 
 public class PaintingScreen extends Screen {
     private static final ITextComponent DEFAULT_TITLE = new TranslationTextComponent("item.zetter.painting.unnamed");
 
-    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(TextFormatting.BLACK));
-    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(TextFormatting.GRAY));
+    private static final IReorderingProcessor BLACK_CURSOR = IReorderingProcessor.forward("_", Style.EMPTY.withColor(TextFormatting.BLACK));
+    private static final IReorderingProcessor GRAY_CURSOR = IReorderingProcessor.forward("_", Style.EMPTY.withColor(TextFormatting.GRAY));
 
     private final PlayerEntity owner;
     private final Hand hand;
@@ -63,7 +55,7 @@ public class PaintingScreen extends Screen {
 
     private Button signButton;
 
-    private final TextFieldHelper titleEdit = new TextFieldHelper(() -> {
+    private final TextInputUtil titleEdit = new TextInputUtil(() -> {
         return this.title;
     }, (String input) -> {
         this.title = input;
@@ -109,20 +101,22 @@ public class PaintingScreen extends Screen {
     public void init() {
         this.calculatePaintingOffset();
 
-        this.signButton = this.addRenderableWidget(Button.builder(new TranslationTextComponent("book.signButton"), (p_98177_) -> {
-            this.signPainting();
-        }).bounds(
+        this.signButton = this.addButton(new Button(
             this.screenOffsetX + this.screenWidth - BUTTON_WIDTH - SCREEN_PADDING,
             this.paintingOffsetY + this.paintingHeight + SCREEN_PADDING,
             BUTTON_WIDTH,
-            BUTTON_HEIGHT
-        ).build());
+            BUTTON_HEIGHT,
+            new TranslationTextComponent("book.signButton"),
+            (button) -> {
+                this.signPainting();
+            }
+        ));
 
         this.signButton.visible = this.editable;
     }
 
     private void signPainting() {
-        int slot = this.hand == Hand.MAIN_HAND ? this.owner.getInventory().selected : 40;
+        int slot = this.hand == Hand.MAIN_HAND ? this.owner.inventory.selected : 40;
 
         CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
         ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
@@ -202,9 +196,8 @@ public class PaintingScreen extends Screen {
     @Override
     public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(matrixStack);
-        this.setFocused((GuiEventListener)null);
+        this.setFocused((IGuiEventListener)null);
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
 
         // Border
@@ -232,18 +225,18 @@ public class PaintingScreen extends Screen {
         matrixStack.translate(this.paintingOffsetX, this.paintingOffsetY, 1.0F);
         matrixStack.scale(this.paintingScale, this.paintingScale, 1.0F);
 
-        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        IRenderTypeBuffer.Impl renderTypeBufferImpl = IRenderTypeBuffer.immediate(Tessellator.getInstance().getBuilder());
         CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, this.canvasCode, this.canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
         matrixStack.popPose();
 
         String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
-        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(title, Style.EMPTY);
+        IReorderingProcessor formattedTitle = IReorderingProcessor.forward(title, Style.EMPTY);
 
         if (this.editable) {
             boolean cursorTick = this.tick / 6 % 2 == 0;
-            formattedTitle = FormattedCharSequence.composite(formattedTitle, cursorTick ? BLACK_CURSOR : GRAY_CURSOR);
+            formattedTitle = IReorderingProcessor.composite(formattedTitle, cursorTick ? BLACK_CURSOR : GRAY_CURSOR);
         }
 
         this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
@@ -254,12 +247,12 @@ public class PaintingScreen extends Screen {
 
     private void setClipboard(String p_98148_) {
         if (this.minecraft != null) {
-            TextFieldHelper.setClipboardContents(this.minecraft, p_98148_);
+            TextInputUtil.setClipboardContents(this.minecraft, p_98148_);
         }
 
     }
 
     private String getClipboard() {
-        return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
+        return this.minecraft != null ? TextInputUtil.getClipboardContents(this.minecraft) : "";
     }
 }

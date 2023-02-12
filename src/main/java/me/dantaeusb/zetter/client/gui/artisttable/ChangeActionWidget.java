@@ -2,14 +2,11 @@ package me.dantaeusb.zetter.client.gui.artisttable;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
-import me.dantaeusb.zetter.client.gui.EaselScreen;
-import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.IRenderable;
-import net.minecraft.client.gui.narration.NarratedElementType;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.network.chat.ITextComponent;
+import net.minecraft.client.gui.IRenderable;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 
 import javax.annotation.Nullable;
 
@@ -30,7 +27,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements IRe
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (ArtistTableScreen.isInRect(this.getX(), this.getY(), this.width, this.height, (int) mouseX, (int) mouseY)) {
+        if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, (int) mouseX, (int) mouseY)) {
             if (!this.parentScreen.getMenu().canChangeMode()) {
                 return true;
             }
@@ -59,11 +56,11 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements IRe
 
         if (!this.parentScreen.getMenu().canChangeMode()) {
             buttonV += BUTTON_HEIGHT * 2;
-        } else if (ArtistTableScreen.isInRect(this.getX(), this.getY(), this.width, this.height, mouseX, mouseY)) {
+        } else if (ArtistTableScreen.isInRect(this.x, this.y, this.width, this.height, mouseX, mouseY)) {
             buttonV += BUTTON_HEIGHT;
         }
 
-        blit(matrixStack, this.getX(), this.getY(), BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        blit(matrixStack, this.x, this.y, BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     public @Nullable
@@ -73,10 +70,5 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements IRe
         } else {
             return CHANGE_TO_COMBINE_TITLE;
         }
-    }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

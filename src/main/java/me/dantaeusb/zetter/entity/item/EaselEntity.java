@@ -80,6 +80,10 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
         return canvasCode;
     }
 
+    public void playPlacementSound() {
+        this.playSound(SoundEvents.ARMOR_STAND_PLACE, 1.0F, 1.0F);
+    }
+
     /**
      * Set canvas code for referencing without loading the items to
      * render canvas on easel
@@ -368,17 +372,6 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
 
     public ArrayList<PlayerEntity> getPlayersUsing() {
         return this.playersUsing;
-    }
-
-    public void setPos(double x, double y, double z) {
-        this.pos = new BlockPos(x, y, z);
-        this.setPosRaw(x, y, z);
-        this.setBoundingBox(this.makeBoundingBox());
-        this.hasImpulse = true;
-    }
-
-    public BlockPos getPos() {
-        return this.pos;
     }
 
     /**

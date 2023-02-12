@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
@@ -21,12 +20,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.network.chat.ITextComponent;
-import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerListener;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
 
@@ -91,11 +84,11 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableMenu> implemen
 
     public void updateCombinedCanvasPosition() {
         if (this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
-            this.previewWidget.setX(this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X);
-            this.previewWidget.setY(this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y);
+            this.previewWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X;
+            this.previewWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y;
         } else {
-            this.previewWidget.setX(this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X);
-            this.previewWidget.setY(this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y);
+            this.previewWidget.x = this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X;
+            this.previewWidget.y = this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y;
         }
     }
 
@@ -115,17 +108,16 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableMenu> implemen
     }
 
     @Override
-    public void containerTick() {
-        super.containerTick();
+    public void tick() {
+        super.tick();
 
         this.tick++;
     }
 
     @Override
     protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
+        this.minecraft.getTextureManager().bind(ARTIST_TABLE_RESOURCE);
 
         blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
 
@@ -264,7 +256,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableMenu> implemen
         final int PLAYER_INV_LABEL_YPOS = ArtistTableMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
-        this.font.draw(matrixStack, this.playerInventoryTitle,
+        this.font.draw(matrixStack, this.inventory.getDisplayName(),
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
     }
 
@@ -280,7 +272,7 @@ public class ArtistTableScreen extends ContainerScreen<ArtistTableMenu> implemen
      * @param value
      */
     @Override
-    public void dataChanged(Container menu, int dataSlotIndex, int value) {
+    public void setContainerData(Container menu, int dataSlotIndex, int value) {
         if (dataSlotIndex == ArtistTableBlockEntity.DATA_MODE) {
             this.updateCombinedCanvasPosition();
         }

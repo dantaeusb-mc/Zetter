@@ -12,7 +12,6 @@ import net.minecraft.state.StateContainer;
 import net.minecraft.state.properties.BlockStateProperties;
 import net.minecraft.state.properties.DoubleBlockHalf;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
@@ -23,7 +22,6 @@ import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.IWorldReader;
 import net.minecraft.world.World;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 
 import javax.annotation.Nullable;
 
@@ -38,8 +36,13 @@ public class EaselBlock extends ContainerBlock {
     }
 
     @Override
-    public TileEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new EaselBlockEntity(pos, state);
+    public TileEntity createTileEntity(BlockState state, IBlockReader world) {
+        return newBlockEntity(world);
+    }
+
+    @Nullable
+    public TileEntity newBlockEntity(IBlockReader world) {
+        return new EaselBlockEntity();
     }
 
     @Override
@@ -49,12 +52,6 @@ public class EaselBlock extends ContainerBlock {
 
     protected void createBlockStateDefinition(StateContainer.Builder<Block, BlockState> builder) {
         builder.add(HALF, FACING);
-    }
-
-    @Nullable
-    @Override
-    public <T extends TileEntity> BlockEntityTicker<T> getTicker(World world, BlockState blockState, TileEntityType<T> entityType) {
-        return world.isClientSide() ? null : createTickerHelper(entityType, ZetterBlockEntities.EASEL_BLOCK_ENTITY.get(), EaselBlockEntity::serverTick);
     }
 
     /*

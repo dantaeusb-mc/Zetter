@@ -24,7 +24,6 @@ import javax.annotation.Nullable;
 public class EaselBlockEntity extends TileEntity {
     private final EaselContainer easelContainer; // two items: canvas and palette
 
-    // @todo: [LOW] Normalize: CapitalCase for tags
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
 
     public EaselBlockEntity(BlockPos pos, BlockState state) {
@@ -45,8 +44,8 @@ public class EaselBlockEntity extends TileEntity {
 
             Vector3d vec3 = Vector3d.atBottomCenterOf(pos);
             EaselEntity easelEntity = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
-            easelEntity.setPos(vec3);
-            easelEntity.setYRot(f);
+            easelEntity.setPos(vec3.x, vec3.y, vec3.z);
+            easelEntity.yRot = f;
 
             world.addFreshEntity(easelEntity);
 
@@ -119,7 +118,7 @@ public class EaselBlockEntity extends TileEntity {
     public CompoundNBT getUpdateTag()
     {
         CompoundNBT nbtTagCompound = new CompoundNBT();
-        this.saveAdditional(nbtTagCompound);
+        save(nbtTagCompound);
         return nbtTagCompound;
     }
 

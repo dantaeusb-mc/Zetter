@@ -10,7 +10,9 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 
 public class BlendingPipe implements Pipe {
@@ -192,7 +194,7 @@ public class BlendingPipe implements Pipe {
         RGBC(BlendingPipe::blendRGBC, new TranslationTextComponent("container.zetter.painting.blending.realistic"));
 
         public static final BlendingOption DEFAULT = RYB;
-        public final BiFunction<Integer, Integer, Float, Integer> blendingFunction;
+        public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;
 
         public final ITextComponent translatableComponent;
 
@@ -200,6 +202,11 @@ public class BlendingPipe implements Pipe {
             this.blendingFunction = blendingFunction;
             this.translatableComponent = translatableComponent;
         }
+    }
+
+    @FunctionalInterface
+    public interface TriFunction<T, U, V, R> {
+        R apply(T t, U u, V v);
     }
 }
 
