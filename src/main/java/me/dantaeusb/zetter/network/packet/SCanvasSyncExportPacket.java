@@ -42,7 +42,7 @@ public class SCanvasSyncExportPacket extends SCanvasSyncPacket<PaintingData> {
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
 
-        ZetterCanvasTypes.PAINTING.get().writePacketData(this.canvasData, networkBuffer);
+        ZetterCanvasTypes.PAINTING.get().writePacketData(this.canvasCode, this.canvasData, networkBuffer);
     }
 
     public static void handle(final SCanvasSyncExportPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

@@ -314,13 +314,14 @@ public class CanvasItem extends Item
 
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
+        String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
         CanvasData canvasData = CanvasData.BUILDER.createFresh(
+            canvasCode,
             resolution,
             widthBlock * resolution.getNumeric(),
             heightBlock * resolution.getNumeric()
         );
 
-        String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());
         canvasTracker.registerCanvasData(canvasCode, canvasData);
 
         return canvasCode;

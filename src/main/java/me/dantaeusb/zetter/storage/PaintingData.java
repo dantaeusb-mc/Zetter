@@ -41,6 +41,27 @@ public class PaintingData extends AbstractCanvasData {
         super(canvasCode);
     }
 
+    @Override
+    public void load(CompoundNBT compoundTag) {
+        this.width = compoundTag.getInt(NBT_TAG_WIDTH);
+        this.height = compoundTag.getInt(NBT_TAG_HEIGHT);
+
+        int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
+        this.resolution = Resolution.values()[resolutionOrdinal];
+
+        this.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
+
+        if (compoundTag.contains(NBT_TAG_AUTHOR_UUID)) {
+            this.authorUuid = compoundTag.getUUID(NBT_TAG_AUTHOR_UUID);
+        } else {
+            this.authorUuid = null;
+        }
+
+        this.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
+        this.name = compoundTag.getString(NBT_TAG_NAME);
+        this.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
+    }
+
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
     }
@@ -121,6 +142,10 @@ public class PaintingData extends AbstractCanvasData {
     }
 
     private static class PaintingDataBuilder implements CanvasDataBuilder<PaintingData> {
+        @Override
+        public PaintingData supply(String canvasCode) {
+            return new PaintingData(canvasCode);
+        }
 
         /**
          * @todo: [HIGH] Use placeholders
@@ -129,8 +154,9 @@ public class PaintingData extends AbstractCanvasData {
          * @param height
          * @return
          */
-        public PaintingData createFresh(Resolution resolution, int width, int height) {
-            final PaintingData newPainting = new PaintingData();
+        @Override
+        public PaintingData createFresh(String canvasCode, Resolution resolution, int width, int height) {
+            final PaintingData newPainting = new PaintingData(canvasCode);
 
             byte[] color = new byte[width * height * 4];
             ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
@@ -144,37 +170,10 @@ public class PaintingData extends AbstractCanvasData {
             return newPainting;
         }
 
-        public PaintingData createWrap(Resolution resolution, int width, int height, byte[] color) {
-            final PaintingData newPainting = new PaintingData();
+        @Override
+        public PaintingData createWrap(String canvasCode, Resolution resolution, int width, int height, byte[] color) {
+            final PaintingData newPainting = new PaintingData(canvasCode);
             newPainting.wrapData(resolution, width, height, color);
-
-            return newPainting;
-        }
-
-        /*
-         * Serialization
-         */
-
-        public PaintingData load(CompoundNBT compoundTag) {
-            final PaintingData newPainting = new PaintingData();
-
-            newPainting.width = compoundTag.getInt(NBT_TAG_WIDTH);
-            newPainting.height = compoundTag.getInt(NBT_TAG_HEIGHT);
-
-            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
-            newPainting.resolution = Resolution.values()[resolutionOrdinal];
-
-            newPainting.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
-
-            if (compoundTag.contains(NBT_TAG_AUTHOR_UUID)) {
-                newPainting.authorUuid = compoundTag.getUUID(NBT_TAG_AUTHOR_UUID);
-            } else {
-                newPainting.authorUuid = null;
-            }
-
-            newPainting.authorName = compoundTag.getString(NBT_TAG_AUTHOR_NAME);
-            newPainting.name = compoundTag.getString(NBT_TAG_NAME);
-            newPainting.banned = compoundTag.getBoolean(NBT_TAG_BANNED);
 
             return newPainting;
         }
@@ -183,8 +182,11 @@ public class PaintingData extends AbstractCanvasData {
          * Networking
          */
 
+        @Override
         public PaintingData readPacketData(PacketBuffer networkBuffer) {
-            final PaintingData newPainting = new PaintingData();
+            final String canvasCode = networkBuffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+
+            final PaintingData newPainting = new PaintingData(canvasCode);
 
             final byte resolutionOrdinal = networkBuffer.readByte();
             AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
@@ -217,7 +219,8 @@ public class PaintingData extends AbstractCanvasData {
             return newPainting;
         }
 
-        public void writePacketData(PaintingData canvasData, PacketBuffer networkBuffer) {
+        public void writePacketData(String canvasCode, PaintingData canvasData, PacketBuffer networkBuffer) {
+            networkBuffer.writeUtf(canvasCode, Helper.CANVAS_CODE_MAX_LENGTH);
             networkBuffer.writeByte(canvasData.resolution.ordinal());
             networkBuffer.writeInt(canvasData.width);
             networkBuffer.writeInt(canvasData.height);

@@ -30,6 +30,7 @@ public class CanvasData extends AbstractCanvasData {
             final int height = size[1];
 
             final CanvasData canvasData = BUILDER.createFresh(
+                CanvasData.getDefaultCanvasCode(width, height),
                 Helper.getResolution(),
                 width * resolution,
                 height * resolution
@@ -54,7 +55,9 @@ public class CanvasData extends AbstractCanvasData {
         return CODE_PREFIX + "default_" + widthBlocks + "x" + heightBlocks;
     }
 
-    protected CanvasData() {}
+    protected CanvasData(String canvasCode) {
+        super(canvasCode);
+    }
 
     public boolean isRenderable() {
         return true;
@@ -68,11 +71,31 @@ public class CanvasData extends AbstractCanvasData {
         return ZetterCanvasTypes.CANVAS.get();
     }
 
+    @Override
+    public void load(CompoundNBT compoundTag) {
+        this.width = compoundTag.getInt(NBT_TAG_WIDTH);
+        this.height = compoundTag.getInt(NBT_TAG_HEIGHT);
+
+        if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
+            int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
+            this.resolution = Resolution.values()[resolutionOrdinal];
+        } else {
+            this.resolution = Helper.getResolution();
+        }
+
+        this.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
+    }
+
     public CompoundNBT save(CompoundNBT compoundTag) {
         return super.save(compoundTag);
     }
 
     private static class CanvasCanvasDataBuilder implements CanvasDataBuilder<CanvasData> {
+        @Override
+        public CanvasData supply(String canvasCode) {
+            return new CanvasData(canvasCode);
+        }
+
         /**
          * Create empty canvas data filled with canvas color
          * @param resolution
@@ -80,7 +103,7 @@ public class CanvasData extends AbstractCanvasData {
          * @param height
          * @return
          */
-        public CanvasData createFresh(Resolution resolution, int width, int height) {
+        public CanvasData createFresh(String canvasCode, Resolution resolution, int width, int height) {
             byte[] color = new byte[width * height * 4];
             ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
@@ -88,7 +111,7 @@ public class CanvasData extends AbstractCanvasData {
                 defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
             }
 
-            final CanvasData newCanvas = new CanvasData();
+            final CanvasData newCanvas = new CanvasData(canvasCode);
             newCanvas.wrapData(resolution, width, height, color);
 
             return newCanvas;
@@ -102,27 +125,9 @@ public class CanvasData extends AbstractCanvasData {
          * @param color
          * @return
          */
-        public CanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
-            final CanvasData newCanvas = new CanvasData();
+        public CanvasData createWrap(String canvasCode, Resolution resolution, int width, int height, byte[] color) {
+            final CanvasData newCanvas = new CanvasData(canvasCode);
             newCanvas.wrapData(resolution, width, height, color);
-
-            return newCanvas;
-        }
-
-        public CanvasData load(CompoundNBT compoundTag) {
-            final CanvasData newCanvas = new CanvasData();
-
-            newCanvas.width = compoundTag.getInt(NBT_TAG_WIDTH);
-            newCanvas.height = compoundTag.getInt(NBT_TAG_HEIGHT);
-
-            if (compoundTag.contains(NBT_TAG_RESOLUTION)) {
-                int resolutionOrdinal = compoundTag.getInt(NBT_TAG_RESOLUTION);
-                newCanvas.resolution = Resolution.values()[resolutionOrdinal];
-            } else {
-                newCanvas.resolution = Helper.getResolution();
-            }
-
-            newCanvas.updateColorData(compoundTag.getByteArray(NBT_TAG_COLOR));
 
             return newCanvas;
         }
@@ -132,7 +137,9 @@ public class CanvasData extends AbstractCanvasData {
          */
 
         public CanvasData readPacketData(PacketBuffer networkBuffer) {
-            final CanvasData newCanvas = new CanvasData();
+            final String canvasCode = networkBuffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+
+            final CanvasData newCanvas = new CanvasData(canvasCode);
 
             final byte resolutionOrdinal = networkBuffer.readByte();
             AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
@@ -155,7 +162,8 @@ public class CanvasData extends AbstractCanvasData {
             return newCanvas;
         }
 
-        public void writePacketData(CanvasData canvasData, PacketBuffer networkBuffer) {
+        public void writePacketData(String canvasCode, CanvasData canvasData, PacketBuffer networkBuffer) {
+            networkBuffer.writeUtf(canvasCode, Helper.CANVAS_CODE_MAX_LENGTH);
             networkBuffer.writeByte(canvasData.resolution.ordinal());
             networkBuffer.writeInt(canvasData.width);
             networkBuffer.writeInt(canvasData.height);

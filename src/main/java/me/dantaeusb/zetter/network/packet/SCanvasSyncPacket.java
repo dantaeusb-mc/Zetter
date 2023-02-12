@@ -61,7 +61,7 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
         CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.getType().getRegistryName());
 
         assert canvasDataType != null;
-        canvasDataType.writePacketData(this.canvasData, networkBuffer);
+        canvasDataType.writePacketData(this.canvasCode, this.canvasData, networkBuffer);
     }
 
     public static void handle(final SCanvasSyncPacket<?> packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

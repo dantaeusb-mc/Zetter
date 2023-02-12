@@ -223,6 +223,7 @@ public class ServerHandler {
             final int newId = canvasTracker.getFreePaintingId();
             final String newCode = PaintingData.getCanvasCode(newId);
             PaintingData paintingData = ZetterCanvasTypes.PAINTING.get().createWrap(
+                newCode,
                 canvasData.getResolution(),
                 canvasData.getWidth(),
                 canvasData.getHeight(),
@@ -230,7 +231,7 @@ public class ServerHandler {
             );
 
             paintingData.setMetaProperties(player.getUUID(), player.getName().getString(), paintingTitle);
-            canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
+            canvasTracker.registerCanvasData(newCode, paintingData);
 
             PaintingItem.storePaintingData(outStack, newCode, paintingData, 0);
 

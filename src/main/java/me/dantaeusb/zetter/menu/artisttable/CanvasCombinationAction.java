@@ -188,6 +188,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             CanvasData defaultCanvasData = CanvasData.DEFAULTS.get(CanvasData.getDefaultCanvasCode(rectangle.width, rectangle.height));
 
             DummyCanvasData combinedCanvasData = DummyCanvasData.BUILDER.createWrap(
+                Helper.COMBINED_CANVAS_CODE,
                 defaultCanvasData.getResolution(),
                 defaultCanvasData.getWidth(),
                 defaultCanvasData.getHeight(),
@@ -239,6 +240,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
 
         DummyCanvasData combinedCanvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
+            Helper.COMBINED_CANVAS_CODE,
             Helper.getResolution(),
             pixelWidth,
             pixelHeight,
@@ -282,15 +284,16 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
 
             if (this.hasColorData) {
+                final int newId = canvasTracker.getFreeCanvasId();
+                final String newCode = CanvasData.getCanvasCode(newId);
+
                 CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
+                    newCode,
                     this.canvasData.getResolution(),
                     this.canvasData.getWidth(),
                     this.canvasData.getHeight(),
                     this.canvasData.getColorData()
                 );
-
-                final int newId = canvasTracker.getFreeCanvasId();
-                final String newCode = CanvasData.getCanvasCode(newId);
 
                 canvasTracker.registerCanvasData(newCode, combinedCanvasData);
                 CanvasItem.storeCanvasData(stack, newCode, combinedCanvasData);

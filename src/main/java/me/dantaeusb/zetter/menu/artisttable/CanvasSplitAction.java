@@ -116,6 +116,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             CanvasData defaultCanvasData = CanvasData.DEFAULTS.get(CanvasData.getDefaultCanvasCode(size[0], size[1]));
 
             DummyCanvasData combinedCanvasData = DummyCanvasData.BUILDER.createWrap(
+                Helper.COMBINED_CANVAS_CODE,
                 defaultCanvasData.getResolution(),
                 defaultCanvasData.getWidth(),
                 defaultCanvasData.getHeight(),
@@ -133,10 +134,11 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         if (combinedStackCanvasData != null) {
             this.canvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
-                    combinedStackCanvasData.getResolution(),
-                    combinedStackCanvasData.getWidth(),
-                    combinedStackCanvasData.getHeight(),
-                    combinedStackCanvasData.getColorData()
+                Helper.COMBINED_CANVAS_CODE,
+                combinedStackCanvasData.getResolution(),
+                combinedStackCanvasData.getWidth(),
+                combinedStackCanvasData.getHeight(),
+                combinedStackCanvasData.getColorData()
             );
 
             if (this.level.isClientSide()) {
@@ -215,21 +217,22 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                         continue;
                     }
 
+                    String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
                     CanvasData itemData = CanvasData.BUILDER.createWrap(
-                            combinedCanvasData.getResolution(),
-                            numericResolution,
-                            numericResolution,
-                            getPartialColorData(
-                                    combinedCanvasData.getColorData(),
-                                    numericResolution,
-                                    x,
-                                    y,
-                                    compoundCanvasWidth,
-                                    compoundCanvasHeight
-                            )
+                        canvasCode,
+                        combinedCanvasData.getResolution(),
+                        numericResolution,
+                        numericResolution,
+                        getPartialColorData(
+                                combinedCanvasData.getColorData(),
+                                numericResolution,
+                                x,
+                                y,
+                                compoundCanvasWidth,
+                                compoundCanvasHeight
+                        )
                     );
 
-                    String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
                     canvasTracker.registerCanvasData(canvasCode, itemData);
 
                     CanvasItem.storeCanvasData(splitStack, canvasCode, itemData);
@@ -238,21 +241,22 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         }
 
         // Set data for the picked item
+        String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
         CanvasData itemData = CanvasData.BUILDER.createWrap(
-                combinedCanvasData.getResolution(),
-                numericResolution,
-                numericResolution,
-                getPartialColorData(
-                        combinedCanvasData.getColorData(),
-                        numericResolution,
-                        missingX,
-                        missingY,
-                        compoundCanvasWidth,
-                        compoundCanvasHeight
-                )
+            canvasCode,
+            combinedCanvasData.getResolution(),
+            numericResolution,
+            numericResolution,
+            getPartialColorData(
+                    combinedCanvasData.getColorData(),
+                    numericResolution,
+                    missingX,
+                    missingY,
+                    compoundCanvasWidth,
+                    compoundCanvasHeight
+            )
         );
 
-        String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
         canvasTracker.registerCanvasData(canvasCode, itemData);
 
         CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);

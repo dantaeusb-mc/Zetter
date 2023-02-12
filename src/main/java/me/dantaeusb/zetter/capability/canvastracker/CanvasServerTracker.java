@@ -15,12 +15,14 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.SharedConstants;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.*;
 
 public class CanvasServerTracker implements CanvasTracker {
@@ -118,58 +120,74 @@ public class CanvasServerTracker implements CanvasTracker {
     @SuppressWarnings("unchecked")
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
         assert this.level.getServer() != null;
-        return this.level.getServer().overworld().getDataStorage().get(
-            (compoundTag) -> {
-                int canvasTypeInt = -1;
-                String canvasResourceLocation = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
 
-                if (canvasResourceLocation.isEmpty()) {
-                    if (!compoundTag.contains(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED)) {
-                        throw new IllegalStateException("Cannot find canvas type");
-                    }
+        boolean deprecatedType;
+        int canvasTypeInt = -1;
+        final Optional<? extends CanvasDataType<?>> type;
 
-                    canvasTypeInt = compoundTag.getInt(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED);
+        // In versions before 0.18 we have to manually pre-read the file
+        // To understand which type of canvas we are working with
+        try {
+            CompoundNBT compoundTag = this.level.getServer().overworld().getDataStorage().readTagFromDisk(canvasCode, SharedConstants.getCurrentVersion().getWorldVersion());
 
-                    switch (canvasTypeInt) {
-                        case 1:
-                            canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().getRegistryName().toString();
-                            break;
-                        case 0:
-                        case 2:
-                        default:
-                            canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().getRegistryName().toString();
-                            break;
-                    }
+            String canvasResourceLocation = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
+
+            if (canvasResourceLocation.isEmpty()) {
+                if (!compoundTag.contains(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED)) {
+                    throw new IllegalStateException("Cannot find canvas type");
                 }
 
-                // Minor beta versions were saving data without modid separator
-                boolean deprecatedType = !canvasResourceLocation.contains(":");
-                if (deprecatedType) {
-                    canvasResourceLocation = Zetter.MOD_ID + ":" + canvasResourceLocation;
+                canvasTypeInt = compoundTag.getInt(AbstractCanvasData.NBT_TAG_TYPE_DEPRECATED);
+
+                switch (canvasTypeInt) {
+                    case 1:
+                        canvasResourceLocation = ZetterCanvasTypes.CANVAS.get().getRegistryName().toString();
+                        break;
+                    case 0:
+                    case 2:
+                    default:
+                        canvasResourceLocation = ZetterCanvasTypes.PAINTING.get().getRegistryName().toString();
+                        break;
                 }
+            }
 
-                final String finalCanvasResourceLocation = canvasResourceLocation;
-                Optional<? extends CanvasDataType<?>> type = ZetterRegistries.CANVAS_TYPE.get().getEntries().stream()
-                    .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
-                    .map(Map.Entry::getValue)
-                    .findFirst();
+            // Minor beta versions were saving data without modid separator
+            deprecatedType = !canvasResourceLocation.contains(":");
+            if (deprecatedType) {
+                canvasResourceLocation = Zetter.MOD_ID + ":" + canvasResourceLocation;
+            }
 
-                if (type.isEmpty()) {
-                    throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
-                }
+            final String finalCanvasResourceLocation = canvasResourceLocation;
+            type = ZetterRegistries.CANVAS_TYPE.get().getEntries().stream()
+                .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
+                .map(Map.Entry::getValue)
+                .findFirst();
 
-                T canvasData = (T) type.get().loadFromNbt(compoundTag);
-                canvasData.correctData(this.level);
+            if (type.isEmpty()) {
+                throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
+            }
+        } catch (IOException e) {
+            return null;
+        }
 
-                // Remove deprecated tags
-                if (canvasTypeInt != -1 || deprecatedType) {
-                    canvasData.setDirty();
-                }
-
-                return canvasData;
-            },
+        // Then we are supplying type we've read, and it loads its own data
+        T canvasData = (T) this.level.getServer().overworld().getDataStorage().get(
+            () -> type.get().supply(canvasCode),
             canvasCode
         );
+
+        if (canvasData == null) {
+            return null;
+        }
+
+        canvasData.correctData(this.level);
+
+        // Remove deprecated tags
+        if (canvasTypeInt != -1 || deprecatedType) {
+            canvasData.setDirty();
+        }
+
+        return canvasData;
     }
 
     /**

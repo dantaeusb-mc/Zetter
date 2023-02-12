@@ -28,16 +28,15 @@ public class ClientHandler {
      * and process update on container screens
      *
      * @param packetIn
-     * @param world
+     * @param level
      */
-    public static void processCanvasSync(final SCanvasSyncPacket<?> packetIn, World world) {
+    public static void processCanvasSync(final SCanvasSyncPacket<?> packetIn, World level) {
         try {
             final String canvasCode = packetIn.canvasCode;
             final AbstractCanvasData canvasData = packetIn.canvasData;
             final long timestamp = packetIn.timestamp;
 
-            CanvasTracker canvasTracker = world.getCapability(CanvasTrackerCapability.CA)
-                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(level);
 
             canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
         } catch (Exception e) {
@@ -174,15 +173,14 @@ public class ClientHandler {
      * if canvas id was reused.
      *
      * @param packetIn
-     * @param world
+     * @param level
      */
-    public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, World world) {
+    public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, World level) {
         try {
             final String canvasCode = packetIn.canvasCode();
             final long timestamp = packetIn.timestamp();
 
-            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
-                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(level);
 
             canvasTracker.unregisterCanvasData(canvasCode);
         } catch (Exception e) {

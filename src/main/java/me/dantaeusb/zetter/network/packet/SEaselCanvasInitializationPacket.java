@@ -57,7 +57,7 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
         networkBuffer.writeUtf(this.canvasCode, Helper.CANVAS_CODE_MAX_LENGTH);
         networkBuffer.writeLong(this.timestamp);
 
-        ZetterCanvasTypes.CANVAS.get().writePacketData(this.canvasData, networkBuffer);
+        ZetterCanvasTypes.CANVAS.get().writePacketData(this.canvasCode, this.canvasData, networkBuffer);
     }
 
     public static void handle(final SEaselCanvasInitializationPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

@@ -22,18 +22,19 @@ public class DummyCanvasData extends AbstractCanvasData {
 
     public static final CanvasDataBuilder<DummyCanvasData> BUILDER = new DummyCanvasDataBuilder();
 
-    protected DummyCanvasData() {}
+    protected DummyCanvasData(String canvasCode) {
+        super(canvasCode);
+    }
 
-    public static DummyCanvasData createDummy() {
+    public static DummyCanvasData createDummy(String canvasCode) {
         int width = Helper.getResolution().getNumeric();
         int height = Helper.getResolution().getNumeric();
         Resolution resolution = Helper.getResolution();
 
-        return DummyCanvasData.createDummy(resolution, width, height);
+        return DummyCanvasData.createDummy(canvasCode, resolution, width, height);
     }
 
-    public static DummyCanvasData createDummy(Resolution resolution, int width, int height) {
-
+    public static DummyCanvasData createDummy(String canvasCode, Resolution resolution, int width, int height) {
         byte[] color = new byte[width * height * 4];
         ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
@@ -44,7 +45,7 @@ public class DummyCanvasData extends AbstractCanvasData {
             defaultColorBuffer.putInt(x * 4, width > halfWidth ^ height > halfHeight ? Helper.DUMMY_PINK_COLOR : Helper.DUMMY_BLACK_COLOR);
         }
 
-        final DummyCanvasData newDummyCanvas = new DummyCanvasData();
+        final DummyCanvasData newDummyCanvas = new DummyCanvasData(canvasCode);
         newDummyCanvas.wrapData(resolution, width, height, color);
 
         return newDummyCanvas;
@@ -71,44 +72,41 @@ public class DummyCanvasData extends AbstractCanvasData {
         return false;
     }
 
+    @Override
+    public void load(CompoundNBT compoundTag) {
+        Zetter.LOG.error("Trying to read into dummy canvas!");
+    }
+
     public CanvasDataType<DummyCanvasData> getType() {
         return ZetterCanvasTypes.DUMMY.get();
     }
 
     private static class DummyCanvasDataBuilder implements CanvasDataBuilder<DummyCanvasData> {
-        public DummyCanvasData createFresh(Resolution resolution, int width, int height) {
-            return DummyCanvasData.createDummy(resolution, width, height);
+        @Override
+        public DummyCanvasData supply(String canvasCode) {
+            return new DummyCanvasData(canvasCode);
         }
 
-        public DummyCanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
-            final DummyCanvasData newCanvas = new DummyCanvasData();
+        @Override
+        public DummyCanvasData createFresh(String canvasCode, Resolution resolution, int width, int height) {
+            return DummyCanvasData.createDummy(canvasCode, resolution, width, height);
+        }
+
+        @Override
+        public DummyCanvasData createWrap(String canvasCode, Resolution resolution, int width, int height, byte[] color) {
+            final DummyCanvasData newCanvas = new DummyCanvasData(canvasCode);
             newCanvas.wrapData(resolution, width, height, color);
 
             return newCanvas;
         }
 
-        /**
-         * @todo: [HIGH] Use a placeholder, it's fall-back
-         * @param compoundTag
-         * @return
-         */
-        public DummyCanvasData load(CompoundNBT compoundTag) {
-            Zetter.LOG.error("Trying to read into dummy canvas!");
-
-            return DummyCanvasData.createDummy();
-        }
-
-        public CompoundNBT save(CompoundNBT compoundTag) {
-            Zetter.LOG.error("Trying to save dummy canvas!");
-
-            return compoundTag;
-        }
-
+        @Override
         public DummyCanvasData readPacketData(PacketBuffer networkBuffer) {
             throw new IllegalStateException("Trying to read Dummy Canvas from network!");
         }
 
-        public void writePacketData(DummyCanvasData canvasData, PacketBuffer networkBuffer) {
+        @Override
+        public void writePacketData(String canvasCode, DummyCanvasData canvasData, PacketBuffer networkBuffer) {
             throw new IllegalStateException("Trying to write Dummy Canvas to network!");
         }
     }
