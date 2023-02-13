@@ -2,11 +2,9 @@ package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUseContext;
+import net.minecraft.item.*;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -16,6 +14,8 @@ import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 
+import java.util.List;
+
 public class EaselItem extends Item
 {
     public EaselItem() {
@@ -23,23 +23,31 @@ public class EaselItem extends Item
     }
 
     public ActionResultType useOn(ItemUseContext context) {
-        BlockPos blockPos = context.getClickedPos();
-        Direction direction = context.getClickedFace();
-        BlockPos facePos = blockPos.relative(direction);
-        ItemStack easelItem = context.getItemInHand();
+        World world = context.getLevel();
         PlayerEntity player = context.getPlayer();
 
-        if (direction == Direction.DOWN || (player != null && !this.canPlace(player, direction, easelItem, facePos))) {
+        Direction direction = context.getClickedFace();
+
+        if (direction == Direction.DOWN) {
             return ActionResultType.FAIL;
-        } else {
-            World world = context.getLevel();;
-            BlockPos pos = context.getClickedPos();
-            Vector3d vec3 = Vector3d.atBottomCenterOf(pos);
+        } else {BlockItemUseContext blockItemUseContext = new BlockItemUseContext(context);
+            ItemStack easelItem = context.getItemInHand();
+            BlockPos blockPos = blockItemUseContext.getClickedPos();
+            BlockPos facePos = blockPos.relative(direction);
+            Vector3d vec3 = Vector3d.atBottomCenterOf(blockPos);
+            
+            if (player != null && !this.canPlace(player, direction, easelItem, facePos)) {
+                return ActionResultType.FAIL;
+            }
+
             AxisAlignedBB aabb = ZetterEntities.EASEL_ENTITY.get().getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
 
+            boolean noCollision = world.noCollision(null, aabb);
+            List<Entity> entities = world.getEntities(null, aabb);
+
             if (
-                world.noCollision(null, aabb) &&
-                world.getEntities(null, aabb).isEmpty()
+                noCollision &&
+                entities.isEmpty()
             ) {
                 if (world instanceof ServerWorld) {
                     /*EaselEntity easel = ModEntities.EASEL_ENTITY.create(

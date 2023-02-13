@@ -38,9 +38,6 @@ public class ZetterSetup
                 ItemModelsProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
             }
 
-            RenderingRegistry.registerEntityRenderingHandler(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), FramedPaintingRenderer::new);
-            RenderingRegistry.registerEntityRenderingHandler(ZetterEntities.EASEL_ENTITY.get(), EaselEntityRenderer::new);
-
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
             new ClientPaintingToolParameters();
         });

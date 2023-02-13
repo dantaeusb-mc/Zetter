@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.client.renderer.entity.EaselEntityRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
@@ -12,6 +13,7 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -33,6 +35,9 @@ public class ZetterEntities {
         for (ModelResourceLocation modelLocation : FramedPaintingRenderer.FRAME_MODELS.values()) {
             ModelLoader.addSpecialModel(modelLocation);
         }
+
+        RenderingRegistry.registerEntityRenderingHandler(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), FramedPaintingRenderer::new);
+        RenderingRegistry.registerEntityRenderingHandler(ZetterEntities.EASEL_ENTITY.get(), EaselEntityRenderer::new);
     }
 
     public static void init(IEventBus bus) {
