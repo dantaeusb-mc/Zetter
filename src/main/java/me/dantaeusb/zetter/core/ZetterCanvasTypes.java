@@ -10,22 +10,22 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 
+import static me.dantaeusb.zetter.core.ZetterRegistries.CANVAS_TYPE_REGISTRY;
+import static me.dantaeusb.zetter.core.ZetterRegistries.HACKY_TYPE;
+
 public class ZetterCanvasTypes
 {
-    public static final DeferredRegister<CanvasDataType<?>> CANVAS_TYPES = DeferredRegister.create(ZetterRegistries.CANVAS_TYPE.get(), Zetter.MOD_ID);
-
-
-    public static final RegistryObject<CanvasDataType<DummyCanvasData>> DUMMY = CANVAS_TYPES.register(DummyCanvasData.TYPE, () -> new CanvasDataType<>(
+    public static final RegistryObject<CanvasDataType<DummyCanvasData>> DUMMY = CANVAS_TYPE_REGISTRY.register(DummyCanvasData.TYPE, () -> new CanvasDataType<>(
         DummyCanvasData.BUILDER
     ));
-    public static final RegistryObject<CanvasDataType<CanvasData>> CANVAS = CANVAS_TYPES.register(CanvasData.TYPE, () -> new CanvasDataType<>(
+    public static final RegistryObject<CanvasDataType<CanvasData>> CANVAS = CANVAS_TYPE_REGISTRY.register(CanvasData.TYPE, () -> new CanvasDataType<>(
         CanvasData.BUILDER
     ));
-    public static final RegistryObject<CanvasDataType<PaintingData>> PAINTING = CANVAS_TYPES.register(PaintingData.TYPE, () -> new CanvasDataType<>(
+    public static final RegistryObject<CanvasDataType<PaintingData>> PAINTING = CANVAS_TYPE_REGISTRY.register(PaintingData.TYPE, () -> new CanvasDataType<>(
         PaintingData.BUILDER
     ));
 
     public static void init(IEventBus bus) {
-        CANVAS_TYPES.register(bus);
+        //
     }
 }

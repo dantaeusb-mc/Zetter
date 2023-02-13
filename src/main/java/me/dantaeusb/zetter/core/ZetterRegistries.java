@@ -11,17 +11,15 @@ import java.util.function.Supplier;
 
 public class ZetterRegistries
 {
-    public static final ResourceLocation CANVAS_TYPE_REGISTRY_NAME = new ResourceLocation(Zetter.MOD_ID, "canvas_type");
-
     /**
      * To avoid hard backporting from 1.19, we use this magic cast to supply into makeRegistry
      */
     @SuppressWarnings("unchecked")
     public static final Class<CanvasDataType<?>> HACKY_TYPE = (Class<CanvasDataType<?>>)((Class<?>) CanvasDataType.class);
 
-    public static final DeferredRegister<CanvasDataType<?>> CANVAS_TYPE_REGISTRY_TYPE = DeferredRegister.create(HACKY_TYPE, Zetter.MOD_ID);
-    public static final Supplier<IForgeRegistry<CanvasDataType<?>>> CANVAS_TYPE = CANVAS_TYPE_REGISTRY_TYPE.makeRegistry(
-            CANVAS_TYPE_REGISTRY_NAME.toString(),
+    public static final DeferredRegister<CanvasDataType<?>> CANVAS_TYPE_REGISTRY = DeferredRegister.create(HACKY_TYPE, Zetter.MOD_ID);
+    public static final Supplier<IForgeRegistry<CanvasDataType<?>>> CANVAS_TYPE = CANVAS_TYPE_REGISTRY.makeRegistry(
+            "canvas_type",
             () ->
             {
                 RegistryBuilder<CanvasDataType<?>> builder = new RegistryBuilder<>();
@@ -31,6 +29,6 @@ public class ZetterRegistries
     );
 
     public static void init(IEventBus bus) {
-        CANVAS_TYPE_REGISTRY_TYPE.register(bus);
+        CANVAS_TYPE_REGISTRY.register(bus);
     }
 }

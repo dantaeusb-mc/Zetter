@@ -11,7 +11,23 @@ import net.minecraftforge.fml.network.NetworkEvent;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public record SCanvasRemovalPacket(String canvasCode, long timestamp) {
+public class SCanvasRemovalPacket {
+    private String canvasCode;
+    private long timestamp;
+
+    public SCanvasRemovalPacket(String canvasCode, long timestamp) {
+        this.canvasCode = canvasCode;
+        this.timestamp = timestamp;
+    }
+
+    public String getCanvasCode() {
+        return canvasCode;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
     /**
      * Reads the raw packet data from the data stream.
      */
@@ -41,7 +57,7 @@ public record SCanvasRemovalPacket(String canvasCode, long timestamp) {
         ctx.setPacketHandled(true);
 
         Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
-        if (clientWorld.isEmpty()) {
+        if (!clientWorld.isPresent()) {
             Zetter.LOG.error("SCanvasRemovalMessage context could not provide a ClientWorld.");
             return;
         }

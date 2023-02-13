@@ -177,8 +177,8 @@ public class ClientHandler {
      */
     public static void processCanvasRemoval(final SCanvasRemovalPacket packetIn, World level) {
         try {
-            final String canvasCode = packetIn.canvasCode();
-            final long timestamp = packetIn.timestamp();
+            final String canvasCode = packetIn.getCanvasCode();
+            final long timestamp = packetIn.getTimestamp();
 
             CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(level);
 
