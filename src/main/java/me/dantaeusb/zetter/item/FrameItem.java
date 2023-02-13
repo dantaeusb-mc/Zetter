@@ -5,6 +5,8 @@ import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUseContext;
 import net.minecraft.nbt.CompoundNBT;
@@ -21,8 +23,8 @@ public class FrameItem extends PaintingItem {
     private PaintingEntity.Materials material;
     private boolean hasPlate;
 
-    public FrameItem(Properties properties, PaintingEntity.Materials material, boolean plated) {
-        super(properties);
+    public FrameItem(PaintingEntity.Materials material, boolean plated) {
+        super(new Item.Properties().tab(ItemGroup.TAB_DECORATIONS).stacksTo(64));
 
         this.material = material;
         this.hasPlate = plated;

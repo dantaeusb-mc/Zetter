@@ -22,14 +22,14 @@ import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
 
-public class EaselRenderer extends EntityRenderer<EaselEntity> {
+public class EaselEntityRenderer extends EntityRenderer<EaselEntity> {
     public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
     public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
 
     protected final EaselModel model;
     protected int canvasRequestTimeout = 0;
 
-    public EaselRenderer(EntityRendererManager rendererManager) {
+    public EaselEntityRenderer(EntityRendererManager rendererManager) {
         super(rendererManager);
 
         this.model = new EaselModel();

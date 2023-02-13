@@ -13,6 +13,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
@@ -48,6 +49,10 @@ public class CanvasItem extends Item
      * and we need resolution for crafting, i.e. copying a painting
      */
     public static final String NBT_TAG_CACHED_RESOLUTION = "CachedResolution";
+
+    public CanvasItem() {
+        super(new Properties().tab(ItemGroup.TAB_TOOLS).stacksTo(1));
+    }
 
     public CanvasItem(Properties properties) {
         super(properties);

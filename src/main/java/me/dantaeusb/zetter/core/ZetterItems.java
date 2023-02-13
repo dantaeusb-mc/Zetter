@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.item.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraftforge.eventbus.api.IEventBus;
 
 import java.util.HashMap;
@@ -18,9 +19,9 @@ public class ZetterItems
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Zetter.MOD_ID);
 
     public static final RegistryObject<EaselItem> EASEL = ITEMS.register("easel", EaselItem::new);
-    public static final RegistryObject<BlockItem> ARTIST_TABLE = ITEMS.register("artist_table", () -> new BlockItem(ZetterBlocks.ARTIST_TABLE.get(), new Item.Properties()));
-    public static final RegistryObject<CanvasItem> CANVAS = ITEMS.register("canvas", () -> new CanvasItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<PaintingItem> PAINTING = ITEMS.register("painting", () -> new PaintingItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<BlockItem> ARTIST_TABLE = ITEMS.register("artist_table", () -> new BlockItem(ZetterBlocks.ARTIST_TABLE.get(), new Item.Properties().tab(ItemGroup.TAB_DECORATIONS)));
+    public static final RegistryObject<CanvasItem> CANVAS = ITEMS.register("canvas", CanvasItem::new);
+    public static final RegistryObject<PaintingItem> PAINTING = ITEMS.register("painting", PaintingItem::new);
     public static final RegistryObject<PaintsItem> PAINTS = ITEMS.register("paints", PaintsItem::new);
     public static final RegistryObject<PaletteItem> PALETTE = ITEMS.register("palette", PaletteItem::new);
 
@@ -51,7 +52,7 @@ public class ZetterItems
 
     private static RegistryObject<FrameItem> registerFrame(String name, PaintingEntity.Materials material, boolean plated)
     {
-        RegistryObject<FrameItem> frameRegistryObject = ITEMS.register(name, () -> new FrameItem(new Item.Properties().stacksTo(64), material, plated));
+        RegistryObject<FrameItem> frameRegistryObject = ITEMS.register(name, () -> new FrameItem(material, plated));
         FRAMES.put(Helper.getFrameKey(material, plated), frameRegistryObject);
 
         return frameRegistryObject;

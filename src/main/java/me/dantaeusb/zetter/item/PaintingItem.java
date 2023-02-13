@@ -11,6 +11,7 @@ import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.stats.Stats;
@@ -39,6 +40,10 @@ public class PaintingItem extends CanvasItem
     public static final int GENERATION_ORIGINAL = 0;
     public static final int GENERATION_COPY = 1;
     public static final int GENERATION_COPY_OF_COPY = 2;
+
+    public PaintingItem() {
+        super(new Properties().stacksTo(1));
+    }
 
     public PaintingItem(Properties properties) {
         super(properties);

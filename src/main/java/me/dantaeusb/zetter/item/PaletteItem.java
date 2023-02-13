@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.item;
 
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 
@@ -10,7 +11,7 @@ public class PaletteItem extends Item
     public static int PALETTE_SIZE = 16;
 
     public PaletteItem() {
-        super(new Properties().durability(8192));
+        super(new Properties().tab(ItemGroup.TAB_TOOLS).durability(8192));
     }
 
     /**

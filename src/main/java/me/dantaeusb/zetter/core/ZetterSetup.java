@@ -5,6 +5,8 @@ import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.client.renderer.entity.EaselEntityRenderer;
+import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
 import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScreenManager;
@@ -13,6 +15,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.RegistryObject;
+import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
@@ -34,6 +37,9 @@ public class ZetterSetup
                 ItemModelsProperties.register(frame.get(), new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
                 ItemModelsProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
             }
+
+            RenderingRegistry.registerEntityRenderingHandler(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), FramedPaintingRenderer::new);
+            RenderingRegistry.registerEntityRenderingHandler(ZetterEntities.EASEL_ENTITY.get(), EaselEntityRenderer::new);
 
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
             new ClientPaintingToolParameters();
