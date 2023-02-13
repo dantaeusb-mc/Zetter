@@ -14,14 +14,25 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 public class CanvasClientTracker implements CanvasTracker {
-    private final Level level;
+    private Level level;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
 
-    public CanvasClientTracker(Level level) {
+    public CanvasClientTracker() {
         super();
+    }
+
+    public void setLevel(Level level) {
+        if (this.level != null) {
+            throw new IllegalStateException("Cannot change level for capability");
+        }
 
         this.level = level;
+    }
+
+    @Override
+    public Level getLevel() {
+        return this.level;
     }
 
     @Override
@@ -83,10 +94,5 @@ public class CanvasClientTracker implements CanvasTracker {
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
-    }
-
-    @Override
-    public Level getLevel() {
-        return this.level;
     }
 }

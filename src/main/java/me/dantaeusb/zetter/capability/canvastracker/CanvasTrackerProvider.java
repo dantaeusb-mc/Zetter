@@ -22,12 +22,14 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
      */
     private final String TAG_NAME_CANVAS_TRACKER = "canvasTracker";
 
-    public CanvasTrackerProvider(Level world) {
-        if (world.isClientSide()) {
-            this.canvasTrackerCapability = new CanvasClientTracker(world);
+    public CanvasTrackerProvider(Level level) {
+        if (level.isClientSide()) {
+            this.canvasTrackerCapability = new CanvasClientTracker();
         } else {
-            this.canvasTrackerCapability = new CanvasServerTracker((ServerLevel) world);
+            this.canvasTrackerCapability = new CanvasServerTracker();
         }
+
+        this.canvasTrackerCapability.setLevel(level);
     }
 
     /**

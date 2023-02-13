@@ -17,9 +17,10 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
 
     private final String TAG_NAME_PAINTING_REGISTRY = "PaintingRegistry";
 
-    public PaintingRegistryProvider(Level world) {
-        if (!world.isClientSide()) {
-            this.paintingRegistryCapability = new PaintingRegistry(world);
+    public PaintingRegistryProvider(Level level) {
+        if (!level.isClientSide()) {
+            this.paintingRegistryCapability = new PaintingRegistry();
+            this.paintingRegistryCapability.setLevel(level);
         } else {
             throw new IllegalArgumentException("Painting Registry should exist only on server in overworld");
         }
@@ -51,7 +52,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
     public CompoundTag serializeNBT() {
         CompoundTag compoundTag = new CompoundTag();
 
-        if (this.paintingRegistryCapability.getWorld() == null || this.paintingRegistryCapability.getWorld().isClientSide()) {
+        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
             return compoundTag;
         }
 
@@ -66,7 +67,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
      * We need to get the data only for Server Implementation of the capability
      */
     public void deserializeNBT(CompoundTag compoundTag) {
-        if (this.paintingRegistryCapability.getWorld() == null || this.paintingRegistryCapability.getWorld().isClientSide()) {
+        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
             return;
         }
 

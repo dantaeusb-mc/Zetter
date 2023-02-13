@@ -41,8 +41,8 @@ public class ServerHandler {
      */
     private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final String canvasName, ServerPlayer sendingPlayer) {
         final MinecraftServer server = sendingPlayer.getLevel().getServer();
-        final Level world = server.overworld();
-        final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+        final Level level = server.overworld();
+        final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
         if (canvasTracker == null) {
             Zetter.LOG.error("Cannot find world canvas capability");
@@ -128,8 +128,8 @@ public class ServerHandler {
     public static void processCanvasExportRequest(final CCanvasRequestExportPacket packetIn, ServerPlayer sendingPlayer) {
         try {
             final MinecraftServer server = sendingPlayer.getLevel().getServer();
-            final Level world = server.overworld();
-            final CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            final Level level = server.overworld();
+            final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
             if (canvasTracker == null) {
                 Zetter.LOG.error("Cannot find world canvas capability");
@@ -143,7 +143,7 @@ public class ServerHandler {
             String canvasCode = packetIn.requestCode;
 
             if (canvasCode == null) {
-                canvasCode = Helper.lookupPaintingCodeByName(packetIn.requestTitle, world);
+                canvasCode = Helper.lookupPaintingCodeByName(packetIn.requestTitle, level);
             }
 
             if (canvasCode == null) {
@@ -187,8 +187,8 @@ public class ServerHandler {
         try {
             // Get overworld world instance
             MinecraftServer server = sendingPlayer.getLevel().getServer();
-            Level world = server.overworld();
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) world.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            final Level level = server.overworld();
+            final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
             Zetter.LOG.debug("Got request to unload canvas " + packetIn.getCanvasName() + " from " + sendingPlayer.getUUID());
 
@@ -289,7 +289,7 @@ public class ServerHandler {
             );
 
             paintingData.setMetaProperties(player.getUUID(), player.getName().getString(), paintingTitle);
-            canvasTracker.registerCanvasData(PaintingData.getPaintingCode(newId), paintingData);
+            canvasTracker.registerCanvasData(newCode, paintingData);
 
             PaintingItem.storePaintingData(outStack, newCode, paintingData, 0);
 

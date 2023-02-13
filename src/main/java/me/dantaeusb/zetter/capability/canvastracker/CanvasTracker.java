@@ -4,6 +4,8 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.world.level.Level;
 
 public interface CanvasTracker {
+    void setLevel(Level level);
+
     Level getLevel();
 
     <T extends AbstractCanvasData> T getCanvasData(String canvasCode);

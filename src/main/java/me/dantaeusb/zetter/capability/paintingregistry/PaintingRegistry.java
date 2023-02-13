@@ -24,21 +24,23 @@ public class PaintingRegistry {
     private static final String SEPARATOR = new String(new byte[] {0}, StandardCharsets.UTF_8);
     private static final byte BYTE_SEPARATOR = SEPARATOR.getBytes(StandardCharsets.UTF_8)[0];
 
-    private final Level world;
+    private Level level;
     private ArrayList<String> paintingCanvasCodeList = new ArrayList<>();
 
-    public PaintingRegistry(Level world) {
+    public PaintingRegistry() {
         super();
-
-        this.world = world;
     }
 
-    /**
-     * World accessor for canvas tracker
-     * @return
-     */
-    public Level getWorld() {
-        return this.world;
+    public void setLevel(Level level) {
+        if (this.level != null) {
+            throw new IllegalStateException("Cannot change level for capability");
+        }
+
+        this.level = level;
+    }
+
+    public Level getLevel() {
+        return this.level;
     }
 
     public void addPaintingCanvasCode(String canvasCode) {

@@ -108,14 +108,7 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        CanvasTracker canvasTracker;
-
-        if (this.easel.getLevel().isClientSide()) {
-            canvasTracker = this.easel.getLevel().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        } else {
-            canvasTracker = this.easel.getLevel().getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        }
-
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.easel.getLevel());
         CanvasData canvas = canvasTracker.getCanvasData(canvasCode);
 
         if (canvas == null) {

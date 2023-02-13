@@ -57,8 +57,8 @@ public class PaintingInfoOverlay implements IGuiOverlay {
             title = BANNED_TEXT;
         }
 
-        float ticksLeft = (float)this.overlayMessageTime - partialTick;
-        int msLeft = (int)(ticksLeft * 255.0F / 20.0F);
+        float ticksLeft = (float) this.overlayMessageTime - partialTick;
+        int msLeft = (int) (ticksLeft * 255.0F / 20.0F);
         if (msLeft > 255) {
             msLeft = 255;
         }
@@ -74,7 +74,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
 
             int titleLength = gui.getFont().width(title);
             this.drawBackdrop(poseStack, gui.getFont(), -4, titleLength, 0xFFFFFF | transparencyMask);
-            gui.getFont().drawShadow(poseStack, title, (float)(-titleLength / 2), -4.0F, textColor | transparencyMask);
+            gui.getFont().drawShadow(poseStack, title, (float) (-titleLength / 2), -4.0F, textColor | transparencyMask);
             RenderSystem.disableBlend();
 
             poseStack.popPose();
@@ -83,6 +83,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
 
     /**
      * Copied from @linkplain {net.minecraft.client.gui.Gui#drawBackdrop Gui#drawBackdrop} method
+     *
      * @param poseStack
      * @param font
      * @param heightOffset
@@ -94,7 +95,14 @@ public class PaintingInfoOverlay implements IGuiOverlay {
 
         if (backgroundColor != 0) {
             int horizontalOffset = -messageWidth / 2;
-            GuiComponent.fill(poseStack, horizontalOffset - 2, heightOffset - 2, horizontalOffset + messageWidth + 2, heightOffset + 9 + 2, FastColor.ARGB32.multiply(backgroundColor, color));
+            GuiComponent.fill(
+                poseStack,
+                horizontalOffset - 2,
+                heightOffset - 2,
+                horizontalOffset + messageWidth + 2,
+                heightOffset + 9 + 2,
+                FastColor.ARGB32.multiply(backgroundColor, color)
+            );
         }
     }
 

@@ -54,7 +54,6 @@ public class EaselItem extends Item
                     );*/
 
                     EaselEntity easel = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
-                    easel.setPos(vec3);
 
                     if (easel == null) {
                         return InteractionResult.FAIL;
