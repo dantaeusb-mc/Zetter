@@ -3,8 +3,11 @@ package me.dantaeusb.zetter.capability.paintingregistry;
 import me.dantaeusb.zetter.Zetter;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
+import net.minecraft.util.Direction;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
 
+import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -24,21 +27,23 @@ public class PaintingRegistry {
     private static final String SEPARATOR = new String(new byte[] {0}, StandardCharsets.UTF_8);
     private static final byte BYTE_SEPARATOR = SEPARATOR.getBytes(StandardCharsets.UTF_8)[0];
 
-    private final World world;
+    private World level;
     private ArrayList<String> paintingCanvasCodeList = new ArrayList<>();
 
-    public PaintingRegistry(World world) {
+    public PaintingRegistry() {
         super();
+    }
 
-        this.world = world;
+    public void setLevel(World level) {
+        this.level = level;
     }
 
     /**
      * World accessor for canvas tracker
      * @return
      */
-    public World getWorld() {
-        return this.world;
+    public World getLevel() {
+        return this.level;
     }
 
     public void addPaintingCanvasCode(String canvasCode) {
@@ -98,6 +103,19 @@ public class PaintingRegistry {
 
                 lastZeroBytePosition = canvasCodesBuffer.position();
             }
+        }
+    }
+
+    // Convert to/from NBT
+    static class PaintingRegistryStorage implements Capability.IStorage<PaintingRegistry> {
+        @Override
+        public INBT writeNBT(Capability<PaintingRegistry> capability, PaintingRegistry instance, @Nullable Direction side) {
+            return instance.serializeNBT();
+        }
+
+        @Override
+        public void readNBT(Capability<PaintingRegistry> capability, PaintingRegistry instance, Direction side, @Nullable INBT nbt) {
+            instance.deserializeNBT(nbt);
         }
     }
 }

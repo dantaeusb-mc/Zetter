@@ -10,8 +10,8 @@ public class CanvasTrackerCapability {
 
     public static void register() {
         CapabilityManager.INSTANCE.register(
-            CanvasTracker.class,
-            new CanvasServerTracker.CanvasTrackerNBTStorage(),
+            CanvasServerTracker.class,
+            new CanvasServerTracker.CanvasTrackerStorage(),
             CanvasServerTracker::new
         );
     }

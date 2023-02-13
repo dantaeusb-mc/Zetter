@@ -30,11 +30,7 @@ public class ArtistTableBlock extends ContainerBlock {
         this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
-    @Nullable
-    public TileEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new ArtistTableBlockEntity(pos, state);
-    }
-
+    @Override
     @Nullable
     public TileEntity newBlockEntity(IBlockReader reader) {
         return new ArtistTableBlockEntity();

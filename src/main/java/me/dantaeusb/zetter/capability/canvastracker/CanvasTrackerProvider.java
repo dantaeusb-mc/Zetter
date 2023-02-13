@@ -24,10 +24,12 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundNB
 
     public CanvasTrackerProvider(World world) {
         if (world.isClientSide()) {
-            this.canvasTrackerCapability = new CanvasClientTracker(world);
+            this.canvasTrackerCapability = new CanvasClientTracker();
         } else {
-            this.canvasTrackerCapability = new CanvasServerTracker((ServerWorld) world);
+            this.canvasTrackerCapability = new CanvasServerTracker();
         }
+
+        this.canvasTrackerCapability.setLevel(world);
     }
 
     /**

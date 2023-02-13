@@ -37,7 +37,13 @@ public abstract class AbstractToolParameters implements Cloneable {
     }
 
     public static void writePacketData(AbstractToolParameters toolParameters, PacketBuffer buffer) {
-        buffer.writeCollection(toolParameters.values.entrySet(), AbstractToolParameters::writeEntry);
+        Set<Map.Entry<String, Object>> parameterSet = toolParameters.values.entrySet();
+
+        buffer.writeVarInt(parameterSet.size());
+
+        for (Map.Entry<String, Object> parameter : parameterSet) {
+            AbstractToolParameters.writeEntry(buffer, parameter);
+        }
     }
 
     /**
@@ -84,10 +90,12 @@ public abstract class AbstractToolParameters implements Cloneable {
                 break;
         }
 
-        final List<Tuple<String, Object>> rawParameters = buffer.readCollection(
-            NonNullList::create,
-            AbstractToolParameters::readEntry
-        );
+        int parametersSize = buffer.readVarInt();
+        List<Tuple<String, Object>> rawParameters = new ArrayList<>(parametersSize);
+
+        for(int i = 0; i < parametersSize; ++i) {
+            rawParameters.add(AbstractToolParameters.readEntry(buffer));
+        }
 
         toolParameters.values = (HashMap<String, Object>) rawParameters.stream().collect(Collectors.toMap(
             Tuple::getA,

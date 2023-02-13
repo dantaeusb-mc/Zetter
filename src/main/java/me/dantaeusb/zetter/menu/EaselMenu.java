@@ -339,14 +339,26 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
      * Canvas initialization: wait for packet to
      * be sent and not propagate stack updates
      * until then
+     *
+     * @todo: [HIGH] Does it work without suppression?
      */
 
+    /*
     public void stateCanvasInitializationStart(EaselState state) {
         this.suppressRemoteUpdates();
     }
 
     public void stateCanvasInitializationEnd(EaselState state) {
         this.resumeRemoteUpdates();
+    }
+    */
+
+    public void stateCanvasInitializationStart(EaselState state) {
+
+    }
+
+    public void stateCanvasInitializationEnd(EaselState state) {
+
     }
 
     /*

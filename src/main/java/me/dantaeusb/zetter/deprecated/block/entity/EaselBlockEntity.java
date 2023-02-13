@@ -26,8 +26,8 @@ public class EaselBlockEntity extends TileEntity {
 
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
 
-    public EaselBlockEntity(BlockPos pos, BlockState state) {
-        super(ZetterBlockEntities.EASEL_BLOCK_ENTITY.get(), pos, state);
+    public EaselBlockEntity() {
+        super(ZetterBlockEntities.EASEL_BLOCK_ENTITY.get());
 
         this.easelContainer = new EaselContainer();
     }

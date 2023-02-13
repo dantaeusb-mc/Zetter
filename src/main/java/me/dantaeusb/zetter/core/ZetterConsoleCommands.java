@@ -3,7 +3,9 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.server.command.PaintingLookupArgument;
 import me.dantaeusb.zetter.server.command.ZetterServerCommand;
+import net.minecraft.command.arguments.ArgumentSerializer;
 import net.minecraft.command.arguments.ArgumentTypes;
+import net.minecraft.command.arguments.GameProfileArgument;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -18,6 +20,6 @@ public class ZetterConsoleCommands {
     }
 
     public static void init(IEventBus bus) {
-        ArgumentTypes.register("zetter:painting_lookup", PaintingLookupArgument.class, PaintingLookupArgument::painting);
+        ArgumentTypes.register("zetter:painting_lookup", PaintingLookupArgument.class, new ArgumentSerializer<>(PaintingLookupArgument::new));
     }
 }

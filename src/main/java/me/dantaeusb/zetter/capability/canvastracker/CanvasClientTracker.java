@@ -9,20 +9,33 @@ import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
 import java.util.Map;
 
 public class CanvasClientTracker implements CanvasTracker {
-    private final World level;
+    private World level;
+
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
 
-    public CanvasClientTracker(World level) {
+    public CanvasClientTracker() {
         super();
+    }
+
+    public void setLevel(World level) {
+        if (this.level != null) {
+            throw new IllegalStateException("Cannot change level for capability");
+        }
 
         this.level = level;
+    }
+
+    @Override
+    public World getLevel() {
+        return this.level;
     }
 
     @Override
@@ -84,10 +97,5 @@ public class CanvasClientTracker implements CanvasTracker {
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
-    }
-
-    @Override
-    public World getLevel() {
-        return this.level;
     }
 }

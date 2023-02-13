@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.capability.paintingregistry;
 
-import me.dantaeusb.zetter.core.ZetterCapabilities;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
@@ -19,7 +18,10 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
 
     public PaintingRegistryProvider(World world) {
         if (!world.isClientSide()) {
-            this.paintingRegistryCapability = new PaintingRegistry(world);
+            PaintingRegistry paintingRegistryCapability = new PaintingRegistry();
+            paintingRegistryCapability.setLevel(world);
+
+            this.paintingRegistryCapability = paintingRegistryCapability;
         } else {
             throw new IllegalArgumentException("Painting Registry should exist only on server in overworld");
         }
@@ -37,7 +39,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
     @Nullable
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
-        if (ZetterCapabilities.PAINTING_REGISTRY == capability) {
+        if (PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY == capability) {
             return (LazyOptional<T>)LazyOptional.of(()-> this.paintingRegistryCapability);
         }
 
@@ -51,7 +53,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
     public CompoundNBT serializeNBT() {
         CompoundNBT compoundTag = new CompoundNBT();
 
-        if (this.paintingRegistryCapability.getWorld() == null || this.paintingRegistryCapability.getWorld().isClientSide()) {
+        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
             return compoundTag;
         }
 
@@ -66,7 +68,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
      * We need to get the data only for Server Implementation of the capability
      */
     public void deserializeNBT(CompoundNBT compoundTag) {
-        if (this.paintingRegistryCapability.getWorld() == null || this.paintingRegistryCapability.getWorld().isClientSide()) {
+        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
             return;
         }
 

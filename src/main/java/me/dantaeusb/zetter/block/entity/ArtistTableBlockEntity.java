@@ -65,8 +65,9 @@ public class ArtistTableBlockEntity extends TileEntity implements ItemStackHandl
 
     private ArtistTableMenu.Mode mode = ArtistTableMenu.Mode.COMBINE;
 
-    public ArtistTableBlockEntity(BlockPos pos, BlockState state) {
-        super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY, pos, state);
+    public ArtistTableBlockEntity() {
+        super(ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get());
+
         this.createInventory();
     }
 
@@ -122,11 +123,15 @@ public class ArtistTableBlockEntity extends TileEntity implements ItemStackHandl
     // NBT stack
 
     @Override
-    public void saveAdditional(CompoundNBT compoundTag)
+    public CompoundNBT save(CompoundNBT compoundTag)
     {
+        super.save(compoundTag); // The super call is required to save and load the tileEntity's location
+
         CompoundNBT gridContainer = this.artistTableGridContainer.serializeNBT();
         compoundTag.put(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE, gridContainer);
         compoundTag.putByte(NBT_TAG_ARTIST_TABLE_MODE, this.mode.getId());
+
+        return compoundTag;
     }
 
     @Override
@@ -177,15 +182,15 @@ public class ArtistTableBlockEntity extends TileEntity implements ItemStackHandl
     @Override
     public CompoundNBT getUpdateTag()
     {
-        CompoundNBT nbtTagCompound = new CompoundNBT();
-        this.saveAdditional(nbtTagCompound);
-        return nbtTagCompound;
+        CompoundNBT compoundTag = new CompoundNBT();
+        save(compoundTag);
+        return compoundTag;
     }
 
     @Override
-    public void handleUpdateTag(CompoundNBT tag)
+    public void handleUpdateTag(BlockState blockState, CompoundNBT compoundTag)
     {
-        this.load(tag);
+        this.load(blockState, compoundTag);
     }
 
     /**
@@ -217,7 +222,7 @@ public class ArtistTableBlockEntity extends TileEntity implements ItemStackHandl
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == ForgeCapabilities.ITEM_HANDLER
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.artistTableContainerOptional.cast();
         }

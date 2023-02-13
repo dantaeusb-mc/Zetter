@@ -76,5 +76,7 @@ public class ExportClientCommand {
 
             throw e;
         }
+
+        return 1;
     }
 }

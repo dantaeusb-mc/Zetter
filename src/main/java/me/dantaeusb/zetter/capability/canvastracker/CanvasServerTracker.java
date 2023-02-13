@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.core.ZetterRegistries;
@@ -15,10 +16,12 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Direction;
 import net.minecraft.util.SharedConstants;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
@@ -30,7 +33,7 @@ public class CanvasServerTracker implements CanvasTracker {
     private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
     private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
 
-    private final ServerWorld level;
+    private ServerWorld level;
 
     protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
@@ -39,10 +42,20 @@ public class CanvasServerTracker implements CanvasTracker {
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
 
-    public CanvasServerTracker(ServerWorld level) {
+    public CanvasServerTracker() {
         super();
+    }
 
-        this.level = level;
+    public void setLevel(World level) {
+        if (this.level != null) {
+            throw new IllegalStateException("Cannot change level for capability");
+        }
+
+        if (!(level instanceof ServerWorld)) {
+            throw new IllegalStateException("Only accepts ServerLevel");
+        }
+
+        this.level = (ServerWorld) level;
     }
 
     @Override
@@ -364,6 +377,19 @@ public class CanvasServerTracker implements CanvasTracker {
             }
 
             this.setLastPaintingId(compoundTag.getInt(NBT_TAG_PAINTING_LAST_ID));
+        }
+    }
+
+    // Convert to/from NBT
+    static class CanvasTrackerStorage implements Capability.IStorage<CanvasServerTracker> {
+        @Override
+        public INBT writeNBT(Capability<CanvasServerTracker> capability, CanvasServerTracker instance, @Nullable Direction side) {
+            return instance.serializeNBT();
+        }
+
+        @Override
+        public void readNBT(Capability<CanvasServerTracker> capability, CanvasServerTracker instance, Direction side, @Nullable INBT nbt) {
+            instance.deserializeNBT(nbt);
         }
     }
 }

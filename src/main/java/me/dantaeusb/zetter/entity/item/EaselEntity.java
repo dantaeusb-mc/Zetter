@@ -34,6 +34,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -154,7 +155,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
 
     @Override
     public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-        if (capability == ForgeCapabilities.ITEM_HANDLER
+        if (capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
                 && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
             return this.easelContainerOptional.cast();
         }
@@ -284,7 +285,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
             BlockPos posBelow = this.pos.below();
             BlockState blockBelowState = this.level.getBlockState(posBelow);
 
-            if (!blockBelowState.getMaterial().isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
+            if (!blockBelowState.getMaterial().isSolid()) {
                 return false;
             }
 
@@ -377,8 +378,7 @@ public class  EaselEntity extends Entity implements ItemStackHandlerListener, IN
 
     public void setPos(double x, double y, double z) {
         this.pos = new BlockPos(x, y, z);
-        this.setPosRaw(x, y, z);
-        this.setBoundingBox(this.makeBoundingBox());
+        super.setPos(x, y, z);
         this.hasImpulse = true;
     }
 

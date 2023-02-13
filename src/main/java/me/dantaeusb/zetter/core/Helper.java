@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerCapability;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
+import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistryCapability;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -73,7 +74,7 @@ public class Helper {
 
         if (!world.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            paintingRegistry = world.getServer().overworld().getCapability(ZetterCapabilities.PAINTING_REGISTRY).orElse(null);
+            paintingRegistry = world.getServer().overworld().getCapability(PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY).orElse(null);
         } else {
             throw new IllegalArgumentException("Painting Registry is not supposed to exist on client");
         }
