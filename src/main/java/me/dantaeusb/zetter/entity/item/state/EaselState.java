@@ -568,7 +568,7 @@ public class EaselState {
         }
 
         this.easel.getEaselContainer().handleCanvasChange(canvasCode);
-        this.easel.getEaselContainer().changed();
+        this.easel.getEaselContainer().setChanged();
 
         return true;
     }

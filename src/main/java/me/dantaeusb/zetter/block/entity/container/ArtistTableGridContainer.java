@@ -7,12 +7,14 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.ItemStackHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
 import java.util.List;
 
-public class ArtistTableGridContainer extends ItemStackHandler {
+public class ArtistTableGridContainer extends ItemStackHandler implements IInventory {
     public static final int STORAGE_SIZE = ArtistTableMenu.CANVAS_SLOT_COUNT;
 
     private ArtistTableBlockEntity boundTable;
@@ -85,5 +87,75 @@ public class ArtistTableGridContainer extends ItemStackHandler {
                 listener.containerChanged(this, slot);
             }
         }
+    }
+
+    /*
+     * IInventory things
+     */
+
+    @Override
+    public int getContainerSize() {
+        return STORAGE_SIZE;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        for(ItemStack itemstack : this.stacks) {
+            if (!itemstack.isEmpty()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public ItemStack getItem(int slot) {
+        return slot >= 0 && slot < this.stacks.size() ? this.stacks.get(slot) : ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack removeItem(int slot, int count) {
+        ItemStack itemstack = ItemStackHelper.removeItem(this.stacks, slot, count);
+        if (!itemstack.isEmpty()) {
+            this.setChanged();
+        }
+
+        return itemstack;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int slot) {
+        ItemStack itemstack = this.stacks.get(slot);
+
+        if (itemstack.isEmpty()) {
+            return ItemStack.EMPTY;
+        } else {
+            this.stacks.set(slot, ItemStack.EMPTY);
+            return itemstack;
+        }
+    }
+
+    @Override
+    public void setItem(int slot, ItemStack stack) {
+        this.stacks.set(slot, stack);
+        if (!stack.isEmpty() && stack.getCount() > this.getMaxStackSize()) {
+            stack.setCount(this.getMaxStackSize());
+        }
+
+        this.setChanged();
+    }
+
+    @Override
+    public void setChanged() {
+        for (int slot = 0; slot < this.stacks.size(); slot++) {
+            this.onContentsChanged(slot);
+        }
+    }
+
+    @Override
+    public void clearContent() {
+        this.stacks.clear();
+        this.setChanged();
     }
 }

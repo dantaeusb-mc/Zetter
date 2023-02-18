@@ -483,7 +483,7 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
             this.sendPaletteUpdatePacket();
         }
 
-        this.container.changed();
+        this.container.setChanged();
     }
 
     public void sendPaletteUpdatePacket() {

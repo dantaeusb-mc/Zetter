@@ -19,7 +19,6 @@ public class CanvasTrackerStorage implements Capability.IStorage<CanvasTracker> 
         CompoundNBT compound = new CompoundNBT();
 
         compound.putByteArray(NBT_TAG_CANVAS_IDS, instance.getCanvasIds().toByteArray());
-        compound.putInt(NBT_TAG_CANVAS_LAST_ID, instance.getLastCanvasId());
         compound.putInt(NBT_TAG_PAINTING_LAST_ID, instance.getLastPaintingId());
 
         return compound;
@@ -30,7 +29,7 @@ public class CanvasTrackerStorage implements Capability.IStorage<CanvasTracker> 
         if (tag.getType() == CompoundNBT.TYPE) {
             CompoundNBT compoundTag = (CompoundNBT) tag;
 
-            // Backward compat for pre-16
+            // Backward compat for 0.20
             if (compoundTag.contains(NBT_TAG_CANVAS_IDS)) {
                 byte[] canvasIds = compoundTag.getByteArray(NBT_TAG_CANVAS_IDS);
 

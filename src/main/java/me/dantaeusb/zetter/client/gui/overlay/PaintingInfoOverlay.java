@@ -33,7 +33,7 @@ public class PaintingInfoOverlay extends AbstractGui {
 
         if (this.overlayMessageTime <= 0) {
             this.paintingData = null;
-            return;
+             return;
         }
 
         ITextComponent title;
@@ -64,7 +64,7 @@ public class PaintingInfoOverlay extends AbstractGui {
         if (msLeft > 8) {
             poseStack.pushPose();
             // For whatever reason we have to divide offsets by 2 (prob matrix multiplied)
-            poseStack.translate(screenWidth / 4.0D, (screenHeight - 68.0D) / 2.0D, 0.0D);
+            poseStack.translate(screenWidth / 2.0D, screenHeight - 68.0D, 0.0D);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
 
