@@ -93,6 +93,7 @@ public class DummyCanvasData extends AbstractCanvasData {
 
     @Override
     public CompoundNBT save(CompoundNBT compoundTag) {
+        Zetter.LOG.error("Dummy Canvas Data shall not ever be saved! Processing to keep data.");
         return this.cacheCompoundTag;
     }
 

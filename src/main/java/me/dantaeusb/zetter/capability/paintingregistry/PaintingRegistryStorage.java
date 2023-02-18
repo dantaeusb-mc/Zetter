@@ -46,7 +46,9 @@ public class PaintingRegistryStorage implements Capability.IStorage<PaintingRegi
             int lastZeroBytePosition = 0;
 
             while (canvasCodesBuffer.hasRemaining()) {
-                if (canvasCodesBuffer.get() != PaintingRegistry.BYTE_SEPARATOR) {
+                byte check = canvasCodesBuffer.get();
+
+                if (check != PaintingRegistry.BYTE_SEPARATOR) {
                     continue;
                 }
 
@@ -55,10 +57,10 @@ public class PaintingRegistryStorage implements Capability.IStorage<PaintingRegi
                 final int lastLimit = canvasCodesBuffer.limit();
 
                 canvasCodesBuffer.position(lastZeroBytePosition);
-                canvasCodesBuffer.limit(canvasCodesBuffer.position() - lastZeroBytePosition - 1);
+                canvasCodesBuffer.limit(lastPos - 1);
                 ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice();
-                canvasCodesBuffer.position(lastPos);
                 canvasCodesBuffer.limit(lastLimit);
+                canvasCodesBuffer.position(lastPos);
 
                 String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
 
