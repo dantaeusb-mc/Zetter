@@ -9,6 +9,7 @@ import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
+import me.dantaeusb.zetter.painting.tools.shape.ShapeLine;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.IRenderable;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -293,14 +294,14 @@ public class CanvasWidget extends AbstractPaintingWidget implements IRenderable 
             int globalX = this.x + this.parentScreen.getMenu().getCanvasOffsetX() + (int) Math.floor(canvasX) * this.getCanvasScale();
             int globalY = this.y + this.parentScreen.getMenu().getCanvasOffsetY() + (int) Math.floor(canvasY) * this.getCanvasScale();
 
-            for (AbstractTool.ShapeLine line : shape.getLines()) {
+            for (ShapeLine line : shape.getLines()) {
                 // Relative positions from the cursor "center" in canvas pixels
                 // Center is
-                int posX = (line.posX() + offset) * this.getCanvasScale();
-                int posY = (line.posY() + offset) * this.getCanvasScale();
-                int length = line.length() * this.getCanvasScale();
+                int posX = (line.posX + offset) * this.getCanvasScale();
+                int posY = (line.posY + offset) * this.getCanvasScale();
+                int length = line.length * this.getCanvasScale();
 
-                if (line.direction() == AbstractTool.ShapeLine.LineDirection.HORIZONTAL) {
+                if (line.direction.equals(ShapeLine.LineDirection.HORIZONTAL)) {
                     // Wrap around top-left
                     if (posX <= 0) {
                         posX--;

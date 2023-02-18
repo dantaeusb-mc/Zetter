@@ -26,7 +26,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements IRenderable {
         // Add borders
         super(parentScreen, x, y, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * 5 + 2, new TranslationTextComponent("container.zetter.painting.tools"));
 
-        this.buttons = new ArrayList<>() {{
+        this.buttons = new ArrayList<ToolButton>() {{
             add(new ToolButton(Tools.PENCIL, TOOL_BUTTONS_U, TOOL_BUTTONS_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
             add(new ToolButton(Tools.BRUSH, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
             add(new ToolButton(Tools.EYEDROPPER, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 2, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));

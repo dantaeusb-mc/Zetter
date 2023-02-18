@@ -32,7 +32,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements IRenderable
         super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, new TranslationTextComponent("container.zetter.painting.history"));
 
 
-        this.buttons = new ArrayList<>() {{
+        this.buttons = new ArrayList<HistoryButton>() {{
             add(new HistoryButton(
                     parentScreen.getMenu()::canUndo, parentScreen.getMenu()::undo,
                     HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,

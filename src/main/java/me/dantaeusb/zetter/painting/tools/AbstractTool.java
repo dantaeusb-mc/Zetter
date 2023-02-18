@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.painting.tools;
 
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.pipes.Pipe;
+import me.dantaeusb.zetter.painting.tools.shape.ShapeLine;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.util.text.ITextComponent;
 
@@ -310,18 +311,5 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
         }
     }
 
-    public record ShapeLine(AbstractTool.ShapeLine.LineDirection direction, int posX, int posY, int length) {
-        public enum LineDirection {
-            HORIZONTAL(0, "Horizontal"),
-            VERTICAL(1, "Vertical");
 
-            private final int step;
-            private final String name;
-
-            LineDirection(int step, String name) {
-                this.step = step;
-                this.name = name;
-            }
-        }
-    }
 }

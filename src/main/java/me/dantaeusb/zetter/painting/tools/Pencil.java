@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.painting.tools;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -18,7 +19,7 @@ public class Pencil extends AbstractTool<PencilParameters> {
     private final ITextComponent translatableComponent = new TranslationTextComponent("container.zetter.painting.tools.pencil");
 
     public Pencil() {
-        super(new ArrayList<>() {{
+        super(new ArrayList<Pipe>() {{
             add(new DitheringPipe());
             add(new BlendingPipe());
         }});
@@ -103,7 +104,7 @@ public class Pencil extends AbstractTool<PencilParameters> {
 
     }
 
-    private HashMap<Integer, ToolShape> shapes = new HashMap<>() {{
+    private HashMap<Integer, ToolShape> shapes = new HashMap<Integer, ToolShape>() {{
         put(1, new ToolShape());
         put(2, new ToolShape(new int[][]{
             {1, 1},

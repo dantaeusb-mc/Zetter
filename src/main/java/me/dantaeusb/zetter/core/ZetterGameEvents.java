@@ -52,8 +52,8 @@ public class ZetterGameEvents {
      */
     @SubscribeEvent
     public static void onPlayerContainerOpened(PlayerContainerEvent.Open event) {
-        if (event.getContainer() instanceof EaselMenu easelMenu) {
-            easelMenu.getState().addPlayer((PlayerEntity) event.getEntity());
+        if (event.getContainer() instanceof EaselMenu) {
+            ((EaselMenu) event.getContainer()).getState().addPlayer((PlayerEntity) event.getEntity());
         }
     }
 
@@ -66,8 +66,8 @@ public class ZetterGameEvents {
      */
     @SubscribeEvent
     public static void onPlayerContainerClosed(PlayerContainerEvent.Close event) {
-        if (event.getContainer() instanceof EaselMenu easelMenu) {
-            easelMenu.getState().removePlayer((PlayerEntity) event.getEntity());
+        if (event.getContainer() instanceof EaselMenu) {
+            ((EaselMenu) event.getContainer()).getState().removePlayer((PlayerEntity) event.getEntity());
         }
     }
 }

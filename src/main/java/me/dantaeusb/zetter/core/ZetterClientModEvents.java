@@ -27,11 +27,11 @@ public class ZetterClientModEvents {
      */
     @SubscribeEvent
     public static void onCanvasViewed(CanvasViewEvent event) {
-        if (event.canvasData instanceof CanvasData canvasCanvasData) {
-            ClientHelper.openCanvasScreen(event.player, event.canvasCode, canvasCanvasData, event.hand);
+        if (event.canvasData instanceof CanvasData) {
+            ClientHelper.openCanvasScreen(event.player, event.canvasCode, (CanvasData) event.canvasData, event.hand);
             event.setCanceled(true);
-        } else if (event.canvasData instanceof PaintingData paintingData) {
-            ClientHelper.openPaintingScreen(event.player, event.canvasCode, paintingData, event.hand);
+        } else if (event.canvasData instanceof PaintingData) {
+            ClientHelper.openPaintingScreen(event.player, event.canvasCode, (PaintingData) event.canvasData, event.hand);
             event.setCanceled(true);
         }
     }
@@ -57,14 +57,15 @@ public class ZetterClientModEvents {
 
         PlayerEntity player = Minecraft.getInstance().player;
 
-        if (canvasData instanceof CanvasData canvasCanvasData) {
+        if (canvasData instanceof CanvasData) {
             // Initialize canvas if client had no canvas loaded when it was updated
-            if (player.containerMenu instanceof EaselMenu easelMenu) {
+            if (player.containerMenu instanceof EaselMenu) {
+                EaselMenu easelMenu = (EaselMenu) player.containerMenu;
                 String canvasItemCode = easelMenu.getCanvasItemCode();
                 // If it's the same canvas player is editing
                 if (canvasItemCode != null && canvasItemCode.equals(canvasCode)) {
                     // Pushing changes that were added after sync packet was created
-                    if (easelMenu.handleCanvasSync(canvasCode, canvasCanvasData, timestamp)) {
+                    if (easelMenu.handleCanvasSync(canvasCode, (CanvasData) canvasData, timestamp)) {
                         // Easel does own registration with latest changes applied
                         event.setCanceled(true);
                     }
@@ -94,9 +95,9 @@ public class ZetterClientModEvents {
 
         PlayerEntity player = Minecraft.getInstance().player;
 
-        if (canvasData instanceof CanvasData canvasCanvasData) {
-            if  (player.containerMenu instanceof ArtistTableMenu artistTableMenu) {
-                if (artistTableMenu.handleCanvasSync(canvasCode, canvasCanvasData, timestamp)) {
+        if (canvasData instanceof CanvasData) {
+            if  (player.containerMenu instanceof ArtistTableMenu) {
+                if (((ArtistTableMenu) player.containerMenu).handleCanvasSync(canvasCode, (CanvasData) canvasData, timestamp)) {
                     event.setCanceled(true);
                 }
             }

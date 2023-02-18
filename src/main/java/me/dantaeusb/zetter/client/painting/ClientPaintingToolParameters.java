@@ -8,7 +8,7 @@ import java.util.HashMap;
 public class ClientPaintingToolParameters {
     private static ClientPaintingToolParameters instance;
 
-    private final HashMap<Tools, AbstractToolParameters> toolParameters = new HashMap<>(){{
+    private final HashMap<Tools, AbstractToolParameters> toolParameters = new HashMap<Tools, AbstractToolParameters>(){{
         put(Tools.PENCIL, new PencilParameters());
         put(Tools.BRUSH, new BrushParameters());
         put(Tools.EYEDROPPER, new NoParameters());

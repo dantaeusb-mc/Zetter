@@ -286,7 +286,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         final int offset = ((blockWidth * resolution * blockY * resolution) + blockX * resolution) * 4;
 
         for (int y = 0; y < resolution; y++) {
-            colorBuffer.get(offset + (blockWidth * resolution * y) * 4, destinationColor, y * resolution * 4, resolution * 4);
+            final int lastPos = colorBuffer.position();
+            colorBuffer.position(offset + (blockWidth * resolution * y) * 4);
+            colorBuffer.get(destinationColor, y * resolution * 4, resolution * 4);
+            colorBuffer.position(lastPos);
         }
 
         return destinationColor;

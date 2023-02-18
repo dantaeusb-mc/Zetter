@@ -228,7 +228,11 @@ public class PaintingData extends AbstractCanvasData {
             networkBuffer.writeBytes(canvasData.getColorDataBuffer());
 
             // @todo: [LOW] Compatibility code, remove on release
-            networkBuffer.writeUUID(Objects.requireNonNullElse(canvasData.authorUuid, FALLBACK_UUID));
+            if (canvasData.authorUuid != null) {
+                networkBuffer.writeUUID(canvasData.authorUuid);
+            } else {
+                networkBuffer.writeUUID(FALLBACK_UUID);
+            }
 
             networkBuffer.writeUtf(canvasData.authorName, 64);
             networkBuffer.writeUtf(canvasData.name, 32);

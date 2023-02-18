@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.painting.tools;
 import me.dantaeusb.zetter.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.painting.pipes.Pipe;
 import me.dantaeusb.zetter.painting.tools.brush.Bezier;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.util.Tuple;
@@ -22,7 +23,7 @@ public class Brush extends AbstractTool<BrushParameters> {
     private final Bezier brushBezier = new Bezier(0.455, 0.030, 0.515, 0.955);
 
     public Brush() {
-        super(new ArrayList<>() {{
+        super(new ArrayList<Pipe>() {{
             add(new DitheringPipe());
             add(new BlendingPipe());
         }});

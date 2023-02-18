@@ -33,7 +33,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements IRenderab
         final int DITHERING_BUTTON_U = 0;
         final int DITHERING_BUTTON_V = 32;
 
-        this.buttons = new ArrayList<>() {{
+        this.buttons = new ArrayList<DitheringButton>() {{
             add(new DitheringButton(DitheringPipe.DitheringOption.NO_DITHERING, DITHERING_BUTTON_U, DITHERING_BUTTON_V, DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_HEIGHT));
             add(new DitheringButton(DitheringPipe.DitheringOption.DENSE_DITHERING, DITHERING_BUTTON_U + DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_V, DITHERING_BUTTON_WIDTH, DITHERING_BUTTON_HEIGHT));
         }};

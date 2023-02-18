@@ -70,7 +70,7 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
         ctx.setPacketHandled(true);
 
         Optional<World> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
-        if (clientWorld.isEmpty()) {
+        if (!clientWorld.isPresent()) {
             Zetter.LOG.error("SCanvasSyncMessage context could not provide a ClientWorld.");
             return;
         }

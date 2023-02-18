@@ -25,6 +25,7 @@ import net.minecraftforge.fml.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class is responsible for all canvas interactions for easels
@@ -371,7 +372,7 @@ public class EaselState {
                 // Set false for players that need to have the last synced action updated
                 List<UUID> playersNeedToUpdateLastSyncedAction = this.playerLastSyncedAction.entrySet().stream()
                     .filter(lastSyncedActionEntry -> this.actions.stream().noneMatch(canvasAction -> canvasAction.id == lastSyncedActionEntry.getValue()))
-                    .map(Map.Entry::getKey).toList();
+                    .map(Map.Entry::getKey).collect(Collectors.toList());
 
                 for (UUID playerUuid : playersNeedToUpdateLastSyncedAction) {
                     this.playerLastSyncedAction.put(playerUuid, firstNonRemovedAction.id);
@@ -409,7 +410,7 @@ public class EaselState {
                 // Set false for players that need to have the last synced snapshot updated
                 List<UUID> playersNeedToUpdateLastSyncedSnapshot = this.playerLastSyncedSnapshot.entrySet().stream()
                     .filter(lastSyncedSnapshotEntry -> this.snapshots.stream().noneMatch(canvasAction -> canvasAction.id == lastSyncedSnapshotEntry.getValue()))
-                    .map(Map.Entry::getKey).toList();
+                    .map(Map.Entry::getKey).collect(Collectors.toList());
 
                 for (UUID playerUuid : playersNeedToUpdateLastSyncedSnapshot) {
                     this.playerLastSyncedSnapshot.put(playerUuid, firstNonRemovedSnapshot.id);
@@ -1385,7 +1386,7 @@ public class EaselState {
                 if (!action.isSync()) {
                     Optional<PlayerEntity> author = this.players.stream().filter(player -> player.getUUID().equals(action.getAuthorUUID())).findFirst();
 
-                    if (author.isEmpty() || !author.get().isCreative()) {
+                    if (!author.isPresent() || !author.get().isCreative()) {
                         this.easel.getEaselContainer().damagePalette(damage);
                     }
                 }

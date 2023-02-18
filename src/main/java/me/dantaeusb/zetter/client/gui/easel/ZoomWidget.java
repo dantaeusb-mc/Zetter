@@ -34,7 +34,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements IRenderable {
         super(parentScreen, x, y, ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTON_HEIGHT, new TranslationTextComponent("container.zetter.painting.zoom"));
 
 
-        this.buttons = new ArrayList<>() {{
+        this.buttons = new ArrayList<ZoomButton>() {{
             add(new ZoomButton(
                     parentScreen.getMenu()::canIncreaseCanvasScale, parentScreen.getMenu()::increaseCanvasScale,
                     ZOOM_BUTTONS_U, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,

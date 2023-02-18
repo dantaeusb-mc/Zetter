@@ -92,7 +92,15 @@ public class PaintingRegistry {
                 }
 
                 // Do not get byte[], it'll share the reference to the full array I suppose
-                ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice(lastZeroBytePosition, canvasCodesBuffer.position() - lastZeroBytePosition - 1);
+                final int lastPos = canvasCodesBuffer.position();
+                final int lastLimit = canvasCodesBuffer.limit();
+
+                canvasCodesBuffer.position(lastZeroBytePosition);
+                canvasCodesBuffer.limit(canvasCodesBuffer.position() - lastZeroBytePosition - 1);
+                ByteBuffer canvasCodeBuffer = canvasCodesBuffer.slice();
+                canvasCodesBuffer.position(lastPos);
+                canvasCodesBuffer.limit(lastLimit);
+
                 String canvasCode = StandardCharsets.UTF_8.decode(canvasCodeBuffer).toString();
 
                 if (canvasCode.isEmpty() || canvasCode.contains(SEPARATOR)) {

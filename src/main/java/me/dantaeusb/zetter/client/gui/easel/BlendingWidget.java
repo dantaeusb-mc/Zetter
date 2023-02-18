@@ -34,7 +34,7 @@ public class BlendingWidget extends AbstractPaintingWidget implements IRenderabl
         final int BLENDING_BUTTON_U = 80;
         final int BLENDING_BUTTON_V = 32;
 
-        this.buttons = new ArrayList<>() {{
+        this.buttons = new ArrayList<BlendingButton>() {{
             add(new BlendingButton(BlendingPipe.BlendingOption.RYB, BLENDING_BUTTON_U, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
             add(new BlendingButton(BlendingPipe.BlendingOption.RGB, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));
             add(new BlendingButton(BlendingPipe.BlendingOption.RGBC, BLENDING_BUTTON_U + BLENDING_BUTTON_WIDTH * 2, BLENDING_BUTTON_V, BLENDING_BUTTON_WIDTH, BLENDING_BUTTON_HEIGHT));

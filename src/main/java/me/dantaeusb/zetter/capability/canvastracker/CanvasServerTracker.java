@@ -192,7 +192,7 @@ public class CanvasServerTracker implements CanvasTracker {
                     .map(Map.Entry::getValue)
                     .findFirst();
 
-            if (type.isEmpty()) {
+            if (!type.isPresent()) {
                 throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
             }
 

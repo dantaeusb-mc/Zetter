@@ -213,7 +213,7 @@ public class CanvasAction {
         if (this.isCommitted()) {
             subActionBuffer = this.subActionBuffer;
         } else {
-            subActionBuffer = this.subActionBuffer.duplicate().flip();
+            subActionBuffer = (ByteBuffer) this.subActionBuffer.duplicate().flip();
         }
 
         subActionBuffer.rewind();
