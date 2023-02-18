@@ -219,7 +219,7 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         IIntArray clientData = new IntArray(1);
         clientData.set(ArtistTableBlockEntity.DATA_MODE, packet.getMode().getId());
 
-        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, new IntArray(1), IWorldPosCallable.NULL);
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, clientData, IWorldPosCallable.NULL);
     }
 
     public ItemStackHandler getCombinationContainer() {

@@ -1,6 +1,9 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerCapability;
+import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistryCapability;
+import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistryProvider;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
@@ -18,6 +21,7 @@ import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
 
@@ -29,7 +33,6 @@ public class ZetterSetup
     public static void onClientSetupEvent(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             // Not registering PaintingScreen as it's client-side only
-
             ScreenManager.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             ScreenManager.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
@@ -41,6 +44,13 @@ public class ZetterSetup
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
             new ClientPaintingToolParameters();
         });
+    }
+
+    @SubscribeEvent
+    @SuppressWarnings("unused")
+    public static void onCommonSetupEvent(FMLCommonSetupEvent event) {
+        CanvasTrackerCapability.register();
+        PaintingRegistryCapability.register();
     }
 
     @SubscribeEvent

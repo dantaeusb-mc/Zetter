@@ -534,6 +534,7 @@ public class EaselState {
             return false;
         }
 
+        // Stop menu updates to prevent sending change before initialization packet
         if (this.listeners != null) {
             for(EaselStateListener listener : this.listeners) {
                 listener.stateCanvasInitializationStart(this);
@@ -543,7 +544,7 @@ public class EaselState {
         int resolution = CanvasItem.getResolution(canvasStack);
         int[] size = CanvasItem.getBlockSize(canvasStack);
 
-        assert size != null && size.length == 2; // @todo: Stop menu updates to prevent sending change before initialization packet
+        assert size != null && size.length == 2;
 
         CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.level);
         canvasCode = CanvasItem.getCanvasCode(canvasStack);

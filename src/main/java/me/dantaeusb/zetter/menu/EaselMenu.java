@@ -353,10 +353,20 @@ public class EaselMenu extends Container implements EaselStateListener, ItemStac
     }
     */
 
+    /**
+     * Seems like we don't need to prevent NBT syncing when
+     * initializing canvas on 1.16.5 as it works fine
+     * @param state
+     */
     public void stateCanvasInitializationStart(EaselState state) {
 
     }
 
+    /**
+     * Seems like we don't need to prevent NBT syncing when
+     * initializing canvas on 1.16.5 as it works fine
+     * @param state
+     */
     public void stateCanvasInitializationEnd(EaselState state) {
 
     }

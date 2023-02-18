@@ -14,6 +14,8 @@ public class ZetterOverlays {
 
     @SubscribeEvent
     public static void onRenderOverlays(RenderGameOverlayEvent.Post event) {
-        PAINTING_INFO.render(Minecraft.getInstance().gui, event.getMatrixStack(), event.getPartialTicks(), event.getWindow().getWidth(), event.getWindow().getHeight());
+        if(event.getType().equals(RenderGameOverlayEvent.ElementType.ALL)) {
+            PAINTING_INFO.render(Minecraft.getInstance().gui, event.getMatrixStack(), event.getPartialTicks(), event.getWindow().getWidth(), event.getWindow().getHeight());
+        }
     }
 }

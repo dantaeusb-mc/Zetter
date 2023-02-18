@@ -12,6 +12,7 @@ import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
+import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
@@ -124,6 +125,7 @@ public class CanvasServerTracker implements CanvasTracker {
 
     /**
      * @todo: [MED] Remove deprecated sections on next release
+     * @todo: canvasCode null check
      * @param canvasCode
      * @return
      * @param <T>
@@ -134,14 +136,28 @@ public class CanvasServerTracker implements CanvasTracker {
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
         assert this.level.getServer() != null;
 
+        if (canvasCode == null) {
+            return null;
+        }
+
         boolean deprecatedType;
         int canvasTypeInt = -1;
         final Optional<? extends CanvasDataType<?>> type;
 
         // In versions before 0.18 we have to manually pre-read the file
         // To understand which type of canvas we are working with
-        try {
-            CompoundNBT compoundTag = this.level.getServer().overworld().getDataStorage().readTagFromDisk(canvasCode, SharedConstants.getCurrentVersion().getWorldVersion());
+
+        // File could be not created yet
+        // Lol just re-set the value bruh
+        // But will we have racing condition? Even if we do, we just keep all data
+        AbstractCanvasData canvasData = this.level.getServer().overworld().getDataStorage().get(
+                () -> ZetterCanvasTypes.DUMMY.get().supply(canvasCode),
+                canvasCode
+        );
+
+        // If we had it in cache, type wil be different
+        if (canvasData instanceof DummyCanvasData) {
+            CompoundNBT compoundTag = ((DummyCanvasData) canvasData).getCacheCompoundTag();
 
             String canvasResourceLocation = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
 
@@ -172,22 +188,26 @@ public class CanvasServerTracker implements CanvasTracker {
 
             final String finalCanvasResourceLocation = canvasResourceLocation;
             type = ZetterRegistries.CANVAS_TYPE.get().getEntries().stream()
-                .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
-                .map(Map.Entry::getValue)
-                .findFirst();
+                    .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
+                    .map(Map.Entry::getValue)
+                    .findFirst();
 
             if (type.isEmpty()) {
                 throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
             }
-        } catch (IOException e) {
-            return null;
+
+            canvasData = type.get().builder.supply(canvasCode);
+            canvasData.load(compoundTag);
+
+            this.level.getServer().overworld().getDataStorage().set(canvasData);
+
+            // Remove deprecated tags
+            if (canvasTypeInt != -1 || deprecatedType) {
+                canvasData.setDirty();
+            }
         }
 
         // Then we are supplying type we've read, and it loads its own data
-        T canvasData = (T) this.level.getServer().overworld().getDataStorage().get(
-            () -> type.get().supply(canvasCode),
-            canvasCode
-        );
 
         if (canvasData == null) {
             return null;
@@ -195,12 +215,7 @@ public class CanvasServerTracker implements CanvasTracker {
 
         canvasData.correctData(this.level);
 
-        // Remove deprecated tags
-        if (canvasTypeInt != -1 || deprecatedType) {
-            canvasData.setDirty();
-        }
-
-        return canvasData;
+        return (T) canvasData;
     }
 
     /**

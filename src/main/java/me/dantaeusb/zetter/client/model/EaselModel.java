@@ -21,39 +21,34 @@ public class EaselModel extends Model {
 
         this.rack = new ModelRenderer(this, 0, 0);
         this.rack
-            .addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F)
-            .texOffs(0, 0);
+            .addBox(1.0F, 11.5F, 3.5F, 14.0F, 1.0F, 4.0F);
 
         this.rack.setPos(-8.0F, 0.0F, -9.0F);
 
-        this.topPlank = new ModelRenderer(this, 0, 0);
+        this.topPlank = new ModelRenderer(this, 0, 5);
         this.topPlank
-            .addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F)
-            .texOffs(0, 5);
+            .addBox(1.0F, 26.0F, 5.0F, 14.0F, 2.0F, 1.0F);
 
         this.topPlank.setPos(-8.0F, 0.0F, -9.0F);
         setRotationAngle(this.topPlank, 0.1745F, 0.0F, 0.0F);
 
-        this.backLeg = new ModelRenderer(this, 0, 0);
+        this.backLeg = new ModelRenderer(this, 6, 8);
         this.backLeg
-            .addBox(0.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F)
-            .texOffs(6, 8);
+            .addBox(0.0F, 0.0F, 0.0F, 2.0F, 30.0F, 1.0F);
 
         this.backLeg.setPos(-1.0F, 0.0F, 7.0F);
         setRotationAngle(this.backLeg, -0.2182F, 0.0F, 0.0F);
 
-        this.frontLeftLeg = new ModelRenderer(this, 0, 0);
+        this.frontLeftLeg = new ModelRenderer(this, 0, 8);
         this.frontLeftLeg
-            .addBox(12.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F)
-            .texOffs(0, 8);
+            .addBox(12.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F);
 
         this.frontLeftLeg.setPos(-8.0F, 0.0F, -12.0F);
         setRotationAngle(this.frontLeftLeg, 0.1745F, 0.0F, 0.0F);
 
-        this.frontRightLeg = new ModelRenderer(this, 0, 0);
+        this.frontRightLeg = new ModelRenderer(this, 12, 8);
         this.frontRightLeg
-            .addBox(2.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F)
-            .texOffs(12, 8);
+            .addBox(2.0F, 1.0F, 7.0F, 2.0F, 30.0F, 1.0F);
 
         this.frontRightLeg.setPos(-8.0F, 0.0F, -12.0F);
         setRotationAngle(this.frontRightLeg, 0.1745F, 0.0F, 0.0F);

@@ -14,13 +14,19 @@ import java.nio.ByteOrder;
  * It's not enough to just init data, we need to register it with
  * @see CanvasServerTracker ::registerCanvasData();
  *
- * It has Dummy type without prefix, it should not be saved
+ * In 1.16.5, it's a temporary storage to read the canvas type
+ * if it's not cached. It shall not be saved manually,
+ * but shall persist read data. Should be replaced
+ * on server with appropriate object type immediately
  */
 public class DummyCanvasData extends AbstractCanvasData {
     public static final String TYPE = "dummy";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
 
     public static final CanvasDataBuilder<DummyCanvasData> BUILDER = new DummyCanvasDataBuilder();
+
+    private CompoundNBT cacheCompoundTag;
+    private String cacheCanvasTypeResource;
 
     protected DummyCanvasData(String canvasCode) {
         super(canvasCode);
@@ -72,9 +78,22 @@ public class DummyCanvasData extends AbstractCanvasData {
         return false;
     }
 
+    /**
+     * Only for 1.16.5 - just return saved tag
+     * @return
+     */
+    public CompoundNBT getCacheCompoundTag() {
+        return this.cacheCompoundTag;
+    }
+
     @Override
     public void load(CompoundNBT compoundTag) {
-        Zetter.LOG.error("Trying to read into dummy canvas!");
+        this.cacheCompoundTag = compoundTag;
+    }
+
+    @Override
+    public CompoundNBT save(CompoundNBT compoundTag) {
+        return this.cacheCompoundTag;
     }
 
     public CanvasDataType<DummyCanvasData> getType() {

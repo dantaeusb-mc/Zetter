@@ -63,18 +63,17 @@ public class PaintingInfoOverlay extends AbstractGui {
 
         if (msLeft > 8) {
             poseStack.pushPose();
-            poseStack.translate(screenWidth / 2, screenHeight - 68, 0.0D);
+            // For whatever reason we have to divide offsets by 2 (prob matrix multiplied)
+            poseStack.translate(screenWidth / 4.0D, (screenHeight - 68.0D) / 2.0D, 0.0D);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
 
             int textColor = 0xFFFFFF;
             int transparencyMask = msLeft << 24 & 0xFF000000;
 
-            FontRenderer fontRenderer = gui.getFont();
-
             int titleLength = gui.getFont().width(title);
             this.drawBackdrop(poseStack, gui.getFont(), -4, titleLength, 0xFFFFFF | transparencyMask);
-            gui.getFont().drawShadow(poseStack, title, (float) (-titleLength / 2), -4.0F, textColor | transparencyMask);
+            gui.getFont().draw(poseStack, title, -titleLength / 2.0F, -4.0F, textColor | transparencyMask);
             RenderSystem.disableBlend();
 
             poseStack.popPose();
