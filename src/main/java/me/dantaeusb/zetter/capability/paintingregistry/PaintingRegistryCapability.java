@@ -11,7 +11,7 @@ public class PaintingRegistryCapability {
     public static void register() {
         CapabilityManager.INSTANCE.register(
             PaintingRegistry.class,
-            new PaintingRegistry.PaintingRegistryStorage(),
+            new PaintingRegistryStorage(),
             PaintingRegistry::new
         );
     }

@@ -13,6 +13,7 @@ import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
+import java.util.BitSet;
 import java.util.Map;
 
 public class CanvasClientTracker implements CanvasTracker {
@@ -97,5 +98,34 @@ public class CanvasClientTracker implements CanvasTracker {
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
+    }
+
+    /*
+     * This is only for server
+     */
+
+    @Override
+    public BitSet getCanvasIds() {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public void setCanvasIds(BitSet canvasIds) {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public int getLastCanvasId() {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public void setLastPaintingId(int id) {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public int getLastPaintingId() {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
     }
 }

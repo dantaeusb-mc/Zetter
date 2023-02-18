@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.capability.paintingregistry;
 
-import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.util.Direction;
 import net.minecraft.world.World;
@@ -11,8 +10,8 @@ import net.minecraftforge.common.util.LazyOptional;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class PaintingRegistryProvider implements ICapabilitySerializable<CompoundNBT> {
-    private final PaintingRegistry paintingRegistryCapability;
+public class PaintingRegistryProvider implements ICapabilitySerializable<INBT> {
+    private final PaintingRegistry paintingRegistry;
 
     private final String TAG_NAME_PAINTING_REGISTRY = "PaintingRegistry";
 
@@ -21,7 +20,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
             PaintingRegistry paintingRegistryCapability = new PaintingRegistry();
             paintingRegistryCapability.setLevel(world);
 
-            this.paintingRegistryCapability = paintingRegistryCapability;
+            this.paintingRegistry = paintingRegistryCapability;
         } else {
             throw new IllegalArgumentException("Painting Registry should exist only on server in overworld");
         }
@@ -40,7 +39,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
         if (PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY == capability) {
-            return (LazyOptional<T>)LazyOptional.of(()-> this.paintingRegistryCapability);
+            return (LazyOptional<T>)LazyOptional.of(()-> this.paintingRegistry);
         }
 
         return LazyOptional.empty();
@@ -50,29 +49,24 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
      * Write all the capability state information to NBT
      * We need to save data only for Server Implementation of the capability
      */
-    public CompoundNBT serializeNBT() {
-        CompoundNBT compoundTag = new CompoundNBT();
-
-        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
-            return compoundTag;
-        }
-
-        INBT paintingRegistryTag = this.paintingRegistryCapability.serializeNBT();
-        compoundTag.put(TAG_NAME_PAINTING_REGISTRY, paintingRegistryTag);
-
-        return compoundTag;
+    public INBT serializeNBT() {
+        return PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY.getStorage().writeNBT(
+            PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY,
+            this.paintingRegistry,
+            null
+        );
     }
 
     /**
      * Read the capability state information out of NBT
      * We need to get the data only for Server Implementation of the capability
      */
-    public void deserializeNBT(CompoundNBT compoundTag) {
-        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
-            return;
-        }
-
-        INBT paintingRegistryTag = compoundTag.get(TAG_NAME_PAINTING_REGISTRY);
-        this.paintingRegistryCapability.deserializeNBT(paintingRegistryTag);
+    public void deserializeNBT(INBT tag) {
+        PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY.getStorage().readNBT(
+            PaintingRegistryCapability.CAPABILITY_PAINTING_REGISTRY,
+            this.paintingRegistry,
+            null,
+            tag
+        );
     }
 }

@@ -30,10 +30,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class CanvasServerTracker implements CanvasTracker {
-    private static final String NBT_TAG_CANVAS_LAST_ID = "LastCanvasId";
-    private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
-    private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
-
     private ServerWorld level;
 
     protected BitSet canvasIds = new BitSet(1);
@@ -72,10 +68,12 @@ public class CanvasServerTracker implements CanvasTracker {
      * or removed, we set according bits to 0
      */
 
+    @Override
     public BitSet getCanvasIds() {
         return this.canvasIds;
     }
 
+    @Override
     public void setCanvasIds(BitSet canvasIds) {
         this.canvasIds = canvasIds;
     }
@@ -87,6 +85,7 @@ public class CanvasServerTracker implements CanvasTracker {
         return freeId;
     }
 
+    @Override
     public int getLastCanvasId() {
         return this.canvasIds.length() - 1;
     }
@@ -106,10 +105,12 @@ public class CanvasServerTracker implements CanvasTracker {
         return ++this.lastPaintingId ;
     }
 
+    @Override
     public int getLastPaintingId() {
         return this.lastPaintingId;
     }
 
+    @Override
     public void setLastPaintingId(int id) {
         this.lastPaintingId = id;
     }
@@ -355,56 +356,6 @@ public class CanvasServerTracker implements CanvasTracker {
         PlayerTrackingCanvas(UUID playerId, String canvasName) {
             this.playerId = playerId;
             this.canvasName = canvasName;
-        }
-    }
-
-    /*
-     * Saving data
-     */
-
-    public CompoundNBT serializeNBT() {
-        CompoundNBT compound = new CompoundNBT();
-
-        compound.putByteArray(NBT_TAG_CANVAS_IDS, this.getCanvasIds().toByteArray());
-        compound.putInt(NBT_TAG_CANVAS_LAST_ID, this.getLastCanvasId());
-        compound.putInt(NBT_TAG_PAINTING_LAST_ID, this.getLastPaintingId());
-
-        return compound;
-    }
-
-    public void deserializeNBT(INBT tag) {
-        if (tag.getType() == CompoundNBT.TYPE) {
-            CompoundNBT compoundTag = (CompoundNBT) tag;
-
-            // Backward compat for pre-16
-            if (compoundTag.contains(NBT_TAG_CANVAS_IDS)) {
-                byte[] canvasIds = compoundTag.getByteArray(NBT_TAG_CANVAS_IDS);
-
-                this.setCanvasIds(BitSet.valueOf(canvasIds));
-            } else if (compoundTag.contains(NBT_TAG_CANVAS_LAST_ID)) {
-                int lastCanvasId = compoundTag.getInt(NBT_TAG_CANVAS_LAST_ID);
-                BitSet canvasIds = new BitSet(lastCanvasId + 1);
-                canvasIds.flip(0, lastCanvasId + 1);
-
-                this.setCanvasIds(canvasIds);
-            } else {
-                this.setCanvasIds(new BitSet());
-            }
-
-            this.setLastPaintingId(compoundTag.getInt(NBT_TAG_PAINTING_LAST_ID));
-        }
-    }
-
-    // Convert to/from NBT
-    static class CanvasTrackerStorage implements Capability.IStorage<CanvasServerTracker> {
-        @Override
-        public INBT writeNBT(Capability<CanvasServerTracker> capability, CanvasServerTracker instance, @Nullable Direction side) {
-            return instance.serializeNBT();
-        }
-
-        @Override
-        public void readNBT(Capability<CanvasServerTracker> capability, CanvasServerTracker instance, Direction side, @Nullable INBT nbt) {
-            instance.deserializeNBT(nbt);
         }
     }
 }

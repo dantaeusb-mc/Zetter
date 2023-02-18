@@ -3,6 +3,8 @@ package me.dantaeusb.zetter.capability.canvastracker;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.world.World;
 
+import java.util.BitSet;
+
 public interface CanvasTracker {
     void setLevel(World level);
 
@@ -15,6 +17,13 @@ public interface CanvasTracker {
     }
 
     void registerCanvasData(String canvasCode, AbstractCanvasData canvasData, long timestamp);
-
     void unregisterCanvasData(String canvasCode);
+
+    BitSet getCanvasIds();
+    void setCanvasIds(BitSet canvasIds);
+
+    int getLastCanvasId();
+
+    void setLastPaintingId(int id);
+    int getLastPaintingId();
 }
