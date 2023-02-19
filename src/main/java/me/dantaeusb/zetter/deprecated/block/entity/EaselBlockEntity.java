@@ -11,6 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
+import net.minecraft.tileentity.ITickableTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -21,7 +22,7 @@ import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
-public class EaselBlockEntity extends TileEntity {
+public class EaselBlockEntity extends TileEntity implements ITickableTileEntity {
     private final EaselContainer easelContainer; // two items: canvas and palette
 
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
@@ -32,22 +33,23 @@ public class EaselBlockEntity extends TileEntity {
         this.easelContainer = new EaselContainer();
     }
 
-    public static void serverTick(World world, BlockPos pos, BlockState state, EaselBlockEntity easelBlockEntity) {
-        if (world.getBlockEntity(pos).getType() == ZetterBlockEntities.EASEL_BLOCK_ENTITY.get()) {
-            final ItemStack canvasStack = easelBlockEntity.getEaselContainer().getCanvasStack();
-            final ItemStack paletteStack = easelBlockEntity.getEaselContainer().getPaletteStack();
+    public void tick() {
+        if (this.getType() == ZetterBlockEntities.EASEL_BLOCK_ENTITY.get()) {
+            final ItemStack canvasStack = this.getEaselContainer().getCanvasStack();
+            final ItemStack paletteStack = this.getEaselContainer().getPaletteStack();
 
-            BlockState blockState = Blocks.AIR.defaultBlockState();
-            world.setBlock(pos, blockState, 1 & 2);
+            BlockState state = this.getBlockState();
+            BlockState airState = Blocks.AIR.defaultBlockState();
+            this.level.setBlock(this.getBlockPos(), airState, 1 & 2);
 
             float f = MathHelper.abs(180.0F - state.getValue(EaselBlock.FACING).toYRot());
 
-            Vector3d vec3 = Vector3d.atBottomCenterOf(pos);
-            EaselEntity easelEntity = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), world);
+            Vector3d vec3 = Vector3d.atBottomCenterOf(this.getBlockPos());
+            EaselEntity easelEntity = new EaselEntity(ZetterEntities.EASEL_ENTITY.get(), this.level);
             easelEntity.setPos(vec3.x, vec3.y, vec3.z);
             easelEntity.yRot = f;
 
-            world.addFreshEntity(easelEntity);
+            this.level.addFreshEntity(easelEntity);
 
             easelEntity.getEaselContainer().setCanvasStack(canvasStack);
             easelEntity.getEaselContainer().setPaletteStack(paletteStack);

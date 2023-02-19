@@ -175,6 +175,11 @@ public class EaselContainer extends ItemStackHandler implements IInventory {
 
     @Override
     protected void onLoad() {
+        // pre 0.20 migration
+        if (this.easel == null) {
+            return;
+        }
+
         this.handleCanvasChange(CanvasItem.getCanvasCode(this.getCanvasStack()));
     }
 
