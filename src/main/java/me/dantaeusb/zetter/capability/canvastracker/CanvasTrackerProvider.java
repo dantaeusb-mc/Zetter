@@ -4,7 +4,6 @@ import me.dantaeusb.zetter.core.ZetterCapabilities;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.core.Direction;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -15,21 +14,21 @@ import javax.annotation.Nullable;
 
 public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTag> {
     private final Direction NO_SPECIFIC_SIDE = null;
-    private final CanvasTracker canvasTrackerCapability;
+    private final CanvasTracker canvasTracker;
 
     /**
      * @todo: datafix to CanvasTracker
      */
     private final String TAG_NAME_CANVAS_TRACKER = "canvasTracker";
 
-    public CanvasTrackerProvider(Level level) {
-        if (level.isClientSide()) {
-            this.canvasTrackerCapability = new CanvasClientTracker();
+    public CanvasTrackerProvider(Level world) {
+        if (world.isClientSide()) {
+            this.canvasTracker = new CanvasClientTracker();
         } else {
-            this.canvasTrackerCapability = new CanvasServerTracker();
+            this.canvasTracker = new CanvasServerTracker();
         }
 
-        this.canvasTrackerCapability.setLevel(level);
+        this.canvasTracker.setLevel(world);
     }
 
     /**
@@ -45,7 +44,7 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
         if (ZetterCapabilities.CANVAS_TRACKER == capability) {
-            return (LazyOptional<T>)LazyOptional.of(()-> this.canvasTrackerCapability);
+            return (LazyOptional<T>)LazyOptional.of(()-> this.canvasTracker);
         }
 
         return LazyOptional.empty();
@@ -58,11 +57,11 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
     public CompoundTag serializeNBT() {
         CompoundTag compoundTag = new CompoundTag();
 
-        if (this.canvasTrackerCapability.getLevel() == null || this.canvasTrackerCapability.getLevel().isClientSide()) {
+        if (this.canvasTracker.getLevel() == null || this.canvasTracker.getLevel().isClientSide()) {
             return compoundTag;
         }
 
-        Tag canvasTrackerTag = ((CanvasServerTracker) this.canvasTrackerCapability).serializeNBT();
+        Tag canvasTrackerTag = CanvasTrackerStorage.save(this.canvasTracker);
         compoundTag.put(TAG_NAME_CANVAS_TRACKER, canvasTrackerTag);
 
         return compoundTag;
@@ -73,11 +72,16 @@ public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTa
      * We need to get the data only for Server Implementation of the capability
      */
     public void deserializeNBT(CompoundTag compoundTag) {
-        if (this.canvasTrackerCapability.getLevel() == null || this.canvasTrackerCapability.getLevel().isClientSide()) {
+        if (this.canvasTracker.getLevel() == null || this.canvasTracker.getLevel().isClientSide()) {
             return;
         }
 
         Tag canvasTrackerTag = compoundTag.get(TAG_NAME_CANVAS_TRACKER);
-        ((CanvasServerTracker) this.canvasTrackerCapability).deserializeNBT(canvasTrackerTag);
+
+        if (canvasTrackerTag == null) {
+            return;
+        }
+
+        CanvasTrackerStorage.load(this.canvasTracker, canvasTrackerTag);
     }
 }

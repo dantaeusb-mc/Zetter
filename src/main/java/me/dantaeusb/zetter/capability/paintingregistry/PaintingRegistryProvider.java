@@ -13,14 +13,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class PaintingRegistryProvider implements ICapabilitySerializable<CompoundTag> {
-    private final PaintingRegistry paintingRegistryCapability;
+    private final PaintingRegistry paintingRegistry;
 
     private final String TAG_NAME_PAINTING_REGISTRY = "PaintingRegistry";
 
     public PaintingRegistryProvider(Level level) {
         if (!level.isClientSide()) {
-            this.paintingRegistryCapability = new PaintingRegistry();
-            this.paintingRegistryCapability.setLevel(level);
+            this.paintingRegistry = new PaintingRegistry();
+            this.paintingRegistry.setLevel(level);
         } else {
             throw new IllegalArgumentException("Painting Registry should exist only on server in overworld");
         }
@@ -39,7 +39,7 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
     @Override
     public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction facing) {
         if (ZetterCapabilities.PAINTING_REGISTRY == capability) {
-            return (LazyOptional<T>)LazyOptional.of(()-> this.paintingRegistryCapability);
+            return (LazyOptional<T>)LazyOptional.of(()-> this.paintingRegistry);
         }
 
         return LazyOptional.empty();
@@ -52,11 +52,11 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
     public CompoundTag serializeNBT() {
         CompoundTag compoundTag = new CompoundTag();
 
-        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
+        if (this.paintingRegistry.getLevel() == null || this.paintingRegistry.getLevel().isClientSide()) {
             return compoundTag;
         }
 
-        Tag paintingRegistryTag = this.paintingRegistryCapability.serializeNBT();
+        Tag paintingRegistryTag = PaintingRegistryStorage.save(paintingRegistry);
         compoundTag.put(TAG_NAME_PAINTING_REGISTRY, paintingRegistryTag);
 
         return compoundTag;
@@ -67,11 +67,16 @@ public class PaintingRegistryProvider implements ICapabilitySerializable<Compoun
      * We need to get the data only for Server Implementation of the capability
      */
     public void deserializeNBT(CompoundTag compoundTag) {
-        if (this.paintingRegistryCapability.getLevel() == null || this.paintingRegistryCapability.getLevel().isClientSide()) {
+        if (this.paintingRegistry.getLevel() == null || this.paintingRegistry.getLevel().isClientSide()) {
             return;
         }
 
         Tag paintingRegistryTag = compoundTag.get(TAG_NAME_PAINTING_REGISTRY);
-        this.paintingRegistryCapability.deserializeNBT(paintingRegistryTag);
+
+        if (paintingRegistryTag == null) {
+            return;
+        }
+
+        PaintingRegistryStorage.load(this.paintingRegistry, paintingRegistryTag);
     }
 }
