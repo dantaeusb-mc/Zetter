@@ -43,20 +43,20 @@ public class PaintingInput {
 
         if (this.code != null) {
             this.paintingData = canvasTracker.getCanvasData(this.code);
-        }
+        } else if (this.title != null) {
+            for (int id = 0; id < canvasTracker.getLastPaintingId() + 1; id++) {
+                final String code = PaintingData.getCanvasCode(id);
+                PaintingData paintingData = canvasTracker.getCanvasData(code);
 
-        for (int id = 0; id < canvasTracker.getLastPaintingId() + 1; id++) {
-            final String code = PaintingData.getCanvasCode(id);
-            PaintingData paintingData = canvasTracker.getCanvasData(code);
+                if (paintingData == null || !paintingData.getType().equals(ZetterCanvasTypes.PAINTING.get())) {
+                    continue;
+                }
 
-            if (paintingData == null || !paintingData.getType().equals(ZetterCanvasTypes.PAINTING.get())) {
-                continue;
-            }
-
-            if (paintingData.getPaintingName().equals(this.title)) {
-                this.code = code;
-                this.paintingData = paintingData;
-                break;
+                if (paintingData.getPaintingName().equals(this.title)) {
+                    this.code = code;
+                    this.paintingData = paintingData;
+                    break;
+                }
             }
         }
     }

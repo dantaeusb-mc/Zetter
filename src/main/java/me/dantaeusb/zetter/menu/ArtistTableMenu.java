@@ -213,7 +213,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         ContainerData clientData = new SimpleContainerData(1);
         clientData.set(ArtistTableBlockEntity.DATA_MODE, packet.getMode().getId());
 
-        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, new SimpleContainerData(1), ContainerLevelAccess.NULL);
+        return new ArtistTableMenu(windowID, playerInventory, artistTableContainer, clientData, ContainerLevelAccess.NULL);
     }
 
     public ItemStackHandler getCombinationContainer() {
