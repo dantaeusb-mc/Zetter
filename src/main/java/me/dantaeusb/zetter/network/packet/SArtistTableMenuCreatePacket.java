@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.network.packet;
 
-import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;

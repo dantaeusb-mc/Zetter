@@ -1,9 +1,9 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;

@@ -5,14 +5,12 @@ import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.item.*;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraftforge.eventbus.api.IEventBus;
-
-import java.util.HashMap;
-
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.util.HashMap;
 
 public class ZetterItems
 {

@@ -1,21 +1,21 @@
 package me.dantaeusb.zetter.client.gui;
 
+import com.google.common.collect.Lists;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.ChangeActionWidget;
-import me.dantaeusb.zetter.client.gui.artisttable.PreviewWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
+import me.dantaeusb.zetter.client.gui.artisttable.PreviewWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;

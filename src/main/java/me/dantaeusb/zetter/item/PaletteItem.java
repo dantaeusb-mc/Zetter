@@ -1,11 +1,8 @@
 package me.dantaeusb.zetter.item;
 
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
-
-import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 public class PaletteItem extends Item
 {

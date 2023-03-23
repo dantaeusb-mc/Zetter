@@ -1,17 +1,16 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.core.tools.Color;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.util.StringUtil;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.StringUtil;
 
 import javax.annotation.Nullable;
 import java.util.function.Predicate;

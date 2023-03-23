@@ -1,16 +1,15 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.event.*;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasViewEvent;
+import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;

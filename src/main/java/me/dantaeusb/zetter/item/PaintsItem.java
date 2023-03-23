@@ -1,9 +1,6 @@
 package me.dantaeusb.zetter.item;
 
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.CreativeModeTab;
-
-import net.minecraft.world.item.Item.Properties;
 
 public class PaintsItem extends Item
 {

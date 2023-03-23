@@ -1,8 +1,8 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.client.gui.EaselScreen;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.painting.Tools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Renderable;

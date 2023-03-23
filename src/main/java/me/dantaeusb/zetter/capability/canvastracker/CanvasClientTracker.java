@@ -1,12 +1,13 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
+import com.google.common.collect.Maps;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.event.*;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import com.google.common.collect.Maps;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 

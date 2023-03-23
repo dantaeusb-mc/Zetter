@@ -3,12 +3,11 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.block.ArtistTableBlock;
 import me.dantaeusb.zetter.deprecated.block.EaselBlock;
-import net.minecraft.world.level.material.Material;
-import net.minecraftforge.eventbus.api.IEventBus;
-
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.Material;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;

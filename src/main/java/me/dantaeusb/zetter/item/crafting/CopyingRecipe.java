@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import net.minecraft.core.NonNullList;

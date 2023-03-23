@@ -6,17 +6,17 @@ import me.dantaeusb.zetter.client.gui.easel.TabsWidget;
 import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
+import me.dantaeusb.zetter.entity.item.container.EaselContainer;
 import me.dantaeusb.zetter.entity.item.state.EaselState;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
 import me.dantaeusb.zetter.painting.Tools;
-import me.dantaeusb.zetter.painting.parameters.*;
-import me.dantaeusb.zetter.entity.item.container.EaselContainer;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -25,7 +25,8 @@ import net.minecraftforge.items.SlotItemHandler;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**

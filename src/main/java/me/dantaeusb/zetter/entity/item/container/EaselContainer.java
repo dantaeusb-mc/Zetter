@@ -1,25 +1,20 @@
 package me.dantaeusb.zetter.entity.item.container;
 
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
-import me.dantaeusb.zetter.core.*;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
 import com.google.common.collect.Lists;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.core.ItemStackHandlerListener;
+import me.dantaeusb.zetter.core.ZetterCapabilities;
+import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.network.packet.SEaselCanvasInitializationPacket;
-import me.dantaeusb.zetter.network.packet.SEaselResetPacket;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.network.PacketDistributor;
-import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.List;
 
 
 public class EaselContainer extends ItemStackHandler {

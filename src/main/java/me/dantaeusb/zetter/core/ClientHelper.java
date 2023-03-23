@@ -1,29 +1,21 @@
 package me.dantaeusb.zetter.core;
 
-import me.dantaeusb.zetter.Zetter;
 import com.google.common.collect.Sets;
+import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.Util;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.util.Locale;
 import java.util.Set;
-
-import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
 public class ClientHelper {
     private static final Set<String> ALLOWED_PROTOCOLS = Sets.newHashSet("http", "https");

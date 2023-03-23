@@ -1,17 +1,15 @@
 package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * It's not enough to just init data, we need to register it with

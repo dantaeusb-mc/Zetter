@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.painting.tools;
 
-import me.dantaeusb.zetter.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
