@@ -22,8 +22,8 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -606,7 +606,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * Called when the ONLY when container is closed.
      * Push painting frames so it will be saved.
      */
-    public void removed(@NotNull Player player) {
+    public void removed(@Nonnull Player player) {
         super.removed(player);
 
         this.state.removeListener(this);
@@ -625,7 +625,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * @return
      */
     @Override
-    public ItemStack quickMoveStack(@NotNull Player playerIn, int sourceSlotIndex)
+    public ItemStack quickMoveStack(@Nonnull Player playerIn, int sourceSlotIndex)
     {
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
@@ -673,7 +673,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
     /**
      * Determines whether supplied player can use this container
      */
-    public boolean stillValid(@NotNull Player player) {
+    public boolean stillValid(@Nonnull Player player) {
         return this.container.stillValid(player);
     }
 }
