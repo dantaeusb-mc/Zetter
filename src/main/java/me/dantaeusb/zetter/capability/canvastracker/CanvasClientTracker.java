@@ -11,17 +11,30 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.Nullable;
+import java.util.BitSet;
 import java.util.Map;
 
 public class CanvasClientTracker implements CanvasTracker {
-    private final Level level;
+    private Level level;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
 
-    public CanvasClientTracker(Level level) {
+    public CanvasClientTracker() {
         super();
+    }
+
+    @Override
+    public void setLevel(Level level) {
+        if (this.level != null) {
+            throw new IllegalStateException("Cannot change level for capability");
+        }
 
         this.level = level;
+    }
+
+    @Override
+    public Level getLevel() {
+        return this.level;
     }
 
     @Override
@@ -85,8 +98,32 @@ public class CanvasClientTracker implements CanvasTracker {
         MinecraftForge.EVENT_BUS.post(postEvent);
     }
 
+    /*
+     * This is only for server
+     */
+
     @Override
-    public Level getLevel() {
-        return this.level;
+    public BitSet getCanvasIds() {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public void setCanvasIds(BitSet canvasIds) {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public int getLastCanvasId() {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public void setLastPaintingId(int id) {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
+    }
+
+    @Override
+    public int getLastPaintingId() {
+        throw new IllegalStateException("Client does not store authoritative canvas tracking information");
     }
 }

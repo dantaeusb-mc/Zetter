@@ -22,11 +22,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 public class CanvasServerTracker implements CanvasTracker {
-    private static final String NBT_TAG_CANVAS_LAST_ID = "LastCanvasId";
-    private static final String NBT_TAG_CANVAS_IDS = "CanvasIds";
-    private static final String NBT_TAG_PAINTING_LAST_ID = "LastPaintingId";
-
-    private final ServerLevel level;
+    private ServerLevel level;
 
     protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
@@ -35,10 +31,21 @@ public class CanvasServerTracker implements CanvasTracker {
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
 
-    public CanvasServerTracker(ServerLevel level) {
+    public CanvasServerTracker() {
         super();
+    }
 
-        this.level = level;
+    @Override
+    public void setLevel(Level level) {
+        if (this.level != null) {
+            throw new IllegalStateException("Cannot change level for capability");
+        }
+
+        if (!(level instanceof ServerLevel)) {
+            throw new IllegalStateException("Only accepts ServerLevel");
+        }
+
+        this.level = (ServerLevel) level;
     }
 
     @Override
@@ -307,43 +314,6 @@ public class CanvasServerTracker implements CanvasTracker {
         PlayerTrackingCanvas(UUID playerId, String canvasName) {
             this.playerId = playerId;
             this.canvasName = canvasName;
-        }
-    }
-
-    /*
-     * Saving data
-     */
-
-    public Tag serializeNBT() {
-        CompoundTag compound = new CompoundTag();
-
-        compound.putByteArray(NBT_TAG_CANVAS_IDS, this.getCanvasIds().toByteArray());
-        compound.putInt(NBT_TAG_CANVAS_LAST_ID, this.getLastCanvasId());
-        compound.putInt(NBT_TAG_PAINTING_LAST_ID, this.getLastPaintingId());
-
-        return compound;
-    }
-
-    public void deserializeNBT(Tag tag) {
-        if (tag.getType() == CompoundTag.TYPE) {
-            CompoundTag compoundTag = (CompoundTag) tag;
-
-            // Backward compat for pre-16
-            if (compoundTag.contains(NBT_TAG_CANVAS_IDS)) {
-                byte[] canvasIds = compoundTag.getByteArray(NBT_TAG_CANVAS_IDS);
-
-                this.setCanvasIds(BitSet.valueOf(canvasIds));
-            } else if (compoundTag.contains(NBT_TAG_CANVAS_LAST_ID)) {
-                int lastCanvasId = compoundTag.getInt(NBT_TAG_CANVAS_LAST_ID);
-                BitSet canvasIds = new BitSet(lastCanvasId + 1);
-                canvasIds.flip(0, lastCanvasId + 1);
-
-                this.setCanvasIds(canvasIds);
-            } else {
-                this.setCanvasIds(new BitSet());
-            }
-
-            this.setLastPaintingId(compoundTag.getInt(NBT_TAG_PAINTING_LAST_ID));
         }
     }
 }
