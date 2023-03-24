@@ -11,10 +11,12 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
@@ -26,9 +28,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class PaintingScreen extends Screen {
     private static final Component DEFAULT_TITLE = Component.translatable("item.zetter.painting.unnamed");
-
-    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
-    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
 
     private final Player owner;
     private final InteractionHand hand;
@@ -125,15 +124,24 @@ public class PaintingScreen extends Screen {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(true);
     }
 
+    /**
+     * Sign painting, creates painting from canvas
+     * Uses translated "Unnamed" title by default
+     * Sends packet to server
+     */
     private void signPainting() {
         int slot = this.hand == InteractionHand.MAIN_HAND ? this.owner.getInventory().selected : 40;
+        String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
 
-        CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
+        CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, title);
         ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
 
         this.minecraft.player.closeContainer();
     }
 
+    /**
+     * Calculate offset at which render the painting texture
+     */
     private void calculatePaintingOffset() {
         float paintingAspectRatio = this.canvasData.getWidth() / (float) this.canvasData.getHeight();
         float windowAspectRatio = this.width / (float) this.height;
@@ -243,11 +251,10 @@ public class PaintingScreen extends Screen {
         matrixStack.popPose();
 
         String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
-        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(title, Style.EMPTY);
+        FormattedCharSequence formattedTitle = FormattedCharSequence.forward(title, this.title.isEmpty() ? Style.EMPTY.withColor(ChatFormatting.GRAY) : Style.EMPTY.withColor(ChatFormatting.BLACK));
 
         if (this.editable) {
-            boolean cursorTick = this.tick / 6 % 2 == 0;
-            formattedTitle = FormattedCharSequence.composite(formattedTitle, cursorTick ? BLACK_CURSOR : GRAY_CURSOR);
+            this.renderCursor(matrixStack, this.titleEdit.getCursorPos(), this.titleEdit.getCursorPos() == this.title.length());
         }
 
         this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
@@ -259,6 +266,19 @@ public class PaintingScreen extends Screen {
     @Override
     public void removed() {
         this.minecraft.keyboardHandler.setSendRepeatsToGui(false);
+    }
+
+    private void renderCursor(PoseStack poseStack, int cursorPos, boolean underscore) {
+        if (this.tick / 6 % 2 == 0) {
+            int cursorX = this.screenOffsetX + SCREEN_PADDING + this.font.width(this.title.substring(0, cursorPos));
+            int cursorY = this.paintingOffsetY + paintingHeight + 7;
+
+            if (!underscore) {
+                GuiComponent.fill(poseStack, cursorX, cursorY - 1, cursorX + 1, cursorY + 9, 0xFF000000);
+            } else {
+                this.font.draw(poseStack, "_", (float) cursorX, (float) cursorY, 0xFF000000);
+            }
+        }
     }
 
     private void setClipboard(String p_98148_) {
