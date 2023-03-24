@@ -12,12 +12,15 @@ import java.nio.ByteOrder;
 
 /**
  * It's not enough to just init data, we need to register it with
- * @see CanvasServerTracker ::registerCanvasData();
  *
  * In 1.16.5, it's a temporary storage to read the canvas type
  * if it's not cached. It shall not be saved manually,
  * but shall persist read data. Should be replaced
  * on server with appropriate object type immediately
+ *
+ * @see CanvasServerTracker ::registerCanvasData();
+ * <p>
+ * It has Dummy type without prefix, it should not be saved
  */
 public class DummyCanvasData extends AbstractCanvasData {
     public static final String TYPE = "dummy";
@@ -26,7 +29,6 @@ public class DummyCanvasData extends AbstractCanvasData {
     public static final CanvasDataBuilder<DummyCanvasData> BUILDER = new DummyCanvasDataBuilder();
 
     private CompoundNBT cacheCompoundTag;
-    private String cacheCanvasTypeResource;
 
     protected DummyCanvasData(String canvasCode) {
         super(canvasCode);
@@ -44,11 +46,22 @@ public class DummyCanvasData extends AbstractCanvasData {
         byte[] color = new byte[width * height * 4];
         ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
-        final int halfWidth = width / 2;
-        final int halfHeight = width / 2;
+        final int halfResolution = resolution.getNumeric() / 2;
 
         for (int x = 0; x < width * height; x++) {
-            defaultColorBuffer.putInt(x * 4, width > halfWidth ^ height > halfHeight ? Helper.DUMMY_PINK_COLOR : Helper.DUMMY_BLACK_COLOR);
+            defaultColorBuffer.putInt(
+                x * 4,
+                ((x / width) % resolution.getNumeric() >= halfResolution ?
+                    ((x % resolution.getNumeric()) < halfResolution ?
+                        Helper.DUMMY_PINK_COLOR :
+                        Helper.DUMMY_BLACK_COLOR
+                    ) :
+                    ((x % resolution.getNumeric()) < halfResolution ?
+                        Helper.DUMMY_BLACK_COLOR :
+                        Helper.DUMMY_PINK_COLOR
+                    )
+                )
+            );
         }
 
         final DummyCanvasData newDummyCanvas = new DummyCanvasData(canvasCode);

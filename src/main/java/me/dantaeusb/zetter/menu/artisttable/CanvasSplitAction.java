@@ -27,9 +27,9 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * Check if can put anything in
      * "combined" slot
      *
-     * @todo: [HIGH] Don't allow if grid is not empty
      * @param stack
      * @return
+     * @todo: [HIGH] Don't allow if grid is not empty
      */
     public boolean mayPlaceCombined(ItemStack stack) {
         if (stack.getItem() == ZetterItems.CANVAS.get()) {
@@ -113,18 +113,29 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             int[] size = CanvasItem.getBlockSize(combinedStack);
 
             assert size != null && size.length == 2;
-            CanvasData defaultCanvasData = CanvasData.DEFAULTS.get(CanvasData.getDefaultCanvasCode(size[0], size[1]));
 
-            DummyCanvasData combinedCanvasData = DummyCanvasData.BUILDER.createWrap(
+            final int resolutionPixels = Helper.getResolution().getNumeric();
+            byte[] color = new byte[
+                size[0] * resolutionPixels *
+                size[1] * resolutionPixels *
+                4
+            ];
+            ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
+
+            for (int x = 0; x < size[0] * resolutionPixels * size[1] * resolutionPixels; x++) {
+                defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
+            }
+
+            this.canvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
                 Helper.COMBINED_CANVAS_CODE,
-                defaultCanvasData.getResolution(),
-                defaultCanvasData.getWidth(),
-                defaultCanvasData.getHeight(),
-                defaultCanvasData.getColorData()
+                Helper.getResolution(),
+                size[0] * Helper.getResolution().getNumeric(),
+                size[1] * Helper.getResolution().getNumeric(),
+                color
             );
 
             if (this.level.isClientSide()) {
-                Helper.getLevelCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
+                Helper.getLevelCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, this.canvasData);
             }
 
             return;
@@ -148,7 +159,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             this.state = State.READY;
         } else {
             CanvasRenderer.getInstance().queueCanvasTextureUpdate(
-                    CanvasItem.getCanvasCode(combinedStack)
+                CanvasItem.getCanvasCode(combinedStack)
             );
 
             this.state = State.NOT_LOADED;
@@ -188,7 +199,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         // Canvas is empty, so split items are empty, too
         // There's no need to assign data
-        if(CanvasItem.isEmpty(combinedStack)) {
+        if (CanvasItem.isEmpty(combinedStack)) {
             // Remove split canvas item
             this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
 
@@ -224,12 +235,12 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                         numericResolution,
                         numericResolution,
                         getPartialColorData(
-                                combinedCanvasData.getColorData(),
-                                numericResolution,
-                                x,
-                                y,
-                                compoundCanvasWidth,
-                                compoundCanvasHeight
+                            combinedCanvasData.getColorData(),
+                            numericResolution,
+                            x,
+                            y,
+                            compoundCanvasWidth,
+                            compoundCanvasHeight
                         )
                     );
 
@@ -248,12 +259,12 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             numericResolution,
             numericResolution,
             getPartialColorData(
-                    combinedCanvasData.getColorData(),
-                    numericResolution,
-                    missingX,
-                    missingY,
-                    compoundCanvasWidth,
-                    compoundCanvasHeight
+                combinedCanvasData.getColorData(),
+                numericResolution,
+                missingX,
+                missingY,
+                compoundCanvasWidth,
+                compoundCanvasHeight
             )
         );
 
@@ -270,6 +281,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
     /**
      * Call changed container to update output slot
+     *
      * @param canvasCode
      * @param canvasData
      * @param timestamp

@@ -21,25 +21,6 @@ public class CanvasData extends AbstractCanvasData {
     public static final String TYPE = "canvas";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
     public static final CanvasDataBuilder<CanvasData> BUILDER = new CanvasCanvasDataBuilder();
-    public static final HashMap<String, CanvasData> DEFAULTS = new HashMap<>();
-
-    static {
-        for (int[] size : CanvasCombinationAction.paintingShapes) {
-            final int resolution = Helper.getResolution().getNumeric();
-            final int width = size[0];
-            final int height = size[1];
-
-            final CanvasData canvasData = BUILDER.createFresh(
-                CanvasData.getDefaultCanvasCode(width, height),
-                Helper.getResolution(),
-                width * resolution,
-                height * resolution
-            );
-            canvasData.setManaged(false);
-
-            DEFAULTS.put(CanvasData.getDefaultCanvasCode(width, height), canvasData);
-        }
-    }
 
     public static String getCanvasCode(int canvasId) {
         return CODE_PREFIX + canvasId;
