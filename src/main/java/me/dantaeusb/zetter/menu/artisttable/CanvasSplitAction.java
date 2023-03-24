@@ -43,6 +43,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         return false;
     }
 
+    public boolean isReady() {
+        return this.state == State.READY;
+    }
+
     /**
      * When compound canvas is placed we
      * should populate the grid with preview
@@ -53,49 +57,50 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      */
     @Override
     public void onChangedCombined(ItemStackHandler combinedHandler) {
-        ItemStack combinedStack = combinedHandler.getStackInSlot(0);
-
-        // No item - clean the contents of split grid
-        if (combinedStack.isEmpty() || !combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
-            for (int i = 0; i < this.menu.getSplitHandler().getSlots(); i++) {
-                ItemStack stackInSlot = this.menu.getSplitHandler().getStackInSlot(i);
-
-                if (!stackInSlot.isEmpty() && CanvasItem.isEmpty(stackInSlot)) {
-                    this.menu.getSplitHandler().setStackInSlot(i, ItemStack.EMPTY);
-                }
-            }
-
-            this.canvasData = null;
-
+        if (this.isInTransaction()) {
             return;
         }
 
-        int[] compoundCanvasSize = CanvasItem.getBlockSize(combinedStack);
-        assert compoundCanvasSize != null;
+        this.updateCanvasData(combinedHandler);
 
-        final int compoundCanvasWidth = compoundCanvasSize[0];
-        final int compoundCanvasHeight = compoundCanvasSize[1];
+        if (this.menu.getLevel().isClientSide()) {
+            return;
+        }
 
-        // Create canvas items for the slots according to split canvas size
-        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
-            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
-                int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+        ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
-                if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
-                    this.menu.getSplitHandler().setStackInSlot(slotNumber, new ItemStack(ZetterItems.CANVAS.get()));
-                } else {
-                    // Just make sure we will not ever remove painted canvas
-                    if (
-                        !this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get()) ||
-                            !CanvasItem.isEmpty(this.menu.getSplitHandler().getStackInSlot(slotNumber))
-                    ) {
-                        this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
+        if (this.isReady()) {
+            int[] compoundCanvasSize = CanvasItem.getBlockSize(combinedStack);
+            assert compoundCanvasSize != null;
+
+            final int compoundCanvasWidth = compoundCanvasSize[0];
+            final int compoundCanvasHeight = compoundCanvasSize[1];
+
+            // Create canvas items for the slots according to split canvas size
+            for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+                for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
+                    int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+
+                    if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
+                        this.menu.getSplitHandler().setStackInSlot(slotNumber, new ItemStack(ZetterItems.CANVAS.get()));
+                    } else {
+                        // Just make sure we will not ever remove painted canvas
+                        if (this.menu.getSplitHandler().getStackInSlot(slotNumber).is(ZetterItems.CANVAS.get())) {
+                            Zetter.LOG.error("Found an canvas in split slot that is not supposed to be there when updating combined slot!");
+                        } else {
+                            this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
+                        }
                     }
                 }
             }
+        } else {
+            for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+                for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
+                    int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+                    this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
+                }
+            }
         }
-
-        this.updateCanvasData(combinedHandler);
     }
 
     /**
@@ -106,6 +111,14 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      */
     public void updateCanvasData(ItemStackHandler combinedHandler) {
         ItemStack combinedStack = combinedHandler.getStackInSlot(0);
+
+        // No item - update preview and state
+        if (combinedStack.isEmpty() || !combinedStack.is(ZetterItems.CANVAS.get()) || !CanvasItem.isCompound(combinedStack)) {
+            this.canvasData = null;
+            this.state = State.EMPTY;
+
+            return;
+        }
 
         String combinedStackCanvasCode = CanvasItem.getCanvasCode(combinedStack);
 
@@ -137,6 +150,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 Helper.getLevelCanvasTracker(this.level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, this.canvasData);
             }
 
+            this.state = State.READY;
             return;
         }
 
@@ -173,8 +187,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      */
     @Override
     public void onTakeSplit(Player player, ItemStack takenStack) {
-        if (this.level.isClientSide()) {
-            // Nothing to do on client
+        if (player.getLevel().isClientSide()) {
             return;
         }
 
@@ -198,8 +211,9 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         // Canvas is empty, so split items are empty, too
         // There's no need to assign data
         if (CanvasItem.isEmpty(combinedStack)) {
-            // Remove split canvas item
-            this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
+            // Remove split canvas item without triggering update
+            this.startTransaction(player);
+            this.endTransaction(player);
 
             return;
         }
@@ -213,6 +227,8 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             Zetter.LOG.error("No canvas data found for item in combined slot");
             return;
         }
+
+        this.startTransaction(player);
 
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
@@ -271,8 +287,16 @@ public class CanvasSplitAction extends AbstractCanvasAction {
         // Cleanup canvas ID
         canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinedStack));
 
-        // Remove split canvas item
+        // Remove split canvas item without triggering update
+        this.endTransaction(player);
+    }
+
+    @Override
+    public void endTransaction(Player player) {
         this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
+        this.updateCanvasData(this.menu.getCombinedHandler());
+
+        super.endTransaction(player);
     }
 
     /**
