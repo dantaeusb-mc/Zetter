@@ -109,7 +109,7 @@ jar {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.20.1-rc",
+            "Specification-Version": "0.20.2-rc",
             "Implementation-Title": project.name,
             "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",
