@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
 import java.util.BitSet;
 import java.util.Map;
 
-public class CanvasClientTracker implements CanvasTracker, AutoCloseable {
+public class CanvasClientTracker implements CanvasTracker {
     private Level level;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
@@ -117,13 +117,6 @@ public class CanvasClientTracker implements CanvasTracker, AutoCloseable {
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
-    }
-
-    @Override
-    public void close() {
-        this.canvases.forEach((canvasCode, canvasData) -> {
-            this.unregisterCanvasData(canvasCode);
-        });
     }
 
     /*
