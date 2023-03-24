@@ -112,37 +112,4 @@ public class ZetterClientModEvents {
     public static void overlayViewEvent(PaintingInfoOverlayEvent event) {
         ZetterOverlays.PAINTING_INFO.hide();
     }
-
-    /**
-     * Prepare textures for default canvases and load them into memory
-     * for quick reference
-     * @param event
-     */
-    @SubscribeEvent
-    public static void initializeDefaultTextures(ClientPlayerNetworkEvent.LoggingIn event) {
-        for (Map.Entry<String, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
-            Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).registerCanvasData(
-                defaultCanvasDataEntry.getKey(),
-                defaultCanvasDataEntry.getValue()
-            );
-        }
-    }
-
-    /**
-     * We don't need to keep textures when we're in menus
-     * @param event
-     */
-    @SubscribeEvent
-    public static void unloadDefaultTextures(ClientPlayerNetworkEvent.LoggingOut event) {
-        // When minecraft loads world and closes game it triggers event with no player
-        if (event.getPlayer() == null) {
-            return;
-        }
-
-        for (Map.Entry<String, CanvasData> defaultCanvasDataEntry : CanvasData.DEFAULTS.entrySet()) {
-            Helper.getLevelCanvasTracker(event.getPlayer().getLevel()).unregisterCanvasData(
-                defaultCanvasDataEntry.getKey()
-            );
-        }
-    }
 }

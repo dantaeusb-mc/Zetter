@@ -12,8 +12,9 @@ import java.nio.ByteOrder;
 
 /**
  * It's not enough to just init data, we need to register it with
- * @see CanvasServerTracker ::registerCanvasData();
  *
+ * @see CanvasServerTracker ::registerCanvasData();
+ * <p>
  * It has Dummy type without prefix, it should not be saved
  */
 public class DummyCanvasData extends AbstractCanvasData {
@@ -22,7 +23,8 @@ public class DummyCanvasData extends AbstractCanvasData {
 
     public static final CanvasDataBuilder<DummyCanvasData> BUILDER = new DummyCanvasDataBuilder();
 
-    protected DummyCanvasData() {}
+    protected DummyCanvasData() {
+    }
 
     public static DummyCanvasData createDummy() {
         int width = Helper.getResolution().getNumeric();
@@ -37,11 +39,22 @@ public class DummyCanvasData extends AbstractCanvasData {
         byte[] color = new byte[width * height * 4];
         ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
-        final int halfWidth = width / 2;
-        final int halfHeight = width / 2;
+        final int halfResolution = resolution.getNumeric() / 2;
 
         for (int x = 0; x < width * height; x++) {
-            defaultColorBuffer.putInt(x * 4, width > halfWidth ^ height > halfHeight ? Helper.DUMMY_PINK_COLOR : Helper.DUMMY_BLACK_COLOR);
+            defaultColorBuffer.putInt(
+                x * 4,
+                ((x / width) % resolution.getNumeric() >= halfResolution ?
+                    ((x % resolution.getNumeric()) < halfResolution ?
+                        Helper.DUMMY_PINK_COLOR :
+                        Helper.DUMMY_BLACK_COLOR
+                    ) :
+                    ((x % resolution.getNumeric()) < halfResolution ?
+                        Helper.DUMMY_BLACK_COLOR :
+                        Helper.DUMMY_PINK_COLOR
+                    )
+                )
+            );
         }
 
         final DummyCanvasData newDummyCanvas = new DummyCanvasData();
@@ -88,9 +101,9 @@ public class DummyCanvasData extends AbstractCanvasData {
         }
 
         /**
-         * @todo: [HIGH] Use a placeholder, it's fall-back
          * @param compoundTag
          * @return
+         * @todo: [HIGH] Use a placeholder, it's fall-back
          */
         public DummyCanvasData load(CompoundTag compoundTag) {
             Zetter.LOG.error("Trying to read into dummy canvas!");

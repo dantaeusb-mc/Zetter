@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.ZetterConfig;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
@@ -50,7 +51,19 @@ public class Helper {
     }
 
     public static AbstractCanvasData.Resolution getResolution() {
-        return AbstractCanvasData.Resolution.x16;
+        int resolution = 16;
+        switch (ZetterConfig.SERVER.resolution.get()) {
+            case "x64":
+                resolution = 64;
+                break;
+            case "x32":
+                resolution = 32;
+                break;
+            case "x16":
+            default:
+        }
+
+        return AbstractCanvasData.Resolution.get(resolution);
     }
 
     public static CanvasTracker getLevelCanvasTracker(Level level) {

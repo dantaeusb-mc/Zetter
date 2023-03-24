@@ -185,13 +185,23 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         // Return default canvas instead
         if (!this.hasColorData) {
-            CanvasData defaultCanvasData = CanvasData.DEFAULTS.get(CanvasData.getDefaultCanvasCode(rectangle.width, rectangle.height));
+            final int resolutionPixels = Helper.getResolution().getNumeric();
+            byte[] color = new byte[
+                rectangle.width * resolutionPixels *
+                rectangle.height * resolutionPixels *
+                4
+            ];
+            ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
-            DummyCanvasData combinedCanvasData = DummyCanvasData.BUILDER.createWrap(
-                defaultCanvasData.getResolution(),
-                defaultCanvasData.getWidth(),
-                defaultCanvasData.getHeight(),
-                defaultCanvasData.getColorData()
+            for (int x = 0; x < rectangle.width * resolutionPixels * rectangle.height * resolutionPixels; x++) {
+                defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
+            }
+
+            DummyCanvasData combinedCanvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
+                Helper.getResolution(),
+                rectangle.width * resolutionPixels,
+                rectangle.height * resolutionPixels,
+                color
             );
 
             if (world.isClientSide()) {
