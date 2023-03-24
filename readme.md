@@ -11,7 +11,11 @@ Supported versions:
 * 1.19.2 (0.19 LTS),
 * 1.19.3 (master)
 
-Info: https://www.curseforge.com/minecraft/mc-mods/zetter
+Download: https://www.curseforge.com/minecraft/mc-mods/zetter
+
+### Contribute translation
+
+https://crowdin.com/project/zetter
 
 ### Licensing
 
