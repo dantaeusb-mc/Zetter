@@ -27,9 +27,6 @@ import org.lwjgl.glfw.GLFW;
 public class PaintingScreen extends Screen {
     private static final ITextComponent DEFAULT_TITLE = new TranslationTextComponent("item.zetter.painting.unnamed");
 
-    private static final IReorderingProcessor BLACK_CURSOR = IReorderingProcessor.forward("_", Style.EMPTY.withColor(TextFormatting.BLACK));
-    private static final IReorderingProcessor GRAY_CURSOR = IReorderingProcessor.forward("_", Style.EMPTY.withColor(TextFormatting.GRAY));
-
     private final PlayerEntity owner;
     private final Hand hand;
 
@@ -115,15 +112,24 @@ public class PaintingScreen extends Screen {
         this.signButton.visible = this.editable;
     }
 
+    /**
+     * Sign painting, creates painting from canvas
+     * Uses translated "Unnamed" title by default
+     * Sends packet to server
+     */
     private void signPainting() {
         int slot = this.hand == Hand.MAIN_HAND ? this.owner.inventory.selected : 40;
+        String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
 
-        CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, this.title);
+        CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, title);
         ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
 
         this.minecraft.player.closeContainer();
     }
 
+    /**
+     * Calculate offset at which render the painting texture
+     */
     private void calculatePaintingOffset() {
         float paintingAspectRatio = this.canvasData.getWidth() / (float) this.canvasData.getHeight();
         float windowAspectRatio = this.width / (float) this.height;
@@ -232,17 +238,31 @@ public class PaintingScreen extends Screen {
         matrixStack.popPose();
 
         String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
-        IReorderingProcessor formattedTitle = IReorderingProcessor.forward(title, Style.EMPTY);
+
+        IReorderingProcessor formattedTitle = IReorderingProcessor.forward(title, this.title.isEmpty() ? Style.EMPTY.withColor(TextFormatting.GRAY) : Style.EMPTY.withColor(TextFormatting.BLACK));
 
         if (this.editable) {
-            boolean cursorTick = this.tick / 6 % 2 == 0;
-            formattedTitle = IReorderingProcessor.composite(formattedTitle, cursorTick ? BLACK_CURSOR : GRAY_CURSOR);
+            this.renderCursor(matrixStack, this.titleEdit.getCursorPos(), this.titleEdit.getCursorPos() == this.title.length());
         }
 
         this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
         this.font.draw(matrixStack, new TranslationTextComponent("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
 
         super.render(matrixStack, mouseX, mouseY, partialTick);
+    }
+
+    private void renderCursor(MatrixStack poseStack, int cursorPos, boolean underscore) {
+        if (this.tick / 6 % 2 == 0) {
+            int cursorX = this.screenOffsetX + SCREEN_PADDING + this.font.width(this.title.substring(0, cursorPos));
+            int cursorY = this.paintingOffsetY + paintingHeight + 7;
+
+            if (!underscore) {
+                fill(poseStack, cursorX, cursorY - 1, cursorX + 1, cursorY + 9, 0xFF000000);
+            } else {
+                this.font.draw(poseStack, "_", (float) cursorX, (float) cursorY, 0xFF000000);
+            }
+        }
+
     }
 
     private void setClipboard(String p_98148_) {

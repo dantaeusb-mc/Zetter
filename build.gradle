@@ -21,7 +21,7 @@ apply from: "https://moddingtutorials.org/applesilicon.gradle"
 apply plugin: 'maven-publish'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.20.1-1.16.5-beta'
+version = '0.20.2-1.16.5-rc'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
