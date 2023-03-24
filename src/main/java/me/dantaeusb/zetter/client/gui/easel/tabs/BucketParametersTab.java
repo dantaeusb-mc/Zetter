@@ -5,7 +5,10 @@ import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.BlendingWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.painting.parameters.*;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
+import me.dantaeusb.zetter.painting.parameters.IntensityParameterHolder;
+import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import net.minecraft.network.chat.Component;
 
 public class BucketParametersTab extends AbstractTab {

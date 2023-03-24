@@ -1,7 +1,10 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.storage.*;
+import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.CanvasDataType;
+import me.dantaeusb.zetter.storage.DummyCanvasData;
+import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;

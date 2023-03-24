@@ -2,8 +2,8 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.model.EaselModel;
-import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
+import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;

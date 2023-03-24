@@ -1,6 +1,10 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
+import com.google.common.collect.Lists;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Matrix4f;
+import com.mojang.math.Vector3f;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
@@ -8,10 +12,6 @@ import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;

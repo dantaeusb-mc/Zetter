@@ -1,9 +1,6 @@
 package me.dantaeusb.zetter.entity.item.state.representation;
 
-import net.minecraft.world.item.crafting.Ingredient;
-
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * Snapshots are complete copy of current canvas

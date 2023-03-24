@@ -3,8 +3,8 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 
 import javax.annotation.Nullable;

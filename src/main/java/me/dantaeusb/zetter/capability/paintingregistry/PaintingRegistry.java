@@ -1,12 +1,7 @@
 package me.dantaeusb.zetter.capability.paintingregistry;
 
-import me.dantaeusb.zetter.Zetter;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

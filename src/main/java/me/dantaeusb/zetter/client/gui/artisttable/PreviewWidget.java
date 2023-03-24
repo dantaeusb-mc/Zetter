@@ -1,18 +1,18 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.MultiBufferSource;
-import com.mojang.blaze3d.vertex.Tesselator;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;

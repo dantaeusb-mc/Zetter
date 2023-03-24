@@ -1,17 +1,15 @@
 package me.dantaeusb.zetter.painting.parameters;
 
 import me.dantaeusb.zetter.painting.Tools;
-import me.dantaeusb.zetter.painting.tools.Brush;
-import me.dantaeusb.zetter.painting.tools.Bucket;
-import me.dantaeusb.zetter.painting.tools.Pencil;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Tuple;
 import org.apache.commons.lang3.SerializationException;
 
-import javax.lang.model.type.PrimitiveType;
 import java.io.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class AbstractToolParameters implements Cloneable {

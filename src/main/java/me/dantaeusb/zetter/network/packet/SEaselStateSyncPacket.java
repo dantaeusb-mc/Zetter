@@ -11,7 +11,8 @@ import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**

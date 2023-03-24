@@ -20,8 +20,6 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.minecraft.world.item.Item.Properties;
-
 public class EaselItem extends Item
 {
     public EaselItem() {

@@ -10,7 +10,6 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;

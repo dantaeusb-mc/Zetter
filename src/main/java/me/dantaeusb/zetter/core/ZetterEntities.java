@@ -1,10 +1,10 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import net.minecraft.world.entity.MobCategory;
+import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;

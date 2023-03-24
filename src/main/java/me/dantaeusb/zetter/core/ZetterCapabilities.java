@@ -1,8 +1,8 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerProvider;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerProvider;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistryProvider;
 import net.minecraft.resources.ResourceLocation;

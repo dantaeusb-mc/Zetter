@@ -1,9 +1,9 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;

@@ -10,10 +10,10 @@ import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.renderer.GameRenderer;
-import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -21,7 +21,8 @@ import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
-import static com.mojang.blaze3d.platform.GlConst.*;
+import static com.mojang.blaze3d.platform.GlConst.GL_FUNC_ADD;
+import static com.mojang.blaze3d.platform.GlConst.GL_FUNC_SUBTRACT;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class CanvasWidget extends AbstractPaintingWidget implements Widget {

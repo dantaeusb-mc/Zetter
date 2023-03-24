@@ -1,21 +1,21 @@
 package me.dantaeusb.zetter.client.renderer;
 
+import com.google.common.collect.Maps;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Matrix4f;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import com.google.common.collect.Maps;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Timer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.client.Timer;
-import com.mojang.math.Matrix4f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 

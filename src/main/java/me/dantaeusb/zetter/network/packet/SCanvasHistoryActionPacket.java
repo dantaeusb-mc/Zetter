@@ -2,16 +2,13 @@ package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ClientHandler;
-import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.util.LogicalSidedProvider;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 /**

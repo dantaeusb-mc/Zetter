@@ -1,22 +1,20 @@
 package me.dantaeusb.zetter.item.crafting;
 
-import me.dantaeusb.zetter.Zetter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
-import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.util.GsonHelper;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
-
+import net.minecraft.util.GsonHelper;
+import net.minecraft.world.inventory.CraftingContainer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.level.Level;
 
 /**
  * Only for frames, toggle

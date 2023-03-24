@@ -1,8 +1,8 @@
 package me.dantaeusb.zetter.client.model;
 
+import com.google.common.collect.ImmutableList;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import com.google.common.collect.ImmutableList;
 import net.minecraft.client.model.ListModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -11,7 +11,6 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
 public class EaselModel<T extends EaselEntity> extends ListModel<T> {

@@ -25,7 +25,6 @@ import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.List;
 
 /**
  * This class is responsible for all canvas interactions for easels

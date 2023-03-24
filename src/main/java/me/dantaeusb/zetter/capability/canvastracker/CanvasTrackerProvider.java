@@ -1,9 +1,9 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.core.ZetterCapabilities;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;

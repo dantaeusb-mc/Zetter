@@ -6,7 +6,10 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 import java.util.stream.Stream;
 
 public class Bucket extends AbstractTool<BucketParameters> {

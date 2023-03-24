@@ -3,10 +3,10 @@ package me.dantaeusb.zetter.network.packet;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.network.ServerHandler;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
+
 import java.util.function.Supplier;
 
 public class CCanvasRequestPacket {

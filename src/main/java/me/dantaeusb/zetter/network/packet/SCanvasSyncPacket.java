@@ -8,11 +8,12 @@ import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.common.util.LogicalSidedProvider;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
-import java.util.function.Supplier;
+
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class SCanvasSyncPacket<T extends AbstractCanvasData> {
     public final String canvasCode;
