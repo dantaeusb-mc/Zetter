@@ -1,12 +1,16 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
+import com.google.common.collect.Maps;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.event.*;
+import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
+import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import com.google.common.collect.Maps;
+import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -14,7 +18,7 @@ import javax.annotation.Nullable;
 import java.util.BitSet;
 import java.util.Map;
 
-public class CanvasClientTracker implements CanvasTracker {
+public class CanvasClientTracker implements CanvasTracker, AutoCloseable {
     private Level level;
     Map<String, AbstractCanvasData> canvases = Maps.newHashMap();
     Map<String, Long> timestamps = Maps.newHashMap();
@@ -30,6 +34,23 @@ public class CanvasClientTracker implements CanvasTracker {
         }
 
         this.level = level;
+
+        for (int[] size : CanvasCombinationAction.paintingShapes) {
+            final int resolution = Helper.getResolution().getNumeric();
+            final int width = size[0];
+            final int height = size[1];
+
+            final String canvasCode = CanvasData.getDefaultCanvasCode(width, height);
+            final CanvasData canvasData = CanvasData.BUILDER.createFresh(
+                Helper.getResolution(),
+                width * resolution,
+                height * resolution
+            );
+            canvasData.setManaged(false);
+
+            this.canvases.put(canvasCode, canvasData);
+            CanvasRenderer.getInstance().addCanvas(canvasCode, canvasData);
+        }
     }
 
     @Override
@@ -96,6 +117,13 @@ public class CanvasClientTracker implements CanvasTracker {
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(removedCanvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
+    }
+
+    @Override
+    public void close() {
+        this.canvases.forEach((canvasCode, canvasData) -> {
+            this.unregisterCanvasData(canvasCode);
+        });
     }
 
     /*

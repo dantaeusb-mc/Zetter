@@ -13,7 +13,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class CanvasTrackerProvider implements ICapabilitySerializable<CompoundTag> {
-    private final Direction NO_SPECIFIC_SIDE = null;
     private final CanvasTracker canvasTracker;
 
     /**

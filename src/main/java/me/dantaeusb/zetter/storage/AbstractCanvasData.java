@@ -54,8 +54,8 @@ public abstract class AbstractCanvasData extends SavedData {
     /**
      *
      * @param resolution
-     * @param width
-     * @param height
+     * @param width in pixels
+     * @param height in pixels
      * @param color
      */
     public final void wrapData(Resolution resolution, int width, int height, byte[] color) {
