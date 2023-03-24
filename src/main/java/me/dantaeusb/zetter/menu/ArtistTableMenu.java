@@ -84,7 +84,6 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         protected void onContentsChanged(int slot) {
             ArtistTableMenu.this.combinedSlotChanged(this);
             super.onContentsChanged(slot);
-            //super.onContentsChanged(slot);
         }
     };
 
@@ -234,7 +233,6 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
         return this.splitHandler;
     }
 
-
     /**
      * Get mode from ContainerData
      * @return
@@ -249,6 +247,10 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
      * @param mode
      */
     public void setMode(Mode mode) {
+        if (this.getMode().equals(mode)) {
+            return;
+        }
+
         if (!this.canChangeMode()) {
             return;
         }
@@ -522,6 +524,10 @@ public class ArtistTableMenu extends Container implements ItemStackHandlerListen
             }
 
         }
+    }
+
+    public World getLevel() {
+        return this.level;
     }
 
     /**

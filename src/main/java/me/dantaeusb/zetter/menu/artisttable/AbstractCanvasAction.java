@@ -15,6 +15,12 @@ public abstract class AbstractCanvasAction {
     protected final ArtistTableMenu menu;
     protected final World level;
 
+    /**
+     * Split or combination process is ongoing
+     * and a lot of slots are changed
+     */
+    private boolean transaction = false;
+
     @Nullable
     protected DummyCanvasData canvasData;
 
@@ -44,6 +50,18 @@ public abstract class AbstractCanvasAction {
     public void onTakeSplit(PlayerEntity player, ItemStack stack) { }
 
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) { }
+
+    public void startTransaction(PlayerEntity player) {
+        this.transaction = true;
+    }
+
+    public void endTransaction(PlayerEntity player) {
+        this.transaction = false;
+    }
+
+    public boolean isInTransaction() {
+        return this.transaction;
+    }
 
     public enum State {
         EMPTY, // No items in crafting slots

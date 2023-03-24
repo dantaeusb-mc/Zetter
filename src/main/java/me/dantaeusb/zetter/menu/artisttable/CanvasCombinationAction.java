@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.menu.artisttable;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
@@ -266,7 +267,17 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
     @Override
     public void onChangedCombination(ItemStackHandler container) {
+        // If player takes the combined canvas, we do not need to update
+        // With this event
+        if (this.isInTransaction()) {
+            return;
+        }
+
         this.updateCanvasData(container);
+
+        if (this.menu.getLevel().isClientSide()) {
+            return;
+        }
 
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
@@ -291,6 +302,8 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         }
 
         if (!player.level.isClientSide()) {
+            this.startTransaction(player);
+
             CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
 
             if (this.hasColorData) {
@@ -311,22 +324,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 CanvasItem.setBlockSize(stack, this.rectangle.width, this.rectangle.height);
             }
 
-            for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-                ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
-
-                if (combinationStack.isEmpty()) {
-                    continue;
-                }
-
-                String canvasCode = CanvasItem.getCanvasCode(combinationStack);
-
-                // Cleanup IDs and grid
-                if (canvasCode != null) {
-                    canvasTracker.unregisterCanvasData(canvasCode);
-                }
-
-                this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
-            }
+            this.endTransaction(player);
         } else {
             CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.level);
 
@@ -351,6 +349,33 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             }
         }
     }
+
+    @Override
+    public void endTransaction(PlayerEntity player) {
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
+
+        for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
+            ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+
+            if (combinationStack.isEmpty()) {
+                continue;
+            }
+
+            String canvasCode = CanvasItem.getCanvasCode(combinationStack);
+
+            // Cleanup IDs and grid
+            if (canvasCode != null) {
+                canvasTracker.unregisterCanvasData(canvasCode);
+            }
+
+            this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
+        }
+
+        this.updateCanvasData(this.menu.getCombinationContainer());
+
+        super.endTransaction(player);
+    }
+
     /**
      * Call changed container to update output slot
      * @param canvasCode
