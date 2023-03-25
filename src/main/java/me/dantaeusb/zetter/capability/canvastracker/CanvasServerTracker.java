@@ -122,7 +122,6 @@ public class CanvasServerTracker implements CanvasTracker {
     @Nullable
     @SuppressWarnings("unchecked")
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
-        assert this.level.getServer() != null;
         return this.level.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
                 int canvasTypeInt = -1;
@@ -250,7 +249,6 @@ public class CanvasServerTracker implements CanvasTracker {
      */
 
     public void tick() {
-        assert this.level.getServer() != null;
         this.ticksFromLastSync++;
 
         if (this.ticksFromLastSync < 20) {
@@ -293,7 +291,11 @@ public class CanvasServerTracker implements CanvasTracker {
     }
 
     public void stopTrackingCanvas(UUID playerId, String canvasName) {
-        Vector<PlayerTrackingCanvas> trackingEntries = this.getTrackingEntries(canvasName);
+        if (!this.trackedCanvases.containsKey(canvasName)) {
+            return;
+        }
+
+        Vector<PlayerTrackingCanvas> trackingEntries = this.trackedCanvases.get(canvasName);
         trackingEntries.removeIf((PlayerTrackingCanvas entry) -> entry.playerId == playerId);
     }
 
