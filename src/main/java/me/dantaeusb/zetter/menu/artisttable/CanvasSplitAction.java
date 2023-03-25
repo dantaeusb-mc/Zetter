@@ -99,10 +99,6 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         this.updateCanvasData(combinedHandler);
 
-        if (this.menu.getLevel().isClientSide()) {
-            return;
-        }
-
         ItemStack combinedStack = combinedHandler.getStackInSlot(0);
 
         if (this.isReady()) {
