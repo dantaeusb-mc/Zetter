@@ -299,9 +299,9 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             return;
         }
 
-        if (!player.getLevel().isClientSide()) {
-            this.startTransaction(player);
+        this.startTransaction(player);
 
+        if (!player.getLevel().isClientSide()) {
             CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
 
             if (this.hasColorData) {
@@ -320,8 +320,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             } else {
                 CanvasItem.setBlockSize(stack, this.rectangle.width, this.rectangle.height);
             }
-
-            this.endTransaction(player);
         } else {
             CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.getLevel());
 
@@ -345,8 +343,15 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 }
             }
         }
+
+        this.endTransaction(player);
     }
 
+    /**
+     * When transaction ends, we need to cleanup canvas data
+     * from both client and server
+     * @param player
+     */
     @Override
     public void endTransaction(Player player) {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
