@@ -273,10 +273,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         this.updateCanvasData(container);
 
-        if (this.menu.getLevel().isClientSide()) {
-            return;
-        }
-
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
         // @todo: [MED] Can combine?
