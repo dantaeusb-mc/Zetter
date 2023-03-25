@@ -323,28 +323,6 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             } else {
                 CanvasItem.setBlockSize(stack, this.rectangle.width, this.rectangle.height);
             }
-        } else {
-            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.level);
-
-            for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-                // First we are removing item to avoid loading it's canvas on update
-                // otherwise, when server will push container update events with
-                // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
-                // One by one by every removed canvas and cause client to load
-                // textures for removed canvases again
-                ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
-
-                if (combinationStack.isEmpty()) {
-                    continue;
-                }
-
-                String canvasCode = CanvasItem.getCanvasCode(combinationStack);
-
-                // Cleanup IDs and grid
-                if (canvasCode != null) {
-                    canvasTracker.unregisterCanvasData(canvasCode);
-                }
-            }
         }
 
         this.endTransaction(player);
@@ -360,7 +338,12 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
 
         for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-            ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+            // First we are removing item to avoid loading it's canvas on update
+            // otherwise, when server will push container update events with
+            // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
+            // One by one by every removed canvas and cause client to load
+            // textures for removed canvases again
+            ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
 
             if (combinationStack.isEmpty()) {
                 continue;
