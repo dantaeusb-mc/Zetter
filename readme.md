@@ -12,7 +12,10 @@ Supported versions:
 * 1.19.2 (0.20 LTS),
 * 1.19.3 (master)
 
-Download: https://www.curseforge.com/minecraft/mc-mods/zetter
+Download with CF: https://www.curseforge.com/minecraft/mc-mods/zetter
+Download from Modrinth: https://modrinth.com/mod/zetter-painting-mod
+
+These are the **ONLY** official sources of the mod. Please avoid downloading from 3rd party sites.
 
 ### Contribute translation
 
