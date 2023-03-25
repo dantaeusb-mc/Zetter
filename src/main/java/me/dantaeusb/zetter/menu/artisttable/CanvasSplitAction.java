@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -19,6 +20,30 @@ import net.minecraftforge.items.ItemStackHandler;
 import java.nio.ByteBuffer;
 
 public class CanvasSplitAction extends AbstractCanvasAction {
+    /**
+     * As we display a preview of an action in the
+     * "reverse" crafting grid, we need to understand
+     * when there are preview canvases and when
+     * there are real canvases, which are crafted
+     * from either painted or blank canvases.
+     * We cannot rely on the fact that canvas is painted,
+     * as blank canvases can be combined and split too.
+     */
+    private final boolean[][] realCanvases = new boolean[][] {
+        {
+            false, false, false, false
+        },
+        {
+            false, false, false, false
+        },
+        {
+            false, false, false, false
+        },
+        {
+            false, false, false, false
+        }
+    };
+
     public CanvasSplitAction(ArtistTableMenu artistTableMenu, World level) {
         super(artistTableMenu, level);
     }
@@ -37,10 +62,22 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 return false;
             }
 
-            return this.menu.isSplitGridEmpty();
+            return this.noRealCanvases() && this.menu.isSplitGridEmpty();
         }
 
         return false;
+    }
+
+    public boolean noRealCanvases() {
+        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
+                if (this.realCanvases[y][x]) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     public boolean isReady() {
@@ -81,6 +118,10 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                     int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
 
+                    if (this.realCanvases[y][x]) {
+                        continue;
+                    }
+
                     if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
                         this.menu.getSplitHandler().setStackInSlot(slotNumber, new ItemStack(ZetterItems.CANVAS.get()));
                     } else {
@@ -97,6 +138,11 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
                 for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                     int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+
+                    if (this.realCanvases[y][x]) {
+                        continue;
+                    }
+
                     this.menu.getSplitHandler().setStackInSlot(slotNumber, ItemStack.EMPTY);
                 }
             }
@@ -184,21 +230,39 @@ public class CanvasSplitAction extends AbstractCanvasAction {
      * Remove the combined canvas, set the data for the
      * partial canvases on the grid
      *
+     * This is fucking monstrosity. I should not be that hard,
+     * yet I have no idea how to make it better.
+     *
+     * Also we iterate over grid three times, which could be redundant
+     *
      * @param player
      * @param takenStack
      */
     @Override
     public void onTakeSplit(PlayerEntity player, ItemStack takenStack) {
-        if (this.level.isClientSide()) {
-            // Nothing to do on client
-            return;
-        }
-
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
+
+        for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+            for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
+                int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+                ItemStack splitStack = this.menu.getSplitHandler().getStackInSlot(slotNumber);
+
+                if (this.realCanvases[y][x]) {
+                    this.realCanvases[y][x] = !splitStack.isEmpty();
+                }
+            }
+        }
 
         if (combinedStack.getItem() != ZetterItems.CANVAS.get() || !CanvasItem.isCompound(combinedStack)) {
             return;
         }
+
+        if (!this.noRealCanvases()) {
+            Zetter.LOG.error("Cannot take split canvas when there are still real canvases on the grid");
+            return;
+        }
+
+        this.startTransaction(player);
 
         int[] compoundCanvasSize = CanvasItem.getBlockSize(combinedStack);
         assert compoundCanvasSize != null;
@@ -208,89 +272,86 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         final int numericResolution = CanvasItem.getResolution(combinedStack);
 
-        int missingX = 0;
-        int missingY = 0;
-
-        // Canvas is empty, so split items are empty, too
-        // There's no need to assign data
-        if (CanvasItem.isEmpty(combinedStack)) {
-            // Remove split canvas item without triggering update
-            this.startTransaction(player);
-            this.endTransaction(player);
-
-            return;
-        }
-
-        // Get data from split canvas
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
-        final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
-
-        // Don't need that data for client, it'll request if needed
-        if (combinedCanvasData == null) {
-            Zetter.LOG.error("No canvas data found for item in combined slot");
-            return;
-        }
-
-        this.startTransaction(player);
-
         for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
                 int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
                 ItemStack splitStack = this.menu.getSplitHandler().getStackInSlot(slotNumber);
 
                 if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
-                    if (splitStack.isEmpty()) {
-                        missingX = x;
-                        missingY = y;
-                        continue;
-                    }
-
-                    String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
-                    CanvasData itemData = CanvasData.BUILDER.createWrap(
-                        canvasCode,
-                        combinedCanvasData.getResolution(),
-                        numericResolution,
-                        numericResolution,
-                        getPartialColorData(
-                            combinedCanvasData.getColorData(),
-                            numericResolution,
-                            x,
-                            y,
-                            compoundCanvasWidth,
-                            compoundCanvasHeight
-                        )
-                    );
-
-                    canvasTracker.registerCanvasData(canvasCode, itemData);
-
-                    CanvasItem.storeCanvasData(splitStack, canvasCode, itemData);
+                    this.realCanvases[y][x] = !splitStack.isEmpty();
                 }
             }
         }
 
-        // Set data for the picked item
-        String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
-        CanvasData itemData = CanvasData.BUILDER.createWrap(
-            canvasCode,
-            combinedCanvasData.getResolution(),
-            numericResolution,
-            numericResolution,
-            getPartialColorData(
-                combinedCanvasData.getColorData(),
-                numericResolution,
-                missingX,
-                missingY,
-                compoundCanvasWidth,
-                compoundCanvasHeight
-            )
-        );
+        if (!this.level.isClientSide()) {
+            // Get data from split canvas
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
 
-        canvasTracker.registerCanvasData(canvasCode, itemData);
+            final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
-        CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
+            if (combinedCanvasData != null) {
+                int missingX = 0;
+                int missingY = 0;
 
-        // Cleanup canvas ID
-        canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinedStack));
+                for (int y = 0; y < ArtistTableMenu.CANVAS_ROW_COUNT; y++) {
+                    for (int x = 0; x < ArtistTableMenu.CANVAS_COLUMN_COUNT; x++) {
+                        int slotNumber = y * ArtistTableMenu.CANVAS_COLUMN_COUNT + x;
+                        ItemStack splitStack = this.menu.getSplitHandler().getStackInSlot(slotNumber);
+
+                        if (x < compoundCanvasWidth && y < compoundCanvasHeight) {
+                            if (splitStack.isEmpty()) {
+                                missingX = x;
+                                missingY = y;
+                                continue;
+                            }
+
+                            this.realCanvases[y][x] = true;
+
+                            String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
+                            CanvasData itemData = CanvasData.BUILDER.createWrap(
+                                canvasCode,
+                                combinedCanvasData.getResolution(),
+                                numericResolution,
+                                numericResolution,
+                                getPartialColorData(
+                                    combinedCanvasData.getColorData(),
+                                    numericResolution,
+                                    x,
+                                    y,
+                                    compoundCanvasWidth,
+                                    compoundCanvasHeight
+                                )
+                            );
+
+                            canvasTracker.registerCanvasData(canvasCode, itemData);
+
+                            CanvasItem.storeCanvasData(splitStack, canvasCode, itemData);
+                        }
+                    }
+                }
+
+                // Set data for the picked item
+                String canvasCode = CanvasData.getCanvasCode(((CanvasServerTracker) canvasTracker).getFreeCanvasId());
+                CanvasData itemData = CanvasData.BUILDER.createWrap(
+                    canvasCode,
+                    combinedCanvasData.getResolution(),
+                    numericResolution,
+                    numericResolution,
+                    getPartialColorData(
+                        combinedCanvasData.getColorData(),
+                        numericResolution,
+                        missingX,
+                        missingY,
+                        compoundCanvasWidth,
+                        compoundCanvasHeight
+                    )
+                );
+
+                canvasTracker.registerCanvasData(canvasCode, itemData);
+
+                CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
+            }
+        }
 
         // Remove split canvas item without triggering update
         this.endTransaction(player);
@@ -298,7 +359,18 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
     @Override
     public void endTransaction(PlayerEntity player) {
+        ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
+
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
+        String canvasCode = CanvasItem.getCanvasCode(combinedStack);
+
+        // Cleanup ID
+        if (canvasCode != null) {
+            canvasTracker.unregisterCanvasData(canvasCode);
+        }
+
         this.menu.getCombinedHandler().setStackInSlot(0, ItemStack.EMPTY);
+
         this.updateCanvasData(this.menu.getCombinedHandler());
 
         super.endTransaction(player);

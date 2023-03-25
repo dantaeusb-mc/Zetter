@@ -301,9 +301,9 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             return;
         }
 
-        if (!player.level.isClientSide()) {
-            this.startTransaction(player);
+        this.startTransaction(player);
 
+        if (!player.level.isClientSide()) {
             CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
 
             if (this.hasColorData) {
@@ -323,39 +323,27 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
             } else {
                 CanvasItem.setBlockSize(stack, this.rectangle.width, this.rectangle.height);
             }
-
-            this.endTransaction(player);
-        } else {
-            CanvasClientTracker canvasTracker = (CanvasClientTracker) Helper.getLevelCanvasTracker(player.level);
-
-            for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-                // First we are removing item to avoid loading it's canvas on update
-                // otherwise, when server will push container update events with
-                // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
-                // One by one by every removed canvas and cause client to load
-                // textures for removed canvases again
-                ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
-
-                if (combinationStack.isEmpty()) {
-                    continue;
-                }
-
-                String canvasCode = CanvasItem.getCanvasCode(combinationStack);
-
-                // Cleanup IDs and grid
-                if (canvasCode != null) {
-                    canvasTracker.unregisterCanvasData(canvasCode);
-                }
-            }
         }
+
+        this.endTransaction(player);
     }
 
+    /**
+     * When transaction ends, we need to cleanup canvas data
+     * from both client and server
+     * @param player
+     */
     @Override
     public void endTransaction(PlayerEntity player) {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level);
 
         for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
-            ItemStack combinationStack = this.menu.getCombinationContainer().getStackInSlot(i);
+            // First we are removing item to avoid loading it's canvas on update
+            // otherwise, when server will push container update events with
+            // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
+            // One by one by every removed canvas and cause client to load
+            // textures for removed canvases again
+            ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
 
             if (combinationStack.isEmpty()) {
                 continue;
