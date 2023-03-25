@@ -353,8 +353,12 @@ public class CanvasSplitAction extends AbstractCanvasAction {
             CanvasItem.storeCanvasData(takenStack, canvasCode, itemData);
         }
 
-        // Cleanup canvas ID
-        canvasTracker.unregisterCanvasData(CanvasItem.getCanvasCode(combinedStack));
+        String canvasCode = CanvasItem.getCanvasCode(combinedStack);
+
+        // Cleanup ID
+        if (canvasCode != null) {
+            canvasTracker.unregisterCanvasData(canvasCode);
+        }
 
         // Remove split canvas item without triggering update
         this.endTransaction(player);
