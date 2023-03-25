@@ -122,6 +122,10 @@ public class CanvasServerTracker implements CanvasTracker {
     @Nullable
     @SuppressWarnings("unchecked")
     public <T extends AbstractCanvasData> T getCanvasData(String canvasCode) {
+        if (canvasCode == null) {
+            return null;
+        }
+
         return this.level.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
                 int canvasTypeInt = -1;
