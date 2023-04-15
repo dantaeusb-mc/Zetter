@@ -2,6 +2,9 @@ package me.dantaeusb.zetter.client.gui.overlay;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import me.dantaeusb.zetter.core.ZetterOverlays;
+import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.AbstractGui;
@@ -11,17 +14,29 @@ import net.minecraft.util.StringUtils;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
 
-public class PaintingInfoOverlay extends AbstractGui {
+public class PaintingInfoOverlay extends AbstractGui implements CanvasOverlay<PaintingData> {
     private static final ITextComponent BANNED_TEXT = new TranslationTextComponent("painting.zetter.banned");
 
     protected PaintingData paintingData = null;
     protected int overlayMessageTime = 0;
 
-    public void setPainting(PaintingData paintingData) {
-        this.paintingData = paintingData;
+    @Override
+    public String getId() {
+        return ZetterOverlays.PAINTING_INFO_OVERLAY;
+    }
+
+    @Override
+    public CanvasDataType<PaintingData> getType() {
+        return ZetterCanvasTypes.PAINTING.get();
+    }
+
+    @Override
+    public void setCanvasData(PaintingData canvasData) {
+        this.paintingData = canvasData;
         this.overlayMessageTime = 15 * 20;
     }
 
+    @Override
     public void hide() {
         this.paintingData = null;
     }
@@ -104,6 +119,7 @@ public class PaintingInfoOverlay extends AbstractGui {
         }
     }
 
+    @Override
     public void tick() {
         if (this.overlayMessageTime > 0) {
             --this.overlayMessageTime;

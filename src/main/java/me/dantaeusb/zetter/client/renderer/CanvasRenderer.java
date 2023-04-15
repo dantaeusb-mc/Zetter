@@ -303,8 +303,8 @@ public class CanvasRenderer implements AutoCloseable {
 
         /*
          * Updates a map {@link net.minecraft.client.gui.MapItemRenderer.Instance#mapTexture texture}
+         * Maybe update with asByteArray() instead of pixel-by-pixel?
          */
-
         private void updateCanvasTexture(AbstractCanvasData canvas) {
             for(int pixelY = 0; pixelY < canvas.getHeight(); pixelY++) {
                 for(int pixelX = 0; pixelX < canvas.getWidth(); pixelX++) {

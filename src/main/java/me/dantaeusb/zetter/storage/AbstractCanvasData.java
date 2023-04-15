@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.storage;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraft.world.storage.WorldSavedData;
@@ -147,6 +148,10 @@ public abstract class AbstractCanvasData extends WorldSavedData {
      * @return
      */
     abstract public boolean isEditable();
+
+    public @Nullable ResourceLocation getOverlay() {
+        return null;
+    }
 
     public byte[] getColorData() {
         return this.color.clone();

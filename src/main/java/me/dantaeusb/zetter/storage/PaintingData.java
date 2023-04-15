@@ -2,12 +2,12 @@ package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterOverlays;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.server.ServerWorld;
 
 import java.nio.ByteBuffer;
@@ -21,7 +21,8 @@ import java.util.UUID;
 public class PaintingData extends AbstractCanvasData {
     public static final String TYPE = "painting";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
-
+    public static final ResourceLocation OVERLAY_KEY = new ResourceLocation(Zetter.MOD_ID, ZetterOverlays.PAINTING_INFO_OVERLAY);
+    
     public static final CanvasDataBuilder<PaintingData> BUILDER = new PaintingDataBuilder();
 
     public static final int MAX_GENERATION = 2;
@@ -100,11 +101,12 @@ public class PaintingData extends AbstractCanvasData {
         return false;
     }
 
-    public PaintingInfoOverlay getOverlay() {
-        return ZetterOverlays.PAINTING_INFO;
+    @Override
+    public ResourceLocation getOverlay() {
+        return OVERLAY_KEY;
     }
 
-    public CanvasDataType<? extends PaintingData> getType() {
+    public CanvasDataType<PaintingData> getType() {
         return ZetterCanvasTypes.PAINTING.get();
     }
 

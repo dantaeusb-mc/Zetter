@@ -5,7 +5,9 @@ import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.registries.*;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.IForgeRegistry;
+import net.minecraftforge.registries.RegistryBuilder;
 
 import java.util.function.Supplier;
 
