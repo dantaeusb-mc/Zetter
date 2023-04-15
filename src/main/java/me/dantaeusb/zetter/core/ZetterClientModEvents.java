@@ -1,9 +1,11 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
+import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
+import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
-import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
@@ -106,7 +108,13 @@ public class ZetterClientModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void overlayViewEvent(PaintingInfoOverlayEvent event) {
-        ZetterOverlays.PAINTING_INFO.hide();
+    public static void overlayViewEvent(CanvasOverlayViewEvent<?> event) {
+        if (event.canvasData instanceof PaintingData && ZetterOverlays.OVERLAYS.containsKey(PaintingData.OVERLAY_KEY)) {
+            CanvasOverlay<?> overlay = ZetterOverlays.OVERLAYS.get(PaintingData.OVERLAY_KEY);
+
+            if (overlay instanceof PaintingInfoOverlay) {
+                ((PaintingInfoOverlay) overlay).setCanvasData((PaintingData) event.canvasData);
+            }
+        }
     }
 }

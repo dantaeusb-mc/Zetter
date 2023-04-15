@@ -127,6 +127,9 @@ public class Helper {
      * could be called from server or client
      * Sanitizes name a bit
      *
+     * @todo: Use LWJGL to save image on client?
+     * @see com.mojang.blaze3d.platform.NativeImage#writeToFile
+     *
      * @param canvasCode
      * @param paintingData
      */

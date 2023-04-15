@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import net.minecraft.Util;
@@ -40,7 +41,9 @@ public class ZetterGameEvents {
             CanvasRenderer.getInstance().update(Util.getMillis());
         }
 
-        ZetterOverlays.PAINTING_INFO.tick();
+        for (CanvasOverlay<?> overlay : ZetterOverlays.OVERLAYS.values()) {
+            overlay.tick();
+        }
     }
 
     /**

@@ -16,16 +16,16 @@ public class ZetterCanvasTypes
 
     public static final RegistryObject<CanvasDataType<DummyCanvasData>> DUMMY = CANVAS_TYPES.register(DummyCanvasData.TYPE, () -> new CanvasDataType<>(
         new ResourceLocation(Zetter.MOD_ID, DummyCanvasData.TYPE),
-        DummyCanvasData.BUILDER
-    ));
+        DummyCanvasData.BUILDER,
+        DummyCanvasData.class));
     public static final RegistryObject<CanvasDataType<CanvasData>> CANVAS = CANVAS_TYPES.register(CanvasData.TYPE, () -> new CanvasDataType<>(
         new ResourceLocation(Zetter.MOD_ID, CanvasData.TYPE),
-        CanvasData.BUILDER
-    ));
+        CanvasData.BUILDER,
+        CanvasData.class));
     public static final RegistryObject<CanvasDataType<PaintingData>> PAINTING = CANVAS_TYPES.register(PaintingData.TYPE, () -> new CanvasDataType<>(
         new ResourceLocation(Zetter.MOD_ID, PaintingData.TYPE),
-        PaintingData.BUILDER
-    ));
+        PaintingData.BUILDER,
+        PaintingData.class));
 
     public static void init(IEventBus bus) {
         CANVAS_TYPES.register(bus);

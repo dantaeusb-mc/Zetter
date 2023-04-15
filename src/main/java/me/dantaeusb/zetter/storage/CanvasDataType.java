@@ -7,13 +7,15 @@ import net.minecraft.resources.ResourceLocation;
 public class CanvasDataType<T extends AbstractCanvasData> {
     public final ResourceLocation resourceLocation;
     public final CanvasDataBuilder<T> builder;
+    public final Class<T> clazz;
 
     public CanvasDataType(
             ResourceLocation resourceLocation,
-            CanvasDataBuilder<T> builder
-    ) {
+            CanvasDataBuilder<T> builder,
+            Class<T> clazz) {
         this.resourceLocation = resourceLocation;
         this.builder = builder;
+        this.clazz = clazz;
     }
 
     public T createFresh(AbstractCanvasData.Resolution resolution, int width, int height) {
