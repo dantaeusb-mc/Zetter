@@ -43,6 +43,8 @@ public class ZetterSetup
 
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
             new ClientPaintingToolParameters();
+
+            ZetterOverlays.register();
         });
     }
 
