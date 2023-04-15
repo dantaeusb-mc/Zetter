@@ -2,6 +2,9 @@ package me.dantaeusb.zetter.client.gui.overlay;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import me.dantaeusb.zetter.core.ZetterOverlays;
+import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -10,19 +13,30 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.StringUtil;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
-public class PaintingInfoOverlay implements IGuiOverlay {
+public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
     private static final Component BANNED_TEXT = Component.translatable("painting.zetter.banned");
 
     protected PaintingData paintingData = null;
     protected int overlayMessageTime = 0;
 
-    public void setPainting(PaintingData paintingData) {
-        this.paintingData = paintingData;
+    @Override
+    public String getId() {
+        return ZetterOverlays.PAINTING_INFO_OVERLAY;
+    }
+
+    @Override
+    public CanvasDataType<PaintingData> getType() {
+        return ZetterCanvasTypes.PAINTING.get();
+    }
+
+    @Override
+    public void setCanvasData(PaintingData canvasData) {
+        this.paintingData = canvasData;
         this.overlayMessageTime = 15 * 20;
     }
 
+    @Override
     public void hide() {
         this.paintingData = null;
     }
@@ -98,6 +112,7 @@ public class PaintingInfoOverlay implements IGuiOverlay {
         }
     }
 
+    @Override
     public void tick() {
         if (this.overlayMessageTime > 0) {
             --this.overlayMessageTime;

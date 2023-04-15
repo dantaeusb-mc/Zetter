@@ -3,7 +3,11 @@ package me.dantaeusb.zetter.core;
 import com.google.common.collect.Sets;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
+import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -11,6 +15,7 @@ import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -111,5 +116,14 @@ public class ClientHelper {
     private static void openUri(URI uri)
     {
         Util.getPlatform().openUri(uri);
+    }
+
+    public static void showOverlay(AbstractCanvasData data) {
+        for (CanvasOverlay<?> overlay : ZetterOverlays.OVERLAYS.values()) {
+            overlay.hide();
+        }
+
+        CanvasOverlayViewEvent<?> viewEvent = new CanvasOverlayViewEvent<>(data);
+        MinecraftForge.EVENT_BUS.post(viewEvent);
     }
 }

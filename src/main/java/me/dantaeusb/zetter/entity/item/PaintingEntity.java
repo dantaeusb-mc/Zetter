@@ -1,10 +1,11 @@
 package me.dantaeusb.zetter.entity.item;
 
 import com.google.common.collect.Maps;
+import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.event.PaintingInfoOverlayEvent;
+import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -211,10 +212,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
             return InteractionResult.FAIL;
         }
 
-        PaintingInfoOverlayEvent viewEvent = new PaintingInfoOverlayEvent(paintingData.getOverlay());
-        MinecraftForge.EVENT_BUS.post(viewEvent);
-
-        paintingData.getOverlay().setPainting(paintingData);
+        ClientHelper.showOverlay(paintingData);
 
         return InteractionResult.CONSUME;
     }
