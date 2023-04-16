@@ -83,7 +83,7 @@ public class PaintingData extends AbstractCanvasData {
         return OVERLAY_KEY;
     }
 
-    public CanvasDataType<PaintingData> getType() {
+    public CanvasDataType<? extends PaintingData> getType() {
         return ZetterCanvasTypes.PAINTING.get();
     }
 
