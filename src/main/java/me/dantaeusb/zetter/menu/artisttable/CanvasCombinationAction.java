@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -12,7 +11,9 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -57,7 +58,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     public CanvasCombinationAction(ArtistTableMenu menu, Level level) {
         super(menu, level);
 
-        this.updateCanvasData(menu.getCombinationContainer());
+        this.updateCanvasData(menu.getCombinationHandler());
     }
 
     /**
@@ -330,13 +331,13 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
     public void endTransaction(Player player) {
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
 
-        for (int i = 0; i < this.menu.getCombinationContainer().getSlots(); i++) {
+        for (int i = 0; i < this.menu.getCombinationHandler().getSlots(); i++) {
             // First we are removing item to avoid loading it's canvas on update
             // otherwise, when server will push container update events with
             // CanvasRenderer.getInstance().queueCanvasTextureUpdate(...)
             // One by one by every removed canvas and cause client to load
             // textures for removed canvases again
-            ItemStack combinationStack = this.menu.getCombinationContainer().extractItem(i, 64, false);
+            ItemStack combinationStack = this.menu.getCombinationHandler().extractItem(i, 64, false);
 
             if (combinationStack.isEmpty()) {
                 continue;
@@ -349,10 +350,10 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
                 canvasTracker.unregisterCanvasData(canvasCode);
             }
 
-            this.menu.getCombinationContainer().setStackInSlot(i, ItemStack.EMPTY);
+            this.menu.getCombinationHandler().setStackInSlot(i, ItemStack.EMPTY);
         }
 
-        this.updateCanvasData(this.menu.getCombinationContainer());
+        this.updateCanvasData(this.menu.getCombinationHandler());
 
         super.endTransaction(player);
     }
@@ -365,7 +366,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
      */
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
-        this.onChangedCombination(this.menu.getCombinationContainer());
+        this.onChangedCombination(this.menu.getCombinationHandler());
     }
 
     public boolean isReady() {

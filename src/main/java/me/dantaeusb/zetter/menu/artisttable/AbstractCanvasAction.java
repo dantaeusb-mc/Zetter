@@ -49,7 +49,7 @@ public abstract class AbstractCanvasAction {
 
     public void onTakeSplit(Player player, ItemStack stack) { }
 
-    public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) { }
+    abstract public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp);
 
     public void startTransaction(Player player) {
         this.transaction = true;
@@ -61,6 +61,16 @@ public abstract class AbstractCanvasAction {
 
     public boolean isInTransaction() {
         return this.transaction;
+    }
+
+    /**
+     * Throw away all items in crafting slots
+     * @param from
+     * @param to
+     * @param player
+     */
+    public void discard(ItemStackHandler from, ItemStackHandler to, Player player) {
+
     }
 
     public enum State {
