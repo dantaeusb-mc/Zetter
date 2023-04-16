@@ -12,6 +12,8 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -378,6 +380,47 @@ public class CanvasSplitAction extends AbstractCanvasAction {
     @Override
     public void handleCanvasSync(String canvasCode, CanvasData canvasData, long timestamp) {
         this.onChangedCombined(this.menu.getCombinedHandler());
+    }
+
+    private boolean isCanvasReal(int index) {
+        return this.isCanvasReal(index % ArtistTableMenu.CANVAS_COLUMN_COUNT, index / ArtistTableMenu.CANVAS_COLUMN_COUNT);
+    }
+
+    private boolean isCanvasReal(int x, int y) {
+        return this.realCanvases[y][x];
+    }
+
+    @Override
+    public void discard(ItemStackHandler from, ItemStackHandler to, Player player) {
+        ItemStack combinedStack = from.extractItem(0, from.getSlotLimit(0), false);
+
+        if (!player.isAlive() || player instanceof ServerPlayer && ((ServerPlayer)player).hasDisconnected()) {
+            if (!combinedStack.isEmpty()) {
+                player.drop(combinedStack, false);
+            }
+
+            for(int i = 0; i < to.getSlots(); ++i) {
+                ItemStack extractedStack = to.extractItem(i, to.getSlotLimit(i), false);
+
+                if (!extractedStack.isEmpty() && this.isCanvasReal(i)) {
+                    player.drop(extractedStack, false);
+                }
+            }
+        } else if (player instanceof ServerPlayer) {
+            Inventory inventory = player.getInventory();
+
+            if (!combinedStack.isEmpty()) {
+                inventory.placeItemBackInInventory(combinedStack);
+            }
+
+            for(int i = 0; i < to.getSlots(); ++i) {
+                ItemStack extractedStack = to.extractItem(i, to.getSlotLimit(i), false);
+
+                if (!extractedStack.isEmpty() && this.isCanvasReal(i)) {
+                    inventory.placeItemBackInInventory(extractedStack);
+                }
+            }
+        }
     }
 
     private static byte[] getPartialColorData(byte[] colorData, int resolution, int blockX, int blockY, int blockWidth, int blockHeight) {
