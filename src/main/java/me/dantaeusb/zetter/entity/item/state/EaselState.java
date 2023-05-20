@@ -35,7 +35,7 @@ import java.util.*;
  */
 public class EaselState {
     public static int SNAPSHOT_HISTORY_SIZE = 10;
-    public static int ACTION_HISTORY_SIZE = 200;
+    public static int ACTION_HISTORY_SIZE = 10;//200;
 
     // Keep history and snapshots for 30 minutes of inactivity
     public static int FREEZE_TIMEOUT = (Zetter.DEBUG_MODE ? 1 : 30) * 60 * 1000;
@@ -73,6 +73,8 @@ public class EaselState {
     private final ArrayList<Player> players = new ArrayList<>();
     // Allocate 110%
     private final ArrayList<CanvasAction> actions = new ArrayList<>(ACTION_HISTORY_SIZE + (int) (ACTION_HISTORY_SIZE * 0.1f));
+    // Only for client, as the last action is not necessarily the action current client is doing
+    private @Nullable CanvasAction currentClientAction = null;
 
     // Check the last items we sent to player, to avoid re-sending
     private final HashMap<UUID, Integer> playerLastSyncedAction = new HashMap<>();
@@ -305,6 +307,7 @@ public class EaselState {
 
         if (tool.getTool().shouldAddAction(this.getCanvasData(), parameters, posX, posY, lastX, lastY)) {
             this.wipeCanceledActionsAndDiscardSnapshots();
+            this.cleanupActionHistory();
 
             if (tool.getTool().hasEffect()) {
                 this.unfreeze();
@@ -334,7 +337,11 @@ public class EaselState {
 
     /**
      * When new action is created, history becomes non-linear
-     * All canceled actions get discarded
+     * All canceled actions should be discarded _before_
+     *
+     * [!!!]
+     * This method will not do anything if the last action
+     * is not canceled!
      *
      * Client and server
      */
@@ -353,9 +360,8 @@ public class EaselState {
             if (action.isCanceled()) {
                 firstRemovedAction = action;
                 actionsIterator.remove();
-            } else if(firstNonRemovedAction == null) {
-                firstNonRemovedAction = action;
             } else {
+                firstNonRemovedAction = action;
                 break;
             }
         }
@@ -391,9 +397,8 @@ public class EaselState {
             if (snapshot.timestamp > firstRemovedAction.getStartTime()) {
                 firstRemovedSnapshot = snapshot;
                 snapshotIterator.remove();
-            } else if (firstNonRemovedSnapshot == null) {
-                firstNonRemovedSnapshot = snapshot;
             } else {
+                firstNonRemovedSnapshot = snapshot;
                 break;
             }
         }
@@ -441,21 +446,22 @@ public class EaselState {
      * @param posY
      */
     private void recordAction(UUID playerId, Tools tool, int color, AbstractToolParameters parameters, float posX, float posY) {
-        CanvasAction lastAction = this.getLastAction();
-
-        if (lastAction == null || lastAction.isCommitted()) {
-            lastAction = this.createAction(playerId, tool, color, parameters);
-        } else if (!lastAction.canContinue(playerId, tool, color, parameters)) {
-            lastAction.commit();
-            lastAction = this.createAction(playerId, tool, color, parameters);
+        if (this.currentClientAction == null || this.currentClientAction.isCommitted()) {
+            this.currentClientAction = this.createAction(playerId, tool, color, parameters);
+        } else if (!this.currentClientAction.canContinue(playerId, tool, color, parameters)) {
+            this.currentClientAction.commit();
+            this.currentClientAction = this.createAction(playerId, tool, color, parameters);
         }
 
-        lastAction.addFrame(posX, posY);
+        this.currentClientAction.addFrame(posX, posY);
     }
 
     /**
      * Create new action buffer, if we can't write to existing, and
      * submit previous to the server
+     *
+     * This method does not track what will happen with the current action.
+     * Always finalize it if needed before calling this method!
      *
      * Client-only
      * @param playerId
@@ -465,14 +471,8 @@ public class EaselState {
      * @return
      */
     private CanvasAction createAction(UUID playerId, Tools tool, int color, AbstractToolParameters parameters) {
-        final CanvasAction lastAction = this.getLastAction();
-
         if (!tool.getTool().hasEffect()) {
             throw new IllegalStateException("Cannot create non-publishable action");
-        }
-
-        if (lastAction != null && !lastAction.isCommitted()) {
-            lastAction.commit();
         }
 
         CanvasAction newAction;
@@ -1091,7 +1091,7 @@ public class EaselState {
      * Client-only
      */
     public void performHistorySyncClient(boolean forceCommit) {
-        final Queue<CanvasAction> unsentActions = new ArrayDeque<>();
+        final ArrayDeque<CanvasAction> unsentActions = new ArrayDeque<>();
         ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
 
         while(actionsIterator.hasPrevious()) {
@@ -1115,7 +1115,14 @@ public class EaselState {
         }
 
         if (!unsentActions.isEmpty()) {
-            CCanvasActionPacket paintingFrameBufferPacket = new CCanvasActionPacket(this.easel.getId(), unsentActions);
+            final Queue<CanvasAction> unsentActionsInOrder = new ArrayDeque<>();
+            Iterator<CanvasAction> descendingIterator = unsentActions.descendingIterator();
+
+            while(descendingIterator.hasNext()) {
+                unsentActionsInOrder.add(descendingIterator.next());
+            }
+
+            CCanvasActionPacket paintingFrameBufferPacket = new CCanvasActionPacket(this.easel.getId(), unsentActionsInOrder);
             ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
 
             for (CanvasAction unsentAction : unsentActions) {
@@ -1284,6 +1291,19 @@ public class EaselState {
             return;
         }
 
+        if (Zetter.DEBUG_MODE && Zetter.DEBUG_SERVER) {
+            long lastActionTimestamp = 0;
+
+            for (CanvasAction action : newActions) {
+                if (action.getStartTime() > lastActionTimestamp) {
+                    lastActionTimestamp = action.getStartTime();
+                } else {
+                    Zetter.LOG.warn("Got action queue with non-ascending timestamps");
+                    return;
+                }
+            }
+        }
+
         if (!this.isCanvasInitialized()) {
             this.initializeCanvas(newActions.peek().getStartTime());
         }
@@ -1356,6 +1376,17 @@ public class EaselState {
 
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_SERVER) {
             Zetter.LOG.debug("Processed actions sync from client");
+
+            long lastActionTimestamp = 0;
+
+            for (CanvasAction action : this.actions) {
+                if (action.getStartTime() > lastActionTimestamp) {
+                    lastActionTimestamp = action.getStartTime();
+                } else {
+                    Zetter.LOG.warn("Sorted action buffer with non-ascending timestamps");
+                    return;
+                }
+            }
         }
     }
 
@@ -1465,19 +1496,27 @@ public class EaselState {
                 continue;
             }
 
-            // Fast-forward client actions to the one that is made at the same
-            // time or later than the first unsynced action
+            /**
+             * Fast-forward client actions to the one that is made at the same
+             * time or later than the first unsynced action.
+             * When only one player is painting, it should happen only once,
+             * because the actions should match and sent periodically, meaning
+             * that client action is always the last synced action
+             * and received actions should mark newer actions as sync.
+             * Not a single received action should be made before the last
+             * synced action.
+             */
             if (unsyncedAction.getStartTime() > clientAction.getStartTime()) {
                 if (++fastForwards > 1) {
                     Zetter.LOG.warn("Fast-forwarding actions without mark sync! Some actions were lost?");
                 }
 
                 while (actionsIterator.hasNext()) {
-                    if (clientAction.getStartTime() >= unsyncedAction.getStartTime()) {
+                    clientAction = actionsIterator.next();
+
+                    if (unsyncedAction.getStartTime() <= clientAction.getStartTime()) {
                         break;
                     }
-
-                    clientAction = actionsIterator.next();
                 }
             }
 
@@ -1485,7 +1524,6 @@ public class EaselState {
             // That server has this action
             if (clientAction.id == unsyncedAction.id) {
                 clientAction.setSync();
-                clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             } else {
                 if (this.findAndReplaceAction(unsyncedAction.id, unsyncedAction) != null) {
                     Zetter.LOG.warn("Duplicating action! Replacing.");
@@ -1493,11 +1531,20 @@ public class EaselState {
                     continue;
                 }
 
+                if (unsyncedAction.isCanceled() && !clientAction.isCanceled()) {
+                    Zetter.LOG.debug("Skipping received canceled action, as client has newer non-canceled action");
+                    clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
+                    continue;
+                }
+
+                // Iterator is always after current item that we've checked
+                // So we need to go back to add item before current
+                actionsIterator.previous();
                 actionsIterator.add(unsyncedAction);
                 addedActions++;
-
-                clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             }
+
+            clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
         } while (unsyncedIterator.hasNext());
 
         this.unfreeze();
@@ -1514,6 +1561,23 @@ public class EaselState {
 
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
             Zetter.LOG.debug("Processed actions sync from server");
+
+            for (CanvasAction action : this.actions) {
+                if (!action.isSync()) {
+                    Zetter.LOG.debug("Unsynced action: " + action.id);
+                }
+            }
+
+            long lastActionTimestamp = 0;
+
+            for (CanvasAction action : this.actions) {
+                if (action.getStartTime() > lastActionTimestamp) {
+                    lastActionTimestamp = action.getStartTime();
+                } else {
+                    Zetter.LOG.warn("Sorted action buffer with non-ascending timestamps");
+                    return;
+                }
+            }
         }
     }
 
@@ -1534,6 +1598,10 @@ public class EaselState {
      * @param packetTimestamp
      */
     public void processWeakSnapshotClient(String canvasCode, CanvasData canvasData, long packetTimestamp) {
+        if (Zetter.DEBUG_NO_WEAK_SNAPSHOTS) {
+            return;
+        }
+
         CanvasSnapshot lastSnapshot = this.getLastSnapshot();
 
         // If not much happened since last snapshot, ignore this
@@ -1623,6 +1691,14 @@ public class EaselState {
             return this.actions.listIterator();
         } else {
             return this.actions.listIterator(this.actions.size());
+        }
+    }
+
+    private @Nullable CanvasAction getCurrentAction() {
+        if (this.actions.isEmpty()) {
+            return null;
+        } else {
+            return this.currentClientAction;
         }
     }
 

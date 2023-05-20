@@ -16,6 +16,8 @@ displayName="Zetter"
 
 displayURL="https://www.curseforge.com/minecraft/mc-mods/zetter"
 
+updateJSONURL = "https://api.modrinth.com/updates/ZmLgjf6f/forge_updates.json"
+
 logoFile="zetter.png"
 
 credits='''
