@@ -27,7 +27,7 @@ public class CanvasAction {
     public static final int MAX_ACTIONS_IN_BUFFER = 100;
     public static final long MAX_TIME = 5000L;
 
-    private static final long MAX_INACTIVE_TIME = 750L;
+    private static final long MAX_INACTIVE_TIME = 500L;
 
     public final int id;
 

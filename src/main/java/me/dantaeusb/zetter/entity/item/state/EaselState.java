@@ -990,8 +990,9 @@ public class EaselState {
 
     /**
      * Should we create a new snapshot
-     * we should if players made more than
+     * we should if players made more actions than
      * MAX_ACTIONS_BEFORE_SNAPSHOT since last snapshot was made
+     * Typically that means we will make a snapshot every 20 actions
      *
      * Server-only
      * @return
@@ -1021,7 +1022,7 @@ public class EaselState {
                 continue;
             }
 
-            actionsSinceSnapshot += paintingActionBuffer.countActions();
+            actionsSinceSnapshot++;
         }
 
         return actionsSinceSnapshot >= MAX_ACTIONS_BEFORE_SNAPSHOT;

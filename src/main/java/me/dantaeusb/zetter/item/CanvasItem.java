@@ -62,9 +62,10 @@ public class CanvasItem extends Item
             }
 
             String canvasCode = getCanvasCode(canvas);
-            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
 
-            if (canvasData != null) {
+            //CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
+
+            /*if (canvasData != null) {
                 // If data is loaded, just show screen
                 ClientHelper.openCanvasScreen(
                         player,
@@ -72,13 +73,14 @@ public class CanvasItem extends Item
                         canvasData,
                         hand
                 );
-            } else {
-                // If data is not loaded, request and show screen after
-                CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(canvasCode, hand);
-                Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
-                ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
-            }
+            } else {*/
 
+            // We always request data from server to make sure that
+            // The player sees correct version before signing in case of desync
+
+            CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(canvasCode, hand);
+            Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
+            ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
         }
         ItemStack itemstack = player.getItemInHand(hand);
         player.openItemGui(itemstack, hand);
