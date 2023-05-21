@@ -43,7 +43,12 @@ public class EaselState {
     private final int MAX_ACTIONS_BEFORE_SNAPSHOT = ACTION_HISTORY_SIZE / SNAPSHOT_HISTORY_SIZE;
 
     public static int CLIENT_SNAPSHOT_HISTORY_SIZE = 50;
-    private static int MAX_LATENCY = 500;
+    private static int SYNC_INTERVAL = 1000;
+    private static int TICK_INTERVAL = 50; // 20 TPM
+    private static long MAX_LATENCY = 500;
+    private static long PROCESSING_WINDOW = SYNC_INTERVAL + MAX_LATENCY + CanvasAction.MAX_TIME;
+
+    private static int SYNC_TICKS = SYNC_INTERVAL / TICK_INTERVAL;
 
     private final EaselEntity easel;
     private List<EaselStateListener> listeners;
@@ -219,7 +224,7 @@ public class EaselState {
         }
 
         if (this.easel.getLevel().isClientSide()) {
-            if (this.tick % 20 == 0) {
+            if (this.tick % SYNC_TICKS == 0) {
                 this.performHistorySyncClient(false);
             }
         } else {
@@ -228,12 +233,13 @@ public class EaselState {
                 return;
             }
 
-            // Every 10 seconds check if we need a snapshot
-            if (this.tick % 200 == 0) {
+            // Every 5 seconds check if we need a snapshot
+            if (this.tick % (SYNC_TICKS * 5) == 0) {
                 this.updateSnapshots();
             }
+
             // Every second send sync
-            if (this.tick % 20 == 0) {
+            if (this.tick % SYNC_TICKS == 0) {
                 this.performHistorySyncServer();
             }
         }
@@ -557,7 +563,7 @@ public class EaselState {
         // Drop things but not sync yet
         this.reset(false);
 
-        this.snapshots.add(CanvasSnapshot.createServerInitializationSnapshot(canvasData.getColorData(), timestamp - MAX_LATENCY - 1L));
+        this.snapshots.add(CanvasSnapshot.createServerSnapshot(canvasData.getColorData(), timestamp - MAX_LATENCY - 1L));
 
         if (this.listeners != null) {
             for(EaselStateListener listener : this.listeners) {
@@ -846,29 +852,22 @@ public class EaselState {
      * From that snapshot, canvas state will be restored and actions applied
      * in submitted order
      */
-    public void recollectPaintingData() {
+    public void recollectPaintingData(long timestamp) {
         CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(true);
         CanvasSnapshot latestSnapshot;
 
-        int latency = 0;
-
-        if (this.easel.getLevel().isClientSide()) {
-            ClientPacketListener connection = Minecraft.getInstance().getConnection();
-            assert connection != null;
-            assert Minecraft.getInstance().player != null;
-            latency = Math.max(MAX_LATENCY, connection.getPlayerInfo(Minecraft.getInstance().player.getUUID()).getLatency());
-        }
-
         if (firstCanceledAction != null) {
-            latestSnapshot = this.getSnapshotBefore(firstCanceledAction.getStartTime() - latency);
-        } else if (this.sync && this.getLastAction() != null) {
+            latestSnapshot = this.getSnapshotBefore(
+                Math.min(timestamp, firstCanceledAction.getStartTime())
+            );
+        } else {
             // We CANNOT just use last snapshot, because it might have been captured "on a different timeline"
             // Where some actions which are no longer in history are applied
             // But to avoid visible "history fast-forward", we do not use that until history is
             // fully synchronized
-            latestSnapshot = this.getSnapshotBefore(this.getLastAction().getStartTime() - latency);
-        } else {
-            latestSnapshot = this.getLastSnapshot();
+            latestSnapshot = this.getSnapshotBefore(
+                timestamp
+            );
         }
 
         if (latestSnapshot == null) {
@@ -911,7 +910,7 @@ public class EaselState {
                         !action.isCanceled() && ( // If not canceled and
                             !action.isCommitted()  // not committed
                             || !action.isSent() // or not sent
-                            || action.getCommitTime() > latestSnapshot.timestamp - latency // or committed before snapshot was created
+                            || action.getCommitTime() > latestSnapshot.timestamp // or committed after snapshot
                         )
                     ) {
                         this.applyAction(action, false);
@@ -931,6 +930,10 @@ public class EaselState {
         }
 
         this.markDesync();
+    }
+
+    public void recollectPaintingData() {
+        this.recollectPaintingData(System.currentTimeMillis());
     }
 
     /**
@@ -997,6 +1000,8 @@ public class EaselState {
             return true;
         }
 
+        long authoritativeTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
+
         CanvasSnapshot lastSnapshot = this.getLastSnapshot();
         assert lastSnapshot != null;
 
@@ -1009,6 +1014,10 @@ public class EaselState {
 
             if (paintingActionBuffer.getStartTime() < lastSnapshot.timestamp) {
                 break;
+            }
+
+            if (paintingActionBuffer.getStartTime() > authoritativeTimestamp) {
+                continue;
             }
 
             actionsSinceSnapshot += paintingActionBuffer.countActions();
@@ -1027,8 +1036,17 @@ public class EaselState {
         assert this.getCanvasData() != null;
         if (this.easel.getLevel().isClientSide()) {
             this.snapshots.add(CanvasSnapshot.createWeakSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
+        } else if (this.snapshots.isEmpty()) {
+            this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
         } else {
-            this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData()));
+            // Restore painting to state at which it could not be changed
+            // (as processing window defines timeout for new actions, we're
+            // sure that no new actions will be added to buffer before that timestamp)
+            long authoritativeTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
+            this.recollectPaintingData(authoritativeTimestamp);
+            this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), authoritativeTimestamp));
+            // Get back to the current state
+            this.recollectPaintingData();
         }
     }
 
@@ -1287,6 +1305,8 @@ public class EaselState {
             this.initializeCanvas(newActions.peek().getStartTime());
         }
 
+        // We don't want to process actions that are too old
+        final long processingAfterTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
         this.wipeCanceledActionsAndDiscardSnapshots();
 
         Iterator<CanvasAction> newActionsIterator = newActions.iterator();
@@ -1317,8 +1337,14 @@ public class EaselState {
 
                 newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
             } else if (existingAction.getStartTime() > newAction.getStartTime()) {
+                if (newAction.getStartTime() < processingAfterTimestamp) {
+                    Zetter.LOG.warn("Got action that is too old, ignoring");
+                    newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
+                    continue;
+                }
+
                 existingActionsIterator.previous(); // rewind to insert before
-                existingActionsIterator.add(newAction); // 5
+                existingActionsIterator.add(newAction);
 
                 if (newAction.isCanceled()) {
                     this.historyDirty = true;
@@ -1513,51 +1539,6 @@ public class EaselState {
 
         if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
             Zetter.LOG.debug("Processed actions sync from server");
-        }
-    }
-
-    /**
-     * Add all newest pixels to the canvas when syncing to keep recent player's changes
-     * Weak snapshot is snapshot not made by server but sent as a canvas
-     * update for all players in range. This is useful for quicker restoration
-     * of the canvas when working with history on client.
-     *
-     * @todo: [LOW] Generally not sure if that needed. Before we synced
-     * actions, that was painting sync mechanism, but now it's excessive.
-     * It sure does allow to restore paintings quicker but it's not that hard
-     * anyway.
-     *
-     * Client-only
-     * @param canvasCode
-     * @param canvasData
-     * @param packetTimestamp
-     */
-    public void processWeakSnapshotClient(String canvasCode, CanvasData canvasData, long packetTimestamp) {
-        CanvasSnapshot lastSnapshot = this.getLastSnapshot();
-
-        // If not much happened since last snapshot, ignore this
-        if (lastSnapshot != null) {
-            ListIterator<CanvasAction> actionIterator = this.getActionsEndIterator();
-            int actionsSinceLastSnapshot = 0;
-
-            while (actionIterator.hasPrevious()) {
-                if (actionIterator.previous().getStartTime() < lastSnapshot.timestamp) {
-                    break;
-                }
-
-                actionsSinceLastSnapshot++;
-            }
-
-            if (actionsSinceLastSnapshot < ACTION_HISTORY_SIZE / CLIENT_SNAPSHOT_HISTORY_SIZE) {
-                return;
-            }
-        }
-
-        this.insertSnapshot(CanvasSnapshot.createWeakSnapshot(canvasData.getColorData(), packetTimestamp));
-        this.recollectPaintingData();
-
-        if (Zetter.DEBUG_MODE && Zetter.DEBUG_CLIENT) {
-            Zetter.LOG.debug("Processed weak snapshot");
         }
     }
 
