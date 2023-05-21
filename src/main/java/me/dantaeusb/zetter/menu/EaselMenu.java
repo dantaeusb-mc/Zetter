@@ -415,10 +415,9 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
             }
 
             return false;
-        } else {
-            this.state.processWeakSnapshotClient(canvasCode, canvasData, timestamp);
-            return true;
         }
+
+        return true;
     }
 
     public int getPaletteColor(int paletteSlot) {

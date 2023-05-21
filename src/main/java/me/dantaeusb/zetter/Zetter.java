@@ -15,10 +15,9 @@ import org.apache.logging.log4j.Logger;
 public class Zetter
 {
     public static final String MOD_ID = "zetter";
-    public static final boolean DEBUG_MODE = true;
-    public static final boolean DEBUG_SERVER = true;
-    public static final boolean DEBUG_CLIENT = true;
-    public static final boolean DEBUG_NO_WEAK_SNAPSHOTS = true;
+    public static final boolean DEBUG_MODE = false;
+    public static final boolean DEBUG_SERVER = false;
+    public static final boolean DEBUG_CLIENT = false;
 
     // get a reference to the event bus for this mod;  Registration events are fired on this bus.
     public static IEventBus MOD_EVENT_BUS;

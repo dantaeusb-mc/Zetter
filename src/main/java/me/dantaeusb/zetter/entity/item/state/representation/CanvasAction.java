@@ -24,8 +24,9 @@ import java.util.stream.Stream;
 public class CanvasAction {
     private static final Random RANDOM = new Random();
 
-    private static final int MAX_ACTIONS_IN_BUFFER = 100;
-    private static final long MAX_TIME = 5000L;
+    public static final int MAX_ACTIONS_IN_BUFFER = 100;
+    public static final long MAX_TIME = 5000L;
+
     private static final long MAX_INACTIVE_TIME = 750L;
 
     public final int id;

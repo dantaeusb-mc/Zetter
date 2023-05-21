@@ -44,21 +44,12 @@ public class CanvasSnapshot {
     }
 
     /**
-     * Server snapshot (created on server, right now)
+     * We're creating snapshots with the timestamp at which we
+     * are sure no actions will be added, and on initial sync
      * @param colors
      * @return
      */
-    public static CanvasSnapshot createServerSnapshot(byte[] colors) {
-        return new CanvasSnapshot(RANDOM.nextInt(), colors, System.currentTimeMillis(), false);
-    }
-
-    /**
-     * When canvas initialized, we have to put snapshot time
-     * before the first action
-     * @param colors
-     * @return
-     */
-    public static CanvasSnapshot createServerInitializationSnapshot(byte[] colors, long timestamp) {
+    public static CanvasSnapshot createServerSnapshot(byte[] colors, long timestamp) {
         return new CanvasSnapshot(RANDOM.nextInt(), colors, timestamp, false);
     }
 }
