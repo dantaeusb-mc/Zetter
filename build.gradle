@@ -21,7 +21,7 @@ apply from: "https://moddingtutorials.org/applesilicon.gradle"
 apply plugin: 'maven-publish'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '0.20.2-1.19.3-rc'
+version = '0.21.1-1.19.4-rc'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
@@ -29,7 +29,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'parchment', version: '2022.12.18-1.19.3'
+    mappings channel: 'parchment', version: '1.19.3-2023.03.12-1.19.4'
 
     runs {
         client {
@@ -92,7 +92,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.3-44.1.0'
+    minecraft 'net.minecraftforge:forge:1.19.4-45.0.64'
 }
 
 /*mixin {

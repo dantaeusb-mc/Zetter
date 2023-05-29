@@ -18,6 +18,7 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -162,7 +163,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (!this.parentScreen.getMenu().isCanvasAvailable()) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             return;
@@ -252,10 +253,10 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
 
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferBuilder.vertex(matrix, x1, y2, this.getBlitOffset()).uv(u1, v2).endVertex();
-        bufferBuilder.vertex(matrix, x2, y2, this.getBlitOffset()).uv(u2, v2).endVertex();
-        bufferBuilder.vertex(matrix, x2, y1, this.getBlitOffset()).uv(u2, v1).endVertex();
-        bufferBuilder.vertex(matrix, x1, y1, this.getBlitOffset()).uv(u1, v1).endVertex();
+        bufferBuilder.vertex(matrix, x1, y2, 0).uv(u1, v2).endVertex();
+        bufferBuilder.vertex(matrix, x2, y2, 0).uv(u2, v2).endVertex();
+        bufferBuilder.vertex(matrix, x2, y1, 0).uv(u2, v1).endVertex();
+        bufferBuilder.vertex(matrix, x1, y1, 0).uv(u1, v1).endVertex();
         BufferUploader.drawWithShader(bufferBuilder.end());
 
         matrixStack.popPose();

@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class PencilParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
@@ -62,25 +63,23 @@ public class PencilParametersTab extends AbstractTab {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        if (this.visible) {
-            fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+    public void renderWidget(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+        fill(poseStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
-                this.blendingWidget.render(matrixStack);
-            }
+        if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
+            this.blendingWidget.render(poseStack, mouseX, mouseY, partialTicks);
+        }
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringParameterHolder) {
-                this.ditheringWidget.render(matrixStack);
-            }
+        if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringParameterHolder) {
+            this.ditheringWidget.render(poseStack, mouseX, mouseY, partialTicks);
+        }
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityParameterHolder) {
-                this.intensityWidget.render(matrixStack);
-            }
+        if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityParameterHolder) {
+            this.intensityWidget.render(poseStack, mouseX, mouseY, partialTicks);
+        }
 
-            if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeParameterHolder) {
-                this.sizeWidget.render(matrixStack);
-            }
+        if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeParameterHolder) {
+            this.sizeWidget.render(poseStack, mouseX, mouseY, partialTicks);
         }
     }
 

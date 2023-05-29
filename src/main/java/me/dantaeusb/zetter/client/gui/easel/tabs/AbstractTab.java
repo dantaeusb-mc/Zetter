@@ -8,7 +8,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-public class AbstractTab extends AbstractPaintingWidget {
+public abstract class AbstractTab extends AbstractPaintingWidget {
     public static final int POSITION_X = 37;
     public static final int POSITION_Y = 155;
     public static final int WIDTH = 162;

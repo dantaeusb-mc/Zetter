@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringUtil;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.function.Predicate;
@@ -148,13 +149,13 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Renderabl
         // Quick check
         if (EaselScreen.isInRect(this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
             this.setFocused(true);
-            this.textField.setFocus(true);
+            this.textField.setFocused(true);
             this.textField.setTextColor(Color.WHITE.getRGB());
             return true;
         }
 
         this.setFocused(false);
-        this.textField.setFocus(false);
+        this.textField.setFocused(false);
         this.textField.setTextColor(INACTIVE_COLOR);
         return false;
     }
@@ -165,7 +166,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Renderabl
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);

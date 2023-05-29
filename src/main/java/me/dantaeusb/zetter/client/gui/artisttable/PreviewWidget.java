@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -31,7 +32,8 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
         super(parentScreen, x, y, size, size, Component.translatable("container.zetter.artist_table.combined_canvas"));
     }
 
-    public void render(PoseStack matrixStack) {
+    @Override
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         matrixStack.pushPose();
         matrixStack.translate(this.getX(), this.getY(), 1.0F);
 

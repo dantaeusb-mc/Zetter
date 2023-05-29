@@ -6,6 +6,7 @@ import me.dantaeusb.zetter.client.gui.easel.ColorCodeWidget;
 import me.dantaeusb.zetter.client.gui.easel.HsbWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class ColorTab extends AbstractTab {
 
@@ -46,13 +47,11 @@ public class ColorTab extends AbstractTab {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        if (this.visible) {
-            fill(poseStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
-            this.hsbWidget.render(poseStack);
-            this.colorCodeWidget.render(poseStack, this.getX(), this.getY(), partialTicks);
-        }
+        this.hsbWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.colorCodeWidget.render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     public void containerTick() {

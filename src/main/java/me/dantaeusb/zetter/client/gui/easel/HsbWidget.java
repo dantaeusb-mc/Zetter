@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -98,13 +99,13 @@ public class HsbWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack) {
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         for (SliderWidget slider : this.sliders) {
-            slider.render(matrixStack);
+            slider.render(matrixStack, mouseX, mouseY, partialTicks);
         }
     }
 

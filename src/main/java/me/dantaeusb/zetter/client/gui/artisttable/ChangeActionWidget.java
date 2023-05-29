@@ -48,7 +48,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) {
             return;
         }

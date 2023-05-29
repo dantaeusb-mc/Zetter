@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class BrushParametersTab extends AbstractTab {
     private final BlendingWidget blendingWidget;
@@ -62,24 +63,24 @@ public class BrushParametersTab extends AbstractTab {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
             fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
-                this.blendingWidget.render(matrixStack);
+                this.blendingWidget.render(matrixStack, mouseX, mouseY, partialTicks);
             }
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringParameterHolder) {
-                this.ditheringWidget.render(matrixStack);
+                this.ditheringWidget.render(matrixStack, mouseX, mouseY, partialTicks);
             }
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityParameterHolder) {
-                this.intensityWidget.render(matrixStack);
+                this.intensityWidget.render(matrixStack, mouseX, mouseY, partialTicks);
             }
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeParameterHolder) {
-                this.sizeWidget.render(matrixStack);
+                this.sizeWidget.render(matrixStack, mouseX, mouseY, partialTicks);
             }
         }
     }
