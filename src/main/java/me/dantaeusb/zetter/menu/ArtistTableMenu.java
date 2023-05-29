@@ -53,7 +53,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
      * in split mode used as a resource
      */
 
-    private final ArrayList<Slot> gridSlots = new ArrayList<>(ArtistTableMenu.CANVAS_SLOT_COUNT);
+    private final ArrayList<Slot> combinationSlots = new ArrayList<>(ArtistTableMenu.CANVAS_SLOT_COUNT);
     private final ArrayList<Slot> splitSlots = new ArrayList<>(ArtistTableMenu.CANVAS_SLOT_COUNT);
     private final Slot combinedSlot;
 
@@ -138,22 +138,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
         final int HOTBAR_XPOS = 36;
         final int HOTBAR_YPOS = 168;
 
-        // Add the players hotbar to the gui - the [xpos, ypos] location of each item
-        for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
-            this.addSlot(new Slot(invPlayer, x, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
-        }
-
-        // Add the rest of the players inventory to the gui
-        for (int y = 0; y < PLAYER_INVENTORY_ROW_COUNT; y++) {
-            for (int x = 0; x < PLAYER_INVENTORY_COLUMN_COUNT; x++) {
-                int slotNumber = HOTBAR_SLOT_COUNT + y * PLAYER_INVENTORY_COLUMN_COUNT + x;
-                int xpos = PLAYER_INVENTORY_XPOS + x * SLOT_X_SPACING;
-                int ypos = PLAYER_INVENTORY_YPOS + y * SLOT_Y_SPACING;
-                this.addSlot(new Slot(invPlayer, slotNumber,  xpos, ypos));
-            }
-        }
-
-        // Add canvas sewing slots
+        // Add canvas combination slots
         for (int y = 0; y < CANVAS_ROW_COUNT; y++) {
             for (int x = 0; x < CANVAS_COLUMN_COUNT; x++) {
                 int slotNumber = y * CANVAS_COLUMN_COUNT + x;
@@ -163,7 +148,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
                 final SlotCombinationGrid combinationSlot = new SlotCombinationGrid(this.combinationHandler, slotNumber,  xpos, ypos);
 
                 this.addSlot(combinationSlot);
-                this.gridSlots.add(combinationSlot);
+                this.combinationSlots.add(combinationSlot);
             }
         }
 
@@ -185,6 +170,21 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
         this.addSlot(combinedSlot);
         this.combinedSlot = combinedSlot;
+
+        // Add the rest of the players inventory to the gui
+        for (int y = 0; y < PLAYER_INVENTORY_ROW_COUNT; y++) {
+            for (int x = 0; x < PLAYER_INVENTORY_COLUMN_COUNT; x++) {
+                int slotNumber = HOTBAR_SLOT_COUNT + y * PLAYER_INVENTORY_COLUMN_COUNT + x;
+                int xpos = PLAYER_INVENTORY_XPOS + x * SLOT_X_SPACING;
+                int ypos = PLAYER_INVENTORY_YPOS + y * SLOT_Y_SPACING;
+                this.addSlot(new Slot(invPlayer, slotNumber,  xpos, ypos));
+            }
+        }
+
+        // Add the players hotbar to the gui - the [xpos, ypos] location of each item
+        for (int x = 0; x < HOTBAR_SLOT_COUNT; x++) {
+            this.addSlot(new Slot(invPlayer, x, HOTBAR_XPOS + SLOT_X_SPACING * x, HOTBAR_YPOS));
+        }
 
         this.addDataSlots(this.containerData);
         this.addSlotListener(this);
@@ -264,7 +264,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     }
 
     public boolean isCombinationGridEmpty() {
-        for (Slot combinationSlot : this.gridSlots) {
+        for (Slot combinationSlot : this.combinationSlots) {
             if (combinationSlot.hasItem()) {
                 return false;
             }
@@ -433,29 +433,50 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
     @Override
     public ItemStack quickMoveStack(Player playerIn, int sourceSlotIndex)
     {
+        final int COMBINATION_SLOTS_TO = CANVAS_SLOT_COUNT;
+        final int SPLIT_SLOTS_TO = COMBINATION_SLOTS_TO + CANVAS_SLOT_COUNT;
+        final int COMBINED_SLOT_TO = SPLIT_SLOTS_TO + 1;
+        final int INVENTORY_SLOTS_TO = COMBINED_SLOT_TO + PLAYER_INVENTORY_ROW_COUNT * PLAYER_INVENTORY_COLUMN_COUNT;
+        final int HOTBAR_SLOTS_TO = INVENTORY_SLOTS_TO + HOTBAR_SLOT_COUNT;
+
         ItemStack outStack = ItemStack.EMPTY;
         Slot sourceSlot = this.slots.get(sourceSlotIndex);
 
-        if (sourceSlot != null && sourceSlot.hasItem()) {
+        if (sourceSlot.hasItem()) {
             ItemStack sourceStack = sourceSlot.getItem();
             outStack = sourceStack.copy();
 
-            // Palette
-            if (sourceSlotIndex == 0) {
-                if (!this.moveItemStackTo(sourceStack, 2, 10, true)) {
+            // Combination, split & combined slots put items to inventory
+            if (
+                (sourceSlotIndex >= 0 && sourceSlotIndex < COMBINED_SLOT_TO) &&
+                sourceStack.getItem().equals(ZetterItems.CANVAS.get())
+            ) {
+                if (!this.moveItemStackTo(sourceStack, COMBINED_SLOT_TO, HOTBAR_SLOTS_TO, true)) {
                     return ItemStack.EMPTY;
                 }
-
-                sourceSlot.onQuickCraft(sourceStack, outStack);
-
-            // Inventory
+            // Inventory & hotbar clicks
             } else {
-                if (sourceStack.getItem() == ZetterItems.PALETTE.get()) {
-                    if (!this.moveItemStackTo(sourceStack, 0, 1, false)) {
+                if (this.getMode().equals(Mode.COMBINE) && this.combinationSlots.get(0).mayPlace(sourceStack)) {
+                    // Put to combination slots
+                    if (!this.moveItemStackTo(sourceStack, 0, COMBINATION_SLOTS_TO, false)) {
                         return ItemStack.EMPTY;
                     }
+                    // Put to combined slot for splitting
+                } else if (this.combinedSlot.mayPlace(sourceStack)) {
+                    if (!this.moveItemStackTo(sourceStack, SPLIT_SLOTS_TO, COMBINED_SLOT_TO, false)) {
+                        return ItemStack.EMPTY;
+                    }
+                    // Swap with hotbar
                 } else {
-                    return ItemStack.EMPTY;
+                    if (sourceSlotIndex >= COMBINED_SLOT_TO && sourceSlotIndex < INVENTORY_SLOTS_TO) {
+                        if (!this.moveItemStackTo(sourceStack, INVENTORY_SLOTS_TO, HOTBAR_SLOTS_TO, false)) {
+                            return ItemStack.EMPTY;
+                        }
+                    } else if (sourceSlotIndex >= INVENTORY_SLOTS_TO && sourceSlotIndex < HOTBAR_SLOTS_TO) {
+                        if (!this.moveItemStackTo(sourceStack, COMBINED_SLOT_TO, INVENTORY_SLOTS_TO, false)) {
+                            return ItemStack.EMPTY;
+                        }
+                    }
                 }
             }
 
