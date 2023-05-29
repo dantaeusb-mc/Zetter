@@ -8,6 +8,7 @@ import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @todo: [MED] Combine with another help widget?
@@ -50,7 +51,8 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    @Override
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) {
             return;
         }

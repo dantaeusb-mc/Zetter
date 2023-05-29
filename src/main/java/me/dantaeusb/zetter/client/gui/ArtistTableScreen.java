@@ -19,6 +19,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -114,7 +115,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(@NotNull PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
@@ -174,8 +175,8 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         final int INVALID_WIDTH = 10;
         final int INVALID_HEIGHT = 10;
 
-        this.changeActionWidget.render(matrixStack, x, y, partialTicks);
-        this.helpWidget.render(matrixStack, x, y, partialTicks);
+        this.changeActionWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.helpWidget.render(matrixStack, mouseX, mouseY, partialTicks);
 
         // @todo: [MED] Move to preview widget
         switch (this.getMenu().getActionState()) {
@@ -215,7 +216,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
                 blit(matrixStack, this.leftPos + xPosLoading, this.topPos + yPosLoading, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT, 512, 256);
                 break;
             case READY:
-                this.previewWidget.render(matrixStack);
+                this.previewWidget.render(matrixStack, mouseX, mouseY, partialTicks);
                 break;
         }
     }

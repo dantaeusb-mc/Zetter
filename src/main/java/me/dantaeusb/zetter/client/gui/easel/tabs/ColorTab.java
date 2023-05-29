@@ -5,7 +5,10 @@ import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.ColorCodeWidget;
 import me.dantaeusb.zetter.client.gui.easel.HsbWidget;
 import me.dantaeusb.zetter.core.tools.Color;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 public class ColorTab extends AbstractTab {
 
@@ -21,8 +24,8 @@ public class ColorTab extends AbstractTab {
         final int TEXTBOX_POSITION_X = 0;
         final int TEXTBOX_POSITION_Y = 50;
 
-        this.hsbWidget = new HsbWidget(this.parentScreen, this.x + SETTINGS_POSITION_X, this.y + SETTINGS_POSITION_Y);
-        this.colorCodeWidget = new ColorCodeWidget(this.parentScreen, this.x + TEXTBOX_POSITION_X, this.y + TEXTBOX_POSITION_Y);
+        this.hsbWidget = new HsbWidget(this.parentScreen, this.getX() + SETTINGS_POSITION_X, this.getY() + SETTINGS_POSITION_Y);
+        this.colorCodeWidget = new ColorCodeWidget(this.parentScreen, this.getX() + TEXTBOX_POSITION_X, this.getY() + TEXTBOX_POSITION_Y);
 
         this.addTabWidget(this.hsbWidget);
         this.addTabWidget(this.colorCodeWidget);
@@ -46,13 +49,16 @@ public class ColorTab extends AbstractTab {
     }
 
     @Override
-    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        if (this.visible) {
-            fill(poseStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
+    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+        fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
-            this.hsbWidget.render(poseStack);
-            this.colorCodeWidget.render(poseStack, this.x, this.y, partialTicks);
-        }
+        this.hsbWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.colorCodeWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+    }
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 
     public void containerTick() {

@@ -394,7 +394,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     public void setPos(double x, double y, double z) {
-        this.pos = new BlockPos(x, y, z);
+        this.pos = new BlockPos((int) x, (int) y, (int) z);
         this.setPosRaw(x, y, z);
         this.setBoundingBox(this.makeBoundingBox());
         this.hasImpulse = true;

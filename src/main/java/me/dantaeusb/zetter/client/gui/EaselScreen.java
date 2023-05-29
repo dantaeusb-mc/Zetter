@@ -227,25 +227,25 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int x, int y) {
+    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
 
         this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
-        this.canvasWidget.render(matrixStack, x, y, partialTicks);
+        this.canvasWidget.render(matrixStack, mouseX, mouseY, partialTicks);
 
         RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
 
-        this.toolsWidget.render(matrixStack);
-        this.tabsWidget.render(matrixStack);
-        this.historyWidget.render(matrixStack);
-        this.zoomWidget.render(matrixStack);
-        this.paletteWidget.render(matrixStack);
-        this.helpWidget.render(matrixStack, x, y, partialTicks);
+        this.toolsWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.tabsWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.historyWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.zoomWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.paletteWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.helpWidget.render(matrixStack, mouseX, mouseY, partialTicks);
 
-        this.getCurrentTab().render(matrixStack, x, y, partialTicks);
+        this.getCurrentTab().render(matrixStack, mouseX, mouseY, partialTicks);
     }
 
     @Override

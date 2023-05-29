@@ -53,14 +53,10 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
-        if (!this.visible) {
-            return;
-        }
 
         drawButton(matrixStack, mouseX, mouseY);
     }

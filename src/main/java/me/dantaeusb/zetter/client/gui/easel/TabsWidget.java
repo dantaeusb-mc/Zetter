@@ -4,7 +4,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 
@@ -12,7 +14,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TabsWidget extends AbstractPaintingWidget implements Widget {
+public class TabsWidget extends AbstractPaintingWidget implements Renderable {
     private List<TabButton> tabs;
     final static int TAB_BUTTON_WIDTH = 28;
     final static int TAB_BUTTON_HEIGHT = 23;
@@ -60,9 +62,9 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
     Component getTooltip(int mouseX, int mouseY) {
         int i = 0;
         for (TabButton tab: this.tabs) {
-            int fromY = this.y + i * TAB_BUTTON_OFFSET;
+            int fromY = this.getY() + i * TAB_BUTTON_OFFSET;
 
-            if (EaselScreen.isInRect(this.x, fromY, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (EaselScreen.isInRect(this.getX(), fromY, TAB_BUTTON_WIDTH, TAB_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return tab.getTooltip();
             }
 
@@ -84,9 +86,9 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
 
         int i = 0;
         for (TabButton tabButton: this.tabs) {
-            int fromY = this.y + i * TAB_BUTTON_OFFSET;
+            int fromY = this.getY() + i * TAB_BUTTON_OFFSET;
 
-            if (EaselScreen.isInRect(this.x, fromY, tabButton.width, tabButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (EaselScreen.isInRect(this.getX(), fromY, tabButton.width, tabButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 this.parentScreen.getMenu().setCurrentTab(tabButton.tab);
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
                 return true;
@@ -98,22 +100,27 @@ public class TabsWidget extends AbstractPaintingWidget implements Widget {
         return false;
     }
 
-    public void render(PoseStack matrixStack) {
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
+    }
+
+    public void renderWidget(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
         int i = 0;
         for (TabButton tab: this.tabs) {
-            int fromY = this.y + i * TAB_BUTTON_OFFSET;
+            int fromY = this.getY() + i * TAB_BUTTON_OFFSET;
             int uOffset = tab.uPosition + (this.parentScreen.getMenu().getCurrentTab() == tab.tab ? TAB_BUTTON_WIDTH : 0);
 
-            this.blit(matrixStack, this.x, fromY, uOffset, tab.vPosition, tab.width, tab.height);
+            blit(matrixStack, this.getX(), fromY, uOffset, tab.vPosition, tab.width, tab.height);
             i++;
         }
     }
 
-    public class TabButton {
+    public static class TabButton {
         private final Tab tab;
         public final int uPosition;
         public final int vPosition;
