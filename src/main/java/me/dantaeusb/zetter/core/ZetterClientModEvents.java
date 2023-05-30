@@ -109,7 +109,7 @@ public class ZetterClientModEvents {
      */
     @SubscribeEvent
     public static void overlayViewEvent(CanvasOverlayViewEvent<?> event) {
-        if (event.canvasData instanceof PaintingData && ZetterOverlays.OVERLAYS.containsKey(PaintingData.OVERLAY_KEY)) {
+        if (event.canvasData.getType().equals(ZetterCanvasTypes.PAINTING.get())) {
             CanvasOverlay<?> overlay = ZetterOverlays.OVERLAYS.get(PaintingData.OVERLAY_KEY);
 
             if (overlay instanceof PaintingInfoOverlay) {
