@@ -1,6 +1,5 @@
 {
 	"block.zetter.artist_table": "მხატვრის მაგიდა",
-	"block.zetter.easel": "დაზგური",
 	"console.zetter.result.requested_painting": "Painting %1$s was requested from the sever, please wait",
 	"console.zetter.result.exported_painting_client": "Painting %1$s was saved to your Minecraft folder",
 	"console.zetter.result.exported_painting_server": "Painting %1$s was saved to server folder",
