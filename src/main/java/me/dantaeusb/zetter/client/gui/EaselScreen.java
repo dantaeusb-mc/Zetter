@@ -461,9 +461,12 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
             this.dragStartCanvasOffset = new int[]{this.getMenu().getCanvasOffsetX(), this.getMenu().getCanvasOffsetY()};
         }
 
-        super.mouseClicked(mouseX, mouseY, button);
+        // We need to handle tab clicks first as we might have input fields
+        // Like color HEX that don't update when focused
+        // So palette change will be ignored if we handle it first
+        this.getCurrentTab().mouseClicked(mouseX, mouseY, button);
 
-        return this.getCurrentTab().mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**

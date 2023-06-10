@@ -188,7 +188,7 @@ public class CanvasWidget extends AbstractEaselWidget implements Renderable {
 
         PoseStack poseStack = guiGraphics.pose();
         poseStack.pushPose();
-        poseStack.translate(this.getX() + this.parentScreen.getMenu().getCanvasOffsetX(), this.getY() + this.parentScreen.getMenu().getCanvasOffsetY(), 1.0F);
+        poseStack.translate(this.getX() + this.parentScreen.getMenu().getCanvasOffsetX(), this.getY() + this.parentScreen.getMenu().getCanvasOffsetY(), 0.0F);
         poseStack.scale(this.getCanvasScale(), this.getCanvasScale(), 1.0F);
 
         MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
