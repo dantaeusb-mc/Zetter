@@ -100,5 +100,6 @@
 	"item.zetter.warped_basic_frame": "Telaio deformato",
 	"item.zetter.warped_plated_frame": "Telaio deformato con targhetta",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
-	"forge.configgui.zetter.painting.resolution": "Painting Resolution"
+	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
+	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
 }
