@@ -100,5 +100,6 @@
 	"item.zetter.warped_basic_frame": "Искажённая рамка",
 	"item.zetter.warped_plated_frame": "Искажённая рамка с Шильдиком",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
-	"forge.configgui.zetter.painting.resolution": "Painting Resolution"
+	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
+	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
 }
