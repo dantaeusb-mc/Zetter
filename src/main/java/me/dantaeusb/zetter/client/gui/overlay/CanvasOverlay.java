@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.client.gui.overlay;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.client.gui.GuiGraphics;

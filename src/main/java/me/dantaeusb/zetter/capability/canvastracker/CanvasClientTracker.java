@@ -2,7 +2,6 @@ package me.dantaeusb.zetter.capability.canvastracker;
 
 import com.google.common.collect.Maps;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.ZetterConfig;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;

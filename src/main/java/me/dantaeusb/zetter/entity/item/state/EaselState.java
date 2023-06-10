@@ -16,8 +16,6 @@ import me.dantaeusb.zetter.painting.Tools;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

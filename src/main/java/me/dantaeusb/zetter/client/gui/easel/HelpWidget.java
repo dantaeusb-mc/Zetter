@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
 import net.minecraft.client.gui.GuiGraphics;
@@ -11,7 +10,7 @@ import net.minecraft.network.chat.Component;
 
 import javax.annotation.Nullable;
 
-public class HelpWidget extends AbstractPaintingWidget implements Renderable {
+public class HelpWidget extends AbstractEaselWidget implements Renderable {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#painting";
 
     final static int BUTTON_WIDTH = 11;
@@ -57,7 +56,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
     public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE);
 
         drawButton(guiGraphics, mouseX, mouseY);
     }
@@ -71,6 +70,6 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
             buttonU += BUTTON_WIDTH;
         }
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 }

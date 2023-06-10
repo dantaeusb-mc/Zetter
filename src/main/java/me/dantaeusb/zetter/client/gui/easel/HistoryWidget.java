@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class HistoryWidget extends AbstractPaintingWidget implements Renderable {
+public class HistoryWidget extends AbstractEaselWidget implements Renderable {
     private final List<HistoryButton> buttons;
 
     public static final int UNDO_HOTKEY = GLFW.GLFW_KEY_Z;
@@ -95,14 +95,14 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
     }
 
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
             int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : HISTORY_BUTTON_WIDTH + 2);
 
-            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
+            guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
     }

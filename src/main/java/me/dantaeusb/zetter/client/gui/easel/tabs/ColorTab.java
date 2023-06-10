@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.client.gui.easel.tabs;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.ColorCodeWidget;
 import me.dantaeusb.zetter.client.gui.easel.HsbWidget;

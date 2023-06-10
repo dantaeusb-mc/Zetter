@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -18,7 +17,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlendingWidget extends AbstractPaintingWidget implements Renderable {
+public class BlendingWidget extends AbstractEaselWidget implements Renderable {
     public final static int WIDTH = 60;
     public final static int HEIGHT = 32;
     public final static int FONT_Y_MARGIN = 12;
@@ -83,7 +82,7 @@ public class BlendingWidget extends AbstractPaintingWidget implements Renderable
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE);
 
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         BlendingPipe.BlendingOption blending = null;
@@ -99,13 +98,13 @@ public class BlendingWidget extends AbstractPaintingWidget implements Renderable
             int fromX = this.getX() + i * BLENDING_BUTTON_WIDTH;
             int vOffset = blending == blendingButton.blending ? BLENDING_BUTTON_HEIGHT : 0;
 
-            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  fromX, this.getY() + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
+            guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  fromX, this.getY() + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
             i++;
         }
     }
 
     public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
+        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB(), false);
     }
 
     public class BlendingButton {

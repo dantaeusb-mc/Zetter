@@ -1,11 +1,8 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
-public class SliderWidget extends AbstractPaintingWidget implements Renderable {
+public class SliderWidget extends AbstractEaselWidget implements Renderable {
     final static int WIDTH = 150;
     final static int HEIGHT = 9;
 
@@ -108,7 +105,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             sliderV += HEIGHT;
         }
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY(), SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  this.getX(), this.getY(), SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
     }
 
     protected void drawSliderForeground(GuiGraphics guiGraphics) {
@@ -174,7 +171,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             sliderV += HANDLER_HEIGHT;
         }
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  sliderGlobalLeft, sliderGlobalTop, HANDLER_POSITION_U, sliderV, HANDLER_WIDTH, HANDLER_HEIGHT);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  sliderGlobalLeft, sliderGlobalTop, HANDLER_POSITION_U, sliderV, HANDLER_WIDTH, HANDLER_HEIGHT);
     }
 
     @FunctionalInterface

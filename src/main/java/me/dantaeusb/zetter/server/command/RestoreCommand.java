@@ -67,7 +67,9 @@ public class RestoreCommand {
             }
         }
 
-        source.sendSuccess(Component.translatable("commands.give.success.single", 1, paintingItem.getDisplayName(), player.getDisplayName()), true);
+        source.sendSuccess(() -> {
+            return Component.translatable("commands.give.success.single", 1, paintingItem.getDisplayName(), player.getDisplayName());
+        }, true);
 
         return 1;
     }

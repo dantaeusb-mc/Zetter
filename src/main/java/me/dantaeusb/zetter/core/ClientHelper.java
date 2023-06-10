@@ -7,7 +7,6 @@ import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;

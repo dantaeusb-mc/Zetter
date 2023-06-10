@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
-import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;

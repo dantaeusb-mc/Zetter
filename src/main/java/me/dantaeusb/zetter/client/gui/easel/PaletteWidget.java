@@ -1,19 +1,16 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 
-public class PaletteWidget extends AbstractPaintingWidget implements Renderable {
+public class PaletteWidget extends AbstractEaselWidget implements Renderable {
     final static int PALETTE_SCALE_FACTOR = 10;
     final static int PALETTE_OFFSET = PALETTE_SCALE_FACTOR + 1; // 1px border between slots
 
@@ -98,6 +95,6 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
         int selectorPositionX = this.getX() + (currentPaletteSlot % 2 != 0 ? PALETTE_OFFSET : 0) - PALETTE_BORDER;
         int selectorPositionY = this.getY() + (currentPaletteSlot / 2) * PALETTE_OFFSET - PALETTE_BORDER;
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  selectorPositionX, selectorPositionY, SELECTOR_POSITION_U, SELECTOR_POSITION_V, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  selectorPositionX, selectorPositionY, SELECTOR_POSITION_U, SELECTOR_POSITION_V, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2);
     }
 }

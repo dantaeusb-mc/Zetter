@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
@@ -64,7 +63,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
             buttonV += BUTTON_HEIGHT;
         }
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        guiGraphics.blit(ArtistTableScreen.ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     public @Nullable

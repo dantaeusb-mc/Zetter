@@ -16,7 +16,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
@@ -244,8 +243,8 @@ public class PaintingScreen extends Screen {
             this.renderCursor(guiGraphics, this.titleEdit.getCursorPos(), this.titleEdit.getCursorPos() == this.title.length());
         }
 
-        guiGraphics.drawString(this.font, formattedTitle, this.screenOffsetX + SCREEN_PADDING, this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
-        guiGraphics.drawString(this.font, Component.translatable("book.byAuthor", this.authorName), this.screenOffsetX + SCREEN_PADDING, this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
+        guiGraphics.drawString(this.font, formattedTitle, this.screenOffsetX + SCREEN_PADDING, this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, Component.translatable("book.byAuthor", this.authorName), this.screenOffsetX + SCREEN_PADDING, this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR, false);
 
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
@@ -258,7 +257,7 @@ public class PaintingScreen extends Screen {
             if (!underscore) {
                 guiGraphics.fill(cursorX, cursorY - 1, cursorX + 1, cursorY + 9, 0xFF000000);
             } else {
-                guiGraphics.drawString(this.font, "_", cursorX, cursorY, 0xFF000000);
+                guiGraphics.drawString(this.font, "_", cursorX, cursorY, 0xFF000000, false);
             }
         }
 

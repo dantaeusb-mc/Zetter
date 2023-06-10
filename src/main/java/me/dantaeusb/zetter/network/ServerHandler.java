@@ -2,7 +2,10 @@ package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
-import me.dantaeusb.zetter.core.*;
+import me.dantaeusb.zetter.core.Helper;
+import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;

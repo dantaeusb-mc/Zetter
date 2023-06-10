@@ -39,7 +39,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     // This is the resource location for the background image
     public static final ResourceLocation EASEL_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel.png");
 
-    private final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
+    private final List<AbstractEaselWidget> paintingWidgets = Lists.newArrayList();
 
     private HashMap<TabsWidget.Tab, AbstractTab> tabs;
 
@@ -140,7 +140,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         //this.updateCurrentColor(this.getMenu().getCurrentColor());
     }
 
-    public void addPaintingWidget(AbstractPaintingWidget widget) {
+    public void addPaintingWidget(AbstractEaselWidget widget) {
         this.paintingWidgets.add(widget);
         this.addWidget(widget);
     }
@@ -252,13 +252,9 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     protected void renderTooltip(@NotNull GuiGraphics guiGraphics, int x, int y) {
         super.renderTooltip(guiGraphics, x, y);
 
-        for (AbstractPaintingWidget widget : this.paintingWidgets) {
+        for (AbstractEaselWidget widget : this.paintingWidgets) {
             if (widget.isMouseOver(x, y)) {
-                Component tooltip = widget.getTooltip(x, y);
-
-                if (tooltip != null) {
-                    this.renderTooltip(guiGraphics, x, y);
-                }
+                widget.renderTooltip(guiGraphics, x, y);
             }
         }
     }
@@ -280,7 +276,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
 
         // draw the label for the player inventory slots
         guiGraphics.drawString(this.getFont(), this.getMenu().getCurrentTab().translatableComponent,
-                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB());
+                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB(), false);
 
         this.getCurrentTab().renderLabels(guiGraphics, mouseX, mouseY);
     }

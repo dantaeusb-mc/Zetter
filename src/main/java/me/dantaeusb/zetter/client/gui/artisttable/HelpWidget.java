@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.client.gui.artisttable;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
@@ -70,7 +69,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Renderable 
             buttonU += BUTTON_WIDTH;
         }
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        guiGraphics.blit(ArtistTableScreen.ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     @Override

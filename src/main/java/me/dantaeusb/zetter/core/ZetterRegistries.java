@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.resources.ResourceLocation;

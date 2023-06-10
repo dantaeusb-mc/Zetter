@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
@@ -22,7 +21,7 @@ import java.util.regex.Pattern;
 /**
  * @todo: [LOW] Disable if no palette
  */
-public class ColorCodeWidget extends AbstractPaintingWidget implements Renderable {
+public class ColorCodeWidget extends AbstractEaselWidget implements Renderable {
     private static final int INACTIVE_COLOR = 0xFF6D634D;
 
     final static int TEXTBOX_WIDTH = 82;
@@ -170,7 +169,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Renderabl
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE);
 
         this.drawTextbox(guiGraphics);
         //drawModeButtons(matrixStack);
@@ -185,7 +184,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Renderabl
                 this.getMessage(),
                 this.getX() - this.parentScreen.getGuiLeft(),
                 this.getY() - this.parentScreen.getGuiTop(),
-                Color.darkGray.getRGB()
+                Color.darkGray.getRGB(), false
         );
     }
 
@@ -195,6 +194,6 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Renderabl
 
         int textboxV = TEXTBOX_POSITION_V + (this.textField.isFocused() ? TEXTBOX_HEIGHT : 0);
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
     }
 }

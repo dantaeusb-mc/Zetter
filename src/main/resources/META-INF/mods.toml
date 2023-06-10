@@ -1,25 +1,20 @@
 modLoader="javafml"
 
-loaderVersion="[45,)"
+loaderVersion="${loader_version_range}"
 
-license="Mozilla Public License 2.0"
+license="${mod_license}"
 
 issueTrackerURL="https://github.com/dantaeusb-mc/Zetter/issues"
 
 [[mods]]
 
-modId="zetter"
-
-version="${file.jarVersion}"
-
-displayName="Zetter"
-
-displayURL="https://www.curseforge.com/minecraft/mc-mods/zetter"
-
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+displayURL="https://modrinth.com/mod/zetter-painting-mod"
+updateJSONURL="https://api.modrinth.com/updates/ZmLgjf6f/forge_updates.json"
 logoFile="zetter.png"
-
 credits='''
-
 StuarteLitro/@ppblitto for fancy icons and Portuguese translation
 diesieben07#0714 from Forge Discord for absolutely insane amount of help
 gigaherz#9173 from Forge Discord for consultations about Forge and GUI
@@ -50,29 +45,18 @@ Vazkii and Quark team for opening their source code as I often used it as a refe
 '''
 
 authors="Dmitry Burlakov <dantaeusb@live.com>"
+description='''${mod_description}'''
 
-description='''
-Zetter is a Minecraft mod with a simple goal of adding custom drawing interface to
-create and use custom pictures in Minecraft.
-
-Core values of this mod:
-1. Encourage players to create own pixel artworks and use it in their creations;
-2. Do not change vanilla gameplay in any way and try to be as much close to vanilla Minecraft feel as possible;
-3. Drawing should be fun and simple;
-4. Let power users to be power users as much as it doesn't overcomplicate UI;
-5. Server administrators should be able to easily moderate player artworks and decide what is appropriate on their server.
-'''
-
-[[dependencies.zetter]]
+[[dependencies.${mod_id}]]
     modId="forge"
     mandatory=true
-    versionRange="[45,)"
+    versionRange="${forge_version_range}"
     ordering="NONE"
     side="BOTH"
 
-[[dependencies.zetter]]
+[[dependencies.${mod_id}]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.19.4]"
+    versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"

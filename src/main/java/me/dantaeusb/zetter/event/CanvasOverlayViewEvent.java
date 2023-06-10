@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.event;
 
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraftforge.eventbus.api.Event;
 
 /**

@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.menu.artisttable;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -11,7 +10,6 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;

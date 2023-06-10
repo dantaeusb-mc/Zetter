@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -18,7 +17,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DitheringWidget extends AbstractPaintingWidget implements Renderable {
+public class DitheringWidget extends AbstractEaselWidget implements Renderable {
     private final static int WIDTH = 80;
     private final static int HEIGHT = 32;
     private final static int FONT_Y_MARGIN = 12;
@@ -82,7 +81,7 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE);
 
         AbstractToolParameters parameters = this.parentScreen.getMenu().getCurrentToolParameters();
         DitheringPipe.DitheringOption dithering = null;
@@ -98,13 +97,13 @@ public class DitheringWidget extends AbstractPaintingWidget implements Renderabl
             int fromX = this.getX() + i * DITHERING_BUTTON_WIDTH;
             int vOffset = dithering == ditheringButton.dithering ? DITHERING_BUTTON_HEIGHT : 0;
 
-            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  fromX, this.getY() + FONT_Y_MARGIN, ditheringButton.uPosition, ditheringButton.vPosition + vOffset, ditheringButton.width, ditheringButton.height);
+            guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE,  fromX, this.getY() + FONT_Y_MARGIN, ditheringButton.uPosition, ditheringButton.vPosition + vOffset, ditheringButton.width, ditheringButton.height);
             i++;
         }
     }
 
     public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
+        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB(), false);
     }
 
     public class DitheringButton {

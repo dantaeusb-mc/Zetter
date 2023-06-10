@@ -29,7 +29,7 @@ import static com.mojang.blaze3d.platform.GlConst.GL_FUNC_ADD;
 import static com.mojang.blaze3d.platform.GlConst.GL_FUNC_SUBTRACT;
 import static org.lwjgl.glfw.GLFW.*;
 
-public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
+public class CanvasWidget extends AbstractEaselWidget implements Renderable {
     public static final int SIZE = 128;
 
     public static final ResourceLocation PAINTING_CHECKER_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel/checker.png");
@@ -182,10 +182,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
         );
 
         this.renderCheckerboard(guiGraphics);
-
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, EaselScreen.EASEL_GUI_TEXTURE_RESOURCE);
 
         String canvasCode = this.parentScreen.getMenu().getCanvasCode();
         CanvasData canvasData = this.parentScreen.getMenu().getCanvasData();

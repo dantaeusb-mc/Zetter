@@ -285,7 +285,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             BlockPos posBelow = this.getPos().below();
             BlockState blockBelowState = this.level().getBlockState(posBelow);
 
-            if (!blockBelowState.getMaterial().isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
+            if (!blockBelowState.isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
                 return false;
             }
 

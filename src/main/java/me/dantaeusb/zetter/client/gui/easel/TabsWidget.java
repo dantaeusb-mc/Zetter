@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -16,7 +15,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TabsWidget extends AbstractPaintingWidget implements Renderable {
+public class TabsWidget extends AbstractEaselWidget implements Renderable {
     private List<TabButton> tabs;
     final static int TAB_BUTTON_WIDTH = 28;
     final static int TAB_BUTTON_HEIGHT = 23;
@@ -110,14 +109,14 @@ public class TabsWidget extends AbstractPaintingWidget implements Renderable {
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
+        RenderSystem.setShaderTexture(0, AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE);
 
         int i = 0;
         for (TabButton tab: this.tabs) {
             int fromY = this.getY() + i * TAB_BUTTON_OFFSET;
             int uOffset = tab.uPosition + (this.parentScreen.getMenu().getCurrentTab() == tab.tab ? TAB_BUTTON_WIDTH : 0);
 
-            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), fromY, uOffset, tab.vPosition, tab.width, tab.height);
+            guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, this.getX(), fromY, uOffset, tab.vPosition, tab.width, tab.height);
             i++;
         }
     }

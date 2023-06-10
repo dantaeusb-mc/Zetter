@@ -1,13 +1,10 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.tabs.AbstractTab;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -15,7 +12,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HsbWidget extends AbstractPaintingWidget implements Renderable {
+public class HsbWidget extends AbstractEaselWidget implements Renderable {
     final static int SLIDER_DISTANCE = 5; // distance between sliders
 
     final static int WIDTH = AbstractTab.WIDTH;
@@ -115,7 +112,7 @@ public class HsbWidget extends AbstractPaintingWidget implements Renderable {
                     slider.getMessage().getString().substring(0, 1).concat("."),
                     this.getX() - this.parentScreen.getGuiLeft(),
                     this.getY() + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * i++ - this.parentScreen.getGuiTop() + 1,
-                    Color.DARK_GRAY.getRGB()
+                    Color.DARK_GRAY.getRGB(), false
             );
         }
     }

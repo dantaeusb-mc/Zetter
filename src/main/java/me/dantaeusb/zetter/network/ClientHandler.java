@@ -6,7 +6,6 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;

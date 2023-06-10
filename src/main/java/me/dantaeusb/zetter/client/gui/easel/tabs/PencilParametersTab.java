@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.gui.easel.tabs;
 
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
+import me.dantaeusb.zetter.client.gui.easel.AbstractEaselWidget;
 import me.dantaeusb.zetter.client.gui.easel.BlendingWidget;
 import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
@@ -89,13 +89,13 @@ public class PencilParametersTab extends AbstractTab {
             guiGraphics.drawString(
                 this.parentScreen.getFont(), this.intensityWidget.getMessage(),
                 this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
-                Color.DARK_GRAY.getRGB()
+                Color.DARK_GRAY.getRGB(), false
             );
 
             guiGraphics.drawString(
                 this.parentScreen.getFont(), this.sizeWidget.getMessage(),
                 this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + 57,
-                Color.DARK_GRAY.getRGB()
+                Color.DARK_GRAY.getRGB(), false
             );
         }
 
@@ -122,7 +122,7 @@ public class PencilParametersTab extends AbstractTab {
         final int INTENSITY_BACKGROUND_U = 8;
         final int INTENSITY_BACKGROUND_V = 99;
 
-        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
+        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
     }
 
     public int renderIntensityForeground(float percent) {

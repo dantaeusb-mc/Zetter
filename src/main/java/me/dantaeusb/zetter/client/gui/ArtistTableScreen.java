@@ -9,6 +9,7 @@ import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.PreviewWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -30,7 +31,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected final Component titleLabel = TITLE;
 
     // This is the resource location for the background image
-    private static final ResourceLocation ARTIST_TABLE_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
+    public static final ResourceLocation ARTIST_TABLE_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
 
     private final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
@@ -221,11 +222,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         for (AbstractArtistTableWidget widget : this.artistTableWidgets) {
             if (widget.isMouseOver(x, y)) {
-                Component tooltip = widget.getTooltip(x, y);
-
-                if (tooltip != null) {
-                    this.renderTooltip(guiGraphics, x, y);
-                }
+                widget.renderTooltip(guiGraphics, x, y);
             }
         }
     }
@@ -244,20 +241,28 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         Component artistTableLabel = Component.translatable("container.zetter.artist_table.mode", this.titleLabel, artistTableModelLabel);
 
-        guiGraphics.drawString(this.font, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
+        guiGraphics.drawString(this.font, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB(), false);
 
         final int FONT_Y_SPACING = 10;
         final int PLAYER_INV_LABEL_XPOS = ArtistTableMenu.PLAYER_INVENTORY_XPOS;
         final int PLAYER_INV_LABEL_YPOS = ArtistTableMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
-        guiGraphics.drawString(this.font, this.playerInventoryTitle,
-                PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
+        guiGraphics.drawString(this.font, this.playerInventoryTitle, PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB(), false);
     }
 
     @Override
     public void slotChanged(AbstractContainerMenu menu, int slotId, ItemStack stack) {
 
+    }
+
+
+    /**
+     * Expose some methods for widgets
+     */
+
+    public Font getFont() {
+        return this.font;
     }
 
     /**
