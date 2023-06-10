@@ -100,5 +100,6 @@
 	"item.zetter.warped_basic_frame": "歪んだナイリウムの額縁",
 	"item.zetter.warped_plated_frame": "名札付き歪んだナイリウムの額縁",
 	"painting.zetter.banned": "この絵画はサーバー管理者によって禁止されています．そのため，代用となる絵画が使用されました．",
-	"forge.configgui.zetter.painting.resolution": "絵画の解像度"
+	"forge.configgui.zetter.painting.resolution": "絵画の解像度",
+	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
 }
