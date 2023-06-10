@@ -2,7 +2,6 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
-import me.dantaeusb.zetter.deprecated.block.entity.EaselBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -17,7 +16,6 @@ public class ZetterBlockEntities
      * All easels should be converted to entities
      */
     @Deprecated
-    public static RegistryObject<BlockEntityType<EaselBlockEntity>> EASEL_BLOCK_ENTITY = BLOCK_ENTITIES.register("easel_tile_entity", () -> BlockEntityType.Builder.of(EaselBlockEntity::new, ZetterBlocks.EASEL.get()).build(null));
     public static RegistryObject<BlockEntityType<ArtistTableBlockEntity>> ARTIST_TABLE_BLOCK_ENTITY = BLOCK_ENTITIES.register("artist_table_tile_entity", () -> BlockEntityType.Builder.of(ArtistTableBlockEntity::new, ZetterBlocks.ARTIST_TABLE.get()).build(null));
 
     public static void init(IEventBus bus) {

@@ -1,13 +1,11 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
@@ -96,19 +94,15 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
-        this.blit(matrixStack, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
             int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : HISTORY_BUTTON_WIDTH + 2);
 
-            this.blit(matrixStack, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
+            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
     }

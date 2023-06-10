@@ -62,7 +62,7 @@ public class CanvasItem extends Item
             }
 
             String canvasCode = getCanvasCode(canvas);
-            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.getLevel());
+            CanvasData canvasData = CanvasItem.getCanvasData(canvas, player.level());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen

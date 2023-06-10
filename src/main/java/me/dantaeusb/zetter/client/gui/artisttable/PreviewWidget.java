@@ -9,6 +9,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -33,31 +34,34 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        matrixStack.pushPose();
-        matrixStack.translate(this.getX(), this.getY(), 1.0F);
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(this.getX(), this.getY(), 1.0F);
 
         DummyCanvasData canvasData = this.parentScreen.getMenu().getAction().getCanvasData();
 
-        this.drawCanvas(matrixStack, canvasData);
+        this.drawCanvas(guiGraphics, canvasData);
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 
-    private void drawCanvas(PoseStack matrixStack, @Nullable DummyCanvasData canvasData) {
+    private void drawCanvas(GuiGraphics guiGraphics, @Nullable DummyCanvasData canvasData) {
         if (canvasData != null) {
+            PoseStack poseStack = guiGraphics.pose();
+
             int scale = getScale(canvasData);
             Tuple<Integer, Integer> displacement = getDisplacement(canvasData, scale);
 
-            matrixStack.pushPose();
-            matrixStack.translate(displacement.getA(), displacement.getB(), 1.0F);
-            matrixStack.scale(scale, scale, 1.0F);
+            poseStack.pushPose();
+            poseStack.translate(displacement.getA(), displacement.getB(), 1.0F);
+            poseStack.scale(scale, scale, 1.0F);
 
             MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-            CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, Helper.COMBINED_CANVAS_CODE, canvasData, 0xF000F0);
+            CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, Helper.COMBINED_CANVAS_CODE, canvasData, 0xF000F0);
             renderTypeBufferImpl.endBatch();
 
-            matrixStack.popPose();
+            poseStack.popPose();
         }
     }
 

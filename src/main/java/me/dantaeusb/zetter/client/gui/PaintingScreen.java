@@ -11,7 +11,7 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.font.TextFieldHelper;
@@ -200,16 +200,15 @@ public class PaintingScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(matrixStack);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(guiGraphics);
         this.setFocused((GuiEventListener)null);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         // Border
-        fill(
-            matrixStack,
+        guiGraphics.fill(
             this.screenOffsetX,
             this.screenOffsetY,
             this.screenOffsetX + this.screenWidth,
@@ -217,8 +216,7 @@ public class PaintingScreen extends Screen {
             0xFFCAC3B4
         );
 
-        fill(
-            matrixStack,
+        guiGraphics.fill(
             this.screenOffsetX + 1,
             this.screenOffsetY + 1,
             this.screenOffsetX + this.screenWidth - 1,
@@ -226,40 +224,41 @@ public class PaintingScreen extends Screen {
             Helper.CANVAS_COLOR
         );
 
-        //this.blit(matrixStack, , 2, 0, 0, 192, 192);
+        //guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  , 2, 0, 0, 192, 192);
 
-        matrixStack.pushPose();
-        matrixStack.translate(this.paintingOffsetX, this.paintingOffsetY, 1.0F);
-        matrixStack.scale(this.paintingScale, this.paintingScale, 1.0F);
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(this.paintingOffsetX, this.paintingOffsetY, 1.0F);
+        poseStack.scale(this.paintingScale, this.paintingScale, 1.0F);
 
         MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, this.canvasCode, this.canvasData, 0xF000F0);
+        CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, this.canvasCode, this.canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
-        matrixStack.popPose();
+        poseStack.popPose();
 
         String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
         FormattedCharSequence formattedTitle = FormattedCharSequence.forward(title, this.title.isEmpty() ? Style.EMPTY.withColor(ChatFormatting.GRAY) : Style.EMPTY.withColor(ChatFormatting.BLACK));
 
         if (this.editable) {
-            this.renderCursor(matrixStack, this.titleEdit.getCursorPos(), this.titleEdit.getCursorPos() == this.title.length());
+            this.renderCursor(guiGraphics, this.titleEdit.getCursorPos(), this.titleEdit.getCursorPos() == this.title.length());
         }
 
-        this.font.draw(matrixStack, formattedTitle, (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
-        this.font.draw(matrixStack, Component.translatable("book.byAuthor", this.authorName), (float) this.screenOffsetX + SCREEN_PADDING, (float) this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
+        guiGraphics.drawString(this.font, formattedTitle, this.screenOffsetX + SCREEN_PADDING, this.paintingOffsetY + paintingHeight + 7, TEXT_COLOR);
+        guiGraphics.drawString(this.font, Component.translatable("book.byAuthor", this.authorName), this.screenOffsetX + SCREEN_PADDING, this.paintingOffsetY + paintingHeight + 17, TEXT_COLOR);
 
-        super.render(matrixStack, mouseX, mouseY, partialTick);
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderCursor(PoseStack poseStack, int cursorPos, boolean underscore) {
+    private void renderCursor(GuiGraphics guiGraphics, int cursorPos, boolean underscore) {
         if (this.tick / 6 % 2 == 0) {
             int cursorX = this.screenOffsetX + SCREEN_PADDING + this.font.width(this.title.substring(0, cursorPos));
             int cursorY = this.paintingOffsetY + paintingHeight + 7;
 
             if (!underscore) {
-                GuiComponent.fill(poseStack, cursorX, cursorY - 1, cursorX + 1, cursorY + 9, 0xFF000000);
+                guiGraphics.fill(cursorX, cursorY - 1, cursorX + 1, cursorY + 9, 0xFF000000);
             } else {
-                this.font.draw(poseStack, "_", (float) cursorX, (float) cursorY, 0xFF000000);
+                guiGraphics.drawString(this.font, "_", cursorX, cursorY, 0xFF000000);
             }
         }
 

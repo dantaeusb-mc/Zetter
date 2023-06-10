@@ -57,7 +57,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         if (easelEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-            CanvasData canvasData = getCanvasData(easelEntity.level, easelEntity.getEntityCanvasCode());
+            CanvasData canvasData = getCanvasData(easelEntity.level(), easelEntity.getEntityCanvasCode());
 
             if (canvasData != null) {
                 this.renderCanvas(easelEntity, canvasData, partialTicks, poseStack, buffer, packedLight);

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -53,15 +54,15 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void renderWidget(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-        drawButton(matrixStack, mouseX, mouseY);
+        drawButton(guiGraphics, mouseX, mouseY);
     }
 
-    protected void drawButton(PoseStack matrixStack, int mouseX, int mouseY) {
+    protected void drawButton(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int buttonU = BUTTON_POSITION_U;
 
         if (this.clicked) {
@@ -70,6 +71,6 @@ public class HelpWidget extends AbstractPaintingWidget implements Renderable {
             buttonU += BUTTON_WIDTH;
         }
 
-        this.blit(matrixStack, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT);
     }
 }

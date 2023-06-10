@@ -11,6 +11,7 @@ import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -163,7 +164,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         if (!this.parentScreen.getMenu().isCanvasAvailable()) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             return;
@@ -180,24 +181,25 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
                 this.height * scale
         );
 
-        this.renderCheckerboard(matrixStack);
+        this.renderCheckerboard(guiGraphics);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, EaselScreen.PAINTING_RESOURCE);
+        RenderSystem.setShaderTexture(0, EaselScreen.EASEL_GUI_TEXTURE_RESOURCE);
 
         String canvasCode = this.parentScreen.getMenu().getCanvasCode();
         CanvasData canvasData = this.parentScreen.getMenu().getCanvasData();
 
-        matrixStack.pushPose();
-        matrixStack.translate(this.getX() + this.parentScreen.getMenu().getCanvasOffsetX(), this.getY() + this.parentScreen.getMenu().getCanvasOffsetY(), 1.0F);
-        matrixStack.scale(this.getCanvasScale(), this.getCanvasScale(), 1.0F);
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        poseStack.translate(this.getX() + this.parentScreen.getMenu().getCanvasOffsetX(), this.getY() + this.parentScreen.getMenu().getCanvasOffsetY(), 1.0F);
+        poseStack.scale(this.getCanvasScale(), this.getCanvasScale(), 1.0F);
 
         MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
-        CanvasRenderer.getInstance().renderCanvas(matrixStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
+        CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
-        matrixStack.popPose();
+        poseStack.popPose();
 
         if (    mouseX >= this.getX()
                 && mouseY >= this.getY()
@@ -210,7 +212,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
                 double canvasX = (mouseX - this.getX() - this.parentScreen.getMenu().getCanvasOffsetX()) / (double) this.getCanvasScale();
                 double canvasY = (mouseY - this.getY() - this.parentScreen.getMenu().getCanvasOffsetY()) / (double) this.getCanvasScale();
 
-                this.renderCursor(matrixStack, canvasX, canvasY);
+                this.renderCursor(guiGraphics, canvasX, canvasY);
             }
         } else {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -222,9 +224,9 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
     /**
      * Renders checkerboard background according to scale and
      * canvas position
-     * @param matrixStack
+     * @param guiGraphics
      */
-    private void renderCheckerboard(PoseStack matrixStack) {
+    private void renderCheckerboard(GuiGraphics guiGraphics) {
         final int offsetX = Math.abs(this.getCanvasScale() * 2 - this.parentScreen.getMenu().getCanvasOffsetX() % (this.getCanvasScale() * 2));
         final int offsetY = Math.abs(this.getCanvasScale() * 2 - this.parentScreen.getMenu().getCanvasOffsetY() % (this.getCanvasScale() * 2));
 
@@ -244,12 +246,12 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
         float v1 = 0f;
         float v2 = height / uvScale;
 
-        matrixStack.pushPose();
-        Matrix4f matrix = matrixStack.last().pose();
+        PoseStack poseStack = guiGraphics.pose();
+        poseStack.pushPose();
+        Matrix4f matrix = poseStack.last().pose();
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, PAINTING_CHECKER_RESOURCE);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
         BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
@@ -259,10 +261,10 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
         bufferBuilder.vertex(matrix, x1, y1, 0).uv(u1, v1).endVertex();
         BufferUploader.drawWithShader(bufferBuilder.end());
 
-        matrixStack.popPose();
+        poseStack.popPose();
     }
 
-    private void renderCursor(PoseStack matrixStack, double canvasX, double canvasY) {
+    private void renderCursor(GuiGraphics guiGraphics, double canvasX, double canvasY) {
         AbstractToolParameters toolParameters = this.parentScreen.getMenu().getCurrentToolParameters();
         AbstractTool.ToolShape shape = this.parentScreen.getMenu().getCurrentTool().getTool().getShape(toolParameters);
 
@@ -284,11 +286,11 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
             int globalX = this.getX() + this.parentScreen.getMenu().getCanvasOffsetX() + (int) Math.floor(canvasX * this.getCanvasScale()) - 1;
             int globalY = this.getY() + this.parentScreen.getMenu().getCanvasOffsetY() + (int) Math.floor(canvasY * this.getCanvasScale()) - 1;
 
-            this.hLine(matrixStack, globalX - radius, globalX - 2, globalY, 0x80808080);
-            this.hLine(matrixStack, globalX + radius, globalX + 2, globalY, 0x80808080);
+            guiGraphics.hLine(globalX - radius, globalX - 2, globalY, 0x80808080);
+            guiGraphics.hLine(globalX + radius, globalX + 2, globalY, 0x80808080);
 
-            this.vLine(matrixStack, globalX, globalY - radius, globalY - 2, 0x80808080);
-            this.vLine(matrixStack, globalX, globalY + radius, globalY + 2, 0x80808080);
+            guiGraphics.vLine(globalX, globalY - radius, globalY - 2, 0x80808080);
+            guiGraphics.vLine(globalX, globalY + radius, globalY + 2, 0x80808080);
         } else {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
@@ -320,7 +322,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
                     }
 
                     final int minX = globalX + posX;
-                    this.hLine(matrixStack, minX, minX + length, globalY + posY, 0x80808080);
+                    guiGraphics.hLine(minX, minX + length, globalY + posY, 0x80808080);
                 } else {
                     // Wrap around bottom-right
                     if (posX <= 0) {
@@ -336,7 +338,7 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
                     }
 
                     final int minY = globalY + posY;
-                    this.vLine(matrixStack, globalX + posX, minY, minY + length, 0x80808080);
+                    guiGraphics.vLine(globalX + posX, minY, minY + length, 0x80808080);
                 }
             }
         }

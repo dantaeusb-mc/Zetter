@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -98,19 +99,19 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-        this.blit(matrixStack, this.getX(), this.getY(), ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
 
         int i = 0;
         for (ZoomButton zoomButton: this.buttons) {
             int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
             int uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
 
-            this.blit(matrixStack, fromX, this.getY(), uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
+            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, fromX, this.getY(), uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
             i++;
         }
     }

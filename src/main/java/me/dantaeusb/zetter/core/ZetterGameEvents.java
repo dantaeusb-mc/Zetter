@@ -20,7 +20,7 @@ public class ZetterGameEvents {
     @SubscribeEvent
     public static void onPlayerDisconnected(PlayerEvent.PlayerLoggedOutEvent event) {
         Player player = event.getEntity();
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level);
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level());
 
         canvasTracker.stopTrackingAllCanvases(player.getUUID());
     }

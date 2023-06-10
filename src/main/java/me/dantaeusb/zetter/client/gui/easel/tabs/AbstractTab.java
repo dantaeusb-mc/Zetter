@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.AbstractPaintingWidget;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
@@ -24,9 +25,9 @@ public abstract class AbstractTab extends AbstractPaintingWidget {
         this.tabWidgets.add(widget);
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         for (AbstractPaintingWidget widget : this.tabWidgets) {
-            widget.renderLabels(matrixStack, mouseX, mouseY);
+            widget.renderLabels(guiGraphics, mouseX, mouseY);
         }
     }
 

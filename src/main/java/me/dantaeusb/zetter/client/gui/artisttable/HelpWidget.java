@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -52,15 +53,15 @@ public class HelpWidget extends AbstractArtistTableWidget implements Renderable 
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) {
             return;
         }
 
-        drawButton(matrixStack, mouseX, mouseY);
+        drawButton(guiGraphics, mouseX, mouseY);
     }
 
-    protected void drawButton(PoseStack matrixStack, int mouseX, int mouseY) {
+    protected void drawButton(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int buttonU = BUTTON_POSITION_U;
 
         if (this.clicked) {
@@ -69,7 +70,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Renderable 
             buttonU += BUTTON_WIDTH;
         }
 
-        blit(matrixStack, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     @Override

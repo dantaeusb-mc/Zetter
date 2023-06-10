@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -79,7 +80,7 @@ public class BlendingWidget extends AbstractPaintingWidget implements Renderable
         return false;
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
@@ -98,13 +99,13 @@ public class BlendingWidget extends AbstractPaintingWidget implements Renderable
             int fromX = this.getX() + i * BLENDING_BUTTON_WIDTH;
             int vOffset = blending == blendingButton.blending ? BLENDING_BUTTON_HEIGHT : 0;
 
-            this.blit(matrixStack, fromX, this.getY() + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
+            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  fromX, this.getY() + FONT_Y_MARGIN, blendingButton.uPosition, blendingButton.vPosition + vOffset, blendingButton.width, blendingButton.height);
             i++;
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        this.parentScreen.getFont().draw(matrixStack, this.getMessage(), (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
+    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB());
     }
 
     public class BlendingButton {

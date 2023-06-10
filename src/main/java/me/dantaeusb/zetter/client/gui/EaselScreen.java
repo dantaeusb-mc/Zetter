@@ -2,7 +2,6 @@ package me.dantaeusb.zetter.client.gui;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.easel.*;
 import me.dantaeusb.zetter.client.gui.easel.tabs.*;
@@ -16,6 +15,7 @@ import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.*;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -28,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
 import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -36,7 +37,7 @@ import java.util.List;
 
 public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements ContainerListener, ActionListener {
     // This is the resource location for the background image
-    public static final ResourceLocation PAINTING_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel.png");
+    public static final ResourceLocation EASEL_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel.png");
 
     private final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
 
@@ -219,56 +220,56 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     }
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(matrixStack, mouseX, mouseY);
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     @Override
-    protected void renderBg(PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
+        RenderSystem.setShaderTexture(0, EASEL_GUI_TEXTURE_RESOURCE);
 
-        this.blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(EASEL_GUI_TEXTURE_RESOURCE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
 
-        this.canvasWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.canvasWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        RenderSystem.setShaderTexture(0, PAINTING_RESOURCE);
+        RenderSystem.setShaderTexture(0, EASEL_GUI_TEXTURE_RESOURCE);
 
-        this.toolsWidget.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.tabsWidget.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.historyWidget.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.zoomWidget.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.paletteWidget.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.helpWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.toolsWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.tabsWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.historyWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.zoomWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.paletteWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.helpWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-        this.getCurrentTab().render(matrixStack, mouseX, mouseY, partialTicks);
+        this.getCurrentTab().render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     @Override
-    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
-        super.renderTooltip(matrixStack, x, y);
+    protected void renderTooltip(@NotNull GuiGraphics guiGraphics, int x, int y) {
+        super.renderTooltip(guiGraphics, x, y);
 
         for (AbstractPaintingWidget widget : this.paintingWidgets) {
             if (widget.isMouseOver(x, y)) {
                 Component tooltip = widget.getTooltip(x, y);
 
                 if (tooltip != null) {
-                    this.renderTooltip(matrixStack, tooltip, x, y);
+                    this.renderTooltip(guiGraphics, x, y);
                 }
             }
         }
     }
 
     /**
-     * @param matrixStack
+     * @param guiGraphics
      * @param mouseX
      * @param mouseY
      */
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         //final int LABEL_XPOS = 5;
         //final int LABEL_YPOS = 5;
         //this.font.draw(matrixStack, this.title, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
@@ -278,10 +279,10 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         final int TAB_LABEL_YPOS = EaselMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
-        this.font.draw(matrixStack, this.getMenu().getCurrentTab().translatableComponent,
+        guiGraphics.drawString(this.getFont(), this.getMenu().getCurrentTab().translatableComponent,
                 TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB());
 
-        this.getCurrentTab().renderLabels(matrixStack, mouseX, mouseY);
+        this.getCurrentTab().renderLabels(guiGraphics, mouseX, mouseY);
     }
 
     @Override

@@ -159,7 +159,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         this.container.addListener(this);
 
         // PlayerContainerEvent are not happening on client
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.isLocalPlayer()) {
             this.state.addPlayer(player);
         }
     }
@@ -173,7 +173,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
     public static EaselMenu createMenuClientSide(int windowID, Inventory playerInventory, net.minecraft.network.FriendlyByteBuf networkBuffer) {
         SEaselMenuCreatePacket createPacket = SEaselMenuCreatePacket.readPacketData(networkBuffer);
 
-        EaselEntity easelEntity = (EaselEntity) playerInventory.player.getLevel().getEntity(createPacket.easelEntityId);
+        EaselEntity easelEntity = (EaselEntity) playerInventory.player.level().getEntity(createPacket.easelEntityId);
         assert easelEntity != null;
 
         EaselContainer easelContainer = easelEntity.getEaselContainer();
@@ -291,7 +291,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         if (slot == EaselContainer.PALETTE_SLOT) {
             this.notifyColorUpdateListeners();
         } else if (slot == EaselContainer.CANVAS_SLOT) {
-            if (this.player.getLevel().isClientSide()) {
+            if (this.player.isLocalPlayer()) {
                 this.resetCanvasPositioning();
             }
         }
@@ -457,7 +457,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
 
         this.notifyColorUpdateListeners();
 
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.isLocalPlayer()) {
             this.sendPaletteUpdatePacket();
         }
 
@@ -612,7 +612,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         this.container.removeListener(this);
 
         // PlayerContainerEvent are not happening on client
-        if (this.player.getLevel().isClientSide()) {
+        if (this.player.isLocalPlayer()) {
             this.state.removePlayer(player);
         }
     }

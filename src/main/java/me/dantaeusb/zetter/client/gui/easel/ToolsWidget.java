@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.painting.Tools;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -87,12 +88,12 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-        this.blit(matrixStack, this.getX(), this.getY(), TOOL_BUTTONS_U - TOOL_BUTTON_WIDTH - 3, TOOL_BUTTONS_V - 1, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * this.buttons.size() + 2);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY(), TOOL_BUTTONS_U - TOOL_BUTTON_WIDTH - 3, TOOL_BUTTONS_V - 1, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * this.buttons.size() + 2);
 
         // Canvas or palette unavailable
         if (this.parentScreen.getMenu().getCanvasData() == null || this.parentScreen.getMenu().getContainer().getPaletteStack().isEmpty()) {
@@ -104,7 +105,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
             int fromY = this.getY() + 1 + i * TOOL_BUTTON_HEIGHT;
             int uOffset = toolButton.uPosition + (this.parentScreen.getMenu().getCurrentTool() == toolButton.tool ? TOOL_BUTTON_WIDTH + 2 : 0);
 
-            this.blit(matrixStack, this.getX() + 1, fromY, uOffset, toolButton.vPosition, toolButton.width, toolButton.height);
+            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX() + 1, fromY, uOffset, toolButton.vPosition, toolButton.width, toolButton.height);
             i++;
         }
     }

@@ -8,7 +8,7 @@ import me.dantaeusb.zetter.storage.CanvasDataType;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiComponent;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.StringUtil;
@@ -42,7 +42,7 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
     }
 
     @Override
-    public void render(ForgeGui gui, PoseStack poseStack, float partialTick, int screenWidth, int screenHeight) {
+    public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
         if (this.paintingData == null) {
             return;
         }
@@ -77,6 +77,7 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
             msLeft = 255;
         }
 
+        PoseStack poseStack = guiGraphics.pose();
         if (msLeft > 8) {
             poseStack.pushPose();
             poseStack.translate(screenWidth / 2, screenHeight - 68, 0.0D);
@@ -87,8 +88,8 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
             int transparencyMask = msLeft << 24 & 0xFF000000;
 
             int titleLength = gui.getFont().width(title);
-            this.drawBackdrop(poseStack, gui.getFont(), -4, titleLength, 0xFFFFFF | transparencyMask);
-            gui.getFont().drawShadow(poseStack, title, (float)(-titleLength / 2), -4.0F, textColor | transparencyMask);
+            this.drawBackdrop(guiGraphics, -4, titleLength, 0xFFFFFF | transparencyMask);
+            guiGraphics.drawString(gui.getFont(), title, -titleLength / 2, -4, textColor | transparencyMask, true);
             RenderSystem.disableBlend();
 
             poseStack.popPose();
@@ -97,18 +98,17 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
 
     /**
      * Copied from @linkplain {net.minecraft.client.gui.Gui#drawBackdrop Gui#drawBackdrop} method
-     * @param poseStack
-     * @param font
+     * @param guiGraphics
      * @param heightOffset
      * @param messageWidth
      * @param color
      */
-    protected void drawBackdrop(PoseStack poseStack, Font font, int heightOffset, int messageWidth, int color) {
+    protected void drawBackdrop(GuiGraphics guiGraphics, int heightOffset, int messageWidth, int color) {
         int backgroundColor = Minecraft.getInstance().options.getBackgroundColor(0.0F);
 
         if (backgroundColor != 0) {
             int horizontalOffset = -messageWidth / 2;
-            GuiComponent.fill(poseStack, horizontalOffset - 2, heightOffset - 2, horizontalOffset + messageWidth + 2, heightOffset + 9 + 2, FastColor.ARGB32.multiply(backgroundColor, color));
+            guiGraphics.fill(horizontalOffset - 2, heightOffset - 2, horizontalOffset + messageWidth + 2, heightOffset + 9 + 2, FastColor.ARGB32.multiply(backgroundColor, color));
         }
     }
 

@@ -107,7 +107,7 @@ public class EaselState {
     public EaselState(EaselEntity entity) {
         this.easel = entity;
 
-        if (entity.getLevel().isClientSide()) {
+        if (entity.level().isClientSide()) {
             this.snapshots = new ArrayList<>(CLIENT_SNAPSHOT_HISTORY_SIZE + 1);
         } else {
             this.snapshots = new ArrayList<>(SNAPSHOT_HISTORY_SIZE + 1);
@@ -129,7 +129,7 @@ public class EaselState {
         this.unfreeze();
 
         this.updateSnapshots();
-        if (!this.easel.getLevel().isClientSide() && this.getCanvasCode() != null) {
+        if (!this.easel.level().isClientSide() && this.getCanvasCode() != null) {
             this.performHistorySyncForServerPlayer(player);
         }
     }
@@ -142,7 +142,7 @@ public class EaselState {
     public void removePlayer(Player player) {
         this.players.remove(player);
 
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             this.freeze();
         } else {
             this.playerLastSyncedAction.remove(player.getUUID());
@@ -168,7 +168,7 @@ public class EaselState {
      */
     public void reset(boolean sync) {
         // To avoid removing data from current stroke
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             this.performHistorySyncClient(true);
         }
 
@@ -177,7 +177,7 @@ public class EaselState {
         this.playerLastSyncedAction.clear();
         this.playerLastSyncedSnapshot.clear();
 
-        if (!this.easel.getLevel().isClientSide() && sync && this.getCanvasData() != null) {
+        if (!this.easel.level().isClientSide() && sync && this.getCanvasData() != null) {
             SEaselResetPacket resetPacket = new SEaselResetPacket(this.easel.getId());
 
             for (Player player : this.players) {
@@ -223,7 +223,7 @@ public class EaselState {
             this.freeze();
         }
 
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             if (this.tick % SYNC_TICKS == 0) {
                 this.performHistorySyncClient(false);
             }
@@ -371,7 +371,7 @@ public class EaselState {
             return;
         }
 
-        if (!this.easel.getLevel().isClientSide()) {
+        if (!this.easel.level().isClientSide()) {
             if (firstNonRemovedAction != null) {
                 // Update last synced actions tracker
                 // Set false for players that need to have the last synced action updated
@@ -409,7 +409,7 @@ public class EaselState {
             return;
         }
 
-        if (!this.easel.getLevel().isClientSide()) {
+        if (!this.easel.level().isClientSide()) {
             if (firstNonRemovedSnapshot != null) {
                 // Update last synced snapshot tracker
                 // Set false for players that need to have the last synced snapshot updated
@@ -551,7 +551,7 @@ public class EaselState {
 
         assert size != null && size.length == 2; // @todo: Stop menu updates to prevent sending change before initialization packet
 
-        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.getLevel());
+        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.level());
         canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
         SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode,canvasData, System.currentTimeMillis());
@@ -637,7 +637,7 @@ public class EaselState {
         }
 
         // If tillAction is not sent, just checking flag will be enough, it will be sent with proper canceled status
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             if (tillAction.isSent()) {
                 CCanvasHistoryActionPacket historyPacket = new CCanvasHistoryActionPacket(this.easel.getId(), tillAction.id, cancel);
                 ZetterNetwork.simpleChannel.sendToServer(historyPacket);
@@ -921,7 +921,7 @@ public class EaselState {
             }
         }
 
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
         }
 
@@ -974,7 +974,7 @@ public class EaselState {
             return;
         }
 
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             if (this.snapshots.isEmpty()) {
                 this.makeSnapshot();
             }
@@ -1034,7 +1034,7 @@ public class EaselState {
      */
     private void makeSnapshot() {
         assert this.getCanvasData() != null;
-        if (this.easel.getLevel().isClientSide()) {
+        if (this.easel.level().isClientSide()) {
             this.snapshots.add(CanvasSnapshot.createWeakSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
         } else if (this.snapshots.isEmpty()) {
             this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
@@ -1056,7 +1056,7 @@ public class EaselState {
     private void cleanupSnapshotHistory() {
         int maxSize = SNAPSHOT_HISTORY_SIZE;
 
-        if (this.easel.level.isClientSide) {
+        if (this.easel.level().isClientSide) {
             maxSize = CLIENT_SNAPSHOT_HISTORY_SIZE;
         }
 
@@ -1390,7 +1390,7 @@ public class EaselState {
      * @param doDamageClient apply damage to palette on client when applying action, server determines it by "sync" state
      */
     public void applyAction(CanvasAction action, boolean doDamageClient) {
-        boolean client = this.easel.getLevel().isClientSide();
+        boolean client = this.easel.level().isClientSide();
 
         action.getSubActionStream().forEach((CanvasAction.CanvasSubAction subAction) -> {
             // Apply subAction directly
@@ -1581,8 +1581,8 @@ public class EaselState {
      * is no longer up to date (tracker will decide when to sync)
      */
     private void markDesync() {
-        if (!this.easel.getLevel().isClientSide()) {
-            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.easel.getLevel())).markCanvasDesync(this.getCanvasCode());
+        if (!this.easel.level().isClientSide()) {
+            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.easel.level())).markCanvasDesync(this.getCanvasCode());
         }
     }
 

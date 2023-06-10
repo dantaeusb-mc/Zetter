@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.client.gui.easel;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -91,17 +92,13 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
-        this.drawSliderBackground(matrixStack);
-        this.drawSliderForeground(matrixStack);
-        this.drawHandler(matrixStack);
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.drawSliderBackground(guiGraphics);
+        this.drawSliderForeground(guiGraphics);
+        this.drawHandler(guiGraphics);
     }
 
-    protected void drawSliderBackground(PoseStack matrixStack) {
+    protected void drawSliderBackground(GuiGraphics guiGraphics) {
         final int SLIDER_POSITION_U = 5;
         final int SLIDER_POSITION_V = 80;
 
@@ -111,10 +108,10 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             sliderV += HEIGHT;
         }
 
-        this.blit(matrixStack, this.getX(), this.getY(), SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY(), SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
     }
 
-    protected void drawSliderForeground(PoseStack matrixStack) {
+    protected void drawSliderForeground(GuiGraphics guiGraphics) {
         int sliderContentGlobalLeft = this.getX() + 3;
         int sliderContentGlobalTop = this.getY() + 3;
 
@@ -126,17 +123,17 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             sliderContentHeight += 4;
 
             if (this.backgroundLambda != null) {
-                this.backgroundLambda.accept(matrixStack, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight);
+                this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight);
             }
         } else if (this.backgroundLambda != null) {
-            this.backgroundLambda.accept(matrixStack, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight);
+            this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight);
         }
 
         // We're not doing gradient because it's too smooth for Minecraft :)
         for (int i = 0; i < sliderContentWidth; i++) {
             int color = this.foregroundLambda.accept((float) i / sliderContentWidth);
 
-            fill(matrixStack, sliderContentGlobalLeft + i, sliderContentGlobalTop, sliderContentGlobalLeft + i + 1, sliderContentGlobalTop + sliderContentHeight, color);
+            guiGraphics.fill(sliderContentGlobalLeft + i, sliderContentGlobalTop, sliderContentGlobalLeft + i + 1, sliderContentGlobalTop + sliderContentHeight, color);
         }
     }
 
@@ -160,7 +157,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
      * Handlers
      */
 
-    protected void drawHandler(PoseStack matrixStack) {
+    protected void drawHandler(GuiGraphics guiGraphics) {
         final int HANDLER_POSITION_U = 0;
         final int HANDLER_POSITION_V = 79;
         final int HANDLER_WIDTH = 5;
@@ -177,12 +174,12 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             sliderV += HANDLER_HEIGHT;
         }
 
-        this.blit(matrixStack, sliderGlobalLeft, sliderGlobalTop, HANDLER_POSITION_U, sliderV, HANDLER_WIDTH, HANDLER_HEIGHT);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  sliderGlobalLeft, sliderGlobalTop, HANDLER_POSITION_U, sliderV, HANDLER_WIDTH, HANDLER_HEIGHT);
     }
 
     @FunctionalInterface
     public interface BackgroundConsumer {
-        public void accept(PoseStack matrixStack, int x, int y, int width, int height);
+        public void accept(GuiGraphics guiGraphics, int x, int y, int width, int height);
     }
 
     /**

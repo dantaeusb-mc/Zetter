@@ -217,7 +217,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         if (player.isCrouching() && heldItem.isEmpty()) {
             ItemStack canvasStack = this.easelContainer.extractCanvasStack();
             player.setItemInHand(hand, canvasStack);
-            return InteractionResult.sidedSuccess(this.level.isClientSide);
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
 
         final boolean isCanvas = heldItem.is(ZetterItems.CANVAS.get());
@@ -228,7 +228,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
                 this.easelContainer.setCanvasStack(heldItem);
                 player.setItemInHand(hand, ItemStack.EMPTY);
 
-                return InteractionResult.sidedSuccess(this.level.isClientSide);
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
         } else if (isPalette) {
             if (this.easelContainer.getPaletteStack().isEmpty()) {
@@ -239,11 +239,11 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
         this.openInventory(player);
 
-        return InteractionResult.sidedSuccess(this.level.isClientSide);
+        return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
 
     public void openInventory(Player player) {
-        if (!this.level.isClientSide) {
+        if (!this.level().isClientSide()) {
             NetworkHooks.openScreen((ServerPlayer) player, this, (packetBuffer) -> {
                 SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
                 packet.writePacketData(packetBuffer);
@@ -260,11 +260,11 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         this.tick++;
 
         // No need to check correctness and players on client side
-        if (this.level.isClientSide()) {
+        if (this.level().isClientSide()) {
             return;
         }
 
-        this.checkOutOfWorld();
+        this.checkBelowWorld();
         if (this.tick % 200 == 0) {
             this.playersUsing = this.calculatePlayersUsing();
         }
@@ -273,23 +273,23 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             if (!this.isRemoved() && !this.survives()) {
                 this.discard();
                 this.dropItem(null);
-                this.dropAllContents(this.level, this.getPos());
+                this.dropAllContents(this.level(), this.getPos());
             }
         }
     }
 
     public boolean survives() {
-        if (!this.level.noCollision(this)) {
+        if (!this.level().noCollision(this)) {
             return false;
         } else {
             BlockPos posBelow = this.getPos().below();
-            BlockState blockBelowState = this.level.getBlockState(posBelow);
+            BlockState blockBelowState = this.level().getBlockState(posBelow);
 
             if (!blockBelowState.getMaterial().isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
                 return false;
             }
 
-            return this.level.getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
+            return this.level().getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
         }
     }
 
@@ -317,7 +317,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         // @todo: [LOW] Seems dumb, lazy load ftw
         // Also could already have canvas, but it's client-only right now so we disregard client data
         // Initialize data if it's not yet
-        CanvasItem.getCanvasData(itemStack, this.level);
+        CanvasItem.getCanvasData(itemStack, this.level());
         this.easelContainer.setCanvasStack(itemStack);
 
         return true;
@@ -333,7 +333,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
             // Initialize canvas
             if (newCanvasCode == null) {
-                CanvasItem.getCanvasData(canvasStack, this.level);
+                CanvasItem.getCanvasData(canvasStack, this.level());
                 newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
             }
         }
@@ -359,7 +359,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public ArrayList<Player> calculatePlayersUsing() {
         ArrayList<Player> usingPlayers = new ArrayList<>();
 
-        for(Player player : this.level.getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
+        for(Player player : this.level().getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)))) {
             if (player.containerMenu instanceof EaselMenu) {
                 EaselContainer storage = ((EaselMenu)player.containerMenu).getContainer();
 
@@ -395,12 +395,12 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         if (this.isInvulnerableTo(damageSource)) {
             return false;
         } else {
-            if (!this.level.isClientSide) {
+            if (!this.level().isClientSide()) {
                 if (!this.isRemoved()) {
                     this.kill();
                     this.markHurt();
                     this.dropItem(damageSource.getEntity());
-                    this.dropAllContents(this.level, this.pos);
+                    this.dropAllContents(this.level(), this.pos);
                 }
             }
             return true;
@@ -408,10 +408,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     }
 
     public void move(MoverType mover, Vec3 move) {
-        if (!this.level.isClientSide && !this.isRemoved() && move.lengthSqr() > 0.0D) {
+        if (!this.level().isClientSide() && !this.isRemoved() && move.lengthSqr() > 0.0D) {
             this.kill();
             this.dropItem(null);
-            this.dropAllContents(this.level, this.pos);
+            this.dropAllContents(this.level(), this.pos);
         }
     }
 
@@ -422,10 +422,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @param z
      */
     public void push(double x, double y, double z) {
-        if (!this.level.isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
+        if (!this.level().isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
             this.kill();
             this.dropItem(null);
-            this.dropAllContents(this.level, this.pos);
+            this.dropAllContents(this.level(), this.pos);
         }
     }
 
@@ -434,7 +434,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * @param entity
      */
     public void dropItem(@Nullable Entity entity) {
-        if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+        if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
             if (entity instanceof Player) {
                 Player player = (Player)entity;
@@ -449,10 +449,10 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
 
     /**
      * When this tile entity is destroyed, drop all of its contents into the world
-     * @param world
+     * @param level
      * @param blockPos
      */
-    public void dropAllContents(Level world, BlockPos blockPos) {
+    public void dropAllContents(Level level, BlockPos blockPos) {
         for (int i = 0; i < this.easelContainer.getSlots(); i++) {
             Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
         }

@@ -1,8 +1,6 @@
 package me.dantaeusb.zetter.client.gui;
 
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.block.entity.ArtistTableBlockEntity;
 import me.dantaeusb.zetter.client.gui.artisttable.AbstractArtistTableWidget;
@@ -11,8 +9,8 @@ import me.dantaeusb.zetter.client.gui.artisttable.HelpWidget;
 import me.dantaeusb.zetter.client.gui.artisttable.PreviewWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
@@ -32,7 +30,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected final Component titleLabel = TITLE;
 
     // This is the resource location for the background image
-    private static final ResourceLocation ARTIST_TABLE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
+    private static final ResourceLocation ARTIST_TABLE_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
 
     private final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
@@ -100,11 +98,11 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     // Listener interface - to track name field availability
 
     @Override
-    public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(matrixStack);
+    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.renderBackground(guiGraphics);
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.renderTooltip(matrixStack, mouseX, mouseY);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
 
     @Override
@@ -115,12 +113,8 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     }
 
     @Override
-    protected void renderBg(@NotNull PoseStack matrixStack, float partialTicks, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, ARTIST_TABLE_RESOURCE);
-
-        blit(matrixStack, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
+    protected void renderBg(@NotNull GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
 
         final int GRID_XPOS_COMBINE = ArtistTableMenu.COMBINATION_SLOTS_COMBINE_X - 5;
         final int GRID_XPOS_SPLIT = ArtistTableMenu.COMBINATION_SLOTS_SPLIT_X - 5;
@@ -132,14 +126,14 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
             // Combination grid
-            blit(matrixStack, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
             // Preview bg
-            blit(matrixStack, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS + GRID_SIZE, GRID_SIZE, GRID_SIZE, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS + GRID_SIZE, GRID_SIZE, GRID_SIZE, 512, 256);
         } else {
             // Combination grid
-            blit(matrixStack, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + GRID_XPOS_SPLIT, this.topPos + GRID_YPOS_SPLIT, GRID_UPOS, GRID_VPOS, GRID_SIZE, GRID_SIZE, 512, 256);
             // Preview bg
-            blit(matrixStack, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS + GRID_SIZE, GRID_SIZE, GRID_SIZE, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + GRID_XPOS_COMBINE, this.topPos + GRID_YPOS_COMBINE, GRID_UPOS, GRID_VPOS + GRID_SIZE, GRID_SIZE, GRID_SIZE, 512, 256);
         }
 
         final int COMBINED_SLOT_YPOS = 62;
@@ -158,11 +152,11 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         final int ARROWS_VPOS = 192;
 
         if (this.menu.getMode() == ArtistTableMenu.Mode.COMBINE) {
-            blit(matrixStack, this.leftPos + this.imageWidth / 2 - ARROWS_WIDTH / 2, this.topPos + ARROWS_YPOS, ARROWS_UPOS, ARROWS_VPOS, ARROWS_WIDTH, ARROWS_HEIGHT, 512, 256);
-            blit(matrixStack, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + this.imageWidth / 2 - ARROWS_WIDTH / 2, this.topPos + ARROWS_YPOS, ARROWS_UPOS, ARROWS_VPOS, ARROWS_WIDTH, ARROWS_HEIGHT, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
         } else {
-            blit(matrixStack, this.leftPos + this.imageWidth / 2 - ARROWS_WIDTH / 2, this.topPos + ARROWS_YPOS, ARROWS_UPOS + ARROWS_WIDTH, ARROWS_VPOS, ARROWS_WIDTH, ARROWS_HEIGHT, 512, 256);
-            blit(matrixStack, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS + COMBINED_SLOT_SIZE, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + this.imageWidth / 2 - ARROWS_WIDTH / 2, this.topPos + ARROWS_YPOS, ARROWS_UPOS + ARROWS_WIDTH, ARROWS_VPOS, ARROWS_WIDTH, ARROWS_HEIGHT, 512, 256);
+            guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + this.imageWidth / 2 - COMBINED_SLOT_SIZE / 2, this.topPos + COMBINED_SLOT_YPOS, COMBINED_SLOT_UPOS + COMBINED_SLOT_SIZE, COMBINED_SLOT_VPOS, COMBINED_SLOT_SIZE, COMBINED_SLOT_SIZE, 512, 256);
         }
 
         final int LOADING_UPOS = 230;
@@ -175,8 +169,8 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
         final int INVALID_WIDTH = 10;
         final int INVALID_HEIGHT = 10;
 
-        this.changeActionWidget.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.helpWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.changeActionWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
+        this.helpWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
 
         // @todo: [MED] Move to preview widget
         switch (this.getMenu().getActionState()) {
@@ -194,7 +188,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
                     yPosInvalid += GRID_YPOS_COMBINE;
                 }
 
-                blit(matrixStack, this.leftPos + xPosInvalid, this.topPos + yPosInvalid, INVALID_UPOS, INVALID_VPOS, INVALID_WIDTH, INVALID_HEIGHT, 512, 256);
+                guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + xPosInvalid, this.topPos + yPosInvalid, INVALID_UPOS, INVALID_VPOS, INVALID_WIDTH, INVALID_HEIGHT, 512, 256);
                 break;
             case NOT_LOADED:
                 int xPosLoading = (GRID_SIZE - LOADING_WIDTH) / 2;
@@ -213,36 +207,36 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
                 frame = frame > 2 ? 1 : frame; // 3rd frame is the same as 1st frame
 
-                blit(matrixStack, this.leftPos + xPosLoading, this.topPos + yPosLoading, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT, 512, 256);
+                guiGraphics.blit(ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.leftPos + xPosLoading, this.topPos + yPosLoading, LOADING_UPOS, LOADING_VPOS + LOADING_HEIGHT * frame, LOADING_WIDTH, LOADING_HEIGHT, 512, 256);
                 break;
             case READY:
-                this.previewWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+                this.previewWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
                 break;
         }
     }
 
     @Override
-    protected void renderTooltip(PoseStack matrixStack, int x, int y) {
-        super.renderTooltip(matrixStack, x, y);
+    protected void renderTooltip(@NotNull GuiGraphics guiGraphics, int x, int y) {
+        super.renderTooltip(guiGraphics, x, y);
 
         for (AbstractArtistTableWidget widget : this.artistTableWidgets) {
             if (widget.isMouseOver(x, y)) {
                 Component tooltip = widget.getTooltip(x, y);
 
                 if (tooltip != null) {
-                    this.renderTooltip(matrixStack, tooltip, x, y);
+                    this.renderTooltip(guiGraphics, x, y);
                 }
             }
         }
     }
 
     /**
-     * @param matrixStack
+     * @param guiGraphics
      * @param mouseX
      * @param mouseY
      */
     @Override
-    protected void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         final int LABEL_XPOS = 5;
         final int LABEL_YPOS = 5;
 
@@ -250,14 +244,14 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         Component artistTableLabel = Component.translatable("container.zetter.artist_table.mode", this.titleLabel, artistTableModelLabel);
 
-        this.font.draw(matrixStack, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
+        guiGraphics.drawString(this.font, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB());
 
         final int FONT_Y_SPACING = 10;
         final int PLAYER_INV_LABEL_XPOS = ArtistTableMenu.PLAYER_INVENTORY_XPOS;
         final int PLAYER_INV_LABEL_YPOS = ArtistTableMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
-        this.font.draw(matrixStack, this.playerInventoryTitle,
+        guiGraphics.drawString(this.font, this.playerInventoryTitle,
                 PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB());
     }
 

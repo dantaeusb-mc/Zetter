@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
@@ -166,34 +167,34 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Renderabl
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
 
-        drawTextbox(matrixStack);
+        this.drawTextbox(guiGraphics);
         //drawModeButtons(matrixStack);
 
-        this.textField.render(matrixStack, mouseX, mouseY, partialTicks);
+        this.textField.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
     @Override
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
-        this.parentScreen.getFont().draw(
-                matrixStack,
+    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        guiGraphics.drawString(
+                this.parentScreen.getFont(),
                 this.getMessage(),
-                (float) this.getX() - this.parentScreen.getGuiLeft(),
-                (float) this.getY() - this.parentScreen.getGuiTop(),
+                this.getX() - this.parentScreen.getGuiLeft(),
+                this.getY() - this.parentScreen.getGuiTop(),
                 Color.darkGray.getRGB()
         );
     }
 
-    protected void drawTextbox(PoseStack matrixStack) {
+    protected void drawTextbox(GuiGraphics guiGraphics) {
         final int TEXTBOX_POSITION_U = 0;
         final int TEXTBOX_POSITION_V = 0;
 
         int textboxV = TEXTBOX_POSITION_V + (this.textField.isFocused() ? TEXTBOX_HEIGHT : 0);
 
-        this.blit(matrixStack, this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
     }
 }

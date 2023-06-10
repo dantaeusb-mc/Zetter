@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,15 +35,15 @@ public class PencilParametersTab extends AbstractTab {
         this.blendingWidget = new BlendingWidget(this.parentScreen, this.getX() + BLENDING_POSITION_X, this.getY() + BLENDING_POSITION_Y);
         this.ditheringWidget = new DitheringWidget(this.parentScreen, this.getX() + DITHERING_POSITION_X, this.getY() + DITHERING_POSITION_Y);
         this.intensityWidget = new SliderWidget(
-                parentScreen, this.getX() + INTENSITY_POSITION_X, this.getY() + INTENSITY_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.intensity"),
-                this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
+            parentScreen, this.getX() + INTENSITY_POSITION_X, this.getY() + INTENSITY_POSITION_Y,
+            Component.translatable("container.zetter.painting.sliders.intensity"),
+            this::updateIntensity, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
         this.sizeWidget = new SliderWidget(
-                parentScreen, this.getX() + SIZE_POSITION_X, this.getY() + SIZE_POSITION_Y,
-                Component.translatable("container.zetter.painting.sliders.size"),
-                this::updateSize, this::renderIntensityBackground, this::renderIntensityForeground
+            parentScreen, this.getX() + SIZE_POSITION_X, this.getY() + SIZE_POSITION_Y,
+            Component.translatable("container.zetter.painting.sliders.size"),
+            this::updateSize, this::renderIntensityBackground, this::renderIntensityForeground
         );
 
         this.addTabWidget(this.blendingWidget);
@@ -63,42 +64,42 @@ public class PencilParametersTab extends AbstractTab {
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
-        fill(poseStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
         if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
-            this.blendingWidget.render(poseStack, mouseX, mouseY, partialTicks);
+            this.blendingWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
 
         if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringParameterHolder) {
-            this.ditheringWidget.render(poseStack, mouseX, mouseY, partialTicks);
+            this.ditheringWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
 
         if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityParameterHolder) {
-            this.intensityWidget.render(poseStack, mouseX, mouseY, partialTicks);
+            this.intensityWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
 
         if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeParameterHolder) {
-            this.sizeWidget.render(poseStack, mouseX, mouseY, partialTicks);
+            this.sizeWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (this.visible) {
-            this.parentScreen.getFont().draw(
-                    matrixStack, this.intensityWidget.getMessage(),
-                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
-                    Color.DARK_GRAY.getRGB()
+            guiGraphics.drawString(
+                this.parentScreen.getFont(), this.intensityWidget.getMessage(),
+                this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
+                Color.DARK_GRAY.getRGB()
             );
 
-            this.parentScreen.getFont().draw(
-                    matrixStack, this.sizeWidget.getMessage(),
-                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + 57,
-                    Color.DARK_GRAY.getRGB()
+            guiGraphics.drawString(
+                this.parentScreen.getFont(), this.sizeWidget.getMessage(),
+                this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + 57,
+                Color.DARK_GRAY.getRGB()
             );
         }
 
-        super.renderLabels(matrixStack, mouseX, mouseY);
+        super.renderLabels(guiGraphics, mouseX, mouseY);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -117,11 +118,11 @@ public class PencilParametersTab extends AbstractTab {
         return false;
     }
 
-    public void renderIntensityBackground(PoseStack matrixStack, int x, int y, int width, int height) {
+    public void renderIntensityBackground(GuiGraphics guiGraphics, int x, int y, int width, int height) {
         final int INTENSITY_BACKGROUND_U = 8;
         final int INTENSITY_BACKGROUND_V = 99;
 
-        blit(matrixStack, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
     }
 
     public int renderIntensityForeground(float percent) {
@@ -147,6 +148,7 @@ public class PencilParametersTab extends AbstractTab {
 
     /**
      * Unfortunately this event is not passed to children
+     *
      * @param mouseX
      * @param mouseY
      * @param button

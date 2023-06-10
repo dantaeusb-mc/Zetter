@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.easel.tabs.AbstractTab;
 import me.dantaeusb.zetter.core.tools.Color;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -99,22 +100,18 @@ public class HsbWidget extends AbstractPaintingWidget implements Renderable {
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         for (SliderWidget slider : this.sliders) {
-            slider.render(matrixStack, mouseX, mouseY, partialTicks);
+            slider.render(guiGraphics, mouseX, mouseY, partialTicks);
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int posX, int posY) {
+    public void renderLabels(GuiGraphics guiGraphics, int posX, int posY) {
         int i = 0;
 
         for (SliderWidget slider : this.sliders) {
-            this.parentScreen.getFont().draw(
-                    matrixStack,
+            guiGraphics.drawString(
+                    this.parentScreen.getFont(),
                     slider.getMessage().getString().substring(0, 1).concat("."),
                     this.getX() - this.parentScreen.getGuiLeft(),
                     this.getY() + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * i++ - this.parentScreen.getGuiTop() + 1,

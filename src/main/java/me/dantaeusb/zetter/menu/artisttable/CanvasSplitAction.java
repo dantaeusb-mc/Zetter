@@ -281,7 +281,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
 
         if (!this.level.isClientSide()) {
             // Get data from split canvas
-            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
+            CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level());
 
             final CanvasData combinedCanvasData = CanvasItem.getCanvasData(combinedStack, this.level);
 
@@ -355,7 +355,7 @@ public class CanvasSplitAction extends AbstractCanvasAction {
     public void endTransaction(Player player) {
         ItemStack combinedStack = this.menu.getCombinedHandler().getStackInSlot(0);
 
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level());
         String canvasCode = CanvasItem.getCanvasCode(combinedStack);
 
         // Cleanup ID

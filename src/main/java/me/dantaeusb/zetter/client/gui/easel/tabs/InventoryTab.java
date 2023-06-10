@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.client.gui.easel.tabs;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +12,7 @@ public class InventoryTab extends AbstractTab {
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         // do nothing
     }
 

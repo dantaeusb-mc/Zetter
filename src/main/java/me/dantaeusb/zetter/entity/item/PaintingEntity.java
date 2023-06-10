@@ -206,7 +206,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
             return InteractionResult.CONSUME;
         }
 
-        PaintingData paintingData = Helper.getLevelCanvasTracker(this.level).getCanvasData(this.paintingCode);
+        PaintingData paintingData = Helper.getLevelCanvasTracker(this.level()).getCanvasData(this.paintingCode);
 
         if (paintingData == null) {
             return InteractionResult.FAIL;
@@ -320,12 +320,12 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
      */
     public void dropItem(@Nullable Entity brokenEntity) {
         // @todo: [MED] Remove item if canvas code is set to fallback code
-        if (this.level.getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+        if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
             this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
 
             ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.material, this.hasPlate)).get());
 
-            PaintingData paintingData = Helper.getLevelCanvasTracker(this.level).getCanvasData(this.paintingCode);
+            PaintingData paintingData = Helper.getLevelCanvasTracker(this.level()).getCanvasData(this.paintingCode);
 
             FrameItem.storePaintingData(canvasStack, this.paintingCode, paintingData, this.generation);
 

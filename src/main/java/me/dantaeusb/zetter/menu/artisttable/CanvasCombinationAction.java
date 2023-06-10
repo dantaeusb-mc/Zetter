@@ -298,8 +298,8 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
 
         this.startTransaction(player);
 
-        if (!player.getLevel().isClientSide()) {
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
+        if (!player.isLocalPlayer()) {
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level());
 
             if (this.hasColorData) {
                 CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
@@ -329,7 +329,7 @@ public class CanvasCombinationAction extends AbstractCanvasAction {
      */
     @Override
     public void endTransaction(Player player) {
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.getLevel());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(player.level());
 
         for (int i = 0; i < this.menu.getCombinationHandler().getSlots(); i++) {
             // First we are removing item to avoid loading it's canvas on update

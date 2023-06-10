@@ -4,11 +4,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -105,7 +107,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Renderable {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 
-    public void renderWidget(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
@@ -115,7 +117,7 @@ public class TabsWidget extends AbstractPaintingWidget implements Renderable {
             int fromY = this.getY() + i * TAB_BUTTON_OFFSET;
             int uOffset = tab.uPosition + (this.parentScreen.getMenu().getCurrentTab() == tab.tab ? TAB_BUTTON_WIDTH : 0);
 
-            this.blit(matrixStack, this.getX(), fromY, uOffset, tab.vPosition, tab.width, tab.height);
+            guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), fromY, uOffset, tab.vPosition, tab.width, tab.height);
             i++;
         }
     }

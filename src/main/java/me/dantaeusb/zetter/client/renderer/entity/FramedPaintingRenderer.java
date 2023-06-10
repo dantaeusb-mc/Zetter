@@ -130,7 +130,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
                 for (int v = 0; v < blockHeight; v++) {
                     matrixStack.translate(0, -v, 0D);
 
-                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, FramedPaintingRenderer.getOffsetBlockPos(entity, 0, v));
+                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level(), FramedPaintingRenderer.getOffsetBlockPos(entity, 0, v));
 
                     if (v == 0) {
                         this.renderModel(entity, "top_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -146,7 +146,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
                 for (int h = 0; h < blockWidth; h++) {
                     matrixStack.translate(-h, 0, 0D);
 
-                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, FramedPaintingRenderer.getOffsetBlockPos(entity, h, 0));
+                    int offsetCombinedLight = LevelRenderer.getLightColor(entity.level(), FramedPaintingRenderer.getOffsetBlockPos(entity, h, 0));
 
                     if (h == 0) {
                         this.renderModel(entity, "left_u", matrixStack, renderBuffers, offsetCombinedLight);
@@ -166,7 +166,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
                     for (int h = 0; h < blockWidth; h++) {
                         matrixStack.translate(-h, -v, 0D);
 
-                        int offsetCombinedLight = LevelRenderer.getLightColor(entity.level, FramedPaintingRenderer.getOffsetBlockPos(entity, h, v));
+                        int offsetCombinedLight = LevelRenderer.getLightColor(entity.level(), FramedPaintingRenderer.getOffsetBlockPos(entity, h, v));
 
                         if (v == 0) {
                             if (h == 0) {

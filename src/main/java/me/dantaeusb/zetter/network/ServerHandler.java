@@ -40,7 +40,7 @@ public class ServerHandler {
      * @param sendingPlayer
      */
     private static @Nullable AbstractCanvasData getAndTrackCanvasDataFromRequest(final String canvasName, ServerPlayer sendingPlayer) {
-        final MinecraftServer server = sendingPlayer.getLevel().getServer();
+        final MinecraftServer server = sendingPlayer.level().getServer();
         final Level level = server.overworld();
         final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
@@ -127,7 +127,7 @@ public class ServerHandler {
      */
     public static void processCanvasExportRequest(final CCanvasRequestExportPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            final MinecraftServer server = sendingPlayer.getLevel().getServer();
+            final MinecraftServer server = sendingPlayer.level().getServer();
             final Level level = server.overworld();
             final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
@@ -186,7 +186,7 @@ public class ServerHandler {
     public static void processUnloadRequest(final CCanvasUnloadRequestPacket packetIn, ServerPlayer sendingPlayer) {
         try {
             // Get overworld world instance
-            MinecraftServer server = sendingPlayer.getLevel().getServer();
+            MinecraftServer server = sendingPlayer.level().getServer();
             final Level level = server.overworld();
             final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
 
@@ -241,7 +241,7 @@ public class ServerHandler {
                     return;
                 }
 
-                CanvasData canvasData = CanvasItem.getCanvasData(canvasStack, sendingPlayer.getLevel());
+                CanvasData canvasData = CanvasItem.getCanvasData(canvasStack, sendingPlayer.level());
 
                 if (canvasData == null) {
                     Zetter.LOG.error("Unable to process painting signature - canvas data is empty");
@@ -268,11 +268,11 @@ public class ServerHandler {
      */
     private static ItemStack createPainting(Player player, String paintingTitle, CanvasData canvasData) {
         try {
-            if (player.getLevel().isClientSide()) {
+            if (player.isLocalPlayer()) {
                 throw new InvalidParameterException("Create painting called on client");
             }
 
-            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.getLevel());
+            CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level());
             ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
 
             /**
@@ -306,7 +306,7 @@ public class ServerHandler {
      */
     public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
+            EaselEntity easelEntity = (EaselEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
 
             // We don't trust client and writing our UUIDs
             for (CanvasAction actionBuffer : packetIn.paintingActions) {
@@ -333,7 +333,7 @@ public class ServerHandler {
      */
     public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            EaselEntity easelEntity = (EaselEntity) sendingPlayer.getLevel().getEntity(packetIn.easelEntityId);
+            EaselEntity easelEntity = (EaselEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
 
             // @todo: [MED] Check if player can access entity
 

@@ -2,12 +2,15 @@ package me.dantaeusb.zetter.client.gui.artisttable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
+import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
@@ -48,7 +51,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    public void renderWidget(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         if (!this.visible) {
             return;
         }
@@ -61,7 +64,7 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
             buttonV += BUTTON_HEIGHT;
         }
 
-        blit(matrixStack, this.getX(), this.getY(), BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), BUTTON_POSITION_U, buttonV, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     public @Nullable

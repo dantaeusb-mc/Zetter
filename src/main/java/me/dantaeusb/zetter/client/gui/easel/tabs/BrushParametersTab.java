@@ -7,6 +7,7 @@ import me.dantaeusb.zetter.client.gui.easel.DitheringWidget;
 import me.dantaeusb.zetter.client.gui.easel.SliderWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.*;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -63,44 +64,44 @@ public class BrushParametersTab extends AbstractTab {
     }
 
     @Override
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            fill(matrixStack, this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+            guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
-                this.blendingWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+                this.blendingWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
             }
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof DitheringParameterHolder) {
-                this.ditheringWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+                this.ditheringWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
             }
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof IntensityParameterHolder) {
-                this.intensityWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+                this.intensityWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
             }
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof SizeParameterHolder) {
-                this.sizeWidget.render(matrixStack, mouseX, mouseY, partialTicks);
+                this.sizeWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
             }
         }
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
+    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (this.visible) {
-            this.parentScreen.getFont().draw(
-                    matrixStack, this.intensityWidget.getMessage(),
-                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
+            guiGraphics.drawString(
+                    this.parentScreen.getFont(), this.intensityWidget.getMessage(),
+                    this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
                     Color.DARK_GRAY.getRGB()
             );
 
-            this.parentScreen.getFont().draw(
-                    matrixStack, this.sizeWidget.getMessage(),
-                    (float) this.getX() - this.parentScreen.getGuiLeft(), (float) this.getY() - this.parentScreen.getGuiTop() + 57,
+            guiGraphics.drawString(
+                this.parentScreen.getFont(), this.sizeWidget.getMessage(),
+                    this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + 57,
                     Color.DARK_GRAY.getRGB()
             );
         }
 
-        super.renderLabels(matrixStack, mouseX, mouseY);
+        super.renderLabels(guiGraphics, mouseX, mouseY);
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -119,11 +120,11 @@ public class BrushParametersTab extends AbstractTab {
         return false;
     }
 
-    public void renderIntensityBackground(PoseStack matrixStack, int x, int y, int width, int height) {
+    public void renderIntensityBackground(GuiGraphics guiGraphics, int x, int y, int width, int height) {
         final int INTENSITY_BACKGROUND_U = 8;
         final int INTENSITY_BACKGROUND_V = 99;
 
-        blit(matrixStack, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
     }
 
     public int renderIntensityForeground(float percent) {

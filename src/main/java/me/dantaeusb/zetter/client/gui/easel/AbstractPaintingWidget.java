@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.client.gui.easel;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -28,7 +29,7 @@ abstract public class AbstractPaintingWidget extends AbstractWidget implements G
         return this.getMessage();
     }
 
-    public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {}
+    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {}
 
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {

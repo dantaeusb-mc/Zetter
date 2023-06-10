@@ -54,7 +54,7 @@ public class PaintingItem extends CanvasItem
                 return InteractionResultHolder.fail(paintingStack);
             }
 
-            PaintingData canvasData = getPaintingData(paintingStack, player.getLevel());
+            PaintingData canvasData = getPaintingData(paintingStack, player.level());
 
             if (canvasData != null) {
                 // If data is loaded, just show screen

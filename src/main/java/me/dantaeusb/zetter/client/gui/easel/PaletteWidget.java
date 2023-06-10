@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.menu.EaselMenu;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -64,16 +65,12 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
         return true;
     }
 
-    public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_RESOURCE);
-
-        drawPalette(matrixStack);
-        drawPaletteSelector(matrixStack, this.parentScreen.getMenu().getCurrentPaletteSlot());
+    public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.drawPalette(guiGraphics);
+        this.drawPaletteSelector(guiGraphics, this.parentScreen.getMenu().getCurrentPaletteSlot());
     }
 
-    protected void drawPalette(PoseStack matrixStack) {
+    protected void drawPalette(GuiGraphics guiGraphics) {
         if (!this.parentScreen.getMenu().isPaletteAvailable()) {
             return;
         }
@@ -84,11 +81,11 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
 
             int color = this.parentScreen.getMenu().getPaletteColor(i);
 
-            fill(matrixStack, fromX, fromY, fromX + PALETTE_SCALE_FACTOR, fromY + PALETTE_SCALE_FACTOR, color);
+            guiGraphics.fill(fromX, fromY, fromX + PALETTE_SCALE_FACTOR, fromY + PALETTE_SCALE_FACTOR, color);
         }
     }
 
-    protected void drawPaletteSelector(PoseStack matrixStack, int currentPaletteSlot) {
+    protected void drawPaletteSelector(GuiGraphics guiGraphics, int currentPaletteSlot) {
         if (!this.parentScreen.getMenu().isPaletteAvailable()) {
             return;
         }
@@ -101,6 +98,6 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
         int selectorPositionX = this.getX() + (currentPaletteSlot % 2 != 0 ? PALETTE_OFFSET : 0) - PALETTE_BORDER;
         int selectorPositionY = this.getY() + (currentPaletteSlot / 2) * PALETTE_OFFSET - PALETTE_BORDER;
 
-        this.blit(matrixStack, selectorPositionX, selectorPositionY, SELECTOR_POSITION_U, SELECTOR_POSITION_V, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2);
+        guiGraphics.blit(EaselScreen.EASEL_GUI_TEXTURE_RESOURCE,  selectorPositionX, selectorPositionY, SELECTOR_POSITION_U, SELECTOR_POSITION_V, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2, PALETTE_SCALE_FACTOR + PALETTE_BORDER * 2);
     }
 }
