@@ -100,5 +100,6 @@
 	"item.zetter.warped_basic_frame": "诡异木画框",
 	"item.zetter.warped_plated_frame": "带铭牌的诡异木画框",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
-	"forge.configgui.zetter.painting.resolution": "Painting Resolution"
+	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
+	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
 }
