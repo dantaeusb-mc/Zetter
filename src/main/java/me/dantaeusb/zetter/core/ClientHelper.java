@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.core;
 
 import com.google.common.collect.Sets;
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.ZetterConfig;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
@@ -26,6 +27,10 @@ public class ClientHelper {
 
     public static boolean openUriAllowed() {
         return Minecraft.getInstance().options.chatLinks().get();
+    }
+
+    public static boolean helpButtonAllowed() {
+        return openUriAllowed() && ZetterConfig.CLIENT.enableHelpButton.get();
     }
 
     /**

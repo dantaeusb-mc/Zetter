@@ -21,7 +21,7 @@ version = mod_version
 group = mod_group_id
 
 base {
-    archivesName = mod_id
+    archivesName = mod_id + '-' + minecraft_version
 }
 
 apply plugin: 'net.minecraftforge.gradle'
