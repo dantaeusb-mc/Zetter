@@ -1,6 +1,5 @@
 {
 	"block.zetter.artist_table": "アーティストテーブル",
-	"block.zetter.easel": "イーゼル",
 	"console.zetter.result.requested_painting": "%1$s の絵画を要求されました。しばらくお待ちください。",
 	"console.zetter.result.exported_painting_client": "%1$s をMinecraftフォルダに保存しました.",
 	"console.zetter.result.exported_painting_server": "%1$s をMinecraftフォルダに保存しました.",
