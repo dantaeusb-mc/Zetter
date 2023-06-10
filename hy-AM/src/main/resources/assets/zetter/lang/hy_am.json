@@ -100,5 +100,6 @@
 	"item.zetter.warped_basic_frame": "Շեղված շրջանակ",
 	"item.zetter.warped_plated_frame": "Շեղված շրջանակ անվանատախտակով",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
-	"forge.configgui.zetter.painting.resolution": "Painting Resolution"
+	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
+	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
 }
