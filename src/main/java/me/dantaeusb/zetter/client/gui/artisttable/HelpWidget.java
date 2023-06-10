@@ -26,7 +26,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
     public HelpWidget(ArtistTableScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.artist_table.help"));
 
-        if (!ClientHelper.openUriAllowed()) {
+        if (!ClientHelper.helpButtonAllowed()) {
             this.active = false;
             this.visible = false;
         }

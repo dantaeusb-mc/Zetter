@@ -24,7 +24,7 @@ public class HelpWidget extends AbstractPaintingWidget implements Widget {
     public HelpWidget(EaselScreen parentScreen, int x, int y) {
         super(parentScreen, x, y, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("container.zetter.painting.help"));
 
-        if (!ClientHelper.openUriAllowed()) {
+        if (!ClientHelper.helpButtonAllowed()) {
             this.active = false;
             this.visible = false;
         }
