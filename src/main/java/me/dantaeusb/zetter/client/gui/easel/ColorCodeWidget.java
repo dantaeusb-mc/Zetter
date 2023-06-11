@@ -88,6 +88,14 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     public void updateColorValue(int color) {
         // Drop alpha channel
         color = color & 0x00FFFFFF;
+
+        // If player is entering, we're not updating
+        // to avoid recursive calls and annoying changes
+        // from other players
+        if (this.textField.isFocused()) {
+            return;
+        }
+
         this.textField.setValue(String.format("%1$06X", color));
     }
 
