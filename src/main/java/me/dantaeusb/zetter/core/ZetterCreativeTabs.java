@@ -12,7 +12,7 @@ import net.minecraftforge.registries.RegistryObject;
 public class ZetterCreativeTabs
 {
     @SubscribeEvent
-    public void buildContents(BuildCreativeModeTabContentsEvent event) {
+    public static void buildContents(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ZetterItems.PALETTE);
             event.accept(ZetterItems.CANVAS);
