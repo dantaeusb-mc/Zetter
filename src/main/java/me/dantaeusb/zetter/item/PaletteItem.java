@@ -11,7 +11,7 @@ public class PaletteItem extends Item
     public static int PALETTE_SIZE = 16;
 
     public PaletteItem() {
-        super(new Properties().durability(8192).tab(CreativeModeTab.TAB_TOOLS));
+        super(new Properties().durability(8192));
     }
 
     /**

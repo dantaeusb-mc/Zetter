@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -29,12 +30,8 @@ abstract public class AbstractPaintingWidget extends AbstractWidget implements G
 
     public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {}
 
-    /**
-     * @todo: [MED] Would be nice to make actual narrations, it seems quite easy with widget system
-     * @param narratorOutput
-     */
     @Override
-    public void updateNarration(NarrationElementOutput narratorOutput) {
-        this.defaultButtonNarrationText(narratorOutput);
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

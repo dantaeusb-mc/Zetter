@@ -4,7 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.ClientHelper;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * @todo: [MED] Combine with another help widget?
  */
-public class HelpWidget extends AbstractArtistTableWidget implements Widget {
+public class HelpWidget extends AbstractArtistTableWidget implements Renderable {
     final static String MANUAL_PAGE = "https://zetter.gallery/wiki/zetter#combining";
 
     final static int BUTTON_WIDTH = 11;
@@ -39,7 +39,7 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
             int iMouseX = (int) mouseX;
             int iMouseY = (int) mouseY;
 
-            if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
+            if (EaselScreen.isInRect(this.getX(), this.getY(), BUTTON_WIDTH, BUTTON_HEIGHT, iMouseX, iMouseY)) {
                 this.clicked = true;
                 ClientHelper.openUriPrompt(this.parentScreen, MANUAL_PAGE);
 
@@ -65,15 +65,15 @@ public class HelpWidget extends AbstractArtistTableWidget implements Widget {
 
         if (this.clicked) {
             buttonU += BUTTON_WIDTH * 2;
-        } else if (EaselScreen.isInRect(this.x, this.y, BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
+        } else if (EaselScreen.isInRect(this.getX(), this.getY(), BUTTON_WIDTH, BUTTON_HEIGHT, mouseX, mouseY)) {
             buttonU += BUTTON_WIDTH;
         }
 
-        blit(matrixStack, this.x, this.y, buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
+        blit(matrixStack, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
 
     @Override
-    public void updateNarration(NarrationElementOutput narrationElementOutput) {
+    public void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
 public class EaselItem extends Item
 {
     public EaselItem() {
-        super(new Properties().tab(CreativeModeTab.TAB_TOOLS));
+        super(new Properties());
     }
 
     public InteractionResult useOn(UseOnContext context) {

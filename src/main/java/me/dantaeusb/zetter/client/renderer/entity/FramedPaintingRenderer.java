@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.client.renderer.entity;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -35,6 +35,7 @@ import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
+import org.joml.Vector3f;
 
 public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
     public static ModelLayerLocation PAINTING_PLATE_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "custom_painting"), "plate_layer");
@@ -110,7 +111,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
         // On directions perpendicular to the facing it would be just 0
         matrixStack.translate((double)facingDirection.getStepX() * offsetAlignment, (double)facingDirection.getStepY() * offsetAlignment, (double)facingDirection.getStepZ() * offsetAlignment);
-        matrixStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - entity.getYRot()));
+        matrixStack.mulPose(Axis.YP.rotationDegrees(180.0F - entity.getYRot()));
 
         // Copied from ItemFrameRenderer
         final boolean flag = entity.isInvisible();
@@ -217,7 +218,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
             // Scale and prepare
             matrixStack.scale(scaleFactor, scaleFactor, scaleFactor);
-            matrixStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+            matrixStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
             matrixStack.translate(-16.0D, -16.0D, 0D);
 
             CanvasRenderer.getInstance().renderCanvas(matrixStack, renderBuffers, entity.getPaintingCode(), canvasData, combinedLight);

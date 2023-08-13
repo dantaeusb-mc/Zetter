@@ -57,11 +57,6 @@ public class BucketParametersTab extends AbstractTab {
         }
     }
 
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
-
     public void renderLabels(PoseStack matrixStack, int mouseX, int mouseY) {
         if (this.visible) {
             this.parentScreen.getFont().draw(

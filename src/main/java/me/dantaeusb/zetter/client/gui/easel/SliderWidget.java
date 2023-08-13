@@ -3,7 +3,9 @@ package me.dantaeusb.zetter.client.gui.easel;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -12,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
 
-public class SliderWidget extends AbstractPaintingWidget implements Widget {
+public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     final static int WIDTH = 150;
     final static int HEIGHT = 9;
 
@@ -111,12 +113,12 @@ public class SliderWidget extends AbstractPaintingWidget implements Widget {
             sliderV += HEIGHT;
         }
 
-        this.blit(matrixStack, this.x, this.y, SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
+        this.blit(matrixStack, this.getX(), this.getY(), SLIDER_POSITION_U, sliderV, WIDTH, HEIGHT);
     }
 
     protected void drawSliderForeground(PoseStack matrixStack) {
-        int sliderContentGlobalLeft = this.x + 3;
-        int sliderContentGlobalTop = this.y + 3;
+        int sliderContentGlobalLeft = this.getX() + 3;
+        int sliderContentGlobalTop = this.getY() + 3;
 
         int sliderContentWidth = WIDTH - 6;
         int sliderContentHeight = 3;
@@ -148,7 +150,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Widget {
     protected void handleSliderInteraction(final int mouseX, final int mouseY) {
         this.sliderDragging = true;
 
-        float percent = (float) (mouseX - this.x - 3) / (WIDTH - 7);
+        float percent = (float) (mouseX - this.getX() - 3) / (WIDTH - 7);
         percent = Mth.clamp(percent, 0.0f, 1.0f);
 
         this.sliderState = percent;
@@ -168,8 +170,8 @@ public class SliderWidget extends AbstractPaintingWidget implements Widget {
 
         int sliderContentWidth = WIDTH - 7;
 
-        int sliderGlobalLeft = this.x + (int) (sliderContentWidth * this.sliderState) + 3 - 2;
-        int sliderGlobalTop = this.y - 1;
+        int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * this.sliderState) + 3 - 2;
+        int sliderGlobalTop = this.getY() - 1;
 
         int sliderV = HANDLER_POSITION_V;
 

@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.renderer.item;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Vector3f;
+import com.mojang.math.Axis;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -10,7 +10,6 @@ import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
@@ -24,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.Objects;
+import org.joml.Vector3f;
 
 public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
     private static ItemRenderer renderer = null;
@@ -57,14 +57,14 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
         String canvasCode = CanvasItem.getCanvasCode(itemStack);
 
         if (inHand) {
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
-            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
             poseStack.scale(0.38F, 0.38F, 0.38F);
             poseStack.translate(-0.5D, -0.5D, 0.0D);
             poseStack.scale(0.0078125F, 0.0078125F, 0.0078125F);
         } else {
-            poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F));
-            poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
             poseStack.scale(0.38F, 0.38F, 0.38F);
         }
 

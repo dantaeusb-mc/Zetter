@@ -21,7 +21,7 @@ apply from: "https://moddingtutorials.org/applesilicon.gradle"
 apply plugin: 'maven-publish'
 //apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
 
-version = '1.19.2-0.21.3-rc'
+version = '1.19.4-0.21.4'
 group = 'com.dantaeusb.zetter' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'zetter'
 
@@ -29,7 +29,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'parchment', version: '1.19.3-2023.03.12-1.19.4'
+    mappings channel: 'parchment', version: '2023.06.26-1.19.4'
 
     runs {
         client {
@@ -92,7 +92,7 @@ minecraft {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 dependencies {
-    minecraft 'net.minecraftforge:forge:1.19.4-45.0.64'
+    minecraft 'net.minecraftforge:forge:1.19.4-45.1.0'
 }
 
 /*mixin {
@@ -109,7 +109,7 @@ jar {
         attributes([
             "Specification-Title": "Zetter",
             "Specification-Vendor": "dantaeusb",
-            "Specification-Version": "0.21.3-rc",
+            "Specification-Version": "0.21.4",
             "Implementation-Title": project.name,
             "Implementation-Version": project.jar.archiveVersion,
             "Implementation-Vendor" :"dantaeusb",

@@ -6,7 +6,9 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Widget;
+import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -21,7 +23,7 @@ import java.util.regex.Pattern;
 /**
  * @todo: [LOW] Disable if no palette
  */
-public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
+public class ColorCodeWidget extends AbstractPaintingWidget implements Renderable {
     private static final int INACTIVE_COLOR = 0xFF6D634D;
 
     final static int TEXTBOX_WIDTH = 82;
@@ -57,8 +59,8 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     public void initFields() {
         this.textField = new EditBox(
                 this.parentScreen.getFont(),
-                this.x + TEXTBOX_TEXT_OFFSET + 4,
-                this.y + TEXTBOX_TITLE_HEIGHT + 4,
+                this.getX() + TEXTBOX_TEXT_OFFSET + 4,
+                this.getY() + TEXTBOX_TITLE_HEIGHT + 4,
                 TEXTBOX_WIDTH - 7,
                 12,
                 Component.translatable("container.zetter.easel")
@@ -155,7 +157,7 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Quick check
-        if (EaselScreen.isInRect(this.x, this.y + TEXTBOX_TITLE_HEIGHT, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
+        if (EaselScreen.isInRect(this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
             this.setFocused(true);
             this.textField.setFocused(true);
             this.textField.setTextColor(Color.WHITE.getRGB());
@@ -190,8 +192,8 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
         this.parentScreen.getFont().draw(
                 matrixStack,
                 this.getMessage(),
-                (float) this.x - this.parentScreen.getGuiLeft(),
-                (float) this.y - this.parentScreen.getGuiTop(),
+                (float) this.getX() - this.parentScreen.getGuiLeft(),
+                (float) this.getY() - this.parentScreen.getGuiTop(),
                 Color.darkGray.getRGB()
         );
     }
@@ -202,6 +204,6 @@ public class ColorCodeWidget extends AbstractPaintingWidget implements Widget {
 
         int textboxV = TEXTBOX_POSITION_V + (this.textField.isFocused() ? TEXTBOX_HEIGHT : 0);
 
-        this.blit(matrixStack, this.x, this.y + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
+        this.blit(matrixStack, this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_POSITION_U, textboxV, TEXTBOX_WIDTH, TEXTBOX_HEIGHT);
     }
 }

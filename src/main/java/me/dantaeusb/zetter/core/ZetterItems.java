@@ -18,8 +18,8 @@ public class ZetterItems
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, Zetter.MOD_ID);
 
     public static final RegistryObject<EaselItem> EASEL = ITEMS.register("easel", () -> new EaselItem());
-    public static final RegistryObject<BlockItem> ARTIST_TABLE = ITEMS.register("artist_table", () -> new BlockItem(ZetterBlocks.ARTIST_TABLE.get(), new Item.Properties().tab(CreativeModeTab.TAB_TOOLS)));
-    public static final RegistryObject<CanvasItem> CANVAS = ITEMS.register("canvas", () -> new CanvasItem(new Item.Properties().stacksTo(1).tab(CreativeModeTab.TAB_TOOLS)));
+    public static final RegistryObject<BlockItem> ARTIST_TABLE = ITEMS.register("artist_table", () -> new BlockItem(ZetterBlocks.ARTIST_TABLE.get(), new Item.Properties()));
+    public static final RegistryObject<CanvasItem> CANVAS = ITEMS.register("canvas", () -> new CanvasItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<PaintingItem> PAINTING = ITEMS.register("painting", () -> new PaintingItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<PaintsItem> PAINTS = ITEMS.register("paints", () -> new PaintsItem());
     public static final RegistryObject<PaletteItem> PALETTE = ITEMS.register("palette", () -> new PaletteItem());
@@ -53,7 +53,7 @@ public class ZetterItems
 
     private static RegistryObject<FrameItem> registerFrame(String name, PaintingEntity.Materials material, boolean plated)
     {
-        RegistryObject<FrameItem> frameRegistryObject = ITEMS.register(name, () -> new FrameItem(new Item.Properties().stacksTo(64).tab(CreativeModeTab.TAB_TOOLS), material, plated));
+        RegistryObject<FrameItem> frameRegistryObject = ITEMS.register(name, () -> new FrameItem(new Item.Properties().stacksTo(64), material, plated));
         FRAMES.put(Helper.getFrameKey(material, plated), frameRegistryObject);
 
         return frameRegistryObject;

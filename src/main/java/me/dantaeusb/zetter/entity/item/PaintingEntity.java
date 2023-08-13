@@ -14,6 +14,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -361,7 +362,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
 
     @Nonnull
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 

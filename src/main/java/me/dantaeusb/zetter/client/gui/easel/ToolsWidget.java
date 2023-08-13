@@ -83,11 +83,6 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
-
-    @Override
     public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);

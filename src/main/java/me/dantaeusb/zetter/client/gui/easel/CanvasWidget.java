@@ -159,11 +159,6 @@ public class CanvasWidget extends AbstractPaintingWidget implements Renderable {
         return true;
     }
 
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
-
     public void renderWidget(@NotNull PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (!this.parentScreen.getMenu().isCanvasAvailable()) {
             GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
