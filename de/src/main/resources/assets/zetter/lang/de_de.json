@@ -8,7 +8,7 @@
 	"console.zetter.error.file_write_folder": "Exportordner kann nicht erstellt werden",
 	"console.zetter.error.file_write_folder_unable": "Exportordner kann nicht erstellt werden",
 	"console.zetter.error.file_write_folder_exists": "Eine Datei mit diesem Namen existiert bereits",
-	"console.zetter.error.file_write_file": "Unable to write image file",
+	"console.zetter.error.file_write_file": "Bilddatei konnte nicht geschrieben werden",
 	"console.zetter.error.invalid_painting_code": "Ungültiger Malerei-Code: %1$s",
 	"console.zetter.error.painting_not_found": "Gemälde nicht gefunden: %1$s",
 	"container.zetter.artistTable": "Künslertisch",
@@ -100,6 +100,6 @@
 	"item.zetter.warped_basic_frame": "Wirrstielrahmen",
 	"item.zetter.warped_plated_frame": "Wirrstielrahmen mit Namenschild",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
-	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
+	"forge.configgui.zetter.painting.resolution": "Bildauflösung",
 	"forge.configgui.zetter.gui.helpButton": "Hilfe-Button anzeigen"
 }
