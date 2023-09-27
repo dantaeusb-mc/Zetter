@@ -3,11 +3,11 @@
 	"console.zetter.result.requested_painting": "Painting %1$s was requested from the sever, please wait",
 	"console.zetter.result.exported_painting_client": "Painting %1$s was saved to your Minecraft folder",
 	"console.zetter.result.exported_painting_server": "Painting %1$s was saved to server folder",
-	"console.zetter.error.unknown": "Unexpected error happened: %1$s",
+	"console.zetter.error.unknown": "Ein unerwarteter Fehler ist aufgetreten: %1$s",
 	"console.zetter.error.file_write_error": "Die Datei zum Speichern des Bildes kann nicht geschrieben werden: %1$s",
-	"console.zetter.error.file_write_folder": "Cannot create export folder",
-	"console.zetter.error.file_write_folder_unable": "Cannot create export folder",
-	"console.zetter.error.file_write_folder_exists": "File with the same name exists",
+	"console.zetter.error.file_write_folder": "Exportordner kann nicht erstellt werden",
+	"console.zetter.error.file_write_folder_unable": "Exportordner kann nicht erstellt werden",
+	"console.zetter.error.file_write_folder_exists": "Eine Datei mit diesem Namen existiert bereits",
 	"console.zetter.error.file_write_file": "Unable to write image file",
 	"console.zetter.error.invalid_painting_code": "Ungültiger Malerei-Code: %1$s",
 	"console.zetter.error.painting_not_found": "Gemälde nicht gefunden: %1$s",
@@ -101,5 +101,5 @@
 	"item.zetter.warped_plated_frame": "Wirrstielrahmen mit Namenschild",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
 	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
-	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
+	"forge.configgui.zetter.gui.helpButton": "Hilfe-Button anzeigen"
 }
