@@ -4,6 +4,8 @@ import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratedElementType;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,5 +31,10 @@ abstract public class AbstractArtistTableWidget extends AbstractWidget implement
     public @Nullable
     Component getTooltip(int mouseX, int mouseY) {
         return this.getMessage();
+    }
+
+    @Override
+    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
+        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
 }

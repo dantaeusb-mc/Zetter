@@ -83,11 +83,15 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
     public void updateCombinedCanvasPosition() {
         if (this.getMenu().getMode() == ArtistTableMenu.Mode.COMBINE) {
-            this.previewWidget.setX(this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X);
-            this.previewWidget.setY(this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y);
+            this.previewWidget.setPosition(
+                this.getGuiLeft() + COMBINED_CANVAS_POSITION_COMBINE_X,
+                this.getGuiTop() + COMBINED_CANVAS_POSITION_COMBINE_Y
+            );
         } else {
-            this.previewWidget.setX(this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X);
-            this.previewWidget.setY(this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y);
+            this.previewWidget.setPosition(
+                this.getGuiLeft() + COMBINED_CANVAS_POSITION_SPLIT_X,
+                this.getGuiTop() + COMBINED_CANVAS_POSITION_SPLIT_Y
+            );
         }
     }
 

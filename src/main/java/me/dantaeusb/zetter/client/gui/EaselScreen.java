@@ -87,7 +87,6 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         final int HELP_POSITION_X = 197;
         final int HELP_POSITION_Y = 0;
 
-        // @todo: [LOW] Use rebuildWidgets in Screen
         this.paintingWidgets.clear();
 
         // Widgets

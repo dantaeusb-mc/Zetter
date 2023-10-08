@@ -71,9 +71,4 @@ public class HelpWidget extends AbstractArtistTableWidget implements Renderable 
 
         guiGraphics.blit(ArtistTableScreen.ARTIST_TABLE_GUI_TEXTURE_RESOURCE, this.getX(), this.getY(), buttonU, BUTTON_POSITION_V, BUTTON_WIDTH, BUTTON_HEIGHT, 512, 256);
     }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
 }

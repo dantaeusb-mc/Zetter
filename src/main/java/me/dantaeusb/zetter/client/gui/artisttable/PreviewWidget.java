@@ -110,9 +110,4 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
 
         return this.getMessage();
     }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
 }

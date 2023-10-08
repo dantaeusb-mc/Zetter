@@ -74,9 +74,4 @@ public class ChangeActionWidget extends AbstractArtistTableWidget implements Ren
             return CHANGE_TO_COMBINE_TITLE;
         }
     }
-
-    @Override
-    protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
-        narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
-    }
 }
