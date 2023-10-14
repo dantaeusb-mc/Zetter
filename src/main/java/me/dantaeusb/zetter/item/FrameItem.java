@@ -14,6 +14,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
@@ -31,6 +32,7 @@ public class FrameItem extends PaintingItem {
 
     /**
      * Use fallback to default behavior for frame
+     *
      * @param stack
      * @return
      */
@@ -69,8 +71,7 @@ public class FrameItem extends PaintingItem {
      * @param livingEntity
      * @return
      */
-    public static byte getHasPaintingPropertyOverride(ItemStack stack, @Nullable Level world, @Nullable LivingEntity livingEntity, int weirdInt)
-    {
+    public static byte getHasPaintingPropertyOverride(ItemStack stack, @Nullable Level world, @Nullable LivingEntity livingEntity, int weirdInt) {
         EnumFrameStyle hasPainting;
 
         if (StringUtil.isNullOrEmpty(getPaintingCode(stack))) {
@@ -100,23 +101,25 @@ public class FrameItem extends PaintingItem {
                 return InteractionResult.FAIL;
             }
 
-            Level world = context.getLevel();
+            Level level = context.getLevel();
 
             PaintingEntity paintingEntity = new PaintingEntity(
-                    world, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack), getGeneration(stack)
+                level, facePos, direction, this.material, this.hasPlate, getPaintingCode(stack), getBlockSize(stack), getGeneration(stack)
             );
 
-            if (!paintingEntity.survives()) {
+            if (paintingEntity.survives()) {
+                if (!level.isClientSide) {
+                    paintingEntity.playPlacementSound();
+                    level.gameEvent(player, GameEvent.ENTITY_PLACE, paintingEntity.position());
+                    level.addFreshEntity(paintingEntity);
+                }
+
+                stack.shrink(1);
+                return InteractionResult.sidedSuccess(level.isClientSide);
+            } else {
                 return InteractionResult.CONSUME;
             }
 
-            if (!world.isClientSide) {
-                paintingEntity.playPlacementSound();
-                world.addFreshEntity(paintingEntity);
-            }
-
-            player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-            return InteractionResult.sidedSuccess(world.isClientSide);
         }
     }
 
@@ -124,8 +127,7 @@ public class FrameItem extends PaintingItem {
         return !directionIn.getAxis().isVertical() && playerIn.mayUseItemAt(posIn, directionIn, itemStackIn);
     }
 
-    public enum EnumFrameStyle implements StringRepresentable
-    {
+    public enum EnumFrameStyle implements StringRepresentable {
         EMPTY(0, "empty", "Missing painting"),
         PAINTING(1, "painting", "Framed painting");
 
@@ -133,31 +135,31 @@ public class FrameItem extends PaintingItem {
         private final String name;
         private final String description;
 
-        EnumFrameStyle(int nbtId, String name, String description)
-        {
-            this.nbtId = (byte)nbtId;
+        EnumFrameStyle(int nbtId, String name, String description) {
+            this.nbtId = (byte) nbtId;
             this.name = name;
             this.description = description;
         }
 
         @Override
-        public String toString()
-        {
+        public String toString() {
             return this.description;
         }
 
         @Override
-        public String getSerializedName()
-        {
+        public String getSerializedName() {
             return this.name;
         }
 
-        public String getDescription() { return this.description; }
+        public String getDescription() {
+            return this.description;
+        }
 
-        public byte getPropertyOverrideValue() { return nbtId; }
+        public byte getPropertyOverrideValue() {
+            return nbtId;
+        }
 
-        public static EnumFrameStyle fromNBT(CompoundTag compoundNBT, String tagname)
-        {
+        public static EnumFrameStyle fromNBT(CompoundTag compoundNBT, String tagname) {
             byte hasPaintingValue = 0;
 
             if (compoundNBT != null && compoundNBT.contains(tagname)) {
@@ -169,11 +171,11 @@ public class FrameItem extends PaintingItem {
 
         /**
          * Write this enum to NBT
+         *
          * @param compoundNBT
          * @param tagName
          */
-        public void putIntoNBT(CompoundTag compoundNBT, String tagName)
-        {
+        public void putIntoNBT(CompoundTag compoundNBT, String tagName) {
             compoundNBT.putByte(tagName, this.nbtId);
         }
 
