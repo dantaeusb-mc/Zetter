@@ -36,6 +36,7 @@ public class Zetter
         MOD_EVENT_BUS = FMLJavaModLoadingContext.get().getModEventBus();
 
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ZetterConfig.serverSpec, "zetter-server.toml");
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ZetterConfig.clientSpec, "zetter-client.toml");
 
         ZetterBlocks.init(MOD_EVENT_BUS);
         ZetterItems.init(MOD_EVENT_BUS);
