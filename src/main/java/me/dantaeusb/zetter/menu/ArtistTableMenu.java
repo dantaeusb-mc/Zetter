@@ -446,11 +446,14 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
             ItemStack sourceStack = sourceSlot.getItem();
             outStack = sourceStack.copy();
 
-            // Combination, split & combined slots put items to inventory
+            // Combination, split & combined slots apply recipe AND put items to inventory
             if (
                 (sourceSlotIndex >= 0 && sourceSlotIndex < COMBINED_SLOT_TO) &&
                 sourceStack.getItem().equals(ZetterItems.CANVAS.get())
             ) {
+                // Apply the recipe / action for the slot
+                this.slots.get(sourceSlotIndex).onTake(playerIn, sourceStack);
+
                 if (!this.moveItemStackTo(sourceStack, COMBINED_SLOT_TO, HOTBAR_SLOTS_TO, true)) {
                     return ItemStack.EMPTY;
                 }
