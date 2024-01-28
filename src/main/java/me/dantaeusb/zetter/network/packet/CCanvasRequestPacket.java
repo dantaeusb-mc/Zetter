@@ -21,7 +21,7 @@ public class CCanvasRequestPacket {
      * Seems like buf is always at least 256 bytes, so we have to process written buffer size
      */
     public static CCanvasRequestPacket readPacketData(FriendlyByteBuf buf) {
-        String canvasName = buf.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+        String canvasName = buf.readUtf(Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
 
         return new CCanvasRequestPacket(canvasName);
     }
@@ -30,7 +30,7 @@ public class CCanvasRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_LENGTH);
+        buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
     }
 
     public static void handle(final CCanvasRequestPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {

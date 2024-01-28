@@ -5,7 +5,6 @@ import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterEntities;
 import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -27,7 +26,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.entity.IEntityAdditionalSpawnData;
 import net.minecraftforge.network.NetworkHooks;
 import org.apache.commons.lang3.Validate;
@@ -268,7 +266,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         buffer.writeBlockPos(this.pos);
         buffer.writeByte((byte)this.direction.get2DDataValue());
 
-        buffer.writeUtf(this.paintingCode, Helper.CANVAS_CODE_MAX_LENGTH);
+        buffer.writeUtf(this.paintingCode, Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
 
         buffer.writeInt(this.blockWidth);
         buffer.writeInt(this.blockHeight);
@@ -281,7 +279,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         this.pos = buffer.readBlockPos();
         this.direction = Direction.from2DDataValue(buffer.readByte());
 
-        this.paintingCode = buffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+        this.paintingCode = buffer.readUtf(Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
 
         this.blockWidth = buffer.readInt();
         this.blockHeight = buffer.readInt();

@@ -31,7 +31,7 @@ public class CCanvasUnloadRequestPacket {
     public static CCanvasUnloadRequestPacket readPacketData(FriendlyByteBuf buf) {
         CCanvasUnloadRequestPacket packet = new CCanvasUnloadRequestPacket();
 
-        packet.canvasName = buf.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+        packet.canvasName = buf.readUtf(Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
 
         return packet;
     }
@@ -40,7 +40,7 @@ public class CCanvasUnloadRequestPacket {
      * Writes the raw packet data to the data stream.
      */
     public void writePacketData(FriendlyByteBuf buf) {
-        buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_LENGTH);
+        buf.writeUtf(this.canvasName, Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
     }
 
     public String getCanvasName() {

@@ -34,7 +34,7 @@ public class CSignPaintingPacket {
 
         try {
             packet.slot = buf.readByte();
-            packet.paintingTitle = buf.readUtf(Helper.PAINTING_TITLE_MAX_LENGTH);
+            packet.paintingTitle = buf.readUtf(Helper.PAINTING_TITLE_MAX_BYTE_LENGTH);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             Zetter.LOG.warn("Exception while reading CCreatePaintingPacket: " + e);
             return packet;
@@ -48,7 +48,7 @@ public class CSignPaintingPacket {
      */
     public void writePacketData(FriendlyByteBuf buf) {
         buf.writeByte(this.slot);
-        buf.writeUtf(this.paintingTitle, Helper.PAINTING_TITLE_MAX_LENGTH);
+        buf.writeUtf(this.paintingTitle, Helper.PAINTING_TITLE_MAX_BYTE_LENGTH);
     }
 
     public int getSlot() {

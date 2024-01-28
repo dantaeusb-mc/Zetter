@@ -37,7 +37,7 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
     public static SEaselCanvasInitializationPacket readPacketData(FriendlyByteBuf networkBuffer) {
         try {
             final int easelEntityId = networkBuffer.readInt();
-            final String canvasCode = networkBuffer.readUtf(Helper.CANVAS_CODE_MAX_LENGTH);
+            final String canvasCode = networkBuffer.readUtf(Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
             final long timestamp = networkBuffer.readLong();
 
             final CanvasData canvasData = ZetterCanvasTypes.CANVAS.get().readPacketData(networkBuffer);
@@ -54,7 +54,7 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
         networkBuffer.writeInt(this.easelEntityId);
-        networkBuffer.writeUtf(this.canvasCode, Helper.CANVAS_CODE_MAX_LENGTH);
+        networkBuffer.writeUtf(this.canvasCode, Helper.CANVAS_CODE_MAX_BYTE_LENGTH);
         networkBuffer.writeLong(this.timestamp);
 
         ZetterCanvasTypes.CANVAS.get().writePacketData(this.canvasData, networkBuffer);
