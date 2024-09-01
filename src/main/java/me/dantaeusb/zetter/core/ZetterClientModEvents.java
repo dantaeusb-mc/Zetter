@@ -1,11 +1,14 @@
 package me.dantaeusb.zetter.core;
 
+import com.mojang.datafixers.util.Either;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
+import me.dantaeusb.zetter.client.gui.tooltip.CanvasTooltipRenderer;
 import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
+import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
@@ -14,8 +17,10 @@ import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.RegistryObject;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ZetterClientModEvents {
@@ -114,6 +119,23 @@ public class ZetterClientModEvents {
 
             if (overlay instanceof PaintingInfoOverlay) {
                 ((PaintingInfoOverlay) overlay).setCanvasData((PaintingData) event.canvasData);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void registerGatherTooltipComponent(RenderTooltipEvent.GatherComponents event) {
+        if (event.getItemStack().is(ZetterItems.PAINTING.get())) {
+            event.getTooltipElements().add(0, Either.right(new CanvasTooltipRenderer.CanvasComponent(event.getItemStack())));
+        }
+
+        if (event.getItemStack().is(ZetterItems.CANVAS.get())) {
+            event.getTooltipElements().add(0, Either.right(new CanvasTooltipRenderer.CanvasComponent(event.getItemStack())));
+        }
+
+        for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
+            if (event.getItemStack().getItem() == frame.get() && FrameItem.getPaintingCode(event.getItemStack()) != null) {
+                event.getTooltipElements().add(0, Either.right(new CanvasTooltipRenderer.CanvasComponent(event.getItemStack())));
             }
         }
     }
