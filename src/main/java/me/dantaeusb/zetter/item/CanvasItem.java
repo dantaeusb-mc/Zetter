@@ -27,6 +27,7 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
+import java.util.Date;
 import java.util.List;
 
 public class CanvasItem extends Item
@@ -264,10 +265,6 @@ public class CanvasItem extends Item
      */
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
-        if (!stack.is(ZetterItems.CANVAS.get())) {
-            return null;
-        }
-
         CompoundTag compoundNBT = stack.getTag();
 
         if (compoundNBT == null || !compoundNBT.contains(NBT_TAG_CACHED_BLOCK_SIZE)) {
