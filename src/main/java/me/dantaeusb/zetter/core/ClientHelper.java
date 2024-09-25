@@ -3,7 +3,7 @@ package me.dantaeusb.zetter.core;
 import com.google.common.collect.Sets;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.ZetterConfig;
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.CanvasScreen;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
@@ -89,7 +89,7 @@ public class ClientHelper {
      */
     public static void openCanvasScreen(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
         Minecraft.getInstance().setScreen(
-                PaintingScreen.createScreenForCanvas(
+                CanvasScreen.createScreenForCanvas(
                         player,
                         canvasCode,
                         canvasData,
@@ -108,7 +108,7 @@ public class ClientHelper {
      */
     public static void openPaintingScreen(Player player, String canvasCode, PaintingData canvasData, InteractionHand hand) {
         Minecraft.getInstance().setScreen(
-                PaintingScreen.createScreenForPainting(
+                CanvasScreen.createScreenForPainting(
                         player,
                         canvasCode,
                         canvasData,

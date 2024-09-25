@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.entity.item;
 
+import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -43,12 +44,14 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.NetworkHooks;
+import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.function.Predicate;
 
-public class   EaselEntity extends Entity implements ItemStackHandlerListener, MenuProvider {
+public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStackHandlerListener, MenuProvider {
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
     private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
@@ -79,7 +82,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         this.entityData.define(DATA_ID_CANVAS_CODE, "");
     }
 
-    public @Nullable String getEntityCanvasCode() {
+    public @Nullable String getCanvasCode() {
         String canvasCode = this.entityData.get(DATA_ID_CANVAS_CODE);
 
         if (canvasCode.isEmpty()) {
@@ -94,12 +97,41 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
      * render canvas on easel
      * @param canvasCode
      */
-    protected void setEntityCanvasCode(@Nullable String canvasCode) {
+    protected void setCanvasCode(@Nullable String canvasCode) {
         if (canvasCode != null) {
             this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
         } else {
             this.entityData.set(DATA_ID_CANVAS_CODE, "");
         }
+    }
+
+    @Override
+    public Optional<Matrix4f> getCanvasMatrixTransform(float partialTicks) {
+        CanvasData canvasData = CanvasItem.getCanvasData(this.getCanvasStack(), this.level());
+
+        if (canvasData == null) {
+            return Optional.empty();
+        }
+
+        final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
+        final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
+
+        final float scaleFactor = 1.0F / 16.0F;
+
+        Matrix4f matrixTransform = new Matrix4f();
+        matrixTransform.scale(scaleFactor, scaleFactor, scaleFactor);
+        matrixTransform.translate(-8.0f, 12.5f, -4.0f);
+        matrixTransform.rotate(Axis.XP.rotation(0.1745f));
+        matrixTransform.rotate(Axis.ZP.rotationDegrees(180.0f));
+        matrixTransform.translate(-8.0f - (8.0f * canvasBlockWidth), -16.0f * canvasBlockHeight, 0.0f);
+
+        return Optional.of(matrixTransform);
+    }
+
+    @Override
+    public boolean playerCanDraw(Player player) {
+        // @todo: Add frustum check?
+        return this.hasCanvas();
     }
 
     public Packet<ClientGamePacketListener> getAddEntityPacket() {
@@ -135,7 +167,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         ItemStack canvasStack = this.easelContainer.getCanvasStack();
 
         if (canvasStack.isEmpty()) {
-            this.setEntityCanvasCode(null);
+            this.setCanvasCode(null);
             return;
         }
 
@@ -148,7 +180,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
             canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
         }
 
-        this.setEntityCanvasCode(canvasCode);
+        this.setCanvasCode(canvasCode);
     }
 
     public boolean canPlayerAccessInventory(Player player) {
@@ -181,8 +213,8 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         compoundTag.put(NBT_TAG_EASEL_STORAGE, this.easelContainer.serializeNBT());
 
-        if (this.getEntityCanvasCode() != null) {
-            compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getEntityCanvasCode());
+        if (this.getCanvasCode() != null) {
+            compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getCanvasCode());
         }
     }
 
@@ -194,7 +226,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
         final String canvasCode = compoundTag.getString(NBT_TAG_CANVAS_CODE);
 
         if (canvasCode != null) {
-            this.setEntityCanvasCode(canvasCode);
+            this.setCanvasCode(canvasCode);
         }
     }
 
@@ -245,7 +277,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     public void openInventory(Player player) {
         if (!this.level().isClientSide()) {
             NetworkHooks.openScreen((ServerPlayer) player, this, (packetBuffer) -> {
-                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getEntityCanvasCode());
+                SEaselMenuCreatePacket packet = new SEaselMenuCreatePacket(this.getId(), this.getCanvasCode());
                 packet.writePacketData(packetBuffer);
             });
         }
@@ -296,7 +328,7 @@ public class   EaselEntity extends Entity implements ItemStackHandlerListener, M
     // specific
 
     public boolean hasCanvas() {
-        return this.getEntityCanvasCode() != null;
+        return this.getCanvasCode() != null;
     }
 
     public @Nullable ItemStack getCanvasStack() {

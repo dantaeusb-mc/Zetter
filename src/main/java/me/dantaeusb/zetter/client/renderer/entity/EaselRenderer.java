@@ -11,7 +11,6 @@ import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -26,6 +25,7 @@ import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 public class EaselRenderer extends EntityRenderer<EaselEntity> {
     public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
@@ -46,7 +46,6 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
     }
 
     public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        Minecraft minecraft = Minecraft.getInstance();
         VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
         poseStack.pushPose();
@@ -57,12 +56,12 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
 
         if (easelEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-            CanvasData canvasData = getCanvasData(easelEntity.level(), easelEntity.getEntityCanvasCode());
+            CanvasData canvasData = getCanvasData(easelEntity.level(), easelEntity.getCanvasCode());
 
             if (canvasData != null) {
                 this.renderCanvas(easelEntity, canvasData, partialTicks, poseStack, buffer, packedLight);
             } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(easelEntity.getEntityCanvasCode());
+                CanvasRenderer.getInstance().queueCanvasTextureUpdate(easelEntity.getCanvasCode());
             }
         }
 
@@ -74,20 +73,18 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
          * Rendering front side
          * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
          */
-
-        final float scaleFactor = 1.0F / 16.0F;
-
         final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
         final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
-        // Scale and prepare
-        poseStack.scale(scaleFactor, scaleFactor, scaleFactor);
-        poseStack.translate(-8.0D, 12.5D, -4.0D);
-        poseStack.mulPose(Axis.XP.rotation(0.1745F));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(180.0F));
-        poseStack.translate(-8.0D - (8.0D * canvasBlockWidth), -16.0D * canvasBlockHeight, 0.0D);
+        Optional<Matrix4f> matrixTransform = easelEntity.getCanvasMatrixTransform(partialTicks);
 
-        CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getEntityCanvasCode(), canvasData, packedLight);
+        if (matrixTransform.isEmpty()) {
+            return;
+        }
+
+        poseStack.mulPoseMatrix(matrixTransform.get());
+
+        CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getCanvasCode(), canvasData, packedLight);
 
         /**
          * Rendering canvas back and sides

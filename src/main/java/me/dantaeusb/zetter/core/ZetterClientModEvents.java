@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.core;
 
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.datafixers.util.Either;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
@@ -15,12 +16,17 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ShaderInstance;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterShadersEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.RegistryObject;
+
+import java.io.IOException;
 
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ZetterClientModEvents {

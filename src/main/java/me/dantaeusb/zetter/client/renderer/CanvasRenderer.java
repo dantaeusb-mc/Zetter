@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.client.renderer;
 
 import com.google.common.collect.Maps;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.dantaeusb.zetter.Zetter;
@@ -17,6 +18,7 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
@@ -80,13 +82,13 @@ public class CanvasRenderer implements AutoCloseable {
      *
      * @todo: [LOW] Make data optional, provide extra interface
      *
-     * @param matrixStack
+     * @param poseStack
      * @param renderTypeBuffer
      * @param canvasCode
      * @param canvas
      * @param combinedLight
      */
-    public void renderCanvas(PoseStack matrixStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
+    public void renderCanvas(PoseStack poseStack, MultiBufferSource renderTypeBuffer, String canvasCode, AbstractCanvasData canvas, int combinedLight) {
         // 0 is a reserved fallback value
         if (canvasCode.equals(CanvasData.getCanvasCode(0))) return;
 
@@ -106,7 +108,7 @@ public class CanvasRenderer implements AutoCloseable {
             return;
         }
 
-        rendererInstance.render(matrixStack, renderTypeBuffer, combinedLight);
+        rendererInstance.render(poseStack, renderTypeBuffer, combinedLight);
     }
 
     /*
