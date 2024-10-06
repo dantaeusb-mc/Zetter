@@ -2,67 +2,90 @@ package me.dantaeusb.zetter.client.gui;
 
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.*;
-import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
-import me.dantaeusb.zetter.client.gui.easel.*;
-import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.core.ZetterRenderTypes;
+import me.dantaeusb.zetter.client.gui.painting.*;
+import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolTabGroupWidget;
+import me.dantaeusb.zetter.client.gui.painting.tool.BrushTabGroupWidget;
+import me.dantaeusb.zetter.client.gui.painting.tool.BucketTabGroupWidget;
+import me.dantaeusb.zetter.client.gui.painting.tool.PencilTabGroupWidget;
+import me.dantaeusb.zetter.client.gui.painting.util.state.CanvasOverlayState;
+import me.dantaeusb.zetter.client.gui.painting.util.state.PaintingScreenState;
+import me.dantaeusb.zetter.client.gui.painting.util.PaletteAccessor;
+import me.dantaeusb.zetter.client.gui.painting.util.state.ToolsParameters;
+import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
+import me.dantaeusb.zetter.painting.Tools;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
 
 import java.util.List;
-import java.util.Optional;
 
+/**
+ * @todo: Close when canvas is destroyed / removed
+ */
 public class PaintingScreen extends Screen {
   // This is the resource location for the background image
   public static final ResourceLocation PAINTING_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/painting.png");
   private static final float MAX_ASPECT_RATIO = 16.0f / 10.0f;
 
-  private final List<AbstractEaselWidget> paintingWidgets = Lists.newArrayList();
+  private final List<AbstractPaintingWidget> paintingWidgets = Lists.newArrayList();
+  private final List<AbstractToolTabGroupWidget> toolWidgets = Lists.newArrayList();
 
-  private CanvasHolderEntity canvasHolderEntity;
+  private final CanvasHolderEntity canvasHolderEntity;
 
-  /**
-   * Starting X position for the Gui. Inconsistent use for Gui backgrounds.
-   */
-  protected int leftPos;
-  /**
-   * Starting Y position for the Gui. Inconsistent use for Gui backgrounds.
-   */
-  protected int topPos;
+  protected int virtualWindowWidth;
+  protected int virtualWindowHeight;
+  protected int canvasWindowLeftPos;
+  protected int canvasWindowTopPos;
+  protected int toolsWindowLeftPos;
+  protected int toolsWindowTopPos;
 
   /**
    * The X size of the inventory window in pixels.
    */
-  protected int imageWidth = 187;
+  protected int imageWidth = 195;
   /**
    * The Y size of the inventory window in pixels.
    */
-  protected int imageHeight = 288;
+  protected int imageHeight = 256;
 
-  /**
-   * @todo: Use player's last known preference
-   */
-  private CanvasMode canvasMode = CanvasMode.IMMERSIVE_BACKGROUND;
+  private final PaletteAccessor paletteAccessor;
 
-  public PaintingScreen(CanvasHolderEntity canvasHolderEntity) {
+  private PaintingScreenState paintingScreenState;
+
+  private ToolsParameters toolsParameters;
+
+  // Widgets
+  private CanvasLayer canvasLayer;
+  private ToolsWidget toolsWidget;
+  private ZoomWidget zoomWidget;
+  private CanvasModeWidget canvasModeWidget;
+  private ColorPickerWidget colorPickerWidget;
+  private BrushTabGroupWidget brushToolWidget;
+  private PencilTabGroupWidget pencilToolWidget;
+  private BucketTabGroupWidget bucketToolWidget;
+
+  public PaintingScreen(ItemStack paletteStack, CanvasHolderEntity canvasHolderEntity) {
     super(Component.translatable("screen.zetter.painting"));
 
+    this.paletteAccessor = new PaletteAccessor(paletteStack);
     this.canvasHolderEntity = canvasHolderEntity;
+
+    // @todo: Read from user capability or something
+    this.paintingScreenState = new PaintingScreenState(
+        this.paletteAccessor.getPaletteColor(0),
+        0,
+        Tools.PENCIL,
+        CanvasMode.IMMERSIVE_BACKGROUND,
+        ColorSpace.okHSL,
+        new CanvasOverlayState(0, 0, 1)
+    );
   }
 
   @Override
@@ -70,34 +93,148 @@ public class PaintingScreen extends Screen {
     super.init();
 
     float aspectRatio = (float) this.width / (float) this.height;
-    int virtualWidth = this.width;
-    int virtualHeight = this.height;
+    this.virtualWindowWidth = this.width;
+    this.virtualWindowHeight = this.height;
 
     if (aspectRatio > MAX_ASPECT_RATIO) {
-      virtualWidth = (int) (this.height * MAX_ASPECT_RATIO);
+      this.virtualWindowWidth = (int) (this.height * MAX_ASPECT_RATIO);
     } else {
-      virtualHeight = (int) (this.width / MAX_ASPECT_RATIO);
+      this.virtualWindowHeight = (int) (this.width / MAX_ASPECT_RATIO);
     }
 
-    this.leftPos = (this.width - virtualWidth) / 2 + virtualWidth - this.imageWidth - 10;
-    this.topPos = (this.height - virtualHeight) / 2 + (virtualHeight - this.imageHeight) / 2;
+    this.canvasWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + 10;
+    this.canvasWindowTopPos = (this.height - this.virtualWindowHeight) / 2;
+
+    this.toolsWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + this.virtualWindowWidth - this.imageWidth - 10;
+    this.toolsWindowTopPos = (this.height - this.virtualWindowHeight) / 2 + (this.virtualWindowHeight - this.imageHeight) / 2;
+
+    final int TOOLS_WIDGET_POSITION_X = 4;
+    final int TOOLS_WIDGET_POSITION_Y = 16;
+    final int ZOOM_WIDGET_POSITION_X = 4;
+    final int ZOOM_WIDGET_POSITION_Y = 205;
+    final int CANVAS_MODE_WIDGET_POSITION_X = 4;
+    final int CANVAS_MODE_WIDGET_POSITION_Y = 152;
+    final int COLOR_PICKER_WIDGET_POSITION_X = 31;
+    final int COLOR_PICKER_WIDGET_POSITION_Y = 0;
+
+    this.canvasLayer = new CanvasLayer(this);
+    this.addWidget(this.canvasLayer);
+
+    this.canvasLayer.init(this.canvasWindowLeftPos, this.canvasWindowTopPos, this.virtualWindowWidth - this.imageWidth - 10, this.virtualWindowHeight);
+
+    this.toolsWidget = new ToolsWidget(this, TOOLS_WIDGET_POSITION_X, TOOLS_WIDGET_POSITION_Y);
+    this.addPaintingWidget(this.toolsWidget);
+    this.zoomWidget = new ZoomWidget(this, ZOOM_WIDGET_POSITION_X, ZOOM_WIDGET_POSITION_Y);
+    this.addPaintingWidget(this.zoomWidget);
+    this.canvasModeWidget = new CanvasModeWidget(this, CANVAS_MODE_WIDGET_POSITION_X, CANVAS_MODE_WIDGET_POSITION_Y);
+    this.addPaintingWidget(this.canvasModeWidget);
+
+    this.colorPickerWidget = new ColorPickerWidget(this, COLOR_PICKER_WIDGET_POSITION_X, COLOR_PICKER_WIDGET_POSITION_Y);
+    this.addPaintingWidget(this.colorPickerWidget);
+
+    this.brushToolWidget = new BrushTabGroupWidget(this);
+    this.addToolWidget(this.brushToolWidget);
+    this.pencilToolWidget = new PencilTabGroupWidget(this);
+    this.addToolWidget(this.pencilToolWidget);
+    this.bucketToolWidget = new BucketTabGroupWidget(this);
+    this.addToolWidget(this.bucketToolWidget);
+
+    this.setPaintingScreenState(this.paintingScreenState);
   }
+
+  public void addPaintingWidget(AbstractPaintingWidget paintingWidget) {
+    this.addRenderableWidget(paintingWidget);
+    this.paintingWidgets.add(paintingWidget);
+  }
+
+  private void addToolWidget(AbstractToolTabGroupWidget paintingWidget) {
+    this.addRenderableWidget(paintingWidget);
+    this.paintingWidgets.add(paintingWidget);
+    this.toolWidgets.add(paintingWidget);
+  }
+
+  /*
+   * Interactions
+   */
+  public PaintingScreenState getPaintingScreenState() {
+    return this.paintingScreenState;
+  }
+
+  public void setPaintingScreenState(PaintingScreenState paintingScreenState) {
+    paintingScreenState = this.beforePaintingScreenStateChange(paintingScreenState);
+    this.paintingScreenState = paintingScreenState;
+    this.afterPaintingScreenStateChange(paintingScreenState);
+  }
+
+  public ToolsParameters getToolsParameters() {
+    return this.toolsParameters;
+  }
+
+  public Color getPaletteColor(int index) {
+    return this.paletteAccessor.getPaletteColor(index);
+  }
+
+  private PaintingScreenState beforePaintingScreenStateChange(PaintingScreenState newState) {
+    if (newState.currentPaletteSlot() != this.paintingScreenState.currentPaletteSlot()) {
+      newState = newState.withCurrentColor(this.paletteAccessor.getPaletteColor(newState.currentPaletteSlot()));
+    }
+
+    if (newState.currentColor().getHsl() != this.paintingScreenState.currentColor().getHsl()) {
+      this.paletteAccessor.setPaletteColor(this.paintingScreenState.currentPaletteSlot(), newState.currentColor());
+    }
+
+    return newState;
+  }
+
+  private void afterPaintingScreenStateChange(PaintingScreenState newState) {
+    for (AbstractToolTabGroupWidget toolWidget : this.toolWidgets) {
+      toolWidget.setVisibility(newState.currentTool().equals(toolWidget.getTool()));
+    }
+  }
+
+  public CanvasHolderEntity getCanvasHolderEntity() {
+    return this.canvasHolderEntity;
+  }
+
+  /*
+   * History
+   */
+
+  public boolean canUndo() {
+    return false;
+  }
+
+  public void undo() {
+    // @todo: Implement undo
+  }
+
+  public boolean canRedo() {
+    return false;
+  }
+
+  public void redo() {
+    // @todo: Implement undo
+  }
+
+  /*
+   * Render
+   */
 
   @Override
   public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
     this.renderBackground(guiGraphics);
     this.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
-    RenderSystem.disableDepthTest();
     //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.ContainerScreenEvent.Render.Background(this, guiGraphics, mouseX, mouseY));
-    super.render(guiGraphics, mouseX, mouseY, partialTicks);
     guiGraphics.pose().pushPose();
-    guiGraphics.pose().translate((float) this.leftPos, (float) this.topPos, 0.0F);
+    guiGraphics.pose().translate((float) this.toolsWindowLeftPos, (float) this.toolsWindowTopPos, 0.0F);
+    RenderSystem.disableDepthTest();
+
     super.render(guiGraphics, mouseX, mouseY, partialTicks);
 
-    this.renderPicker(guiGraphics, partialTicks);
-    this.renderCanvas(guiGraphics, partialTicks);
     //this.renderTooltip(guiGraphics, mouseX, mouseY);
     RenderSystem.enableDepthTest();
+
+    guiGraphics.pose().popPose();
   }
 
   /**
@@ -106,7 +243,7 @@ public class PaintingScreen extends Screen {
    * @param guiGraphics
    */
   public void renderBackground(@NotNull GuiGraphics guiGraphics) {
-    switch (this.canvasMode) {
+    switch (this.getPaintingScreenState().canvasMode()) {
       case IMMERSIVE:
         break;
       case IMMERSIVE_BACKGROUND:
@@ -126,96 +263,7 @@ public class PaintingScreen extends Screen {
     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     RenderSystem.setShaderTexture(0, PAINTING_GUI_TEXTURE_RESOURCE);
 
-    guiGraphics.blit(PAINTING_GUI_TEXTURE_RESOURCE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, this.imageWidth, this.imageHeight);
-  }
-
-  protected void renderCanvas(GuiGraphics guiGraphics, float partialTicks) {
-    Minecraft minecraft = Minecraft.getInstance();
-
-    if (minecraft.level == null) {
-      return;
-    }
-
-    String canvasCode = this.canvasHolderEntity.getCanvasCode();
-    if (canvasCode == null) {
-      return;
-    }
-
-    CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(minecraft.level);
-    AbstractCanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
-
-    if (canvasData == null) {
-      return;
-    }
-
-    Optional<Matrix4f> matrixTransform = this.canvasHolderEntity.getCanvasMatrixTransform(partialTicks);
-
-    if (matrixTransform.isEmpty()) {
-      return;
-    }
-
-    guiGraphics.flush();
-
-    Vec3 entityPosition = this.canvasHolderEntity.getPosition(partialTicks);
-    Camera camera = minecraft.gameRenderer.getMainCamera();
-
-    Matrix4f projectionMatrix = minecraft.gameRenderer.getProjectionMatrix(70.0F);
-
-    RenderSystem.backupProjectionMatrix();
-    RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
-
-    RenderSystem.getModelViewStack().translate(0.0D, 0.0D, -1000F + net.minecraftforge.client.ForgeHooksClient.getGuiFarPlane());
-    RenderSystem.applyModelViewMatrix();
-
-    Vec3 cameraPosition = camera.getPosition();
-
-    PoseStack poseStack = guiGraphics.pose();
-
-    Matrix4f lastMatrix = poseStack.last().pose();
-    poseStack.popPose();
-
-    poseStack.pushPose();
-    poseStack.last().pose().identity();
-
-    poseStack.mulPose(Axis.XP.rotationDegrees(camera.getXRot()));
-    poseStack.mulPose(Axis.YP.rotationDegrees(camera.getYRot() + 180.0F));
-
-    poseStack.translate(entityPosition.x - cameraPosition.x, entityPosition.y - cameraPosition.y, entityPosition.z - cameraPosition.z);
-    poseStack.mulPose(Axis.XP.rotationDegrees(this.canvasHolderEntity.getXRot()));
-    poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - this.canvasHolderEntity.getYRot()));
-    poseStack.mulPoseMatrix(matrixTransform.get());
-
-    MultiBufferSource.BufferSource renderTypeBufferImpl = guiGraphics.bufferSource();
-    CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
-    renderTypeBufferImpl.endBatch();
-
-    poseStack.popPose();
-    RenderSystem.restoreProjectionMatrix();
-    RenderSystem.getModelViewStack().setIdentity();
-    RenderSystem.applyModelViewMatrix();
-
-    poseStack.pushPose();
-    poseStack.last().pose().set(lastMatrix);
-  }
-
-  public void renderPicker(GuiGraphics guiGraphics, float partialTicks) {
-    RenderSystem.setShader(ZetterRenderTypes::getOklchPaletteShader);
-    ZetterRenderTypes.setOklchLightness(0.5f);
-
-    Matrix4f matrix4f = guiGraphics.pose().last().pose();
-
-    int pX1 = 62;
-    int pY1 = 16;
-    int pX2 = pX1 + 116;
-    int pY2 = pY1 + 116;
-
-    BufferBuilder bufferbuilder = Tesselator.getInstance().getBuilder();
-    bufferbuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-    bufferbuilder.vertex(matrix4f, (float)pX1, (float)pY1, 0.0f).uv(0, 0).endVertex();
-    bufferbuilder.vertex(matrix4f, (float)pX1, (float)pY2, 0.0f).uv(0, 1).endVertex();
-    bufferbuilder.vertex(matrix4f, (float)pX2, (float)pY2, 0.0f).uv(1, 1).endVertex();
-    bufferbuilder.vertex(matrix4f, (float)pX2, (float)pY1, 0.0f).uv(1, 0).endVertex();
-    BufferUploader.drawWithShader(bufferbuilder.end());
+    guiGraphics.blit(PAINTING_GUI_TEXTURE_RESOURCE, this.toolsWindowLeftPos, this.toolsWindowTopPos, 0, 0, this.imageWidth, this.imageHeight);
   }
 
   /**
@@ -320,6 +368,8 @@ public class PaintingScreen extends Screen {
    */
   @Override
   public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+
+
     /*if (this.getCurrentTab().keyReleased(keyCode, scanCode, modifiers)) {
       return true;
     }
@@ -336,32 +386,13 @@ public class PaintingScreen extends Screen {
 
   @Override
   public boolean charTyped(char codePoint, int modifiers) {
-    //this.getCurrentTab().charTyped(codePoint, modifiers);
-
-    return super.charTyped(codePoint, modifiers);
-  }
-
-  /**
-   * We have a little complicated logic with active tabs here
-   *
-   * @param mouseX
-   * @param mouseY
-   * @param button
-   * @return
-   */
-  @Override
-  public boolean mouseClicked(double mouseX, double mouseY, int button) {
-    /*if (this.dragStart == null) {
-      this.dragStart = new double[]{mouseX, mouseY};
-      this.dragStartCanvasOffset = new int[]{this.getMenu().getCanvasOffsetX(), this.getMenu().getCanvasOffsetY()};
+    for (AbstractPaintingWidget paintingWidget : this.paintingWidgets) {
+      if (paintingWidget.charTyped(codePoint, modifiers)) {
+        return true;
+      }
     }
 
-    // We need to handle tab clicks first as we might have input fields
-    // Like color HEX that don't update when focused
-    // So palette change will be ignored if we handle it first
-    this.getCurrentTab().mouseClicked(mouseX, mouseY, button);*/
-
-    return super.mouseClicked(mouseX, mouseY, button);
+    return super.charTyped(codePoint, modifiers);
   }
 
   /**
@@ -376,11 +407,11 @@ public class PaintingScreen extends Screen {
    */
   @Override
   public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-    /*this.dragCurrent = new double[]{mouseX, mouseY};
-
-    this.canvasWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-
-    this.getCurrentTab().mouseDragged(mouseX, mouseY, button, dragX, dragY);*/
+    for (AbstractPaintingWidget paintingWidget : this.paintingWidgets) {
+      if (paintingWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+        return true;
+      }
+    }
 
     return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
   }
@@ -411,6 +442,12 @@ public class PaintingScreen extends Screen {
 
   @Override
   public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    for (AbstractPaintingWidget paintingWidget : this.paintingWidgets) {
+      if (paintingWidget.mouseScrolled(mouseX, mouseY, delta)) {
+        return true;
+      }
+    }
+
     /*if (hasControlDown()) {
       if (this.getMenu().getCurrentTool() == Tools.BRUSH) {
         AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
@@ -442,23 +479,27 @@ public class PaintingScreen extends Screen {
     return false;
   }
 
+  /**
+   * Expose some methods for widgets
+   */
+
+  public Font getFont() {
+    return this.font;
+  }
+
   /*
    * Helpers
    */
 
-  /**
-   * @param x
-   * @param y
-   * @param xSize
-   * @param ySize
-   * @param mouseX
-   * @param mouseY
-   * @return
-   * @todo: [LOW] Use this.isPointInRegion
-   */
-  // Returns true if the given x,y coordinates are within the given rectangle
-  public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY) {
-    return ((mouseX >= x && mouseX <= x + xSize) && (mouseY >= y && mouseY <= y + ySize));
+  public enum ColorSpace {
+    HSL("hsl"),
+    okHSL("okhsl");
+
+    public final String code;
+
+    ColorSpace(String code) {
+      this.code = code;
+    }
   }
 
   public enum CanvasMode {

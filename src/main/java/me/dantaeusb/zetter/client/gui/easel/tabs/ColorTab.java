@@ -48,7 +48,7 @@ public class ColorTab extends AbstractTab {
 
     @Override
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getARGB());
 
         this.hsbWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
         this.colorCodeWidget.render(guiGraphics, mouseX, mouseY, partialTicks);

@@ -14,6 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -37,7 +38,9 @@ public class PaletteItem extends Item {
   }
 
   @Override
-  public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+  public @NotNull InteractionResultHolder<ItemStack> use(Level level, Player player, @NotNull InteractionHand hand) {
+    ItemStack paletteStack = player.getItemInHand(hand);
+
     double pickRange = player.getBlockReach();
     Vec3 eyePosition = player.getEyePosition(1.0F);
     Vec3 viewVector = player.getViewVector(1.0F);
@@ -82,7 +85,7 @@ public class PaletteItem extends Item {
 
     if (level.isClientSide()) {
       Minecraft.getInstance().setScreen(
-          new PaintingScreen(closestCanvasHolder)
+          new PaintingScreen(paletteStack, closestCanvasHolder)
       );
     }
 

@@ -245,14 +245,14 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
         Component artistTableLabel = Component.translatable("container.zetter.artist_table.mode", this.titleLabel, artistTableModelLabel);
 
-        guiGraphics.drawString(this.font, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getRGB(), false);
+        guiGraphics.drawString(this.font, artistTableLabel, LABEL_XPOS, LABEL_YPOS, Color.darkGray.getARGB(), false);
 
         final int FONT_Y_SPACING = 10;
         final int PLAYER_INV_LABEL_XPOS = ArtistTableMenu.PLAYER_INVENTORY_XPOS;
         final int PLAYER_INV_LABEL_YPOS = ArtistTableMenu.PLAYER_INVENTORY_YPOS - FONT_Y_SPACING;
 
         // draw the label for the player inventory slots
-        guiGraphics.drawString(this.font, this.playerInventoryTitle, PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getRGB(), false);
+        guiGraphics.drawString(this.font, this.playerInventoryTitle, PLAYER_INV_LABEL_XPOS, PLAYER_INV_LABEL_YPOS, Color.darkGray.getARGB(), false);
     }
 
     @Override

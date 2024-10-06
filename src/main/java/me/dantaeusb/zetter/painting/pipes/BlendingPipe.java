@@ -61,7 +61,7 @@ public class BlendingPipe implements Pipe {
                 (newColorModel.getRed() * intensity + oldColorModel.getRed() * (1f - intensity)) / 255,
                 (newColorModel.getGreen() * intensity + oldColorModel.getGreen() * (1f - intensity)) / 255,
                 (newColorModel.getBlue() * intensity + oldColorModel.getBlue() * (1f - intensity)) / 255
-        ).getRGB();
+        ).getARGB();
     }
 
     /**
@@ -94,7 +94,7 @@ public class BlendingPipe implements Pipe {
 
         final float[] rgbResult = BlendingPipe.protectOverflow(BlendingPipe.rybToRgb(rybResult));
 
-        return new Color(rgbResult[0], rgbResult[1], rgbResult[2]).getRGB();
+        return new Color(rgbResult[0], rgbResult[1], rgbResult[2]).getARGB();
     }
 
     /**

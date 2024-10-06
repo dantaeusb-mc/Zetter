@@ -275,7 +275,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
 
         // draw the label for the player inventory slots
         guiGraphics.drawString(this.getFont(), this.getMenu().getCurrentTab().translatableComponent,
-                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getRGB(), false);
+                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getARGB(), false);
 
         this.getCurrentTab().renderLabels(guiGraphics, mouseX, mouseY);
     }

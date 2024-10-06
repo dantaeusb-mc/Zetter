@@ -101,5 +101,20 @@
 	"item.zetter.warped_plated_frame": "Warped Frame with Nameplate",
 	"painting.zetter.banned": "This painting was banned by the server admins, alternative used",
 	"forge.configgui.zetter.painting.resolution": "Painting Resolution",
-	"forge.configgui.zetter.gui.helpButton": "Show Help Button"
+	"forge.configgui.zetter.gui.helpButton": "Show Help Button",
+	"screen.zetter.painting.canvas_mode.immersive": "Immersive Mode",
+	"screen.zetter.painting.canvas_mode.immersive_background": "Immersive Mode with Background",
+	"screen.zetter.painting.canvas_mode.overlay": "Overlay Mode",
+	"screen.zetter.painting": "Painting",
+	"screen.zetter.painting.color_picker": "Color Picker",
+	"screen.zetter.painting.color_picker.wheel": "Wheel",
+	"screen.zetter.painting.color_picker.sliders": "Sliders",
+	"screen.zetter.painting.color_picker.sliders.hue": "Hue",
+	"screen.zetter.painting.color_picker.sliders.saturation": "Saturation",
+	"screen.zetter.painting.color_picker.sliders.lightness": "Lightness",
+	"screen.zetter.painting.color_picker.lightness": "Lightness",
+	"screen.zetter.painting.color_picker.color_wheel": "Color Wheel",
+	"screen.zetter.painting.tool.brush": "Brush",
+	"screen.zetter.painting.tool.bucket": "Bucket",
+	"screen.zetter.painting.tool.pencil": "Pencil"
 }

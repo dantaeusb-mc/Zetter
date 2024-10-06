@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.client.gui.easel;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.core.tools.Color;
@@ -8,7 +7,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
@@ -157,7 +155,7 @@ public class ColorCodeWidget extends AbstractEaselWidget implements Renderable {
         if (EaselScreen.isInRect(this.getX(), this.getY() + TEXTBOX_TITLE_HEIGHT, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, (int) mouseX, (int) mouseY)) {
             this.setFocused(true);
             this.textField.setFocused(true);
-            this.textField.setTextColor(Color.WHITE.getRGB());
+            this.textField.setTextColor(Color.WHITE.getARGB());
             return true;
         }
 
@@ -187,7 +185,7 @@ public class ColorCodeWidget extends AbstractEaselWidget implements Renderable {
                 this.getMessage(),
                 this.getX() - this.parentScreen.getGuiLeft(),
                 this.getY() - this.parentScreen.getGuiTop(),
-                Color.darkGray.getRGB(), false
+                Color.darkGray.getARGB(), false
         );
     }
 

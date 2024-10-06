@@ -103,7 +103,7 @@ public class DitheringWidget extends AbstractEaselWidget implements Renderable {
     }
 
     public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getRGB(), false);
+        guiGraphics.drawString(this.parentScreen.getFont(), this.getMessage(), this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop(), Color.DARK_GRAY.getARGB(), false);
     }
 
     public class DitheringButton {

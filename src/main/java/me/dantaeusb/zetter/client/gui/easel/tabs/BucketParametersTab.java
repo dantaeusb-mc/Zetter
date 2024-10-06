@@ -45,7 +45,7 @@ public class BucketParametersTab extends AbstractTab {
 
     @Override
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getRGB());
+        guiGraphics.fill(this.getX(), this.getY(), this.getX() + this.width, this.getY() + this.height, Color.SCREEN_GRAY.getARGB());
 
         if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
             this.blendingWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
@@ -61,7 +61,7 @@ public class BucketParametersTab extends AbstractTab {
             guiGraphics.drawString(
                     this.parentScreen.getFont(), this.intensityWidget.getMessage(),
                     this.getX() - this.parentScreen.getGuiLeft(), this.getY() - this.parentScreen.getGuiTop() + BlendingWidget.HEIGHT + 4,
-                    Color.DARK_GRAY.getRGB(), false
+                    Color.DARK_GRAY.getARGB(), false
             );
         }
 

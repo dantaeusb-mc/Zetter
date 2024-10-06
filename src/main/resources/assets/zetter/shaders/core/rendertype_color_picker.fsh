@@ -1,6 +1,21 @@
 #version 150
 
-uniform float Lightness;
+/**
+ * OK_HUE_SATURATION(0),
+ * RGB_HUE_SATURATION(1),
+ * OK_HUE_HORIZONTAL(2),
+ * OK_SATURATION_HORIZONTAL(3),
+ * OK_LIGHTNESS_HORIZONTAL(4),
+ * OK_LIGHTNESS_VERTICAL(5),
+ * RGB_HUE_HORIZONTAL(6),
+ * RGB_SATURATION_HORIZONTAL(7),
+ * RGB_LIGHTNESS_HORIZONTAL(8),
+ * RGB_LIGHTNESS_VERTICAL(9),
+ * OK_OPACITY_HORIZONTAL(10),
+ * RGB_OPACITY_HORIZONTAL(11);
+ */
+uniform int Mode;
+uniform vec3 HSL;
 uniform vec4 ColorModulator;
 
 in vec2 texCoord0;
@@ -49,9 +64,9 @@ out vec4 fragColor;
 precision mediump float;
 #define M_PI 3.1415926535897932384626433832795
 
-float cbrt( float x )
+float cbrt(float x)
 {
-    return sign(x)*pow(abs(x), 1.0 / 3.0);
+    return sign(x) * pow(abs(x), 1.0 / 3.0);
 }
 
 float srgb_transfer_function(float a)
@@ -70,7 +85,7 @@ vec3 oklab_to_linear_srgb(vec3 c)
     float s = s_ * s_ * s_;
 
     return vec3(
-    +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    + 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
     -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
     -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
     );
@@ -89,20 +104,20 @@ float compute_max_saturation(float a, float b)
     if (-1.88170328 * a - 0.80936493 * b > 1.0)
     {
         // Red component
-        k0 = +1.19086277; k1 = +1.76576728; k2 = +0.59662641; k3 = +0.75515197; k4 = +0.56771245;
-        wl = +4.0767416621; wm = -3.3077115913; ws = +0.2309699292;
+        k0 = + 1.19086277; k1 = + 1.76576728; k2 = + 0.59662641; k3 = + 0.75515197; k4 = + 0.56771245;
+        wl = + 4.0767416621; wm = -3.3077115913; ws = + 0.2309699292;
     }
     else if (1.81444104 * a - 1.19445276 * b > 1.0)
     {
         // Green component
-        k0 = +0.73956515; k1 = -0.45954404; k2 = +0.08285427; k3 = +0.12541070; k4 = +0.14503204;
-        wl = -1.2684380046; wm = +2.6097574011; ws = -0.3413193965;
+        k0 = + 0.73956515; k1 = -0.45954404; k2 = + 0.08285427; k3 = + 0.12541070; k4 = + 0.14503204;
+        wl = -1.2684380046; wm = + 2.6097574011; ws = -0.3413193965;
     }
     else
     {
         // Blue component
-        k0 = +1.35733652; k1 = -0.00915799; k2 = -1.15130210; k3 = -0.50559606; k4 = +0.00692167;
-        wl = -0.0041960863; wm = -0.7034186147; ws = +1.7076147010;
+        k0 = + 1.35733652; k1 = -0.00915799; k2 = -1.15130210; k3 = -0.50559606; k4 = + 0.00692167;
+        wl = -0.0041960863; wm = -0.7034186147; ws = + 1.7076147010;
     }
 
     // Approximate max saturation using a polynomial:
@@ -112,7 +127,7 @@ float compute_max_saturation(float a, float b)
     // this gives an error less than 10e6, except for some blue hues where the dS/dh is close to infinite
     // this should be sufficient for most applications, otherwise do two/three steps
 
-    float k_l = +0.3963377774 * a + 0.2158037573 * b;
+    float k_l = + 0.3963377774 * a + 0.2158037573 * b;
     float k_m = -0.1055613458 * a - 0.0638541728 * b;
     float k_s = -0.0894841775 * a - 1.2914855480 * b;
 
@@ -151,11 +166,11 @@ vec2 find_cusp(float a, float b)
     float S_cusp = compute_max_saturation(a, b);
 
     // Convert to linear sRGB to find the first point where at least one of r,g or b >= 1:
-    vec3 rgb_at_max = oklab_to_linear_srgb(vec3( 1, S_cusp * a, S_cusp * b ));
+    vec3 rgb_at_max = oklab_to_linear_srgb(vec3(1, S_cusp * a, S_cusp * b));
     float L_cusp = cbrt(1.0 / max(max(rgb_at_max.r, rgb_at_max.g), rgb_at_max.b));
     float C_cusp = L_cusp * S_cusp;
 
-    return vec2( L_cusp , C_cusp );
+    return vec2(L_cusp, C_cusp);
 }
 
 // Finds intersection of the line defined by
@@ -184,7 +199,7 @@ float find_gamut_intersection(float a, float b, float L1, float C1, float L0, ve
             float dL = L1 - L0;
             float dC = C1;
 
-            float k_l = +0.3963377774 * a + 0.2158037573 * b;
+            float k_l = + 0.3963377774 * a + 0.2158037573 * b;
             float k_m = -0.1055613458 * a - 0.0638541728 * b;
             float k_s = -0.0894841775 * a - 1.2914855480 * b;
 
@@ -267,7 +282,7 @@ vec2 to_ST(vec2 cusp)
 {
     float L = cusp.x;
     float C = cusp.y;
-    return vec2( C / L, C / (1.0 - L) );
+    return vec2(C / L, C / (1.0 - L));
 }
 
 // Returns a smooth approximation of the location of the cusp
@@ -276,7 +291,7 @@ vec2 to_ST(vec2 cusp)
 vec2 get_ST_mid(float a_, float b_)
 {
     float S = 0.11516993 + 1.0 / (
-    +7.44778970 + 4.15901240 * b_
+    + 7.44778970 + 4.15901240 * b_
     + a_ * (-2.19557347 + 1.75198401 * b_
     + a_ * (-2.13704948 - 10.02301043 * b_
     + a_ * (-4.24894561 + 5.38770819 * b_ + 4.69891013 * a_
@@ -284,14 +299,14 @@ vec2 get_ST_mid(float a_, float b_)
     );
 
     float T = 0.11239642 + 1.0 / (
-    +1.61320320 - 0.68124379 * b_
-    + a_ * (+0.40370612 + 0.90148123 * b_
+    + 1.61320320 - 0.68124379 * b_
+    + a_ * (+ 0.40370612 + 0.90148123 * b_
     + a_ * (-0.27087943 + 0.61223990 * b_
-    + a_ * (+0.00299215 - 0.45399568 * b_ - 0.14661872 * a_
+    + a_ * (+ 0.00299215 - 0.45399568 * b_ - 0.14661872 * a_
     )))
     );
 
-    return vec2( S, T );
+    return vec2(S, T);
 }
 
 vec3 get_Cs(float L, float a_, float b_)
@@ -324,7 +339,7 @@ vec3 get_Cs(float L, float a_, float b_)
         C_0 = sqrt(1.0 / (1.0 / (C_a * C_a) + 1.0 / (C_b * C_b)));
     }
 
-    return vec3( C_0, C_mid, C_max );
+    return vec3(C_0, C_mid, C_max);
 }
 
 vec3 okhsl_to_srgb(vec3 hsl)
@@ -335,12 +350,12 @@ vec3 okhsl_to_srgb(vec3 hsl)
 
     if (l == 1.0)
     {
-        return vec3( 1.0, 1.0, 1.0 );
+        return vec3(1.0, 1.0, 1.0);
     }
 
     else if (l == 0.0)
     {
-        return vec3( 0.0, 0.0, 0.0 );
+        return vec3(0.0, 0.0, 0.0);
     }
 
     float a_ = cos(2.0 * M_PI * h);
@@ -368,7 +383,7 @@ vec3 okhsl_to_srgb(vec3 hsl)
     }
     else
     {
-        t = (s - mid)/ (1.0 - mid);
+        t = (s - mid) / (1.0 - mid);
 
         k_0 = C_mid;
         k_1 = (1.0 - mid) * C_mid * C_mid * mid_inv * mid_inv / C_0;
@@ -377,7 +392,7 @@ vec3 okhsl_to_srgb(vec3 hsl)
         C = k_0 + t * k_1 / (1.0 - k_2 * t);
     }
 
-    vec3 rgb = oklab_to_linear_srgb(vec3( L, C * a_, C * b_ ));
+    vec3 rgb = oklab_to_linear_srgb(vec3(L, C * a_, C * b_));
     return vec3(
     srgb_transfer_function(rgb.r),
     srgb_transfer_function(rgb.g),
@@ -399,12 +414,12 @@ vec3 okhsv_to_srgb(vec3 hsv)
     float S_max = ST_max.x;
     float T_max = ST_max.y;
     float S_0 = 0.5;
-    float k = 1.0- S_0 / S_max;
+    float k = 1.0 - S_0 / S_max;
 
     // first we compute L and V as if the gamut is a perfect triangle:
 
     // L, C when v==1:
-    float L_v = 1.0   - s * S_0 / (S_0 + T_max - T_max * k * s);
+    float L_v = 1.0 - s * S_0 / (S_0 + T_max - T_max * k * s);
     float C_v = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
 
     float L = v * L_v;
@@ -418,13 +433,13 @@ vec3 okhsv_to_srgb(vec3 hsv)
     C = C * L_new / L;
     L = L_new;
 
-    vec3 rgb_scale = oklab_to_linear_srgb(vec3( L_vt, a_ * C_vt, b_ * C_vt ));
+    vec3 rgb_scale = oklab_to_linear_srgb(vec3(L_vt, a_ * C_vt, b_ * C_vt));
     float scale_L = cbrt(1.0 / max(max(rgb_scale.r, rgb_scale.g), max(rgb_scale.b, 0.0)));
 
     L = L * scale_L;
     C = C * scale_L;
 
-    vec3 rgb = oklab_to_linear_srgb(vec3( L, C * a_, C * b_ ));
+    vec3 rgb = oklab_to_linear_srgb(vec3(L, C * a_, C * b_));
     return vec3(
     srgb_transfer_function(rgb.r),
     srgb_transfer_function(rgb.g),
@@ -432,26 +447,273 @@ vec3 okhsv_to_srgb(vec3 hsv)
     );
 }
 
+vec3 hsl_to_srgb(vec3 hsl) {
+    float h = hsl.x;
+    float s = hsl.y;
+    float l = hsl.z;
+
+    float r, g, b;
+
+    if (s == 0.0) {
+        return vec3(l, l, l);
+    }
+
+    if (h >= 1.0) {
+        h = 0.0;
+    } else {
+        h *= 6.0;
+    }
+
+    float f = h - floor(h);
+    float p = l * (1.0 - s);
+    float q = l * (1.0 - s * f);
+    float t = l * (1.0 - s * (1.0 - f));
+
+    switch (int(h)) {
+        case 0:
+            r = l;
+            g = t;
+            b = p;
+            break;
+        case 1:
+            r = q;
+            g = l;
+            b = p;
+            break;
+        case 2:
+            r = p;
+            g = l;
+            b = t;
+            break;
+        case 3:
+            r = p;
+            g = q;
+            b = l;
+            break;
+        case 4:
+            r = t;
+            g = p;
+            b = l;
+            break;
+        case 5:
+            r = l;
+            g = p;
+            b = q;
+            break;
+    }
+
+    return vec3(r, g, b);
+}
+
 // Zetter code
 bool in_bounds(in vec3 v) {
     return all(greaterThanEqual(v, vec3(0.0))) && all(lessThanEqual(v, vec3(1.0)));
 }
 
+/**
+ * OK_HUE_SATURATION(0),
+ * RGB_HUE_SATURATION(1),
+ * OK_HUE_HORIZONTAL(2),
+ * OK_SATURATION_HORIZONTAL(3),
+ * OK_LIGHTNESS_HORIZONTAL(4),
+ * OK_LIGHTNESS_VERTICAL(5),
+ * RGB_HUE_HORIZONTAL(6),
+ * RGB_SATURATION_HORIZONTAL(7),
+ * RGB_LIGHTNESS_HORIZONTAL(8),
+ * RGB_LIGHTNESS_VERTICAL(9);
+ */
 void main() {
+    float h, s, l;
     vec2 zeroHue = vec2(0.0, 1.0);
-    vec2 colorPosition = vec2(texCoord0.x - 0.5, texCoord0.y - 0.5);
-    float colorPositionLength = length(colorPosition);
+    vec2 colorPosition;
+    float colorPositionLength;
+    vec3 rgb;
 
-    float h = atan(colorPosition.x, colorPosition.y) / (2.0 * M_PI);
-    float s = colorPositionLength / 0.5;
-    float l = Lightness;
+    switch (Mode) {
+        // OK_HUE_SATURATION
+        case 0:
+            colorPosition = vec2(texCoord0.x - 0.5, texCoord0.y - 0.5);
+            colorPositionLength = length(colorPosition);
 
-    vec3 hsl = vec3(h, s, l);
-    vec3 oklchRgb = okhsl_to_srgb(hsl);
+            h = atan(colorPosition.x, colorPosition.y) / (2.0 * M_PI);
+            s = colorPositionLength / 0.5;
+            l = HSL.z;
 
-    if (colorPositionLength < 0.5 && in_bounds(oklchRgb)) {
-        fragColor = vec4(oklchRgb, 1.0)/* * ColorModulator*/;
-    } else {
-        discard;
+            rgb = okhsl_to_srgb(vec3(h, s, l));
+
+            if (colorPositionLength < 0.5 && in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // RGB_HUE_SATURATION
+        case 1:
+            colorPosition = vec2(texCoord0.x - 0.5, texCoord0.y - 0.5);
+            colorPositionLength = length(colorPosition);
+
+            h = atan(colorPosition.x, colorPosition.y) / (2.0 * M_PI);
+            s = colorPositionLength / 0.5;
+            l = HSL.z;
+
+            rgb = hsl_to_srgb(vec3(h, s, l));
+
+            if (colorPositionLength < 0.5 && in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // OK_HUE_HORIZONTAL
+        case 2:
+            h = texCoord0.x;
+            s = HSL.y;
+            l = HSL.z;
+
+            rgb = okhsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // OK_SATURATION_HORIZONTAL
+        case 3:
+            h = HSL.x;
+            s = texCoord0.x;
+            l = HSL.z;
+
+            rgb = okhsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // OK_LIGHTNESS_HORIZONTAL
+        case 4:
+            h = HSL.x;
+            s = HSL.y;
+            l = texCoord0.x;
+
+            rgb = okhsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // OK_LIGHTNESS_VERTICAL
+        case 5:
+            h = HSL.x;
+            s = HSL.y;
+            l = 1.0 - texCoord0.y;
+
+            rgb = okhsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // RGB_HUE_HORIZONTAL
+        case 6:
+            h = texCoord0.x;
+            s = HSL.y;
+            l = HSL.z;
+
+            rgb = hsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // RGB_SATURATION_HORIZONTAL
+        case 7:
+            h = HSL.x;
+            s = texCoord0.x;
+            l = HSL.z;
+
+            rgb = hsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // RGB_LIGHTNESS_HORIZONTAL
+        case 8:
+            h = HSL.x;
+            s = HSL.y;
+            l = texCoord0.x;
+
+            rgb = hsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // RGB_LIGHTNESS_VERTICAL
+        case 9:
+            h = HSL.x;
+            s = HSL.y;
+            l = 1.0 - texCoord0.y;
+
+            rgb = hsl_to_srgb(vec3(h, s, l));
+
+            if (in_bounds(rgb)) {
+                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
+            } else {
+                discard;
+            }
+            break;
+        // OK_OPACITY_HORIZONTAL
+        case 10:
+            {
+                float o = texCoord0.x;
+
+                h = HSL.x;
+                s = HSL.y;
+                l = HSL.z;
+
+                rgb = okhsl_to_srgb(vec3(h, s, l));
+
+                if (in_bounds(rgb)) {
+                    fragColor = vec4(rgb, o);
+                } else {
+                    discard;
+                }
+            }
+
+            break;
+        // RGB_OPACITY_HORIZONTAL
+        case 11:
+            {
+                float o = texCoord0.x;
+
+                h = HSL.x;
+                s = HSL.y;
+                l = HSL.z;
+
+                rgb = hsl_to_srgb(vec3(h, s, l));
+
+                if (in_bounds(rgb)) {
+                    fragColor = vec4(rgb, o);
+                } else {
+                    discard;
+                }
+            }
+            break;
+        default:
+            discard;
     }
 }

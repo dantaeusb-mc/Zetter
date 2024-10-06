@@ -7,6 +7,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -56,11 +57,11 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
 
     public void updateColor(int color) {
         final Color newColor = new Color(color);
-        float[] hsb = newColor.toHSB();
+        Vector3f hsb = newColor.toHSB();
 
-        this.hueSlider.setSliderState(hsb[0]);
-        this.saturationSlider.setSliderState(hsb[1]);
-        this.brightnessSlider.setSliderState(hsb[2]);
+        this.hueSlider.setSliderState(hsb.x);
+        this.saturationSlider.setSliderState(hsb.y);
+        this.brightnessSlider.setSliderState(hsb.z);
     }
 
     @Override
@@ -112,14 +113,14 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
                     slider.getMessage().getString().substring(0, 1).concat("."),
                     this.getX() - this.parentScreen.getGuiLeft(),
                     this.getY() + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * i++ - this.parentScreen.getGuiTop() + 1,
-                    Color.DARK_GRAY.getRGB(), false
+                    Color.DARK_GRAY.getARGB(), false
             );
         }
     }
 
     public void updateSlidersWithCurrentColor() {
         Color currentColor = new Color(parentScreen.getMenu().getCurrentColor());
-        float[] currentColorHSB = currentColor.toHSB();
+        Vector3f currentColorHSB = currentColor.toHSB();
 
         //this.hueSlider;
         //this.sliderSaturationPercent = 1.0f - currentColorHSB[1];
