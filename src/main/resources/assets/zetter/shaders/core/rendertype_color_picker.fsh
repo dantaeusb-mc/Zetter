@@ -74,7 +74,7 @@ float srgb_transfer_function(float a)
     return .0031308 >= a ? 12.92 * a : 1.055 * pow(a, .4166666666666667) - .055;
 }
 
-vec3 oklab_to_linear_srgb(vec3 c)
+vec3 oklab_to_linear_rgb(vec3 c)
 {
     float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
     float m_ = c.x - 0.1055613458 * c.y - 0.0638541728 * c.z;
@@ -166,7 +166,7 @@ vec2 find_cusp(float a, float b)
     float S_cusp = compute_max_saturation(a, b);
 
     // Convert to linear sRGB to find the first point where at least one of r,g or b >= 1:
-    vec3 rgb_at_max = oklab_to_linear_srgb(vec3(1, S_cusp * a, S_cusp * b));
+    vec3 rgb_at_max = oklab_to_linear_rgb(vec3(1, S_cusp * a, S_cusp * b));
     float L_cusp = cbrt(1.0 / max(max(rgb_at_max.r, rgb_at_max.g), rgb_at_max.b));
     float C_cusp = L_cusp * S_cusp;
 
@@ -392,7 +392,7 @@ vec3 okhsl_to_srgb(vec3 hsl)
         C = k_0 + t * k_1 / (1.0 - k_2 * t);
     }
 
-    vec3 rgb = oklab_to_linear_srgb(vec3(L, C * a_, C * b_));
+    vec3 rgb = oklab_to_linear_rgb(vec3(L, C * a_, C * b_));
     return vec3(
     srgb_transfer_function(rgb.r),
     srgb_transfer_function(rgb.g),
@@ -400,54 +400,7 @@ vec3 okhsl_to_srgb(vec3 hsl)
     );
 }
 
-vec3 okhsv_to_srgb(vec3 hsv)
-{
-    float h = hsv.x;
-    float s = hsv.y;
-    float v = hsv.z;
-
-    float a_ = cos(2.0 * M_PI * h);
-    float b_ = sin(2.0 * M_PI * h);
-
-    vec2 cusp = find_cusp(a_, b_);
-    vec2 ST_max = to_ST(cusp);
-    float S_max = ST_max.x;
-    float T_max = ST_max.y;
-    float S_0 = 0.5;
-    float k = 1.0 - S_0 / S_max;
-
-    // first we compute L and V as if the gamut is a perfect triangle:
-
-    // L, C when v==1:
-    float L_v = 1.0 - s * S_0 / (S_0 + T_max - T_max * k * s);
-    float C_v = s * T_max * S_0 / (S_0 + T_max - T_max * k * s);
-
-    float L = v * L_v;
-    float C = v * C_v;
-
-    // then we compensate for both toe and the curved top part of the triangle:
-    float L_vt = toe_inv(L_v);
-    float C_vt = C_v * L_vt / L_v;
-
-    float L_new = toe_inv(L);
-    C = C * L_new / L;
-    L = L_new;
-
-    vec3 rgb_scale = oklab_to_linear_srgb(vec3(L_vt, a_ * C_vt, b_ * C_vt));
-    float scale_L = cbrt(1.0 / max(max(rgb_scale.r, rgb_scale.g), max(rgb_scale.b, 0.0)));
-
-    L = L * scale_L;
-    C = C * scale_L;
-
-    vec3 rgb = oklab_to_linear_srgb(vec3(L, C * a_, C * b_));
-    return vec3(
-    srgb_transfer_function(rgb.r),
-    srgb_transfer_function(rgb.g),
-    srgb_transfer_function(rgb.b)
-    );
-}
-
-vec3 hsl_to_srgb(vec3 hsl) {
+vec3 hsl_to_linear_rgb(vec3 hsl) {
     float h = hsl.x;
     float s = hsl.y;
     float l = hsl.z;
@@ -464,45 +417,45 @@ vec3 hsl_to_srgb(vec3 hsl) {
         h *= 6.0;
     }
 
-    float f = h - floor(h);
-    float p = l * (1.0 - s);
-    float q = l * (1.0 - s * f);
-    float t = l * (1.0 - s * (1.0 - f));
+    float c = (1.0 - abs(2.0 * l - 1.0)) * s;
+    float x = c * (1.0 - abs(mod(h, 2.0) - 1.0));
 
     switch (int(h)) {
         case 0:
-            r = l;
-            g = t;
-            b = p;
+            r = c;
+            g = x;
+            b = 0.0;
             break;
         case 1:
-            r = q;
-            g = l;
-            b = p;
+            r = x;
+            g = c;
+            b = 0.0;
             break;
         case 2:
-            r = p;
-            g = l;
-            b = t;
+            r = 0.0;
+            g = c;
+            b = x;
             break;
         case 3:
-            r = p;
-            g = q;
-            b = l;
+            r = 0.0;
+            g = x;
+            b = c;
             break;
         case 4:
-            r = t;
-            g = p;
-            b = l;
+            r = x;
+            g = 0.0;
+            b = c;
             break;
         case 5:
-            r = l;
-            g = p;
-            b = q;
+            r = c;
+            g = 0.0;
+            b = x;
             break;
     }
 
-    return vec3(r, g, b);
+    float m = l - 0.5 * c;
+
+    return vec3(r + m, g + m, b + m);
 }
 
 // Zetter code
@@ -535,7 +488,14 @@ void main() {
             colorPosition = vec2(texCoord0.x - 0.5, texCoord0.y - 0.5);
             colorPositionLength = length(colorPosition);
 
-            h = atan(colorPosition.x, colorPosition.y) / (2.0 * M_PI);
+            h = atan(colorPosition.y, colorPosition.x);
+
+            if (h < 0.0) {
+                h += 2.0 * M_PI;
+            }
+
+            h /= 2.0 * M_PI;
+
             s = colorPositionLength / 0.5;
             l = HSL.z;
 
@@ -552,11 +512,18 @@ void main() {
             colorPosition = vec2(texCoord0.x - 0.5, texCoord0.y - 0.5);
             colorPositionLength = length(colorPosition);
 
-            h = atan(colorPosition.x, colorPosition.y) / (2.0 * M_PI);
+
+            h = atan(colorPosition.y, colorPosition.x);
+
+            if (h < 0.0) {
+                h += 2.0 * M_PI;
+            }
+
+            h /= 2.0 * M_PI;
             s = colorPositionLength / 0.5;
             l = HSL.z;
 
-            rgb = hsl_to_srgb(vec3(h, s, l));
+            rgb = hsl_to_linear_rgb(vec3(h, s, l));
 
             if (colorPositionLength < 0.5 && in_bounds(rgb)) {
                 fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
@@ -571,12 +538,9 @@ void main() {
             l = HSL.z;
 
             rgb = okhsl_to_srgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // OK_SATURATION_HORIZONTAL
         case 3:
@@ -585,12 +549,9 @@ void main() {
             l = HSL.z;
 
             rgb = okhsl_to_srgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // OK_LIGHTNESS_HORIZONTAL
         case 4:
@@ -599,12 +560,9 @@ void main() {
             l = texCoord0.x;
 
             rgb = okhsl_to_srgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // OK_LIGHTNESS_VERTICAL
         case 5:
@@ -613,12 +571,9 @@ void main() {
             l = 1.0 - texCoord0.y;
 
             rgb = okhsl_to_srgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // RGB_HUE_HORIZONTAL
         case 6:
@@ -626,13 +581,10 @@ void main() {
             s = HSL.y;
             l = HSL.z;
 
-            rgb = hsl_to_srgb(vec3(h, s, l));
+            rgb = hsl_to_linear_rgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // RGB_SATURATION_HORIZONTAL
         case 7:
@@ -640,13 +592,10 @@ void main() {
             s = texCoord0.x;
             l = HSL.z;
 
-            rgb = hsl_to_srgb(vec3(h, s, l));
+            rgb = hsl_to_linear_rgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // RGB_LIGHTNESS_HORIZONTAL
         case 8:
@@ -654,13 +603,10 @@ void main() {
             s = HSL.y;
             l = texCoord0.x;
 
-            rgb = hsl_to_srgb(vec3(h, s, l));
+            rgb = hsl_to_linear_rgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // RGB_LIGHTNESS_VERTICAL
         case 9:
@@ -668,13 +614,10 @@ void main() {
             s = HSL.y;
             l = 1.0 - texCoord0.y;
 
-            rgb = hsl_to_srgb(vec3(h, s, l));
+            rgb = hsl_to_linear_rgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-            if (in_bounds(rgb)) {
-                fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
-            } else {
-                discard;
-            }
+            fragColor = vec4(rgb, 1.0)/* * ColorModulator*/;
             break;
         // OK_OPACITY_HORIZONTAL
         case 10:
@@ -686,14 +629,10 @@ void main() {
                 l = HSL.z;
 
                 rgb = okhsl_to_srgb(vec3(h, s, l));
+                rgb = clamp(rgb, 0.0, 1.0);
 
-                if (in_bounds(rgb)) {
-                    fragColor = vec4(rgb, o);
-                } else {
-                    discard;
-                }
+                fragColor = vec4(rgb, o)/* * ColorModulator*/;
             }
-
             break;
         // RGB_OPACITY_HORIZONTAL
         case 11:
@@ -704,13 +643,10 @@ void main() {
                 s = HSL.y;
                 l = HSL.z;
 
-                rgb = hsl_to_srgb(vec3(h, s, l));
+                rgb = hsl_to_linear_rgb(vec3(h, s, l));
+                rgb = clamp(rgb, 0.0, 1.0);
 
-                if (in_bounds(rgb)) {
-                    fragColor = vec4(rgb, o);
-                } else {
-                    discard;
-                }
+                fragColor = vec4(rgb, o)/* * ColorModulator*/;
             }
             break;
         default:

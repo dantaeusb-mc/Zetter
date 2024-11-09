@@ -14,9 +14,10 @@ import me.dantaeusb.zetter.client.gui.painting.util.PaletteAccessor;
 import me.dantaeusb.zetter.client.gui.painting.util.state.ToolsParameters;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
@@ -81,11 +82,13 @@ public class PaintingScreen extends Screen {
     this.paintingScreenState = new PaintingScreenState(
         this.paletteAccessor.getPaletteColor(0),
         0,
-        Tools.PENCIL,
+        Tool.PENCIL,
         CanvasMode.IMMERSIVE_BACKGROUND,
         ColorSpace.okHSL,
         new CanvasOverlayState(0, 0, 1)
     );
+
+    this.toolsParameters = new ToolsParameters();
   }
 
   @Override
@@ -103,7 +106,7 @@ public class PaintingScreen extends Screen {
     }
 
     this.canvasWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + 10;
-    this.canvasWindowTopPos = (this.height - this.virtualWindowHeight) / 2;
+    this.canvasWindowTopPos = (this.height - this.virtualWindowHeight) / 2 + 10;
 
     this.toolsWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + this.virtualWindowWidth - this.imageWidth - 10;
     this.toolsWindowTopPos = (this.height - this.virtualWindowHeight) / 2 + (this.virtualWindowHeight - this.imageHeight) / 2;
@@ -118,9 +121,7 @@ public class PaintingScreen extends Screen {
     final int COLOR_PICKER_WIDGET_POSITION_Y = 0;
 
     this.canvasLayer = new CanvasLayer(this);
-    this.addWidget(this.canvasLayer);
-
-    this.canvasLayer.init(this.canvasWindowLeftPos, this.canvasWindowTopPos, this.virtualWindowWidth - this.imageWidth - 10, this.virtualWindowHeight);
+    this.canvasLayer.init(this.canvasWindowLeftPos, this.canvasWindowTopPos, this.virtualWindowWidth - this.imageWidth - 16, this.virtualWindowHeight - 20);
 
     this.toolsWidget = new ToolsWidget(this, TOOLS_WIDGET_POSITION_X, TOOLS_WIDGET_POSITION_Y);
     this.addPaintingWidget(this.toolsWidget);
@@ -151,6 +152,11 @@ public class PaintingScreen extends Screen {
     this.addRenderableWidget(paintingWidget);
     this.paintingWidgets.add(paintingWidget);
     this.toolWidgets.add(paintingWidget);
+  }
+
+  @Override
+  public boolean isPauseScreen() {
+    return false;
   }
 
   /*
@@ -223,6 +229,9 @@ public class PaintingScreen extends Screen {
   @Override
   public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
     this.renderBackground(guiGraphics);
+
+    this.canvasLayer.render(guiGraphics, mouseX, mouseY, partialTicks);
+
     this.renderBg(guiGraphics, partialTicks, mouseX, mouseY);
     //net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.client.event.ContainerScreenEvent.Render.Background(this, guiGraphics, mouseX, mouseY));
     guiGraphics.pose().pushPose();
@@ -264,6 +273,28 @@ public class PaintingScreen extends Screen {
     RenderSystem.setShaderTexture(0, PAINTING_GUI_TEXTURE_RESOURCE);
 
     guiGraphics.blit(PAINTING_GUI_TEXTURE_RESOURCE, this.toolsWindowLeftPos, this.toolsWindowTopPos, 0, 0, this.imageWidth, this.imageHeight);
+  }
+
+  public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    for (GuiEventListener eventListener : this.paintingWidgets) {
+      if (eventListener.mouseClicked(
+          mouseX - this.toolsWindowLeftPos,
+          mouseY - this.toolsWindowTopPos,
+          button
+      )) {
+        this.setFocused(eventListener);
+
+        if (button == 0) {
+          this.setDragging(true);
+        }
+
+        return true;
+      }
+    }
+
+    this.canvasLayer.mouseClicked(mouseX, mouseY, button);
+
+    return false;
   }
 
   /**
@@ -407,8 +438,20 @@ public class PaintingScreen extends Screen {
    */
   @Override
   public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-    for (AbstractPaintingWidget paintingWidget : this.paintingWidgets) {
-      if (paintingWidget.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+    for (GuiEventListener eventListener : this.paintingWidgets) {
+      if (eventListener.mouseDragged(
+          mouseX - this.toolsWindowLeftPos,
+          mouseY - this.toolsWindowTopPos,
+          button,
+          dragX,
+          dragY
+      )) {
+        this.setFocused(eventListener);
+
+        if (button == 0) {
+          this.setDragging(true);
+        }
+
         return true;
       }
     }
@@ -426,6 +469,16 @@ public class PaintingScreen extends Screen {
    */
   @Override
   public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    for (GuiEventListener eventListener : this.paintingWidgets) {
+      if (eventListener.mouseReleased(
+          mouseX - this.toolsWindowLeftPos,
+          mouseY - this.toolsWindowTopPos,
+          button
+      )) {
+        return true;
+      }
+    }
+
     /*this.canvasWidget.mouseReleased(mouseX, mouseY, button);
 
     this.getCurrentTab().mouseReleased(mouseX, mouseY, button);

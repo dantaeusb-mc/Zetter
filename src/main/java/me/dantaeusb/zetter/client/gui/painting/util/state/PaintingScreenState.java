@@ -2,12 +2,12 @@ package me.dantaeusb.zetter.client.gui.painting.util.state;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.tools.Color;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 
 public record PaintingScreenState(
     Color currentColor,
     int currentPaletteSlot,
-    Tools currentTool,
+    Tool currentTool,
     PaintingScreen.CanvasMode canvasMode,
     PaintingScreen.ColorSpace colorSpace,
     CanvasOverlayState canvasOverlayState
@@ -20,7 +20,7 @@ public record PaintingScreenState(
     return new PaintingScreenState(currentColor, currentPaletteSlot, currentTool, canvasMode, colorSpace, canvasOverlayState);
   }
 
-  public PaintingScreenState withCurrentTool(Tools selectedTool) {
+  public PaintingScreenState withCurrentTool(Tool selectedTool) {
     return new PaintingScreenState(currentColor, currentPaletteSlot, selectedTool, canvasMode, colorSpace, canvasOverlayState);
   }
 

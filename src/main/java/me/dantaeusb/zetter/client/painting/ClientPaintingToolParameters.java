@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter.client.painting;
 
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.*;
 
 import java.util.HashMap;
@@ -8,14 +8,14 @@ import java.util.HashMap;
 public class ClientPaintingToolParameters {
     private static ClientPaintingToolParameters instance;
 
-    private final HashMap<Tools, AbstractToolParameters> toolParameters = new HashMap<>(){{
-        put(Tools.PENCIL, new PencilParameters());
-        put(Tools.BRUSH, new BrushParameters());
-        put(Tools.EYEDROPPER, new NoParameters());
-        put(Tools.BUCKET, new BucketParameters());
+    private final HashMap<Tool, AbstractToolParameters> toolParameters = new HashMap<>(){{
+        put(Tool.PENCIL, new PencilParameters());
+        put(Tool.BRUSH, new BrushParameters());
+        put(Tool.EYEDROPPER, new NoParameters());
+        put(Tool.BUCKET, new BucketParameters());
     }};
 
-    public AbstractToolParameters getToolParameters(Tools tool) {
+    public AbstractToolParameters getToolParameters(Tool tool) {
         return this.toolParameters.get(tool);
     }
 

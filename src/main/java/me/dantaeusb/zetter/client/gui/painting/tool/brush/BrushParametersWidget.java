@@ -24,24 +24,44 @@ public class BrushParametersWidget extends AbstractPaintingWidget implements Ren
     final int SIZE_POSITION_Y = 67;
 
     this.intensitySlider = new SliderWidget(
-        parentScreen, this.getX() + INTENSITY_POSITION_X, this.getY() + INTENSITY_POSITION_Y,
+        parentScreen,
+        this.getX() + INTENSITY_POSITION_X,
+        this.getY() + INTENSITY_POSITION_Y,
         Component.translatable("container.zetter.painting.sliders.intensity"),
-        this::updateIntensity, this::renderIntensityBackground, this::renderIntensityHandlerState
+        this::getIntensity,
+        this::updateIntensity,
+        this::renderIntensityBackground,
+        this::renderIntensityHandlerState
     );
 
     this.sizeSlider = new SliderWidget(
-        parentScreen, this.getX() + SIZE_POSITION_X, this.getY() + SIZE_POSITION_Y,
+        parentScreen,
+        this.getX() + SIZE_POSITION_X,
+        this.getY() + SIZE_POSITION_Y,
         Component.translatable("container.zetter.painting.sliders.size"),
-        this::updateSize, this::renderIntensityBackground, this::renderIntensityHandlerState
+        this::getSize,
+        this::updateSize,
+        this::renderIntensityBackground,
+        this::renderIntensityHandlerState
     );
   }
 
-  public void updateIntensity(float percent) {
+  private float getIntensity() {
+    BrushParameters parameters = this.parentScreen.getToolsParameters().getBrushParameters();
+    return parameters.getIntensity();
+  }
+
+  private void updateIntensity(float percent) {
     BrushParameters parameters = this.parentScreen.getToolsParameters().getBrushParameters();
     parameters.setIntensity(percent);
   }
 
-  public void updateSize(float percent) {
+  private float getSize() {
+    BrushParameters parameters = this.parentScreen.getToolsParameters().getBrushParameters();
+    return parameters.getSize();
+  }
+
+  private void updateSize(float percent) {
     BrushParameters parameters = this.parentScreen.getToolsParameters().getBrushParameters();
     parameters.setSize(1f + percent * 5f);
   }

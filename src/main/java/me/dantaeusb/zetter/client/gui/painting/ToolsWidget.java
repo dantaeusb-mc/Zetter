@@ -1,8 +1,7 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.painting.Tools;
-import net.minecraft.client.Minecraft;
+import me.dantaeusb.zetter.painting.Tool;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -28,11 +27,11 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
         super(parentScreen, x, y, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * 5 + 2, Component.translatable("container.zetter.painting.tools"));
 
         this.buttons = new ArrayList<>() {{
-            add(new ToolButton(Tools.PENCIL, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.BRUSH, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.EYEDROPPER, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 2 + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.BUCKET, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 3 + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.HAND, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 4 + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.PENCIL, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.BRUSH, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.EYEDROPPER, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 2 + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.BUCKET, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 3 + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.HAND, TOOL_BUTTONS_U + TOOL_BUTTON_WIDTH + 3, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 4 + 1, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
         }};
     }
 
@@ -54,7 +53,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    protected boolean clicked(double mouseX, double mouseY) {
         int iMouseX = (int) mouseX;
         int iMouseY = (int) mouseY;
 
@@ -67,15 +66,41 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
         for (ToolButton toolButton: this.buttons) {
             int fromY = this.getY() + 1 + i * TOOL_BUTTON_HEIGHT;
 
-            if (isInRect(this.getX(), fromY, toolButton.width, toolButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
-                this.updateCurrentTool(toolButton);
-                this.playDownSound(Minecraft.getInstance().getSoundManager());
+            if (isInRect(this.getX(), fromY, toolButton.width, toolButton.height, iMouseX, iMouseY)) {
                 return true;
             }
 
             i++;
         }
 
+        return false;
+    }
+
+    @Override
+    public void onClick(double mouseX, double mouseY) {
+        int iMouseX = (int) mouseX;
+        int iMouseY = (int) mouseY;
+
+        int i = 0;
+        for (ToolButton toolButton: this.buttons) {
+            int fromY = this.getY() + 1 + i * TOOL_BUTTON_HEIGHT;
+
+            if (isInRect(this.getX(), fromY, toolButton.width, toolButton.height, iMouseX, iMouseY)) {
+                this.updateCurrentTool(toolButton);
+                return;
+            }
+
+            i++;
+        }
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
         return false;
     }
 
@@ -91,6 +116,12 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
         int i = 0;
         for (ToolButton toolButton: this.buttons) {
             int fromY = this.getY() + 1 + i * TOOL_BUTTON_HEIGHT;
+
+            if (toolButton.tool == Tool.HAND && this.parentScreen.getPaintingScreenState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
+                i++;
+                continue;
+            }
+
             int uOffset = toolButton.uPosition + (this.parentScreen.getPaintingScreenState().currentTool() == toolButton.tool ? TOOL_BUTTON_WIDTH + 2 : 0);
 
             guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE,  this.getX() + 1, fromY, uOffset, toolButton.vPosition, toolButton.width, toolButton.height);
@@ -103,13 +134,13 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     public class ToolButton {
-        public final Tools tool;
+        public final Tool tool;
         public final int uPosition;
         public final int vPosition;
         public final int height;
         public final int width;
 
-        ToolButton(Tools tool, int uPosition, int vPosition, int width, int height) {
+        ToolButton(Tool tool, int uPosition, int vPosition, int width, int height) {
             this.tool = tool;
             this.uPosition = uPosition;
             this.vPosition = vPosition;

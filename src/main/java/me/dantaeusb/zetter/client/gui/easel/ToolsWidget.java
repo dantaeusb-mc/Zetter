@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.client.gui.easel;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -30,11 +30,11 @@ public class ToolsWidget extends AbstractEaselWidget implements Renderable {
         super(parentScreen, x, y, TOOL_BUTTON_WIDTH + 2, TOOL_BUTTON_HEIGHT * 5 + 2, Component.translatable("container.zetter.painting.tools"));
 
         this.buttons = new ArrayList<>() {{
-            add(new ToolButton(Tools.PENCIL, TOOL_BUTTONS_U, TOOL_BUTTONS_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.BRUSH, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.EYEDROPPER, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 2, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.BUCKET, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 3, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
-            add(new ToolButton(Tools.HAND, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 4, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.PENCIL, TOOL_BUTTONS_U, TOOL_BUTTONS_V, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.BRUSH, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.EYEDROPPER, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 2, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.BUCKET, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 3, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
+            add(new ToolButton(Tool.HAND, TOOL_BUTTONS_U, TOOL_BUTTONS_V + TOOL_BUTTON_HEIGHT * 4, TOOL_BUTTON_WIDTH, TOOL_BUTTON_HEIGHT));
         }};
     }
 
@@ -114,13 +114,13 @@ public class ToolsWidget extends AbstractEaselWidget implements Renderable {
     }
 
     public class ToolButton {
-        public final Tools tool;
+        public final Tool tool;
         public final int uPosition;
         public final int vPosition;
         public final int height;
         public final int width;
 
-        ToolButton(Tools tool, int uPosition, int vPosition, int width, int height) {
+        ToolButton(Tool tool, int uPosition, int vPosition, int width, int height) {
             this.tool = tool;
             this.uPosition = uPosition;
             this.vPosition = vPosition;

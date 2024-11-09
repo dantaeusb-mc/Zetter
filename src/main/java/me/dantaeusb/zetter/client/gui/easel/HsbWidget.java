@@ -23,7 +23,7 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
 
     private final SliderWidget saturationSlider;
 
-    private final SliderWidget brightnessSlider;
+    private final SliderWidget lightnessSlider;
 
     private final List<SliderWidget> sliders = new ArrayList<>();
 
@@ -44,24 +44,24 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
                 this::updateSaturation, null, this::renderSaturationForeground
         );
 
-        this.brightnessSlider = new SliderWidget(
+        this.lightnessSlider = new SliderWidget(
                 parentScreen, x + sliderOffset, y + (SliderWidget.HEIGHT + SLIDER_DISTANCE) * 2,
                 Component.translatable("container.zetter.painting.sliders.brightness"),
-                this::updateBrightness, null, this::renderBrightnessForeground
+                this::updateLightness, null, this::renderLightnessForeground
         );
 
         this.sliders.add(this.hueSlider);
         this.sliders.add(this.saturationSlider);
-        this.sliders.add(this.brightnessSlider);
+        this.sliders.add(this.lightnessSlider);
     }
 
     public void updateColor(int color) {
         final Color newColor = new Color(color);
-        Vector3f hsb = newColor.toHSB();
+        Vector3f hsl = newColor.getHsl();
 
-        this.hueSlider.setSliderState(hsb.x);
-        this.saturationSlider.setSliderState(hsb.y);
-        this.brightnessSlider.setSliderState(hsb.z);
+        this.hueSlider.setSliderState(hsl.x);
+        this.saturationSlider.setSliderState(hsl.y);
+        this.lightnessSlider.setSliderState(hsl.z);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         boolean result = this.hueSlider.mouseClicked(mouseX, mouseY, button) ||
                          this.saturationSlider.mouseClicked(mouseX, mouseY, button) ||
-                         this.brightnessSlider.mouseClicked(mouseX, mouseY, button);
+                         this.lightnessSlider.mouseClicked(mouseX, mouseY, button);
 
         this.setFocused(result);
 
@@ -84,7 +84,7 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         this.hueSlider.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         this.saturationSlider.mouseDragged(mouseX, mouseY, button, dragX, dragY);
-        this.brightnessSlider.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        this.lightnessSlider.mouseDragged(mouseX, mouseY, button, dragX, dragY);
 
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
@@ -93,7 +93,7 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         this.hueSlider.mouseReleased(mouseX, mouseY, button);
         this.saturationSlider.mouseReleased(mouseX, mouseY, button);
-        this.brightnessSlider.mouseReleased(mouseX, mouseY, button);
+        this.lightnessSlider.mouseReleased(mouseX, mouseY, button);
 
         return super.mouseReleased(mouseX, mouseY, button);
     }
@@ -120,7 +120,7 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
 
     public void updateSlidersWithCurrentColor() {
         Color currentColor = new Color(parentScreen.getMenu().getCurrentColor());
-        Vector3f currentColorHSB = currentColor.toHSB();
+        Vector3f currentColorHSB = currentColor.getHsl();
 
         //this.hueSlider;
         //this.sliderSaturationPercent = 1.0f - currentColorHSB[1];
@@ -132,7 +132,7 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
      */
 
     public int renderHueForeground(float percent) {
-        return Color.HSBtoRGB(percent, 1.0f, 1.0f);
+        return Color.fromHsl(new Vector3f(percent, 1.0f, 1.0f)).getARGB();
     }
 
     public void updateHue(float percent) {
@@ -140,26 +140,26 @@ public class HsbWidget extends AbstractEaselWidget implements Renderable {
     }
 
     public int renderSaturationForeground(float percent) {
-        return Color.HSBtoRGB(this.hueSlider.getSliderState(), percent, 1.0f);
+        return Color.fromHsl(new Vector3f(this.hueSlider.getSliderState(), percent, 1.0f)).getARGB();
     }
 
     public void updateSaturation(float percent) {
         this.pushColorUpdate();
     }
 
-    public int renderBrightnessForeground(float percent) {
-        return Color.HSBtoRGB(this.hueSlider.getSliderState(), this.saturationSlider.getSliderState(), percent);
+    public int renderLightnessForeground(float percent) {
+        return Color.fromHsl(new Vector3f(this.hueSlider.getSliderState(), this.saturationSlider.getSliderState(), percent)).getARGB();
     }
 
-    public void updateBrightness(float percent) {
+    public void updateLightness(float percent) {
         this.pushColorUpdate();
     }
 
     public void pushColorUpdate() {
         float hue = this.hueSlider.getSliderState();
         float saturation = this.saturationSlider.getSliderState();
-        float brightness = this.brightnessSlider.getSliderState();
+        float brightness = this.lightnessSlider.getSliderState();
 
-        this.parentScreen.getMenu().setPaletteColor(Color.HSBtoRGB(hue, saturation, brightness));
+        this.parentScreen.getMenu().setPaletteColor(Color.fromHsl(new Vector3f(hue, saturation, brightness)).getARGB());
     }
 }

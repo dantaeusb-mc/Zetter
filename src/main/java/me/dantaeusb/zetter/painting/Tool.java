@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.painting;
 
 import me.dantaeusb.zetter.painting.tools.*;
-public enum Tools {
+public enum Tool {
     PENCIL(new Pencil()),
     BRUSH(new Brush()),
     EYEDROPPER(new Eyedropper()),
@@ -10,7 +10,7 @@ public enum Tools {
 
     private final AbstractTool tool;
 
-    Tools(AbstractTool tool) {
+    Tool(AbstractTool tool) {
         this.tool = tool;
     }
 

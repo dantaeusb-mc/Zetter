@@ -9,8 +9,8 @@ import net.minecraft.network.chat.Component;
 import java.util.Map;
 
 public abstract class AbstractTabGroupWidget extends AbstractPaintingWidget {
-  private final TabsWidget tabsWidget;
-  private final Map<String, AbstractPaintingWidget> tabWidgets;
+  protected final TabsWidget tabsWidget;
+  protected final Map<String, AbstractPaintingWidget> tabWidgets;
 
   public AbstractTabGroupWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title, TabsWidget.Tab[] tabs, Map<String, AbstractPaintingWidget> tabWidgets) {
     super(parentScreen, x, y, width, height, title);
@@ -33,12 +33,46 @@ public abstract class AbstractTabGroupWidget extends AbstractPaintingWidget {
 
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    if (!this.active || !this.visible || !this.isValidClickButton(button)) {
+      return false;
+    }
+
     if (this.tabsWidget.mouseClicked(mouseX, mouseY, button)) {
       return true;
     }
 
     for (Map.Entry<String, AbstractPaintingWidget> entry : this.tabWidgets.entrySet()) {
       if (entry.getValue().visible && entry.getValue().mouseClicked(mouseX, mouseY, button)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    if (!this.active || !this.visible || !this.isValidClickButton(button)) {
+      return false;
+    }
+
+    for (Map.Entry<String, AbstractPaintingWidget> entry : this.tabWidgets.entrySet()) {
+      if (entry.getValue().visible && entry.getValue().mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  @Override
+  public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    if (!this.active || !this.visible || !this.isValidClickButton(button)) {
+      return false;
+    }
+
+    for (Map.Entry<String, AbstractPaintingWidget> entry : this.tabWidgets.entrySet()) {
+      if (entry.getValue().visible && entry.getValue().mouseReleased(mouseX, mouseY, button)) {
         return true;
       }
     }

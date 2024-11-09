@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.entity.item.state.representation;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -39,7 +39,7 @@ public class CanvasAction {
      */
     private UUID authorUUID;
 
-    public final Tools tool;
+    public final Tool tool;
 
     public final int color;
 
@@ -69,11 +69,11 @@ public class CanvasAction {
 
     private boolean canceled = false;
 
-    public CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+    public CanvasAction(UUID authorId, Tool tool, int color, AbstractToolParameters parameters) {
         this(authorId, tool, color, parameters, System.currentTimeMillis(), ByteBuffer.allocateDirect(BUFFER_SIZE));
     }
 
-    private CanvasAction(UUID authorId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
+    private CanvasAction(UUID authorId, Tool tool, int color, AbstractToolParameters parameters, Long startTime, ByteBuffer actionBuffer) {
         this.id = RANDOM.nextInt(); // is it too much?
         this.authorUUID = authorId;
         this.tool = tool;
@@ -95,7 +95,7 @@ public class CanvasAction {
      * @param actionBuffer
      * @param canceled
      */
-    private CanvasAction(int actionId, Tools tool, int color, AbstractToolParameters parameters, Long startTime, Long commitTime, ByteBuffer actionBuffer, boolean canceled) {
+    private CanvasAction(int actionId, Tool tool, int color, AbstractToolParameters parameters, Long startTime, Long commitTime, ByteBuffer actionBuffer, boolean canceled) {
         this.id = actionId;
         this.tool = tool;
         this.color = color;
@@ -138,7 +138,7 @@ public class CanvasAction {
      * @param parameters
      * @return
      */
-    public boolean canContinue(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+    public boolean canContinue(UUID authorId, Tool tool, int color, AbstractToolParameters parameters) {
         // Not committed, should not yet be committed, and action is compatible
         return this.commitTime == null && !this.shouldCommit() && this.isActionCompatible(authorId, tool, color, parameters);
     }
@@ -150,7 +150,7 @@ public class CanvasAction {
      * @param parameters
      * @return
      */
-    public boolean isActionCompatible(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
+    public boolean isActionCompatible(UUID authorId, Tool tool, int color, AbstractToolParameters parameters) {
         return this.authorUUID == authorId && this.tool == tool && this.color == color;
     }
 
@@ -380,7 +380,7 @@ public class CanvasAction {
 
     public static CanvasAction readPacketData(FriendlyByteBuf buffer) {
         int actionId = buffer.readInt();
-        Tools tool = Tools.valueOf(buffer.readUtf(32));
+        Tool tool = Tool.valueOf(buffer.readUtf(32));
         int color = buffer.readInt();
         Long startTime = buffer.readLong();
         Long commitTime = buffer.readLong();

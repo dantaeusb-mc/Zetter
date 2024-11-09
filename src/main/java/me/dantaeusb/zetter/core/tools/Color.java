@@ -9,48 +9,47 @@ import org.joml.Vector3f;
  */
 public class Color {
   private int argb = 0xFFFFFFFF;
-
-  private Vector3f hsl = new Vector3f(0.0f, 1.0f, 0.5f);
-
-  private Vector3f okHsl = new Vector3f(0.0f, 1.0f, 0.5f);
+  private Vector3f rgb = new Vector3f(1.0f, 1.0f, 1.0f);
+  private Vector3f hsl;
+  private Vector3f okHsl;
 
   public Color(int rgb) {
     this.argb = 0xff000000 | rgb;
-
-    this.hsl = Color.RGBtoHSB(this.getRed(), this.getGreen(), this.getBlue());
+    this.rgb = Color.argbToRgb(rgb);
   }
 
-  public Color(int r, int g, int b) {
-    this(r, g, b, 0xFF);
+  public Color(Vector3f color, Mode mode) {
+    switch (mode) {
+      case RGB:
+        this.rgb = color;
+        break;
+      case HSL:
+        this.hsl = color;
+        this.rgb = Color.hslToRgb(color);
+        break;
+      case OKHSL:
+        this.okHsl = color;
+        this.rgb = Color.okhslToRgb(color);
+        break;
+    }
+
+    this.argb = Color.rgbToArgb(this.rgb);
   }
 
-  public Color(int r, int g, int b, int a) {
-    this(
-        ((a & 0xFF) << 24) |
-            ((r & 0xFF) << 16) |
-            ((g & 0xFF) << 8) |
-            ((b & 0xFF))
-    );
+  public static Color fromRgb(Vector3f rgb) {
+    return new Color(rgb, Mode.RGB);
   }
 
-  public Color(float r, float g, float b) {
-    this((int) (r * 255), (int) (g * 255), (int) (b * 255));
+  public static Color fromHsl(Vector3f hsl) {
+    return new Color(hsl, Mode.HSL);
   }
 
-  public Color(float r, float g, float b, float a) {
-    this((int) (r * 255), (int) (g * 255), (int) (b * 255), (int) (a * 255));
-  }
-
-  public static Color fromHsl(float hue, float saturation, float lightness) {
-    return new Color(Color.HSBtoRGB(hue, saturation, lightness));
-  }
-
-  public static Color fromOkHsl(float hue, float saturation, float lightness) {
-    return new Color(Color.HSBtoRGB(hue, saturation, lightness));
+  public static Color fromOkHsl(Vector3f okHsl) {
+    return new Color(okHsl, Mode.OKHSL);
   }
 
   public int getARGB() {
-    return argb;
+    return this.argb;
   }
 
   public float[] getRGBfloat() {
@@ -58,7 +57,7 @@ public class Color {
   }
 
   public int getRed() {
-    return (getARGB() >> 16) & 0xFF;
+    return (this.getARGB() >> 16) & 0xFF;
   }
 
   /**
@@ -69,7 +68,7 @@ public class Color {
    * @see #getARGB
    */
   public int getGreen() {
-    return (getARGB() >> 8) & 0xFF;
+    return (this.getARGB() >> 8) & 0xFF;
   }
 
   /**
@@ -80,58 +79,107 @@ public class Color {
    * @see #getARGB
    */
   public int getBlue() {
-    return (getARGB() >> 0) & 0xFF;
-  }
-
-  /**
-   * Returns the alpha component in the range 0-255.
-   *
-   * @return the alpha component.
-   * @see #getARGB
-   */
-  public int getAlpha() {
-    return (getARGB() >> 24) & 0xff;
+    return (this.getARGB()) & 0xFF;
   }
 
   public Vector3f getHsl() {
+    if (this.hsl == null) {
+      this.hsl = Color.rgbToHsl(this.rgb);
+    }
+
     return this.hsl;
   }
 
-  public void setHsl(Vector3f hsl) {
-    this.hsl = hsl;
-    // @todo: Add conversion to sRGB
-  }
-
   public Vector3f getOkHsl() {
+    if (this.okHsl == null) {
+      this.okHsl = Color.rgbToOkHsl(this.rgb);
+    }
+
     return this.okHsl;
   }
 
-  public Vector3f toHSB() {
-    return Color.RGBtoHSB(this.getRed(), this.getGreen(), this.getBlue());
+  public static int rgbToArgb(Vector3f rgb) {
+    return (0xFF << 24) | ((int) (rgb.x * 255.0f) << 16) | ((int) (rgb.y * 255.0f) << 8) | (int) (rgb.z * 255.0f);
   }
 
-  public static Vector3f RGBtoHSB(int r, int g, int b) {
+  public static Vector3f argbToRgb(int argb) {
+    int r = (argb >> 16) & 0xFF;
+    int g = (argb >> 8) & 0xFF;
+    int b = (argb) & 0xFF;
+    return new Vector3f(r / 255.0f, g / 255.0f, b / 255.0f);
+  }
+
+  // Color conversion helpers
+
+  /**
+   * This is not needed for anything but export. Work should be done in linear RGB space.
+   * OpenGL will do the conversion.
+   * However, this does not apply to shaders, which will need to do the conversion manually.
+   * <p>
+   *
+   * @param linearRgb
+   * @return
+   */
+  public static Vector3f rgbToSrgb(Vector3f linearRgb) {
+    Vector3f srgb = new Vector3f();
+    for (int i = 0; i < 3; i++) {
+      float v = linearRgb.get(i);
+      if (v <= 0.0031308f) {
+        v = 12.92f * v;
+      } else {
+        v = 1.055f * (float) Math.pow(v, 1.0 / 2.4) - 0.055f;
+      }
+      srgb.setComponent(i, v);
+    }
+    return srgb;
+  }
+
+  /**
+   * This is not needed for anything but export. Work should be done in linear RGB space.
+   * OpenGL will do the conversion.
+   * However, this does not apply to shaders, which will need to do the conversion manually.
+   * <p>
+   *
+   * @param color
+   * @return
+   */
+  public static int rgbToSrgb(int color) {
+    int r = (color >> 16) & 0xFF;
+    int g = (color >> 8) & 0xFF;
+    int b = (color) & 0xFF;
+
+    Vector3f linearRgb = new Vector3f(r / 255.0f, g / 255.0f, b / 255.0f);
+    Vector3f srgb = rgbToSrgb(linearRgb);
+    r = (int) (srgb.x * 255.0f);
+    g = (int) (srgb.y * 255.0f);
+    b = (int) (srgb.z * 255.0f);
+
+    return (0xFF << 24) | (r << 16) | (g << 8) | b;
+  }
+
+  public static Vector3f rgbToHsl(Vector3f rgb) {
     float hue, saturation, brightness;
     Vector3f hsbvals = new Vector3f();
-    int cmax = Math.max(r, g);
-    if (b > cmax) cmax = b;
-    int cmin = Math.min(r, g);
-    if (b < cmin) cmin = b;
+    float cmax = Math.max(rgb.x, rgb.y);
+    if (rgb.z > cmax) cmax = rgb.z;
+    float cmin = Math.min(rgb.x, rgb.y);
+    if (rgb.z < cmin) cmin = rgb.z;
 
-    brightness = ((float) cmax) / 255.0f;
+    brightness = cmax;
     if (cmax != 0)
-      saturation = ((float) (cmax - cmin)) / ((float) cmax);
+      saturation = (cmax - cmin) / cmax;
     else
       saturation = 0;
     if (saturation == 0)
       hue = 0;
     else {
-      float redc = ((float) (cmax - r)) / ((float) (cmax - cmin));
-      float greenc = ((float) (cmax - g)) / ((float) (cmax - cmin));
-      float bluec = ((float) (cmax - b)) / ((float) (cmax - cmin));
-      if (r == cmax)
+      float redc = (cmax - rgb.x) / (cmax - cmin);
+      float greenc = (cmax - rgb.y) / (cmax - cmin);
+      float bluec = (cmax - rgb.z) / (cmax - cmin);
+
+      if (rgb.x == cmax)
         hue = bluec - greenc;
-      else if (g == cmax)
+      else if (rgb.y == cmax)
         hue = 2.0f + redc - bluec;
       else
         hue = 4.0f + greenc - redc;
@@ -139,69 +187,78 @@ public class Color {
       if (hue < 0)
         hue = hue + 1.0f;
     }
+
     hsbvals.x = hue;
     hsbvals.y = saturation;
     hsbvals.z = brightness;
+
     return hsbvals;
   }
 
-  public static int HSBtoRGB(float hue, float saturation, float brightness) {
-    int r = 0, g = 0, b = 0;
-    if (saturation == 0) {
-      r = g = b = (int) (brightness * 255.0f + 0.5f);
+  /**
+   * @todo: [URG] Incorrect, it's HSV to RGB, not HSL to RGB
+   * @param hsl
+   * @return
+   */
+  public static Vector3f hslToRgb(Vector3f hsl) {
+    float r = 0.0f, g = 0.0f, b = 0.0f;
+    if (hsl.y == 0) {
+      r = g = b = hsl.z;
     } else {
-      float h = (hue - (float) Math.floor(hue)) * 6.0f;
-      float f = h - (float) java.lang.Math.floor(h);
-      float p = brightness * (1.0f - saturation);
-      float q = brightness * (1.0f - saturation * f);
-      float t = brightness * (1.0f - (saturation * (1.0f - f)));
-      switch ((int) h) {
-        case 0:
-          r = (int) (brightness * 255.0f + 0.5f);
-          g = (int) (t * 255.0f + 0.5f);
-          b = (int) (p * 255.0f + 0.5f);
-          break;
-        case 1:
-          r = (int) (q * 255.0f + 0.5f);
-          g = (int) (brightness * 255.0f + 0.5f);
-          b = (int) (p * 255.0f + 0.5f);
-          break;
-        case 2:
-          r = (int) (p * 255.0f + 0.5f);
-          g = (int) (brightness * 255.0f + 0.5f);
-          b = (int) (t * 255.0f + 0.5f);
-          break;
-        case 3:
-          r = (int) (p * 255.0f + 0.5f);
-          g = (int) (q * 255.0f + 0.5f);
-          b = (int) (brightness * 255.0f + 0.5f);
-          break;
-        case 4:
-          r = (int) (t * 255.0f + 0.5f);
-          g = (int) (p * 255.0f + 0.5f);
-          b = (int) (brightness * 255.0f + 0.5f);
-          break;
-        case 5:
-          r = (int) (brightness * 255.0f + 0.5f);
-          g = (int) (p * 255.0f + 0.5f);
-          b = (int) (q * 255.0f + 0.5f);
-          break;
-      }
+      float q = hsl.z < 0.5f ? hsl.z * (1.0f + hsl.y) : hsl.z + hsl.y - hsl.z * hsl.y;
+      float p = 2.0f * hsl.z - q;
+      r = hueToRgb(p, q, hsl.x + 1.0f / 3.0f);
+      g = hueToRgb(p, q, hsl.x);
+      b = hueToRgb(p, q, hsl.x - 1.0f / 3.0f);
     }
-    return 0xff000000 | (r << 16) | (g << 8) | (b);
+    return new Vector3f(r, g, b);
   }
 
-  // Color conversion helpers
-
-  public static Vector3f okhslToSrgb(Vector3f hsl) {
-    Vector3f linearRgb = okhslToLinearRgb(hsl);
-
-    Vector3f srgb = linearRgbToSrgb(linearRgb);
-
-    return srgb;
+  private static float hueToRgb(float p, float q, float t) {
+    if (t < 0.0f) t += 1.0f;
+    if (t > 1.0f) t -= 1.0f;
+    if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
+    if (t < 1.0f / 2.0f) return q;
+    if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
+    return p;
   }
 
-  private static Vector3f okhslToLinearRgb(Vector3f hsl) {
+  public static Vector3f rgbToOkHsl(Vector3f rgb) {
+    Vector3f lab = rgbToOklab(rgb);
+    float C = (float) Math.sqrt(lab.y * lab.y + lab.z * lab.z);
+    float a_ = lab.y / C;
+    float b_ = lab.z / C;
+
+    float L = lab.x;
+    float h = (float) (0.5 + 0.5 * Math.atan2(-lab.z, -lab.y) / Math.PI);
+
+    Vector3f cs = getCs(L, a_, b_);
+    float C_0 = cs.x;
+    float C_mid = cs.y;
+    float C_max = cs.z;
+
+    float s;
+    if (C < C_mid) {
+      float k_0 = 0.0f;
+      float k_1 = 0.8f * C_0;
+      float k_2 = (1.0f - k_1 / C_mid);
+
+      float t = (C - k_0) / (k_1 + k_2 * (C - k_0));
+      s = t * 0.8f;
+    } else {
+      float k_0 = C_mid;
+      float k_1 = 0.2f * C_mid * C_mid * 1.25f * 1.25f / C_0;
+      float k_2 = (1 - (k_1) / (C_max - C_mid));
+
+      float t = (C - k_0) / (k_1 + k_2 * (C - k_0));
+      s = 0.8f + 0.2f * t;
+    }
+
+    float l = toe(L);
+    return new Vector3f(h, s, l);
+  }
+
+  public static Vector3f okhslToRgb(Vector3f hsl) {
     float h = hsl.x;
     float s = hsl.y;
     float l = hsl.z;
@@ -239,10 +296,26 @@ public class Color {
       C = k_0 + t * k_1 / (1.0f - k_2 * t);
     }
 
-    return oklabToLinearSrgb(new Vector3f(L, C * a, C * b));
+    return oklabToRgb(new Vector3f(L, C * a, C * b));
   }
 
-  public static Vector3f oklabToLinearSrgb(Vector3f okLab) {
+  public static Vector3f rgbToOklab(Vector3f rgb) {
+    double l = (float) (0.4122214708 * rgb.x + 0.5363325363 * rgb.y + 0.0514459929 * rgb.z);
+    double m = (float) (0.2119034982 * rgb.x + 0.6806995451 * rgb.y + 0.1073969566 * rgb.z);
+    double s = (float) (0.0883024619 * rgb.x + 0.2817188376 * rgb.y + 0.6299787005 * rgb.z);
+
+    double l_ = Math.cbrt(l);
+    double m_ = Math.cbrt(m);
+    double s_ = Math.cbrt(s);
+
+    return new Vector3f(
+        (float) (0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_),
+        (float) (1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_),
+        (float) (0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_)
+    );
+  }
+
+  public static Vector3f oklabToRgb(Vector3f okLab) {
     float L_ = okLab.x + 0.3963377774f * okLab.y + 0.2158037573f * okLab.z;
     float M_ = okLab.x - 0.1055613458f * okLab.y - 0.0638541728f * okLab.z;
     float S_ = okLab.x - 0.0894841775f * okLab.y - 1.2914855480f * okLab.z;
@@ -258,20 +331,9 @@ public class Color {
     return new Vector3f(r, g, b);
   }
 
-  // Helper method to convert linear RGB to sRGB
-  public static Vector3f linearRgbToSrgb(Vector3f linearRgb) {
-    Vector3f srgb = new Vector3f();
-    for (int i = 0; i < 3; i++) {
-      float v = linearRgb.get(i);
-      if (v <= 0.0031308f) {
-        v = 12.92f * v;
-      } else {
-        v = 1.055f * (float) Math.pow(v, 1.0 / 2.4) - 0.055f;
-      }
-      srgb.setComponent(i, v);
-    }
-    return srgb;
-  }
+  /*
+   * okHSL/okLCH helper section
+   */
 
   private static Vector3f getCs(float L, float a, float b) {
     Vector2f cusp = findCusp(a, b);
@@ -305,7 +367,7 @@ public class Color {
 
   private static Vector2f findCusp(float a, float b) {
     float SCusp = computeMaxSaturation(a, b);
-    Vector3f rgbAtMax = oklabToLinearSrgb(new Vector3f(1.0f, SCusp * a, SCusp * b));
+    Vector3f rgbAtMax = oklabToRgb(new Vector3f(1.0f, SCusp * a, SCusp * b));
     float LCusp = (float) Math.cbrt(1.0f / Math.max(Math.max(rgbAtMax.x, rgbAtMax.y), rgbAtMax.z));
     float CCusp = SCusp * LCusp;
 
@@ -489,6 +551,13 @@ public class Color {
     return new Vector2f(S, T);
   }
 
+  private static float toe(float x) {
+    final float k1 = 0.206f;
+    final float k2 = 0.03f;
+    final float k3 = (1.0f + k1) / (1.0f + k2);
+    return (float) Math.sqrt(x) / (k3 - 1.0f) - k1;
+  }
+
   private static float toeInv(float x) {
     final float K1 = 0.206f;
     final float K2 = 0.03f;
@@ -496,32 +565,28 @@ public class Color {
     return (x * x + K1 * x) / (K3 * (x + K2));
   }
 
-  public static final Color white = new Color(255, 255, 255);
-  public static final Color WHITE = white;
-  public static final Color screenGray = new Color(198, 198, 198);
-  public static final Color SCREEN_GRAY = screenGray;
-  public static final Color lightGray = new Color(192, 192, 192);
-  public static final Color LIGHT_GRAY = lightGray;
-  public static final Color gray = new Color(128, 128, 128);
-  public static final Color GRAY = gray;
-  public static final Color darkGray = new Color(64, 64, 64);
-  public static final Color DARK_GRAY = darkGray;
-  public static final Color black = new Color(0, 0, 0);
-  public static final Color BLACK = black;
-  public static final Color red = new Color(255, 0, 0);
-  public static final Color RED = red;
-  public static final Color pink = new Color(255, 175, 175);
-  public static final Color PINK = pink;
-  public static final Color orange = new Color(255, 200, 0);
-  public static final Color ORANGE = orange;
-  public static final Color yellow = new Color(255, 255, 0);
-  public static final Color YELLOW = yellow;
-  public static final Color green = new Color(0, 255, 0);
-  public static final Color GREEN = green;
-  public static final Color magenta = new Color(255, 0, 255);
-  public static final Color MAGENTA = magenta;
-  public static final Color cyan = new Color(0, 255, 255);
-  public static final Color CYAN = cyan;
-  public static final Color blue = new Color(0, 0, 255);
-  public static final Color BLUE = blue;
+  /*
+   * Constants
+   */
+
+  public static final Color WHITE = new Color(0xFFFFFF);
+  public static final Color SCREEN_GRAY = new Color(0xC6C6C6);
+  public static final Color LIGHT_GRAY = new Color(0xC0C0C0);
+  public static final Color GRAY = new Color(0x808080);
+  public static final Color DARK_GRAY = new Color(0x404040);
+  public static final Color BLACK = new Color(0x000000);
+  public static final Color RED = new Color(0xFF0000);
+  public static final Color PINK = new Color(0xFFAFAF);
+  public static final Color ORANGE = new Color(0xFFC800);
+  public static final Color YELLOW = new Color(0xFFFF00);
+  public static final Color GREEN = new Color(0x00FF00);
+  public static final Color MAGENTA = new Color(0xFF00FF);
+  public static final Color CYAN = new Color(0x00FFFF);
+  public static final Color BLUE = new Color(0x0000FF);
+
+  enum Mode {
+    RGB,
+    HSL,
+    OKHSL
+  }
 }

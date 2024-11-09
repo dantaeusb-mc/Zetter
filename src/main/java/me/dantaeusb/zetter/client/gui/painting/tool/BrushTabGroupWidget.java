@@ -3,7 +3,7 @@ package me.dantaeusb.zetter.client.gui.painting.tool;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.base.TabsWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.brush.BrushParametersWidget;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 
@@ -14,7 +14,7 @@ public class BrushTabGroupWidget extends AbstractToolTabGroupWidget implements R
     super(
         parentScreen,
         Component.translatable("screen.zetter.painting.tool.brush"),
-        Tools.BRUSH,
+        Tool.BRUSH,
         new TabsWidget.Tab[]{
             new TabsWidget.Tab("brush", Component.translatable("screen.zetter.painting.tool.brush"), parentScreen.getFont()),
         }, Map.of(

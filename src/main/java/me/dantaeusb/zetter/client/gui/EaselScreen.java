@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.client.gui.easel.*;
 import me.dantaeusb.zetter.client.gui.easel.tabs.*;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.menu.EaselMenu;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.BrushParameters;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
@@ -133,8 +133,8 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         this.menu.addColorUpdateListener(this::updateCurrentColor);
         this.menu.addSlotListener(this);
 
-        Tools.EYEDROPPER.getTool().addActionListener(this);
-        Tools.HAND.getTool().addActionListener(this);
+        Tool.EYEDROPPER.getTool().addActionListener(this);
+        Tool.HAND.getTool().addActionListener(this);
 
         //this.updateCurrentColor(this.getMenu().getCurrentColor());
     }
@@ -194,8 +194,8 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
         this.menu.removeColorUpdateListener(this::updateCurrentColor);
         this.menu.removeSlotListener(this);
 
-        Tools.EYEDROPPER.getTool().removeActionListener(this);
-        Tools.HAND.getTool().removeActionListener(this);
+        Tool.EYEDROPPER.getTool().removeActionListener(this);
+        Tool.HAND.getTool().removeActionListener(this);
     }
 
     /**
@@ -275,7 +275,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
 
         // draw the label for the player inventory slots
         guiGraphics.drawString(this.getFont(), this.getMenu().getCurrentTab().translatableComponent,
-                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.darkGray.getARGB(), false);
+                TAB_LABEL_XPOS, TAB_LABEL_YPOS, Color.DARK_GRAY.getARGB(), false);
 
         this.getCurrentTab().renderLabels(guiGraphics, mouseX, mouseY);
     }
@@ -301,13 +301,13 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
      * @param posY
      */
     public void useToolCallback(CanvasData canvas, AbstractTool<?> tool, AbstractToolParameters parameters, int color, float posX, float posY) {
-        if (tool.equals(Tools.EYEDROPPER.getTool())) {
+        if (tool.equals(Tool.EYEDROPPER.getTool())) {
             int canvasPosX = (int) Math.min(Math.max(posX, 0), canvas.getWidth());
             int canvasPosY = (int) Math.min(Math.max(posY, 0), canvas.getHeight());
 
             final int newColor = canvas.getColorAt(canvasPosX, canvasPosY);
             this.getMenu().setPaletteColor(newColor);
-        } else if (tool.equals(Tools.HAND.getTool())) {
+        } else if (tool.equals(Tool.HAND.getTool())) {
             if (this.dragStart == null || this.dragCurrent == null || this.dragStartCanvasOffset == null) {
                 return;
             }
@@ -345,25 +345,25 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
                 this.minecraft.player.closeContainer();
                 return true;
             case Pencil.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.PENCIL);
+                this.getMenu().setCurrentTool(Tool.PENCIL);
                 return true;
             case Brush.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.BRUSH);
+                this.getMenu().setCurrentTool(Tool.BRUSH);
                 return true;
             case Eyedropper.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.EYEDROPPER);
+                this.getMenu().setCurrentTool(Tool.EYEDROPPER);
                 return true;
             case Eyedropper.QUICK_TOOL_KEY:
-                this.activateQuickTool(Tools.EYEDROPPER);
+                this.activateQuickTool(Tool.EYEDROPPER);
                 return true;
             case Bucket.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.BUCKET);
+                this.getMenu().setCurrentTool(Tool.BUCKET);
                 return true;
             case Hand.HOTKEY:
-                this.getMenu().setCurrentTool(Tools.HAND);
+                this.getMenu().setCurrentTool(Tool.HAND);
                 return true;
             case Hand.QUICK_TOOL_KEY:
-                this.activateQuickTool(Tools.HAND);
+                this.activateQuickTool(Tool.HAND);
                 return true;
             case PaletteWidget.SWAP_HOTKEY: {
                 final int row = (this.getMenu().getCurrentPaletteSlot() / 2) * 2;
@@ -514,7 +514,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (hasControlDown()) {
-            if (this.getMenu().getCurrentTool() == Tools.BRUSH) {
+            if (this.getMenu().getCurrentTool() == Tool.BRUSH) {
                 AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
 
                 if (parameters instanceof SizeParameterHolder) {
@@ -524,7 +524,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
                     ((SizeParameterHolder) parameters).setSize(newSize);
                     return true;
                 }
-            } else if (this.getMenu().getCurrentTool() == Tools.PENCIL) {
+            } else if (this.getMenu().getCurrentTool() == Tool.PENCIL) {
                 AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
 
                 if (parameters instanceof SizeParameterHolder) {
@@ -566,9 +566,9 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
      * picker with alt hotkey or hand with space
      */
 
-    private @Nullable Tools quickToolCache;
+    private @Nullable Tool quickToolCache;
 
-    public void activateQuickTool(Tools tool) {
+    public void activateQuickTool(Tool tool) {
         if (this.getMenu().getCurrentTool() != tool) {
             this.quickToolCache = this.getMenu().getCurrentTool();
             this.getMenu().setCurrentTool(tool);

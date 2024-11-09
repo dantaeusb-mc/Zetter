@@ -10,17 +10,20 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class SliderWidget extends AbstractPaintingWidget implements Renderable {
   /**
    * Size in horizontal mode, swapped in vertical mode
    */
-  final static int WIDTH = 150;
-  final static int HEIGHT = 9;
+  public final static int HORIZONTAL_WIDTH = 150;
+  public final static int HORIZONTAL_HEIGHT = 9;
+
+  public final static int VERTICAL_WIDTH = 9;
+  public final static int VERTICAL_HEIGHT = 120;
 
   private final Orientation orientation;
 
-  private float value = 0.0f;
   private boolean sliderDragging = false;
 
   /**
@@ -31,43 +34,39 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
    * The function to paint slider's foreground (i.e. gradient)
    */
   private final @Nullable PaintConsumer handlerLambda;
+  private final @NotNull Supplier<Float> valueSupplier;
   private Consumer<Float> positionConsumer;
 
   public SliderWidget(
       PaintingScreen parentScreen, int x, int y, Component translatableComponent,
+      Supplier<Float> valueSupplier,
       Consumer<Float> positionConsumer,
       Orientation orientation,
       @Nullable PaintConsumer backgroundLambda, @Nullable PaintConsumer handlerLambda
   ) {
     super(
         parentScreen, x, y,
-        orientation == Orientation.HORIZONTAL ? WIDTH : HEIGHT,
-        orientation == Orientation.HORIZONTAL ? HEIGHT : WIDTH,
+        orientation == Orientation.HORIZONTAL ? HORIZONTAL_WIDTH : VERTICAL_WIDTH,
+        orientation == Orientation.HORIZONTAL ? HORIZONTAL_HEIGHT : VERTICAL_HEIGHT,
         translatableComponent
     );
 
     this.orientation = orientation;
 
+    this.valueSupplier = valueSupplier;
+    this.positionConsumer = positionConsumer;
+
     this.backgroundLambda = backgroundLambda;
     this.handlerLambda = handlerLambda;
-
-    this.positionConsumer = positionConsumer;
   }
 
   public SliderWidget(
       PaintingScreen parentScreen, int x, int y, Component translatableComponent,
+      Supplier<Float> valueSupplier,
       Consumer<Float> positionConsumer,
       @Nullable PaintConsumer backgroundLambda, @Nullable PaintConsumer handlerLambda
   ) {
-    this(parentScreen, x, y, translatableComponent, positionConsumer, Orientation.HORIZONTAL, backgroundLambda, handlerLambda);
-  }
-
-  public double getValue() {
-    return this.value;
-  }
-
-  public void setValue(float percent) {
-    this.value = percent;
+    this(parentScreen, x, y, translatableComponent, valueSupplier, positionConsumer, Orientation.HORIZONTAL, backgroundLambda, handlerLambda);
   }
 
   @Override
@@ -77,37 +76,27 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
 
   @Override
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    if (!this.isMouseOver(mouseX, mouseY) || !this.isValidClickButton(button)) {
+      return false;
+    }
+
     int iMouseX = (int) mouseX;
     int iMouseY = (int) mouseY;
 
-    if (this.isMouseOver(mouseX, mouseY)) {
-      this.handleSliderInteraction(iMouseX, iMouseY);
-      return true;
-    }
-
-    return super.mouseClicked(mouseX, mouseY, button);
+    this.handleSliderInteraction(iMouseX, iMouseY);
+    return true;
   }
 
   @Override
-  public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+  protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
     if (this.sliderDragging) {
       this.handleSliderInteraction(mouseX, mouseY);
-      return true;
     }
-
-    return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
   }
 
   @Override
-  public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (this.sliderDragging) {
-      // If we were changing palette colors, sync them with server
-      // this.parentScreen.getMenu().sendPaletteUpdatePacket();
-    }
-
+  public void onRelease(double mouseX, double mouseY) {
     this.sliderDragging = false;
-
-    return super.mouseReleased(mouseX, mouseY, button);
   }
 
   protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
@@ -124,23 +113,19 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     int sliderContentGlobalLeft = this.getX() + 3;
     int sliderContentGlobalTop = this.getY() + 3;
 
+    float value = this.valueSupplier.get();
+
     if (this.orientation == Orientation.HORIZONTAL) {
       int sliderV = SLIDER_HORIZONTAL_POSITION_V;
 
       if (this.sliderDragging) {
-        sliderV += HEIGHT;
+        sliderV += HORIZONTAL_HEIGHT;
       }
 
-      /**
-       * Sugar, hope the compiler will remove it.
-       */
-      final int width = WIDTH;
-      final int height = HEIGHT;
-
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, width, height);
+      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_WIDTH, HORIZONTAL_HEIGHT);
 
       if (this.backgroundLambda != null) {
-        int sliderContentWidth = width - 6;
+        int sliderContentWidth = HORIZONTAL_WIDTH - 6;
         int sliderContentHeight = 3;
 
         if (this.sliderDragging) {
@@ -148,33 +133,27 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
           sliderContentHeight += 4;
         }
 
-        this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, this.value);
+        this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
       }
     } else {
       int sliderU = SLIDER_VERTICAL_POSITION_U;
 
       if (this.sliderDragging) {
-        sliderU += HEIGHT;
+        sliderU += VERTICAL_WIDTH;
       }
 
-      /**
-       * Sugar, hope the compiler will remove it.
-       */
-      final int width = HEIGHT;
-      final int height = WIDTH;
-
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), sliderU, SLIDER_VERTICAL_POSITION_V, width, height);
+      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), sliderU, SLIDER_VERTICAL_POSITION_V, VERTICAL_WIDTH, VERTICAL_HEIGHT);
 
       if (this.backgroundLambda != null) {
         int sliderContentWidth = 3;
-        int sliderContentHeight = height - 6;
+        int sliderContentHeight = VERTICAL_HEIGHT - 6;
 
         if (this.sliderDragging) {
           sliderContentGlobalLeft -= 2;
           sliderContentWidth += 4;
         }
 
-        this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, this.value);
+        this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
       }
     }
   }
@@ -184,13 +163,17 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
    * @param mouseY
    */
   protected void handleSliderInteraction(final double mouseX, final double mouseY) {
-
     this.sliderDragging = true;
 
-    float percent = (float) (mouseX - this.getX() - 3) / (WIDTH - 7);
-    percent = Mth.clamp(percent, 0.0f, 1.0f);
+    float percent;
 
-    this.value = percent;
+    if (this.orientation == Orientation.HORIZONTAL) {
+      percent = (float) (mouseX - this.getX() - 3) / (HORIZONTAL_WIDTH - 7);
+    } else {
+      percent = 1.0f - (float) (mouseY - this.getY() - 3) / (VERTICAL_HEIGHT - 7);
+    }
+
+    percent = Mth.clamp(percent, 0.0f, 1.0f);
 
     this.positionConsumer.accept(percent);
   }
@@ -201,17 +184,19 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
 
   protected void drawHandler(GuiGraphics guiGraphics) {
     final int HANDLER_HORIZONTAL_POSITION_U = 90;
-    final int HANDLER_HORIZONTAL_POSITION_V = 120;
+    final int HANDLER_HORIZONTAL_POSITION_V = 119;
     final int HANDLER_VERTICAL_POSITION_U = 90;
     final int HANDLER_VERTICAL_POSITION_V = 141;
 
     final int HANDLER_WIDTH = 5;
     final int HANDLER_HEIGHT = 11;
 
-    if (this.orientation == Orientation.HORIZONTAL) {
-      int sliderContentWidth = WIDTH - 7;
+    float value = this.valueSupplier.get();
 
-      int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * this.value) + 3 - 2;
+    if (this.orientation == Orientation.HORIZONTAL) {
+      int sliderContentWidth = HORIZONTAL_WIDTH - 7;
+
+      int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * value) + 3 - 2;
       int sliderGlobalTop = this.getY() - 1;
 
       int sliderV = HANDLER_HORIZONTAL_POSITION_V;
@@ -237,13 +222,13 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
           width = 3;
         }
 
-        this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, this.value);
+        this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
       }
     } else {
-      int sliderContentHeight = HEIGHT - 7;
+      int sliderContentHeight = VERTICAL_HEIGHT - 7;
 
       int sliderGlobalLeft = this.getX() - 1;
-      int sliderGlobalTop = this.getX() + (int) (sliderContentHeight * this.value) + 3 - 2;
+      int sliderGlobalTop = this.getY() + (int) (sliderContentHeight * (1.0f - value)) + 3 - 2;
 
       int sliderV = HANDLER_VERTICAL_POSITION_V;
 
@@ -272,7 +257,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
           height = 3;
         }
 
-        this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, this.value);
+        this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
       }
     }
   }

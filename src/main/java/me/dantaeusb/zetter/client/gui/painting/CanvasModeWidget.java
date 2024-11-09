@@ -2,7 +2,6 @@ package me.dantaeusb.zetter.client.gui.painting;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.painting.Tools;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -76,6 +75,16 @@ public class CanvasModeWidget extends AbstractPaintingWidget implements Renderab
       i++;
     }
 
+    return false;
+  }
+
+  @Override
+  public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    return false;
+  }
+
+  @Override
+  public boolean mouseReleased(double mouseX, double mouseY, int button) {
     return false;
   }
 

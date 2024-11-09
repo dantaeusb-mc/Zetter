@@ -12,7 +12,7 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.world.entity.player.Inventory;
@@ -63,7 +63,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
     /*
      * Tools
      */
-    private Tools currentTool = Tools.PENCIL;
+    private Tool currentTool = Tool.PENCIL;
 
     // Cached values
     private boolean canUndo = false;
@@ -240,11 +240,11 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         }
     }
 
-    public Tools getCurrentTool() {
+    public Tool getCurrentTool() {
         return this.currentTool;
     }
 
-    public void setCurrentTool(Tools tool) {
+    public void setCurrentTool(Tool tool) {
         this.currentTool = tool;
 
         for (Consumer<AbstractToolParameters> listener: this.toolUpdateListeners) {

@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.client.renderer;
 
 import com.google.common.collect.Maps;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.dantaeusb.zetter.Zetter;
@@ -18,7 +17,6 @@ import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
@@ -311,14 +309,14 @@ public class CanvasRenderer implements AutoCloseable {
             for(int pixelY = 0; pixelY < canvas.getHeight(); pixelY++) {
                 for(int pixelX = 0; pixelX < canvas.getWidth(); pixelX++) {
                     int color = canvas.getColorAt(pixelX, pixelY);
-                    this.canvasTexture.getPixels().setPixelRGBA(pixelX, pixelY, this.ARGBtoABGR(color));
+                    this.canvasTexture.getPixels().setPixelRGBA(pixelX, pixelY, this.LinearArgbToSabgr(color));
                 }
             }
 
             this.canvasTexture.upload();
         }
 
-        private int ARGBtoABGR(int x)
+        private int LinearArgbToSabgr(int x)
         {
             return ((x & 0xFF000000)) |       //AA______
                    ((x & 0x00FF0000) >> 16) | //______RR

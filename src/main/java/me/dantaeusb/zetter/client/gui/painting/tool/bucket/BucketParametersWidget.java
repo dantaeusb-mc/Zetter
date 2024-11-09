@@ -20,13 +20,23 @@ public class BucketParametersWidget extends AbstractPaintingWidget implements Re
     final int INTENSITY_POSITION_Y = BlendingWidget.HEIGHT + 14;
 
     this.intensitySlider = new SliderWidget(
-        parentScreen, this.getX() + INTENSITY_POSITION_X, this.getY() + INTENSITY_POSITION_Y,
+        parentScreen,
+        this.getX() + INTENSITY_POSITION_X,
+        this.getY() + INTENSITY_POSITION_Y,
         Component.translatable("container.zetter.painting.sliders.intensity"),
-        this::updateIntensity, this::renderIntensityBackground, this::renderIntensityState
+        this::getIntensity,
+        this::updateIntensity,
+        this::renderIntensityBackground,
+        this::renderIntensityState
     );
   }
 
-  public void updateIntensity(float percent) {
+  private float getIntensity() {
+    BucketParameters parameters = this.parentScreen.getToolsParameters().getBucketParameters();
+    return parameters.getIntensity();
+  }
+
+  private void updateIntensity(float percent) {
     BucketParameters parameters = this.parentScreen.getToolsParameters().getBucketParameters();
     parameters.setIntensity(1f + percent * 5f);
   }

@@ -1,11 +1,9 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.easel.AbstractEaselWidget;
 import me.dantaeusb.zetter.client.gui.painting.util.state.CanvasOverlayState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.narration.NarratedElementType;
@@ -92,7 +90,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
     for (ZoomButton zoomButton : this.buttons) {
       int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
 
-      if (EaselScreen.isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, mouseX, mouseY)) {
+      if (isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, mouseX, mouseY)) {
         return zoomButton.getTooltip();
       }
 
@@ -103,7 +101,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
   }
 
   @Override
-  public boolean mouseClicked(double mouseX, double mouseY, int button) {
+  public boolean clicked(double mouseX, double mouseY) {
     int iMouseX = (int) mouseX;
     int iMouseY = (int) mouseY;
 
@@ -112,19 +110,49 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
       return false;
     }
 
+    if (this.parentScreen.getPaintingScreenState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
+      return false;
+    }
+
     int i = 0;
-    for (ZoomButton zoomButton : this.buttons) {
+    for (ZoomButton ignored : this.buttons) {
       int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
 
-      if (EaselScreen.isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
-        zoomButton.action.run();
-
-        this.playDownSound(Minecraft.getInstance().getSoundManager());
+      if (isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
+        return true;
       }
 
       i++;
     }
 
+    return false;
+  }
+
+  @Override
+  public void onClick(double mouseX, double mouseY) {
+    int iMouseX = (int) mouseX;
+    int iMouseY = (int) mouseY;
+
+    int i = 0;
+    for (ZoomButton zoomButton : this.buttons) {
+      int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
+
+      if (isInRect(fromX, this.getY(), ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT, iMouseX, iMouseY)) {
+        zoomButton.action.run();
+        return;
+      }
+
+      i++;
+    }
+  }
+
+  @Override
+  public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    return false;
+  }
+
+  @Override
+  public boolean mouseReleased(double mouseX, double mouseY, int button) {
     return false;
   }
 
@@ -143,19 +171,17 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
     int i = 0;
     for (ZoomButton zoomButton : this.buttons) {
       int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
-      int uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
+      int uOffset;
+
+      if (this.parentScreen.getPaintingScreenState().canvasMode() == PaintingScreen.CanvasMode.OVERLAY) {
+        uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
+      } else {
+        uOffset = zoomButton.uPosition - ZOOM_BUTTON_WIDTH * 2;
+      }
 
       guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, fromX, this.getY(), uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
       i++;
     }
-  }
-
-  public boolean undo() {
-    return false;
-  }
-
-  public boolean redo() {
-    return false;
   }
 
   public class ZoomButton {

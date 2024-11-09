@@ -12,7 +12,7 @@ import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.*;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -278,7 +278,7 @@ public class EaselState {
      * @param posX
      * @param posY
      */
-    public void useTool(Player player, Tools tool, float posX, float posY, int color, AbstractToolParameters parameters) {
+    public void useTool(Player player, Tool tool, float posX, float posY, int color, AbstractToolParameters parameters) {
         ItemStack paletteStack = this.easel.getEaselContainer().getPaletteStack();
 
         // No palette or no paints left and player is not creative mode player
@@ -444,7 +444,7 @@ public class EaselState {
      * @param posX
      * @param posY
      */
-    private void recordAction(UUID playerId, Tools tool, int color, AbstractToolParameters parameters, float posX, float posY) {
+    private void recordAction(UUID playerId, Tool tool, int color, AbstractToolParameters parameters, float posX, float posY) {
         CanvasAction lastAction = this.getLastAction();
 
         if (lastAction == null || lastAction.isCommitted()) {
@@ -468,7 +468,7 @@ public class EaselState {
      * @param parameters
      * @return
      */
-    private CanvasAction createAction(UUID playerId, Tools tool, int color, AbstractToolParameters parameters) {
+    private CanvasAction createAction(UUID playerId, Tool tool, int color, AbstractToolParameters parameters) {
         final CanvasAction lastAction = this.getLastAction();
 
         if (!tool.getTool().hasEffect()) {

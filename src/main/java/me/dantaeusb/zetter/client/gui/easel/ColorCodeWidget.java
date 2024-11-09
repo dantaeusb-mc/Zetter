@@ -185,7 +185,7 @@ public class ColorCodeWidget extends AbstractEaselWidget implements Renderable {
                 this.getMessage(),
                 this.getX() - this.parentScreen.getGuiLeft(),
                 this.getY() - this.parentScreen.getGuiTop(),
-                Color.darkGray.getARGB(), false
+                Color.DARK_GRAY.getARGB(), false
         );
     }
 

@@ -37,8 +37,6 @@ abstract public class AbstractPaintingWidget extends AbstractWidget implements G
         return this.getMessage();
     }
 
-    public void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {}
-
     @Override
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());

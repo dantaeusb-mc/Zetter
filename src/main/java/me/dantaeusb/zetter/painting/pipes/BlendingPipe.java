@@ -9,6 +9,7 @@ import me.dantaeusb.zetter.painting.tools.Brush;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.function.TriFunction;
+import org.joml.Vector3f;
 
 
 public class BlendingPipe implements Pipe {
@@ -57,11 +58,11 @@ public class BlendingPipe implements Pipe {
         final Color newColorModel = new Color(newColor);
         final Color oldColorModel = new Color(oldColor);
 
-        return new Color(
+        return Color.fromRgb(new Vector3f(
                 (newColorModel.getRed() * intensity + oldColorModel.getRed() * (1f - intensity)) / 255,
                 (newColorModel.getGreen() * intensity + oldColorModel.getGreen() * (1f - intensity)) / 255,
                 (newColorModel.getBlue() * intensity + oldColorModel.getBlue() * (1f - intensity)) / 255
-        ).getARGB();
+        )).getARGB();
     }
 
     /**
@@ -94,7 +95,7 @@ public class BlendingPipe implements Pipe {
 
         final float[] rgbResult = BlendingPipe.protectOverflow(BlendingPipe.rybToRgb(rybResult));
 
-        return new Color(rgbResult[0], rgbResult[1], rgbResult[2]).getARGB();
+        return Color.fromRgb(new Vector3f(rgbResult[0], rgbResult[1], rgbResult[2])).getARGB();
     }
 
     /**

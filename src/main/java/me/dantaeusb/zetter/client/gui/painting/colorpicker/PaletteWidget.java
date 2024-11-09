@@ -68,7 +68,8 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
         }
 
         this.parentScreen.setPaintingScreenState(
-            this.parentScreen.getPaintingScreenState().withCurrentPaletteSlot(slotIndex));
+            this.parentScreen.getPaintingScreenState().withCurrentPaletteSlot(slotIndex)
+        );
 
         return true;
     }

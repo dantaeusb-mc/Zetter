@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter.painting.parameters;
 
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import net.minecraft.core.NonNullList;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Tuple;
@@ -68,7 +68,7 @@ public abstract class AbstractToolParameters implements Cloneable {
         }
     }
 
-    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer, Tools tool) {
+    public static AbstractToolParameters readPacketData(FriendlyByteBuf buffer, Tool tool) {
         // @todo: varies!
         AbstractToolParameters toolParameters;
 

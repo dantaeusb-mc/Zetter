@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.*;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.painting.Tools;
+import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
 import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import me.dantaeusb.zetter.painting.tools.AbstractTool;
@@ -202,7 +202,7 @@ public class CanvasWidget extends AbstractEaselWidget implements Renderable {
                 && mouseX < this.getX() + this.width
                 && mouseY < this.getY() + this.height
         ) {
-            if (this.parentScreen.getMenu().getCurrentTool().getTool() == Tools.HAND.getTool()) {
+            if (this.parentScreen.getMenu().getCurrentTool().getTool() == Tool.HAND.getTool()) {
                 GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             } else {
                 double canvasX = (mouseX - this.getX() - this.parentScreen.getMenu().getCanvasOffsetX()) / (double) this.getCanvasScale();
