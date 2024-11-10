@@ -262,16 +262,17 @@ public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStack
 
                 return InteractionResult.sidedSuccess(this.level().isClientSide());
             }
-        } else if (isPalette) {
+        } /*else if (isPalette) {
             if (this.easelContainer.getPaletteStack().isEmpty()) {
                 this.easelContainer.setPaletteStack(heldItem);
                 player.setItemInHand(hand, ItemStack.EMPTY);
             }
-        }
+        }*/
 
-        this.openInventory(player);
+        /*this.openInventory(player);*/
 
-        return InteractionResult.sidedSuccess(this.level().isClientSide);
+        return InteractionResult.PASS;
+        //return InteractionResult.sidedSuccess(this.level().isClientSide);
     }
 
     public void openInventory(Player player) {

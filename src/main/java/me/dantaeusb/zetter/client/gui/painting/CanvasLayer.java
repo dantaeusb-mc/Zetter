@@ -31,6 +31,7 @@ import org.joml.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.Optional;
+import java.util.Vector;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL14.GL_FUNC_ADD;
@@ -329,16 +330,23 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
       return;
     }
 
-    Optional<Matrix4f> matrixTransform = this.parentScreen.getCanvasHolderEntity().getCanvasMatrixTransform(partialTick);
+    Optional<Matrix4f> canvasTransform = this.parentScreen.getCanvasHolderEntity().getCanvasMatrixTransform(partialTick);
 
-    if (matrixTransform.isEmpty()) {
+    if (canvasTransform.isEmpty()) {
       return;
     }
 
     Vec3 entityPosition = this.parentScreen.getCanvasHolderEntity().getPosition(partialTick);
     Camera camera = minecraft.gameRenderer.getMainCamera();
 
-    Matrix4f projectionMatrix = minecraft.gameRenderer.getProjectionMatrix(70.0F);
+    /**
+     * @todo: [HIGH] This does not account for various game effects,
+     * correct solution would be to reflect GameRenderer#getFov() method
+     * making it public
+     */
+    Matrix4f projectionMatrix = minecraft.gameRenderer.getProjectionMatrix(
+        minecraft.options.fov().get()
+    );
 
     RenderSystem.backupProjectionMatrix();
     RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorting.DISTANCE_TO_ORIGIN);
@@ -363,7 +371,7 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
     poseStack.translate(entityPosition.x - cameraPosition.x, entityPosition.y - cameraPosition.y, entityPosition.z - cameraPosition.z);
     poseStack.mulPose(Axis.XP.rotationDegrees(this.parentScreen.getCanvasHolderEntity().getXRot()));
     poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - this.parentScreen.getCanvasHolderEntity().getYRot()));
-    poseStack.mulPoseMatrix(matrixTransform.get());
+    poseStack.mulPoseMatrix(canvasTransform.get());
 
     MultiBufferSource.BufferSource renderTypeBufferImpl = guiGraphics.bufferSource();
     CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
@@ -385,14 +393,16 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
 
     PoseStack poseStack = guiGraphics.pose();
 
-    Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix());
-    Matrix4f transform = new Matrix4f(poseStack.last().pose());
+    Matrix4f projectionMatrix = new Matrix4f(RenderSystem.getProjectionMatrix());
+    Matrix4f viewMatrix = new Matrix4f(poseStack.last().pose());
 
-    Vector3f localPosition = transform.unproject(
-        mouseX,
-        minecraft.getWindow().getGuiScaledHeight() - mouseY,
-        0.0f,
-        new int[]{0, 0, minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight()},
+    Matrix4f inverseViewProjectionMatrix = viewMatrix.mul(projectionMatrix).invert();
+
+    Vector3f localPosition = viewMatrix.unproject(
+        (float) minecraft.mouseHandler.xpos(),
+        (float) (minecraft.getWindow().getHeight() - minecraft.mouseHandler.ypos()),
+        0.05f,
+        new int[]{0, 0, minecraft.getWindow().getWidth(), minecraft.getWindow().getHeight()},
         new Vector3f()
     );
 
