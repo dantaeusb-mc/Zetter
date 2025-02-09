@@ -196,9 +196,9 @@ public class Color {
   }
 
   /**
-   * @todo: [URG] Incorrect, it's HSV to RGB, not HSL to RGB
    * @param hsl
    * @return
+   * @todo: [URG] Incorrect, it's HSV to RGB, not HSL to RGB
    */
   public static Vector3f hslToRgb(Vector3f hsl) {
     float r = 0.0f, g = 0.0f, b = 0.0f;
@@ -551,18 +551,16 @@ public class Color {
     return new Vector2f(S, T);
   }
 
+  private static final float TOE_K1 = 0.206f;
+  private static final float TOE_K2 = 0.03f;
+  private static final float TOE_K3 = (1.0f + TOE_K1) / (1.0f + TOE_K2);
+
   private static float toe(float x) {
-    final float k1 = 0.206f;
-    final float k2 = 0.03f;
-    final float k3 = (1.0f + k1) / (1.0f + k2);
-    return (float) Math.sqrt(x) / (k3 - 1.0f) - k1;
+    return 0.5f * (TOE_K3 * x - TOE_K1 + (float) Math.sqrt((TOE_K3 * x - TOE_K1) * (TOE_K3 * x - TOE_K1) + 4 * TOE_K2 * TOE_K3 * x));
   }
 
   private static float toeInv(float x) {
-    final float K1 = 0.206f;
-    final float K2 = 0.03f;
-    final float K3 = (1.0f + K1) / (1.0f + K2);
-    return (x * x + K1 * x) / (K3 * (x + K2));
+    return (x * x + TOE_K1 * x) / (TOE_K3 * (x + TOE_K2));
   }
 
   /*

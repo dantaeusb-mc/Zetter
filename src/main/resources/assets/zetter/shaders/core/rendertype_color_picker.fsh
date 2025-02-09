@@ -69,11 +69,6 @@ float cbrt(float x)
     return sign(x) * pow(abs(x), 1.0 / 3.0);
 }
 
-float srgb_transfer_function(float a)
-{
-    return .0031308 >= a ? 12.92 * a : 1.055 * pow(a, .4166666666666667) - .055;
-}
-
 vec3 oklab_to_linear_rgb(vec3 c)
 {
     float l_ = c.x + 0.3963377774 * c.y + 0.2158037573 * c.z;
@@ -392,12 +387,7 @@ vec3 okhsl_to_srgb(vec3 hsl)
         C = k_0 + t * k_1 / (1.0 - k_2 * t);
     }
 
-    vec3 rgb = oklab_to_linear_rgb(vec3(L, C * a_, C * b_));
-    return vec3(
-    srgb_transfer_function(rgb.r),
-    srgb_transfer_function(rgb.g),
-    srgb_transfer_function(rgb.b)
-    );
+    return oklab_to_linear_rgb(vec3(L, C * a_, C * b_));
 }
 
 vec3 hsl_to_linear_rgb(vec3 hsl) {
@@ -464,6 +454,8 @@ bool in_bounds(in vec3 v) {
 }
 
 /**
+ * Nothing needs to be translated to sRGB, as it is handled by openGL.
+ *
  * OK_HUE_SATURATION(0),
  * RGB_HUE_SATURATION(1),
  * OK_HUE_HORIZONTAL(2),
