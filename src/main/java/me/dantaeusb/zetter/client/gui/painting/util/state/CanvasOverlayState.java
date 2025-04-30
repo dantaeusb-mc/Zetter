@@ -1,5 +1,12 @@
 package me.dantaeusb.zetter.client.gui.painting.util.state;
 
+/**
+ * Stores canvas transformations for overlay mode,
+ * offset from the center of the screen and current scale.
+ * @param canvasOffsetX Offset from the center
+ * @param canvasOffsetY Offset from the center
+ * @param canvasScale Scale of the canvas
+ */
 public record CanvasOverlayState(
     int canvasOffsetX,
     int canvasOffsetY,

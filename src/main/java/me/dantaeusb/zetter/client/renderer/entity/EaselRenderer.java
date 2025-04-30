@@ -69,10 +69,6 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
     }
 
     private void renderCanvas(EaselEntity easelEntity, CanvasData canvasData, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        /**
-         * Rendering front side
-         * Copied from {@link net.minecraft.client.renderer.entity.ItemFrameRenderer#render}
-         */
         final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
         final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 

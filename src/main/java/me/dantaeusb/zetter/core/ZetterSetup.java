@@ -3,7 +3,8 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
 import me.dantaeusb.zetter.client.gui.EaselScreen;
-import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
+import me.dantaeusb.zetter.client.painting.ClientPaintingPaletteStateStorage;
+import me.dantaeusb.zetter.client.painting.ClientPaintingEaselStateStorage;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.client.Minecraft;
@@ -37,7 +38,8 @@ public class ZetterSetup
             }
 
             new CanvasRenderer(Minecraft.getInstance().getTextureManager());
-            new ClientPaintingToolParameters();
+            new ClientPaintingPaletteStateStorage();
+            new ClientPaintingEaselStateStorage();
         });
     }
 

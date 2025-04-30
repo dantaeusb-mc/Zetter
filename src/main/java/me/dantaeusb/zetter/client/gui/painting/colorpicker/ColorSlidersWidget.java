@@ -9,6 +9,7 @@ import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 public class ColorSlidersWidget extends AbstractPaintingWidget implements Renderable {
@@ -113,78 +114,78 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
   }
 
   private float getHue() {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
-      return this.parentScreen.getPaintingScreenState().currentColor().getOkHsl().x;
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+      return this.parentScreen.getCurrentColor().getOkHsl().x;
     }
 
-    return this.parentScreen.getPaintingScreenState().currentColor().getHsl().x;
+    return this.parentScreen.getCurrentColor().getHsl().x;
   }
 
   private void updateHue(float value) {
-    Color oldColor = this.parentScreen.getPaintingScreenState().currentColor();
+    Color oldColor = this.parentScreen.getCurrentColor();
     Color newColor;
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       newColor = Color.fromOkHsl(new Vector3f(value, oldColor.getOkHsl().y, oldColor.getOkHsl().z));
     } else {
       newColor = Color.fromHsl(new Vector3f(value, oldColor.getHsl().y, oldColor.getHsl().z));
     }
 
-    this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCurrentColor(newColor));
+    this.parentScreen.setCurrentColor(newColor);
   }
 
   private float getSaturation() {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
-      return this.parentScreen.getPaintingScreenState().currentColor().getOkHsl().y;
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+      return this.parentScreen.getCurrentColor().getOkHsl().y;
     }
 
-    return this.parentScreen.getPaintingScreenState().currentColor().getHsl().y;
+    return this.parentScreen.getCurrentColor().getHsl().y;
   }
 
   private void updateSaturation(float value) {
-    Color oldColor = this.parentScreen.getPaintingScreenState().currentColor();
+    Color oldColor = this.parentScreen.getCurrentColor();
     Color newColor;
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       newColor = Color.fromOkHsl(new Vector3f(oldColor.getOkHsl().x, value, oldColor.getOkHsl().z));
     } else {
       newColor = Color.fromHsl(new Vector3f(oldColor.getHsl().x, value, oldColor.getHsl().z));
     }
 
-    this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCurrentColor(newColor));
+    this.parentScreen.setCurrentColor(newColor);
   }
 
   private float getLightness() {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
-      return this.parentScreen.getPaintingScreenState().currentColor().getOkHsl().z;
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+      return this.parentScreen.getCurrentColor().getOkHsl().z;
     }
 
-    return this.parentScreen.getPaintingScreenState().currentColor().getHsl().z;
+    return this.parentScreen.getCurrentColor().getHsl().z;
   }
 
   private void updateLightness(float value) {
-    Color oldColor = this.parentScreen.getPaintingScreenState().currentColor();
+    Color oldColor = this.parentScreen.getCurrentColor();
     Color newColor;
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       newColor = Color.fromOkHsl(new Vector3f(oldColor.getOkHsl().x, oldColor.getOkHsl().y, value));
     } else {
       newColor = Color.fromHsl(new Vector3f(oldColor.getHsl().x, oldColor.getHsl().y, value));
     }
 
-    this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCurrentColor(newColor));
+    this.parentScreen.setCurrentColor(newColor);
   }
 
   @Override
-  public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+  public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
     this.hueSlider.render(guiGraphics, mouseX, mouseY, partialTick);
     this.saturationSlider.render(guiGraphics, mouseX, mouseY, partialTick);
     this.lightnessSlider.render(guiGraphics, mouseX, mouseY, partialTick);
   }
 
   public void renderHueSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.OK_HUE_HORIZONTAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,
@@ -194,7 +195,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.RGB_HUE_HORIZONTAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,
@@ -204,11 +205,11 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
   }
 
   public void renderSaturationSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.OK_SATURATION_HORIZONTAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,
@@ -218,7 +219,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.RGB_SATURATION_HORIZONTAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,
@@ -228,11 +229,11 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
   }
 
   public void renderLightnessSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.OK_LIGHTNESS_HORIZONTAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,
@@ -242,7 +243,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.RGB_LIGHTNESS_HORIZONTAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,

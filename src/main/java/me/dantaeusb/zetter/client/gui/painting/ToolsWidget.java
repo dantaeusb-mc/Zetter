@@ -117,12 +117,12 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
         for (ToolButton toolButton: this.buttons) {
             int fromY = this.getY() + 1 + i * TOOL_BUTTON_HEIGHT;
 
-            if (toolButton.tool == Tool.HAND && this.parentScreen.getPaintingScreenState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
+            if (toolButton.tool == Tool.HAND && this.parentScreen.getEaselState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
                 i++;
                 continue;
             }
 
-            int uOffset = toolButton.uPosition + (this.parentScreen.getPaintingScreenState().currentTool() == toolButton.tool ? TOOL_BUTTON_WIDTH + 2 : 0);
+            int uOffset = toolButton.uPosition + (this.parentScreen.getPaletteState().currentTool() == toolButton.tool ? TOOL_BUTTON_WIDTH + 2 : 0);
 
             guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE,  this.getX() + 1, fromY, uOffset, toolButton.vPosition, toolButton.width, toolButton.height);
             i++;
@@ -130,7 +130,7 @@ public class ToolsWidget extends AbstractPaintingWidget implements Renderable {
     }
 
     protected void updateCurrentTool(ToolButton toolButton) {
-        this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCurrentTool(toolButton.tool));
+        this.parentScreen.setPaletteState(this.parentScreen.getPaletteState().withCurrentTool(toolButton.tool));
     }
 
     public class ToolButton {

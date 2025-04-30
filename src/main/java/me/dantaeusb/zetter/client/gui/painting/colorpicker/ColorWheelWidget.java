@@ -54,23 +54,23 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
   }
 
   private float getLightness() {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
-      return this.parentScreen.getPaintingScreenState().currentColor().getOkHsl().z;
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+      return this.parentScreen.getCurrentColor().getOkHsl().z;
     } else {
-      return this.parentScreen.getPaintingScreenState().currentColor().getHsl().z;
+      return this.parentScreen.getCurrentColor().getHsl().z;
     }
   }
 
   private void updateLightness(float value) {
-    Color oldColor = this.parentScreen.getPaintingScreenState().currentColor();
+    Color oldColor = this.parentScreen.getCurrentColor();
     Color newColor;
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       newColor = Color.fromOkHsl(new Vector3f(oldColor.getOkHsl().x, oldColor.getOkHsl().y, value));
     } else {
       newColor = Color.fromHsl(new Vector3f(oldColor.getHsl().x, oldColor.getHsl().y, value));
     }
 
-    this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCurrentColor(newColor));
+    this.parentScreen.setCurrentColor(newColor);
   }
 
   @Override
@@ -78,11 +78,11 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
     final int COLOR_WHEEL_U = 0;
     final int COLOR_WHEEL_V = 0;
 
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.OK_HUE_SATURATION,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           this.getX() + COLOR_WHEEL_POSITION_X + 2,
           this.getY() + COLOR_WHEEL_POSITION_Y + 2,
           COLOR_WHEEL_WIDTH - 4,
@@ -92,7 +92,7 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.RGB_HUE_SATURATION,
-          this.parentScreen.getPaintingScreenState().currentColor().getHsl(),
+          this.parentScreen.getCurrentColor().getHsl(),
           this.getX() + COLOR_WHEEL_POSITION_X + 2,
           this.getY() + COLOR_WHEEL_POSITION_Y + 2,
           COLOR_WHEEL_WIDTH - 4,
@@ -132,24 +132,24 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
 
       float saturation = Math.min(1.0f, Math.max(0.0f, colorPosition.length()));
 
-      if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
-        this.parentScreen.setPaintingScreenState(
-            this.parentScreen.getPaintingScreenState().withCurrentColor(
-                Color.fromOkHsl(new Vector3f(
+      if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+        this.parentScreen.setCurrentColor(
+            Color.fromOkHsl(
+                new Vector3f(
                     hue,
                     saturation,
-                    this.parentScreen.getPaintingScreenState().currentColor().getOkHsl().z
-                ))
+                    this.parentScreen.getCurrentColor().getOkHsl().z
+                )
             )
         );
       } else {
-        this.parentScreen.setPaintingScreenState(
-            this.parentScreen.getPaintingScreenState().withCurrentColor(
-                Color.fromHsl(new Vector3f(
+        this.parentScreen.setCurrentColor(
+            Color.fromHsl(
+                new Vector3f(
                     hue,
                     saturation,
-                    this.parentScreen.getPaintingScreenState().currentColor().getHsl().z
-                ))
+                    this.parentScreen.getCurrentColor().getHsl().z
+                )
             )
         );
       }
@@ -218,14 +218,14 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
     int offsetX;
     int offsetY;
 
-    final Color color = this.parentScreen.getPaintingScreenState().currentColor();
+    final Color color = this.parentScreen.getCurrentColor();
 
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       Vector3f okHsl = color.getOkHsl();
       offsetX = COLOR_WHEEL_RADIUS + (int) (Math.cos(okHsl.x * 2.0 * Math.PI) * okHsl.y * COLOR_WHEEL_RADIUS);
       offsetY = COLOR_WHEEL_RADIUS + (int) (Math.sin(okHsl.x * 2.0 * Math.PI) * okHsl.y * COLOR_WHEEL_RADIUS);
     } else {
-      Vector3f hsl = this.parentScreen.getPaintingScreenState().currentColor().getHsl();
+      Vector3f hsl = this.parentScreen.getCurrentColor().getHsl();
       offsetX = COLOR_WHEEL_RADIUS + (int) (Math.cos(hsl.x * 2.0 * Math.PI) * hsl.y * COLOR_WHEEL_RADIUS);
       offsetY = COLOR_WHEEL_RADIUS + (int) (Math.sin(hsl.x * 2.0 * Math.PI) * hsl.y * COLOR_WHEEL_RADIUS);
     }
@@ -252,11 +252,11 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
   }
 
   protected void renderLightnessVerticalSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    if (this.parentScreen.getPaintingScreenState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
+    if (this.parentScreen.getEaselState().colorSpace() == PaintingScreen.ColorSpace.okHSL) {
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.OK_LIGHTNESS_VERTICAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getOkHsl(),
+          this.parentScreen.getCurrentColor().getOkHsl(),
           x,
           y,
           width,
@@ -266,7 +266,7 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
       ZetterColorPickerRenderer.renderColorPicker(
           guiGraphics,
           ZetterRenderTypes.RenderMode.RGB_LIGHTNESS_VERTICAL,
-          this.parentScreen.getPaintingScreenState().currentColor().getHsl(),
+          this.parentScreen.getCurrentColor().getHsl(),
           x,
           y,
           width,

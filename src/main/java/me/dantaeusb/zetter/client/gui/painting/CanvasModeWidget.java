@@ -67,7 +67,7 @@ public class CanvasModeWidget extends AbstractPaintingWidget implements Renderab
       int fromY = this.getY() + 1 + i * MODE_BUTTON_HEIGHT;
 
       if (isInRect(this.getX(), fromY, modeButton.width, modeButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
-        this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCanvasMode(modeButton.mode));
+        this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasMode(modeButton.mode));
         this.playDownSound(Minecraft.getInstance().getSoundManager());
         return true;
       }
@@ -104,7 +104,7 @@ public class CanvasModeWidget extends AbstractPaintingWidget implements Renderab
     int i = 0;
     for (ModeButton modeButton : this.buttons) {
       int fromY = this.getY() + 1 + i * MODE_BUTTON_HEIGHT;
-      int uOffset = modeButton.uPosition + (this.parentScreen.getPaintingScreenState().canvasMode() == modeButton.mode ? MODE_BUTTON_WIDTH + 2 : 0);
+      int uOffset = modeButton.uPosition + (this.parentScreen.getEaselState().canvasMode() == modeButton.mode ? MODE_BUTTON_WIDTH + 2 : 0);
 
       guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, modeButton.vPosition, modeButton.width, modeButton.height);
       i++;

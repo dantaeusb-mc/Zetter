@@ -3,11 +3,11 @@ package me.dantaeusb.zetter.menu;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.easel.CanvasWidget;
 import me.dantaeusb.zetter.client.gui.easel.TabsWidget;
-import me.dantaeusb.zetter.client.painting.ClientPaintingToolParameters;
+import me.dantaeusb.zetter.client.painting.ClientPaintingPaletteStateStorage;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
-import me.dantaeusb.zetter.entity.item.state.EaselState;
+import me.dantaeusb.zetter.entity.item.state.CanvasState;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.network.packet.CPaletteUpdatePacket;
@@ -27,6 +27,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -43,7 +44,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      */
     private final Player player;
     private final EaselContainer container;
-    private final EaselState state;
+    private final CanvasState state;
 
     private static final int HOTBAR_SLOT_COUNT = 9;
 
@@ -89,7 +90,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * Initializing
      *
      */
-    public EaselMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, EaselState stateHandler) {
+    public EaselMenu(int windowID, Inventory invPlayer, EaselContainer easelContainer, CanvasState stateHandler) {
         super(ZetterContainerMenus.EASEL.get(), windowID);
 
         this.player = invPlayer.player;
@@ -164,7 +165,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         }
     }
 
-    public static EaselMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, EaselState stateHandler) {
+    public static EaselMenu createMenuServerSide(int windowID, Inventory playerInventory, EaselContainer easelContainer, CanvasState stateHandler) {
         EaselMenu easelMenu = new EaselMenu(windowID, playerInventory, easelContainer, stateHandler);
 
         return easelMenu;
@@ -177,7 +178,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         assert easelEntity != null;
 
         EaselContainer easelContainer = easelEntity.getEaselContainer();
-        EaselState stateHandler = easelEntity.getStateHandler();
+        CanvasState stateHandler = easelEntity.getStateHandler();
 
         // Manually update canvas on client
         easelContainer.handleCanvasChange(createPacket.canvasCode);
@@ -261,7 +262,8 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
     }
 
     public AbstractToolParameters getCurrentToolParameters() {
-        return ClientPaintingToolParameters.getInstance().getToolParameters(this.currentTool);
+        UUID paletteUuid = PaletteItem.getPaletteUuid(this.container.getPaletteStack());
+        return ClientPaintingPaletteStateStorage.getInstance().getPaintingPaletteState(paletteUuid).toolParameters().getToolParameters(this.currentTool);
     }
 
     public int getCurrentColor() {
@@ -272,7 +274,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         return this.container;
     }
 
-    public EaselState getState() {
+    public CanvasState getState() {
         return this.state;
     }
 
@@ -342,11 +344,11 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      * until then
      */
 
-    public void stateCanvasInitializationStart(EaselState state) {
+    public void stateCanvasInitializationStart(CanvasState state) {
         this.suppressRemoteUpdates();
     }
 
-    public void stateCanvasInitializationEnd(EaselState state) {
+    public void stateCanvasInitializationEnd(CanvasState state) {
         this.resumeRemoteUpdates();
     }
 
@@ -355,7 +357,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
      */
 
     @Override
-    public void stateChanged(EaselState state) {
+    public void stateChanged(CanvasState state) {
         this.updateCanHistory();
     }
 

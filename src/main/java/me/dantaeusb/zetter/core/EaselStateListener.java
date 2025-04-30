@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter.core;
 
-import me.dantaeusb.zetter.entity.item.state.EaselState;
+import me.dantaeusb.zetter.entity.item.state.CanvasState;
 
 public interface EaselStateListener {
     /**
@@ -9,7 +9,7 @@ public interface EaselStateListener {
      * initialization packet
      * @param state
      */
-    void stateCanvasInitializationStart(EaselState state);
+    void stateCanvasInitializationStart(CanvasState state);
 
     /**
      * Notifies listeners that canvas is being initialized
@@ -17,11 +17,11 @@ public interface EaselStateListener {
      * initialization packet
      * @param state
      */
-    void stateCanvasInitializationEnd(EaselState state);
+    void stateCanvasInitializationEnd(CanvasState state);
 
     /**
      * Canvas changed
      * @param state
      */
-    void stateChanged(EaselState state);
+    void stateChanged(CanvasState state);
 }

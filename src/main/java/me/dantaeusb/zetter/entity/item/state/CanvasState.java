@@ -31,7 +31,7 @@ import java.util.*;
  *
  * @todo: [LOW] Make it capability?
  */
-public class EaselState {
+public class CanvasState {
     public static int SNAPSHOT_HISTORY_SIZE = 10;
     public static int ACTION_HISTORY_SIZE = 200;
 
@@ -102,7 +102,7 @@ public class EaselState {
      */
     private boolean historyDirty = false;
 
-    public EaselState(EaselEntity entity) {
+    public CanvasState(EaselEntity entity) {
         this.easel = entity;
 
         if (entity.level().isClientSide()) {

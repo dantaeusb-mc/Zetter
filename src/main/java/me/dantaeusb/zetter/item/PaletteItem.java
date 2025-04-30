@@ -15,10 +15,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.UUID;
 
 public class PaletteItem extends Item {
+  public static final String NBT_TAG_NAME_PALETTE_UUID = "paletteUuid";
   public static final String NBT_TAG_NAME_PALETTE_COLORS = "paletteColors";
   public static int PALETTE_SIZE = 16;
 
@@ -93,6 +96,19 @@ public class PaletteItem extends Item {
     player.awardStat(Stats.ITEM_USED.get(this));
 
     return InteractionResultHolder.sidedSuccess(itemstack, level.isClientSide());
+  }
+
+  public static UUID getPaletteUuid(ItemStack stack) {
+    CompoundTag compoundNBT = stack.getTag();
+
+    if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_PALETTE_UUID)) {
+      return compoundNBT.getUUID(NBT_TAG_NAME_PALETTE_UUID);
+    }
+
+    compoundNBT = stack.getOrCreateTag();
+    compoundNBT.putUUID(NBT_TAG_NAME_PALETTE_UUID, UUID.randomUUID());
+
+    return null;
   }
 
   public static int[] getPaletteColors(ItemStack stack) {

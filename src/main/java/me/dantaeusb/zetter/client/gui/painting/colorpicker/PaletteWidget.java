@@ -67,8 +67,8 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
             return false;
         }
 
-        this.parentScreen.setPaintingScreenState(
-            this.parentScreen.getPaintingScreenState().withCurrentPaletteSlot(slotIndex)
+        this.parentScreen.setPaletteState(
+            this.parentScreen.getPaletteState().withCurrentPaletteSlot(slotIndex)
         );
 
         return true;
@@ -76,7 +76,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
 
     protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
         this.drawPalette(guiGraphics);
-        this.drawPaletteSelector(guiGraphics, this.parentScreen.getPaintingScreenState().currentPaletteSlot());
+        this.drawPaletteSelector(guiGraphics, this.parentScreen.getPaletteState().currentPaletteSlot());
     }
 
     protected void drawPalette(GuiGraphics guiGraphics) {

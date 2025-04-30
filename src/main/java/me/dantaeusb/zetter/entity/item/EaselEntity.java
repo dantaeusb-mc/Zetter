@@ -2,10 +2,12 @@ package me.dantaeusb.zetter.entity.item;
 
 import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.entity.item.container.EaselContainer;
-import me.dantaeusb.zetter.entity.item.state.EaselState;
+import me.dantaeusb.zetter.entity.item.state.CanvasState;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.network.packet.SEaselMenuCreatePacket;
@@ -45,15 +47,19 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.NetworkHooks;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStackHandlerListener, MenuProvider {
+public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerListener, MenuProvider {
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
     private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
+
+    private static final Vector3f CANVAS_OFFSET = new Vector3f(-0.5f, 0.78125f, -0.25f);
+    private static final Vector3f CANVAS_NORMAL = new Vector3f(0.0f, 1.0f, 0.0f).rotateZ((float) Math.PI).rotateX(0.1745f);
 
     protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> {
         return entity instanceof EaselEntity;
@@ -63,7 +69,7 @@ public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStack
 
     protected BlockPos pos;
     protected EaselContainer easelContainer;
-    protected EaselState stateHandler;
+    protected CanvasState stateHandler;
 
     protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
@@ -75,7 +81,7 @@ public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStack
     public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
         super(type, world);
         this.createInventory();
-        this.stateHandler = new EaselState(this);
+        this.stateHandler = new CanvasState(this);
     }
 
     protected void defineSynchedData() {
@@ -106,8 +112,19 @@ public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStack
     }
 
     @Override
+    public Vector3f getCanvasOffset() {
+        return CANVAS_OFFSET;
+    }
+
+    @Override
+    public Vector3f getCanvasNormal() {
+        return CANVAS_NORMAL;
+    }
+
+    @Override
     public Optional<Matrix4f> getCanvasMatrixTransform(float partialTicks) {
-        CanvasData canvasData = CanvasItem.getCanvasData(this.getCanvasStack(), this.level());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
+        CanvasData canvasData = canvasTracker.getCanvasData(this.getCanvasCode());;
 
         if (canvasData == null) {
             return Optional.empty();
@@ -119,8 +136,8 @@ public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStack
         final float scaleFactor = 1.0F / 16.0F;
 
         Matrix4f matrixTransform = new Matrix4f();
+        matrixTransform.translate(this.getCanvasOffset());
         matrixTransform.scale(scaleFactor, scaleFactor, scaleFactor);
-        matrixTransform.translate(-8.0f, 12.5f, -4.0f);
         matrixTransform.rotate(Axis.XP.rotation(0.1745f));
         matrixTransform.rotate(Axis.ZP.rotationDegrees(180.0f));
         matrixTransform.translate(-8.0f - (8.0f * canvasBlockWidth), -16.0f * canvasBlockHeight, 0.0f);
@@ -198,7 +215,7 @@ public class EaselEntity extends Entity implements CanvasHolderEntity, ItemStack
         return super.getCapability(capability, direction);
     }
 
-    public EaselState getStateHandler() {
+    public CanvasState getStateHandler() {
         return this.stateHandler;
     }
 

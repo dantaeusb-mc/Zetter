@@ -52,7 +52,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
   }
 
   private boolean canDecreaseCanvasScale() {
-    return this.parentScreen.getPaintingScreenState().canvasOverlayState().canvasScale() > CanvasOverlayState.MIN_SCALE;
+    return this.parentScreen.getEaselState().canvasOverlayState().canvasScale() > CanvasOverlayState.MIN_SCALE;
   }
 
   private void decreaseCanvasScale() {
@@ -60,15 +60,15 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
       return;
     }
 
-    final CanvasOverlayState canvasOverlayState = this.parentScreen.getPaintingScreenState().canvasOverlayState();
+    final CanvasOverlayState canvasOverlayState = this.parentScreen.getEaselState().canvasOverlayState();
 
-    this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCanvasOverlayState(
+    this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(
         canvasOverlayState.withCanvasScale(canvasOverlayState.canvasScale() - 1)
     ));
   }
 
   private boolean canIncreaseCanvasScale() {
-    return this.parentScreen.getPaintingScreenState().canvasOverlayState().canvasScale() < CanvasOverlayState.MAX_SCALE;
+    return this.parentScreen.getEaselState().canvasOverlayState().canvasScale() < CanvasOverlayState.MAX_SCALE;
   }
 
   private void increaseCanvasScale() {
@@ -76,9 +76,9 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
       return;
     }
 
-    final CanvasOverlayState canvasOverlayState = this.parentScreen.getPaintingScreenState().canvasOverlayState();
+    final CanvasOverlayState canvasOverlayState = this.parentScreen.getEaselState().canvasOverlayState();
 
-    this.parentScreen.setPaintingScreenState(this.parentScreen.getPaintingScreenState().withCanvasOverlayState(
+    this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(
         canvasOverlayState.withCanvasScale(canvasOverlayState.canvasScale() + 1)
     ));
   }
@@ -110,7 +110,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
       return false;
     }
 
-    if (this.parentScreen.getPaintingScreenState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
+    if (this.parentScreen.getEaselState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
       return false;
     }
 
@@ -173,7 +173,7 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
       int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
       int uOffset;
 
-      if (this.parentScreen.getPaintingScreenState().canvasMode() == PaintingScreen.CanvasMode.OVERLAY) {
+      if (this.parentScreen.getEaselState().canvasMode() == PaintingScreen.CanvasMode.OVERLAY) {
         uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
       } else {
         uOffset = zoomButton.uPosition - ZOOM_BUTTON_WIDTH * 2;

@@ -8,13 +8,15 @@ import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolTabGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.BrushTabGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.BucketTabGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.PencilTabGroupWidget;
-import me.dantaeusb.zetter.client.gui.painting.util.state.CanvasOverlayState;
-import me.dantaeusb.zetter.client.gui.painting.util.state.PaintingScreenState;
 import me.dantaeusb.zetter.client.gui.painting.util.PaletteAccessor;
 import me.dantaeusb.zetter.client.gui.painting.util.state.ToolsParameters;
+import me.dantaeusb.zetter.client.painting.ClientPaintingEaselStateStorage;
+import me.dantaeusb.zetter.client.painting.ClientPaintingPaletteStateStorage;
+import me.dantaeusb.zetter.client.painting.easel.ClientPaintingEaselState;
+import me.dantaeusb.zetter.client.painting.palette.ClientPaintingPaletteState;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.painting.Tool;
+import me.dantaeusb.zetter.item.PaletteItem;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -44,6 +46,8 @@ public class PaintingScreen extends Screen {
   protected int virtualWindowHeight;
   protected int canvasWindowLeftPos;
   protected int canvasWindowTopPos;
+  protected int canvasWindowWidth;
+  protected int canvasWindowHeight;
   protected int toolsWindowLeftPos;
   protected int toolsWindowTopPos;
 
@@ -57,8 +61,10 @@ public class PaintingScreen extends Screen {
   protected int imageHeight = 256;
 
   private final PaletteAccessor paletteAccessor;
+  private Color currentColor;
 
-  private PaintingScreenState paintingScreenState;
+  private ClientPaintingPaletteState paletteState;
+  private ClientPaintingEaselState easelState;
 
   private ToolsParameters toolsParameters;
 
@@ -78,15 +84,10 @@ public class PaintingScreen extends Screen {
     this.paletteAccessor = new PaletteAccessor(paletteStack);
     this.canvasHolderEntity = canvasHolderEntity;
 
-    // @todo: Read from user capability or something
-    this.paintingScreenState = new PaintingScreenState(
-        this.paletteAccessor.getPaletteColor(0),
-        0,
-        Tool.PENCIL,
-        CanvasMode.IMMERSIVE_BACKGROUND,
-        ColorSpace.okHSL,
-        new CanvasOverlayState(0, 0, 1)
-    );
+    this.paletteState = ClientPaintingPaletteStateStorage.getInstance().getPaintingPaletteState(PaletteItem.getPaletteUuid(paletteStack));
+    this.easelState = ClientPaintingEaselStateStorage.getInstance().getPaintingPaletteState(canvasHolderEntity.getUUID());
+
+    this.currentColor = this.paletteAccessor.getPaletteColor(this.paletteState.currentPaletteSlot());
 
     this.toolsParameters = new ToolsParameters();
   }
@@ -107,6 +108,8 @@ public class PaintingScreen extends Screen {
 
     this.canvasWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + 10;
     this.canvasWindowTopPos = (this.height - this.virtualWindowHeight) / 2 + 10;
+    this.canvasWindowWidth = this.virtualWindowWidth - this.imageWidth - 16;
+    this.canvasWindowHeight = this.virtualWindowHeight - 20;
 
     this.toolsWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + this.virtualWindowWidth - this.imageWidth - 10;
     this.toolsWindowTopPos = (this.height - this.virtualWindowHeight) / 2 + (this.virtualWindowHeight - this.imageHeight) / 2;
@@ -121,7 +124,8 @@ public class PaintingScreen extends Screen {
     final int COLOR_PICKER_WIDGET_POSITION_Y = 0;
 
     this.canvasLayer = new CanvasLayer(this);
-    this.canvasLayer.init(this.canvasWindowLeftPos, this.canvasWindowTopPos, this.virtualWindowWidth - this.imageWidth - 16, this.virtualWindowHeight - 20);
+    this.canvasLayer.init(this.canvasWindowLeftPos, this.canvasWindowTopPos, this.canvasWindowWidth, this.canvasWindowHeight);
+    this.addWidget(this.canvasLayer);
 
     this.toolsWidget = new ToolsWidget(this, TOOLS_WIDGET_POSITION_X, TOOLS_WIDGET_POSITION_Y);
     this.addPaintingWidget(this.toolsWidget);
@@ -140,7 +144,8 @@ public class PaintingScreen extends Screen {
     this.bucketToolWidget = new BucketTabGroupWidget(this);
     this.addToolWidget(this.bucketToolWidget);
 
-    this.setPaintingScreenState(this.paintingScreenState);
+    this.setPaletteState(this.paletteState);
+    this.setEaselState(this.easelState);
   }
 
   public void addPaintingWidget(AbstractPaintingWidget paintingWidget) {
@@ -162,14 +167,59 @@ public class PaintingScreen extends Screen {
   /*
    * Interactions
    */
-  public PaintingScreenState getPaintingScreenState() {
-    return this.paintingScreenState;
+  public Color getCurrentColor() {
+    return this.currentColor;
   }
 
-  public void setPaintingScreenState(PaintingScreenState paintingScreenState) {
-    paintingScreenState = this.beforePaintingScreenStateChange(paintingScreenState);
-    this.paintingScreenState = paintingScreenState;
-    this.afterPaintingScreenStateChange(paintingScreenState);
+  public void setCurrentColor(Color color) {
+    this.currentColor = color;
+    this.paletteAccessor.setPaletteColor(
+        this.paletteState.currentPaletteSlot(),
+        color
+    );
+  }
+
+  public void useTool(float posX, float posY) {
+    this.getCanvasHolderEntity().useTool(
+        this.getMinecraft().player,
+        this.paletteState.currentTool(),
+        posX,
+        posY,
+        this.currentColor,
+        this.getToolsParameters().getToolParameters(this.paletteState.currentTool())
+    );
+  }
+
+  public ClientPaintingEaselState getEaselState() {
+    return this.easelState;
+  }
+
+  public void setEaselState(ClientPaintingEaselState easelState) {
+    this.easelState = easelState;
+  }
+
+  public ClientPaintingPaletteState getPaletteState() {
+    return this.paletteState;
+  }
+
+  public void setPaletteState(ClientPaintingPaletteState paletteState) {
+    paletteState = this.beforePaletteStateChange(paletteState);
+    this.paletteState = paletteState;
+    this.afterPaletteStateChange(paletteState);
+  }
+
+  private ClientPaintingPaletteState beforePaletteStateChange(ClientPaintingPaletteState newState) {
+    if (newState.currentPaletteSlot() != this.paletteState.currentPaletteSlot()) {
+      this.currentColor = this.paletteAccessor.getPaletteColor(newState.currentPaletteSlot());
+    }
+
+    return newState;
+  }
+
+  private void afterPaletteStateChange(ClientPaintingPaletteState newState) {
+    for (AbstractToolTabGroupWidget toolWidget : this.toolWidgets) {
+      toolWidget.setVisibility(newState.currentTool().equals(toolWidget.getTool()));
+    }
   }
 
   public ToolsParameters getToolsParameters() {
@@ -178,24 +228,6 @@ public class PaintingScreen extends Screen {
 
   public Color getPaletteColor(int index) {
     return this.paletteAccessor.getPaletteColor(index);
-  }
-
-  private PaintingScreenState beforePaintingScreenStateChange(PaintingScreenState newState) {
-    if (newState.currentPaletteSlot() != this.paintingScreenState.currentPaletteSlot()) {
-      newState = newState.withCurrentColor(this.paletteAccessor.getPaletteColor(newState.currentPaletteSlot()));
-    }
-
-    if (newState.currentColor().getHsl() != this.paintingScreenState.currentColor().getHsl()) {
-      this.paletteAccessor.setPaletteColor(this.paintingScreenState.currentPaletteSlot(), newState.currentColor());
-    }
-
-    return newState;
-  }
-
-  private void afterPaintingScreenStateChange(PaintingScreenState newState) {
-    for (AbstractToolTabGroupWidget toolWidget : this.toolWidgets) {
-      toolWidget.setVisibility(newState.currentTool().equals(toolWidget.getTool()));
-    }
   }
 
   public CanvasHolderEntity getCanvasHolderEntity() {
@@ -244,6 +276,9 @@ public class PaintingScreen extends Screen {
     RenderSystem.enableDepthTest();
 
     guiGraphics.pose().popPose();
+
+    // @todo: not sure the best place for that
+    this.paletteAccessor.tick(System.currentTimeMillis());
   }
 
   /**
@@ -252,7 +287,7 @@ public class PaintingScreen extends Screen {
    * @param guiGraphics
    */
   public void renderBackground(@NotNull GuiGraphics guiGraphics) {
-    switch (this.getPaintingScreenState().canvasMode()) {
+    switch (this.easelState.canvasMode()) {
       case IMMERSIVE:
         break;
       case IMMERSIVE_BACKGROUND:
@@ -538,6 +573,11 @@ public class PaintingScreen extends Screen {
 
   public Font getFont() {
     return this.font;
+  }
+
+  public void onClose() {
+    this.paletteAccessor.writeColors();
+    super.onClose();
   }
 
   /*

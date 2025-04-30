@@ -582,7 +582,7 @@ public class Color {
   public static final Color CYAN = new Color(0x00FFFF);
   public static final Color BLUE = new Color(0x0000FF);
 
-  enum Mode {
+  public enum Mode {
     RGB,
     HSL,
     OKHSL
