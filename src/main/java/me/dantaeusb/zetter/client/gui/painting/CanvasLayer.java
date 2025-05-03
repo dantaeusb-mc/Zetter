@@ -90,7 +90,7 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
   public boolean mouseClicked(double mouseX, double mouseY, int button) {
     if (this.isMouseOver(mouseX, mouseY)) {
       this.canvasDragging = true;
-      this.handleCanvasInteraction(mouseX, mouseY);
+      //this.handleCanvasInteraction(mouseX, mouseY);
       return true;
     }
 
@@ -469,7 +469,8 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
     Matrix4f projectionViewMatrix = projectionMatrix.mul(viewMatrix, new Matrix4f());
 
     Vector3f nearPoint = minecraft.gameRenderer.getMainCamera().getPosition().toVector3f();
-    Vector3f farPoint = projectionViewMatrix.unproject((float) mx, (float) my, -1f, new int[]{0, 0, width, height}, new Vector3f()).add(nearPoint);
+    // Flipping Y seems to be necessary because opengl
+    Vector3f farPoint = projectionViewMatrix.unproject((float) mx, (float) (height - my), -1f, new int[]{0, 0, width, height}, new Vector3f()).add(nearPoint);
     Vector3f direction = new Vector3f(farPoint.x - nearPoint.x, farPoint.y - nearPoint.y, farPoint.z - nearPoint.z);
     direction.normalize();
 
@@ -477,10 +478,8 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
     Vector3f canvasPosition = new Vector3f(this.parentScreen.getCanvasHolderEntity().getCanvasOffset());
     canvasPosition.add(this.parentScreen.getCanvasHolderEntity().getPosition(partialTicks).toVector3f());
     Vector3f canvasPlaneNormal = new Vector3f(this.parentScreen.getCanvasHolderEntity().getCanvasNormal());
-    this.parentScreen.getCanvasHolderEntity().getViewVector(partialTicks);
-    //canvasPlaneNormal.rotateY(-((float) Math.toRadians(this.parentScreen.getCanvasHolderEntity().getYRot())));
 
-    float denominator = canvasPlaneNormal.dot(direction);
+    float denominator = direction.dot(canvasPlaneNormal);
     if (Mth.abs(denominator) < Mth.EPSILON) {
       // do the right fucking thing
       poseStack.pushPose();
@@ -488,8 +487,9 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
       return;
     }
 
-    float numerator = new Vector3f(canvasPosition.sub(nearPoint)).dot(canvasPlaneNormal);
-    float distance = -(numerator / denominator);
+    Vector3f vectorToPlane = new Vector3f(canvasPosition).sub(nearPoint);
+    float numerator = vectorToPlane.dot(canvasPlaneNormal);
+    float distance = (numerator / denominator);
 
     Vector3f intersection = new Vector3f(
         nearPoint.x + (direction.x * distance),
@@ -497,44 +497,20 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
         nearPoint.z + (direction.z * distance)
     );
 
-    Vector2f canvasCoordinate = new Vector2f(
-        intersection.x - canvasPosition.x,
-        intersection.y - canvasPosition.y
-    );
+    Vector3f u = this.parentScreen.getCanvasHolderEntity().getCanvasU();
+    Vector3f v = this.parentScreen.getCanvasHolderEntity().getCanvasV();
 
-    //debug
-    poseStack.pushPose();
+    Vector3f relativePosition = new Vector3f(intersection).sub(canvasPosition);
 
-    VertexConsumer lineBuffer = minecraft.renderBuffers().bufferSource().getBuffer(RenderType.lines());
-    Matrix4f matrix4f = poseStack.last().pose();
-    Matrix3f matrix3f = poseStack.last().normal();
-    lineBuffer.vertex(matrix4f, 0, 0, 0).color(0, 0, 255, 255).normal(matrix3f, nearPoint.x, nearPoint.y, nearPoint.z).endVertex();
-    lineBuffer.vertex(matrix4f, (float) (intersection.x - cameraPosition.x), (float) (intersection.y - cameraPosition.y), (float) (intersection.z - cameraPosition.z)).color(0, 0, 255, 255).normal(matrix3f, farPoint.x, farPoint.y, farPoint.z).endVertex();
+    float x = relativePosition.dot(u) * 16.0f + 16.0f;
+    float y = relativePosition.dot(v) * 16.0f + 16.0f;
 
-    poseStack.popPose();
+    Vector2f canvasCoordinate = new Vector2f(x, y);
+
+    //this.drawDebugCanvasNormal(guiGraphics, canvasPosition, canvasPlaneNormal, cameraPosition);
 
     poseStack.pushPose();
     poseStack.last().pose().set(worldTransformations.pose());
-
-    //debug
-
-    /*float x = 2.0f * ((float) mx / (float) width) - 1.0f;
-    float y = 1.0f - 2.0f * ((float) my / (float) height);
-    x = Mth.clamp(x, -1.0f, 1.0f);
-    y = Mth.clamp(y, -1.0f, 1.0f);
-
-    Vector4f screenPosition = new Vector4f(
-        x,
-        y,
-        -1.0f,
-        1.0f
-    );
-
-    Vector4f canvasPosition = screenPosition.mul(inverseViewMatrix).mul(inverseProjectionMatrix);*/
-    /*canvasPosition.w = 1.0f / canvasPosition.w;
-    canvasPosition.x *= canvasPosition.w;
-    canvasPosition.y *= canvasPosition.w;
-    canvasPosition.z *= canvasPosition.w;*/
 
     Tool tool = this.parentScreen.getPaletteState().currentTool();
     AbstractToolParameters toolParameters = this.parentScreen.getToolsParameters().getToolParameters(tool);
@@ -558,6 +534,23 @@ public class CanvasLayer implements GuiEventListener, NarratableEntry, Renderabl
     } else {
       this.renderCursor(guiGraphics, shape, (int) canvasCoordinate.x, (int) canvasCoordinate.y);
     }
+
+    poseStack.popPose();
+  }
+
+  private void drawDebugCanvasNormal(GuiGraphics guiGraphics, Vector3f canvasPosition, Vector3f canvasPlaneNormal, Vec3 cameraPosition) {
+    Minecraft minecraft = Minecraft.getInstance();
+    PoseStack poseStack = guiGraphics.pose();
+
+    poseStack.pushPose();
+
+    VertexConsumer lineBuffer = minecraft.renderBuffers().bufferSource().getBuffer(RenderType.lines());
+    Matrix4f matrix4f = poseStack.last().pose();
+    Matrix3f matrix3f = poseStack.last().normal();
+    Vector3f canvasCameraOrig = new Vector3f(canvasPosition).sub(cameraPosition.toVector3f());
+    lineBuffer.vertex(matrix4f, canvasCameraOrig.x, canvasCameraOrig.y, canvasCameraOrig.z).color(0, 0, 255, 255).normal(matrix3f, canvasPlaneNormal.x, canvasPlaneNormal.y, canvasPlaneNormal.z).endVertex();
+    Vector3f canvasCameraNormal = new Vector3f(canvasCameraOrig).add(canvasPlaneNormal);
+    lineBuffer.vertex(matrix4f, canvasCameraNormal.x, canvasCameraNormal.y, canvasCameraNormal.z).color(0, 0, 255, 255).normal(matrix3f, canvasPlaneNormal.x, canvasPlaneNormal.y, canvasPlaneNormal.z).endVertex();
 
     poseStack.popPose();
   }

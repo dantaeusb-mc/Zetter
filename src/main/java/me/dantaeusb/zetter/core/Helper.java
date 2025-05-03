@@ -6,12 +6,14 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
+import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
@@ -30,178 +32,208 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
  * @todo: [MID] Get rid of this class, all functions can be moved to the classes with execution context
  */
 public class Helper {
-    public static final int DUMMY_BLACK_COLOR = 0xFF000000;
-    public static final int DUMMY_PINK_COLOR = 0xFFFF00FF;
-    public static final int CANVAS_COLOR = 0xFFE0DACE;
+  public static final int DUMMY_BLACK_COLOR = 0xFF000000;
+  public static final int DUMMY_PINK_COLOR = 0xFFFF00FF;
+  public static final int CANVAS_COLOR = 0xFFE0DACE;
 
-    public static final String COMBINED_CANVAS_CODE = Zetter.MOD_ID + "_combined_canvas";
-    public static final String FALLBACK_CANVAS_CODE = Zetter.MOD_ID + "_fallback_canvas";
+  public static final String COMBINED_CANVAS_CODE = Zetter.MOD_ID + "_combined_canvas";
+  public static final String FALLBACK_CANVAS_CODE = Zetter.MOD_ID + "_fallback_canvas";
 
-    public static final int CANVAS_CODE_MAX_LENGTH = 64;
-    public static final int PAINTING_TITLE_MAX_LENGTH = 32;
+  public static final int CANVAS_CODE_MAX_LENGTH = 64;
+  public static final int PAINTING_TITLE_MAX_LENGTH = 32;
 
-    /**
-     * Basic resolution is a minimal resolution of a painting, 16px
-     * Used for GUIs and converting from ENUM resolution (power pf 2)
-     * to the numeric resolution (actual pixel count)
-     * @return
-     */
-    public static AbstractCanvasData.Resolution getBasicResolution() {
-        return AbstractCanvasData.Resolution.x16;
+  /**
+   * Basic resolution is a minimal resolution of a painting, 16px
+   * Used for GUIs and converting from ENUM resolution (power pf 2)
+   * to the numeric resolution (actual pixel count)
+   *
+   * @return
+   */
+  public static AbstractCanvasData.Resolution getBasicResolution() {
+    return AbstractCanvasData.Resolution.x16;
+  }
+
+  public static AbstractCanvasData.Resolution getResolution() {
+    int resolution = 16;
+    switch (ZetterConfig.SERVER.resolution.get()) {
+      case "x64":
+        resolution = 64;
+        break;
+      case "x32":
+        resolution = 32;
+        break;
+      case "x16":
+      default:
     }
 
-    public static AbstractCanvasData.Resolution getResolution() {
-        int resolution = 16;
-        switch (ZetterConfig.SERVER.resolution.get()) {
-            case "x64":
-                resolution = 64;
-                break;
-            case "x32":
-                resolution = 32;
-                break;
-            case "x16":
-            default:
-        }
+    return AbstractCanvasData.Resolution.get(resolution);
+  }
 
-        return AbstractCanvasData.Resolution.get(resolution);
+  public static CanvasTracker getLevelCanvasTracker(Level level) {
+    CanvasTracker canvasTracker;
+
+    if (!level.isClientSide()) {
+      // looking for a server canvas tracker in the overworld, since canvases are world-independent
+      canvasTracker = level.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+    } else {
+      canvasTracker = level.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
     }
 
-    public static CanvasTracker getLevelCanvasTracker(Level level) {
-        CanvasTracker canvasTracker;
+    return canvasTracker;
+  }
 
-        if (!level.isClientSide()) {
-            // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = level.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        } else {
-            canvasTracker = level.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
-        }
+  public static PaintingRegistry getLevelPaintingRegistry(Level world) {
+    PaintingRegistry paintingRegistry;
 
-        return canvasTracker;
+    if (!world.isClientSide()) {
+      // looking for a server canvas tracker in the overworld, since canvases are world-independent
+      paintingRegistry = world.getServer().overworld().getCapability(ZetterCapabilities.PAINTING_REGISTRY).orElse(null);
+    } else {
+      throw new IllegalArgumentException("Painting Registry is not supposed to exist on client");
     }
 
-    public static PaintingRegistry getLevelPaintingRegistry(Level world) {
-        PaintingRegistry paintingRegistry;
+    return paintingRegistry;
+  }
 
-        if (!world.isClientSide()) {
-            // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            paintingRegistry = world.getServer().overworld().getCapability(ZetterCapabilities.PAINTING_REGISTRY).orElse(null);
-        } else {
-            throw new IllegalArgumentException("Painting Registry is not supposed to exist on client");
-        }
+  public static String getFrameKey(PaintingEntity.Materials material, boolean plated) {
+    String key = material.toString();
 
-        return paintingRegistry;
+    if (plated) {
+      key += "/plated";
     }
 
-    public static String getFrameKey(PaintingEntity.Materials material, boolean plated) {
-        String key = material.toString();
+    return key;
+  }
 
-        if (plated) {
-            key += "/plated";
-        }
+  /**
+   * Before we did not store player UUID data in paintings,
+   * to provide compatibility layer we would need to convert
+   * player nickname back to uuid, this should work for the most cases.
+   *
+   * @param level
+   * @param authorNickname
+   * @return
+   */
+  public static @Nullable UUID tryToRestoreAuthorUuid(ServerLevel level, String authorNickname) {
+    List<ServerPlayer> playersWithAuthorNickname = level.getPlayers(serverPlayer -> {
+      return serverPlayer.getName().getString().equals(authorNickname);
+    });
 
-        return key;
+    if (playersWithAuthorNickname.size() == 1) {
+      return playersWithAuthorNickname.get(0).getUUID();
     }
 
-    /**
-     * Before we did not store player UUID data in paintings,
-     * to provide compatibility layer we would need to convert
-     * player nickname back to uuid, this should work for the most cases.
-     * @param level
-     * @param authorNickname
-     * @return
-     */
-    public static @Nullable UUID tryToRestoreAuthorUuid(ServerLevel level, String authorNickname) {
-        List<ServerPlayer> playersWithAuthorNickname = level.getPlayers(serverPlayer -> {
-            return serverPlayer.getName().getString().equals(authorNickname);
-        });
+    return null;
+  }
 
-        if (playersWithAuthorNickname.size() == 1) {
-            return playersWithAuthorNickname.get(0).getUUID();
-        }
+  /**
+   * Saves painting data as a png relative to rootDirectory
+   * could be called from server or client
+   * Sanitizes name a bit
+   *
+   * @param canvasCode
+   * @param paintingData
+   * @todo: Use LWJGL to save image on client?
+   * @see com.mojang.blaze3d.platform.NativeImage#writeToFile
+   */
+  public static void exportPainting(File rootDirectory, String canvasCode, PaintingData paintingData) throws IOException {
+    File exportDirectory = new File(rootDirectory, "zetter");
 
-        return null;
+    if (!exportDirectory.exists()) {
+      if (!exportDirectory.mkdir()) {
+        throw new IOException(Component.translatable("console.zetter.error.file_write_folder_unable").getString());
+      }
+    } else if (!exportDirectory.isDirectory()) {
+      throw new IOException(Component.translatable("console.zetter.error.file_write_folder_exists").getString());
     }
 
-    /**
-     * Saves painting data as a png relative to rootDirectory
-     * could be called from server or client
-     * Sanitizes name a bit
-     *
-     * @todo: Use LWJGL to save image on client?
-     * @see com.mojang.blaze3d.platform.NativeImage#writeToFile
-     *
-     * @param canvasCode
-     * @param paintingData
-     */
-    public static void exportPainting(File rootDirectory, String canvasCode, PaintingData paintingData) throws IOException {
-        File exportDirectory = new File(rootDirectory, "zetter");
-
-        if (!exportDirectory.exists()) {
-            if (!exportDirectory.mkdir()) {
-                throw new IOException(Component.translatable("console.zetter.error.file_write_folder_unable").getString());
-            }
-        } else if (!exportDirectory.isDirectory()) {
-            throw new IOException(Component.translatable("console.zetter.error.file_write_folder_exists").getString());
-        }
-
-        String name = paintingData.getPaintingName().replaceAll("\s", "-");
-        name = name.replaceAll("[^a-zA-Z0-9.-]", "");
-        if (name.isEmpty()) {
-            name = canvasCode;
-        }
-
-        int maxLength = Math.min(name.length(), 32);
-        name = name.substring(0, maxLength) + "_" + Util.getFilenameFormattedDateTime();
-
-        File exportFile = new File(exportDirectory, name + ".png");
-
-        int width = paintingData.getWidth();
-        int height = paintingData.getHeight();
-
-        BufferedImage bufferedImage = new BufferedImage(
-            width,
-            height,
-            TYPE_INT_ARGB
-        );
-
-        IntBuffer colorByteBuffer = ByteBuffer.wrap(paintingData.getColorData()).asIntBuffer();
-        int[] colorIntArray = new int[colorByteBuffer.remaining()];
-        colorByteBuffer.get(colorIntArray);
-
-        bufferedImage.setRGB(
-            0, 0, width, height, colorIntArray, 0, width
-        );
-
-        try {
-            ImageIO.write(bufferedImage, "PNG", exportFile);
-        } catch (IOException e) {
-            throw new IOException(Component.translatable("console.zetter.error.file_write_file").getString());
-        }
+    String name = paintingData.getPaintingName().replaceAll("\s", "-");
+    name = name.replaceAll("[^a-zA-Z0-9.-]", "");
+    if (name.isEmpty()) {
+      name = canvasCode;
     }
 
-    /**
-     * Try to find a painting by it's name using
-     * level canvas tracker
-     * @param paintingName
-     * @param level
-     * @return
-     */
-    public static @Nullable String lookupPaintingCodeByName(String paintingName, Level level) {
-        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
+    int maxLength = Math.min(name.length(), 32);
+    name = name.substring(0, maxLength) + "_" + Util.getFilenameFormattedDateTime();
 
-        for (int id = 0; id < canvasTracker.getLastPaintingId() + 1; id++) {
-            final String code = PaintingData.getCanvasCode(id);
-            PaintingData paintingData = canvasTracker.getCanvasData(code);
+    File exportFile = new File(exportDirectory, name + ".png");
 
-            if (paintingData == null || !paintingData.getType().equals(ZetterCanvasTypes.PAINTING.get())) {
-                continue;
-            }
+    int width = paintingData.getWidth();
+    int height = paintingData.getHeight();
 
-            if (paintingData.getPaintingName().equals(paintingName)) {
-                return code;
-            }
-        }
+    BufferedImage bufferedImage = new BufferedImage(
+        width,
+        height,
+        TYPE_INT_ARGB
+    );
 
-        return null;
+    IntBuffer colorByteBuffer = ByteBuffer.wrap(paintingData.getColorData()).asIntBuffer();
+    int[] colorIntArray = new int[colorByteBuffer.remaining()];
+    colorByteBuffer.get(colorIntArray);
+
+    bufferedImage.setRGB(
+        0, 0, width, height, colorIntArray, 0, width
+    );
+
+    try {
+      ImageIO.write(bufferedImage, "PNG", exportFile);
+    } catch (IOException e) {
+      throw new IOException(Component.translatable("console.zetter.error.file_write_file").getString());
     }
+  }
+
+  /**
+   * Try to find a painting by it's name using
+   * level canvas tracker
+   *
+   * @param paintingName
+   * @param level
+   * @return
+   */
+  public static @Nullable String lookupPaintingCodeByName(String paintingName, Level level) {
+    CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
+
+    for (int id = 0; id < canvasTracker.getLastPaintingId() + 1; id++) {
+      final String code = PaintingData.getCanvasCode(id);
+      PaintingData paintingData = canvasTracker.getCanvasData(code);
+
+      if (paintingData == null || !paintingData.getType().equals(ZetterCanvasTypes.PAINTING.get())) {
+        continue;
+      }
+
+      if (paintingData.getPaintingName().equals(paintingName)) {
+        return code;
+      }
+    }
+
+    return null;
+  }
+
+  public static ItemStack lookupPaletteStackByPlayer(ServerPlayer player, UUID paletteUUID) {
+    ItemStack selectedItem = player.getInventory().getSelected();
+
+    if (
+        !selectedItem.isEmpty()
+            && selectedItem.is(ZetterItems.PALETTE.get())
+            && PaletteItem.getPaletteUuid(selectedItem) != null
+            && PaletteItem.getPaletteUuid(selectedItem).equals(paletteUUID)
+    ) {
+      return selectedItem;
+    }
+
+    for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+      ItemStack itemStack = player.getInventory().getItem(i);
+
+      if (
+          !itemStack.isEmpty()
+              && itemStack.is(ZetterItems.PALETTE.get())
+              && PaletteItem.getPaletteUuid(itemStack) != null
+              && PaletteItem.getPaletteUuid(itemStack).equals(paletteUUID)
+      ) {
+        return itemStack;
+      }
+    }
+
+    return ItemStack.EMPTY;
+  }
 }

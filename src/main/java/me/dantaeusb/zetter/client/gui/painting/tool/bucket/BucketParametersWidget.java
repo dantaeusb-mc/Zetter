@@ -1,8 +1,6 @@
 package me.dantaeusb.zetter.client.gui.painting.tool.bucket;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.easel.AbstractEaselWidget;
-import me.dantaeusb.zetter.client.gui.easel.BlendingWidget;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.painting.parameters.BucketParameters;
@@ -17,7 +15,7 @@ public class BucketParametersWidget extends AbstractPaintingWidget implements Re
     super(parentScreen, x, y, width, height, title);
 
     final int INTENSITY_POSITION_X = 0;
-    final int INTENSITY_POSITION_Y = BlendingWidget.HEIGHT + 14;
+    final int INTENSITY_POSITION_Y = SliderWidget.HORIZONTAL_HEIGHT + 14;
 
     this.intensitySlider = new SliderWidget(
         parentScreen,
@@ -46,7 +44,7 @@ public class BucketParametersWidget extends AbstractPaintingWidget implements Re
     final int INTENSITY_BACKGROUND_U = 8;
     final int INTENSITY_BACKGROUND_V = 99;
 
-    guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
+    guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
   }
 
   public void renderIntensityState(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {

@@ -18,9 +18,8 @@ import java.util.List;
 
 
 public class EaselContainer extends ItemStackHandler {
-    public static final int STORAGE_SIZE = 2;
+    public static final int STORAGE_SIZE = 1;
     public static final int CANVAS_SLOT = 0;
-    public static final int PALETTE_SLOT = 1;
 
     /*
      * Canvas
@@ -67,17 +66,6 @@ public class EaselContainer extends ItemStackHandler {
         this.listeners.remove(listener);
     }
 
-    /*
-     * Palette
-     */
-
-    public void damagePalette(int damage) {
-        final int maxDamage = this.getPaletteStack().getMaxDamage() - 1;
-        int newDamage = this.getPaletteStack().getDamageValue() + damage;
-        newDamage = Math.min(newDamage, maxDamage);
-
-        this.getPaletteStack().setDamageValue(newDamage);
-    }
 
     /*
      * Canvas
@@ -147,16 +135,8 @@ public class EaselContainer extends ItemStackHandler {
         return this.getStackInSlot(CANVAS_SLOT);
     }
 
-    public ItemStack getPaletteStack() {
-        return this.getStackInSlot(PALETTE_SLOT);
-    }
-
     public ItemStack extractCanvasStack() {
         return this.extractItem(CANVAS_SLOT, this.getSlotLimit(CANVAS_SLOT), false);
-    }
-
-    public ItemStack extractPaletteStack() {
-        return this.extractItem(PALETTE_SLOT, this.getSlotLimit(PALETTE_SLOT), false);
     }
 
     @Override
@@ -167,10 +147,6 @@ public class EaselContainer extends ItemStackHandler {
 
     public void setCanvasStack(ItemStack canvasStack) {
         this.setStackInSlot(CANVAS_SLOT, canvasStack);
-    }
-
-    public void setPaletteStack(ItemStack canvasStack) {
-        this.setStackInSlot(PALETTE_SLOT, canvasStack);
     }
 
     public void changed() {

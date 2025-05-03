@@ -1,6 +1,5 @@
 package me.dantaeusb.zetter.core;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.datafixers.util.Either;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
@@ -11,16 +10,12 @@ import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterShadersEvent;
 import net.minecraftforge.client.event.RenderTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -47,6 +42,8 @@ public class ZetterClientModEvents {
     }
 
     /**
+     * @todo: Not needed anymore I think
+     *
      * Handle canvas registration on event, some menus/screens
      * might need to update
      *
@@ -67,7 +64,7 @@ public class ZetterClientModEvents {
 
         Player player = Minecraft.getInstance().player;
 
-        if (canvasData instanceof CanvasData canvasCanvasData) {
+        /*if (canvasData instanceof CanvasData canvasCanvasData) {
             // Initialize canvas if client had no canvas loaded when it was updated
             if (player.containerMenu instanceof EaselMenu easelMenu) {
                 String canvasItemCode = easelMenu.getCanvasItemCode();
@@ -80,7 +77,7 @@ public class ZetterClientModEvents {
                     }
                 }
             }
-        }
+        }*/
     }
 
     /**

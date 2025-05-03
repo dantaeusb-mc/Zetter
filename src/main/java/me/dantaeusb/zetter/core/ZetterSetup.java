@@ -2,7 +2,6 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.ArtistTableScreen;
-import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.painting.ClientPaintingPaletteStateStorage;
 import me.dantaeusb.zetter.client.painting.ClientPaintingEaselStateStorage;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
@@ -27,8 +26,6 @@ public class ZetterSetup
     public static void onClientSetupEvent(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             // Not registering PaintingScreen as it's client-side only
-
-            MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
 
             // @todo: [CRIT] Broke icons with paintings!

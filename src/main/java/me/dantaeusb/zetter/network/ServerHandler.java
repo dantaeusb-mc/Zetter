@@ -10,8 +10,8 @@ import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
+import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
-import me.dantaeusb.zetter.menu.EaselMenu;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -216,10 +216,14 @@ public class ServerHandler {
      */
     public static void processPaletteUpdate(final CPaletteUpdatePacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            if (sendingPlayer.containerMenu instanceof EaselMenu) {
-                EaselMenu paintingContainer = (EaselMenu)sendingPlayer.containerMenu;
-                paintingContainer.setPaletteColor(packetIn.getColor(), packetIn.getSlotIndex());
+            ItemStack paletteStack = Helper.lookupPaletteStackByPlayer(sendingPlayer, packetIn.getPaletteUuid());
+
+            if (paletteStack.isEmpty()) {
+                Zetter.LOG.error("Unable to process palette update - item in slot is not a palette");
+                return;
             }
+
+            PaletteItem.updatePaletteColor(paletteStack, packetIn.getColor(), packetIn.getSlotIndex());
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
             throw e;
@@ -319,7 +323,7 @@ public class ServerHandler {
             // @todo: [MED] Check if player can access entity
 
             if (easelEntity != null) {
-                easelEntity.getStateHandler().processActionServer(packetIn.paintingActions);
+                easelEntity.getCanvasState().processActionServer(packetIn.paintingActions);
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
             }
@@ -342,9 +346,9 @@ public class ServerHandler {
 
             if (easelEntity != null) {
                 if (packetIn.canceled) {
-                    easelEntity.getStateHandler().undo(packetIn.actionId);
+                    easelEntity.getCanvasState().undo(packetIn.actionId);
                 } else {
-                    easelEntity.getStateHandler().redo(packetIn.actionId);
+                    easelEntity.getCanvasState().redo(packetIn.actionId);
                 }
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");

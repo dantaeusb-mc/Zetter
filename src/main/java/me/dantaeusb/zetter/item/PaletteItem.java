@@ -90,6 +90,8 @@ public class PaletteItem extends Item {
       Minecraft.getInstance().setScreen(
           new PaintingScreen(paletteStack, closestCanvasHolder)
       );
+    } else {
+
     }
 
     ItemStack itemstack = player.getItemInHand(hand);

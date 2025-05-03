@@ -1,8 +1,6 @@
 package me.dantaeusb.zetter.client.gui.painting;
 
-import me.dantaeusb.zetter.client.gui.EaselScreen;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.easel.AbstractEaselWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -54,7 +52,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (EaselScreen.isInRect(this.getX() + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
+            if (isInRect(this.getX() + 1, fromY, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT, mouseX, mouseY)) {
                 return historyButton.getTooltip();
             }
 
@@ -78,7 +76,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
-            if (EaselScreen.isInRect(this.getX() + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
+            if (isInRect(this.getX() + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
                 historyButton.action.run();
 
                 this.playDownSound(Minecraft.getInstance().getSoundManager());
@@ -107,14 +105,14 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
     }
 
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+        guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {
             int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
             int uOffset = historyButton.uPosition + (historyButton.active.get() ? 0 : HISTORY_BUTTON_WIDTH + 2);
 
-            guiGraphics.blit(AbstractEaselWidget.EASEL_WIDGETS_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
+            guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
     }

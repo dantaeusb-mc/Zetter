@@ -17,6 +17,10 @@ import me.dantaeusb.zetter.client.painting.palette.ClientPaintingPaletteState;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.item.PaletteItem;
+import me.dantaeusb.zetter.painting.Tool;
+import me.dantaeusb.zetter.painting.parameters.BrushParameters;
+import me.dantaeusb.zetter.painting.parameters.PencilParameters;
+import me.dantaeusb.zetter.painting.parameters.SizeParameterHolder;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -180,12 +184,12 @@ public class PaintingScreen extends Screen {
   }
 
   public void useTool(float posX, float posY) {
-    this.getCanvasHolderEntity().useTool(
+    this.getCanvasHolderEntity().getCanvasState().useTool(
         this.getMinecraft().player,
         this.paletteState.currentTool(),
         posX,
         posY,
-        this.currentColor,
+        this.currentColor.getARGB(),
         this.getToolsParameters().getToolParameters(this.paletteState.currentTool())
     );
   }
@@ -203,8 +207,7 @@ public class PaintingScreen extends Screen {
   }
 
   public void setPaletteState(ClientPaintingPaletteState paletteState) {
-    paletteState = this.beforePaletteStateChange(paletteState);
-    this.paletteState = paletteState;
+    this.paletteState = this.beforePaletteStateChange(paletteState);
     this.afterPaletteStateChange(paletteState);
   }
 
@@ -536,33 +539,25 @@ public class PaintingScreen extends Screen {
       }
     }
 
-    /*if (hasControlDown()) {
-      if (this.getMenu().getCurrentTool() == Tools.BRUSH) {
-        AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
+    if (hasControlDown()) {
+      if (this.getPaletteState().currentTool() == Tool.BRUSH) {
+        BrushParameters parameters = this.getPaletteState().toolParameters().getBrushParameters();
 
-        if (parameters instanceof SizeParameterHolder) {
-          float newSize = ((SizeParameterHolder) parameters).getSize() + (float) delta;
-          newSize = Math.min(Math.max(newSize, BrushParameters.MIN_SIZE), BrushParameters.MAX_SIZE);
+        float newSize = ((SizeParameterHolder) parameters).getSize() + (float) delta;
+        newSize = Math.min(Math.max(newSize, BrushParameters.MIN_SIZE), BrushParameters.MAX_SIZE);
 
-          ((SizeParameterHolder) parameters).setSize(newSize);
-          return true;
-        }
-      } else if (this.getMenu().getCurrentTool() == Tools.PENCIL) {
-        AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
+        ((SizeParameterHolder) parameters).setSize(newSize);
+        return true;
+      } else if (this.getPaletteState().currentTool() == Tool.PENCIL) {
+        PencilParameters parameters = this.getPaletteState().toolParameters().getPencilParameters();
 
-        if (parameters instanceof SizeParameterHolder) {
-          float newSize = ((SizeParameterHolder) parameters).getSize() + (delta > 0 ? 1 : -1);
-          newSize = Math.min(Math.max(newSize, PencilParameters.MIN_SIZE), PencilParameters.MAX_SIZE);
+        float newSize = ((SizeParameterHolder) parameters).getSize() + (delta > 0 ? 1 : -1);
+        newSize = Math.min(Math.max(newSize, PencilParameters.MIN_SIZE), PencilParameters.MAX_SIZE);
 
-          ((SizeParameterHolder) parameters).setSize(newSize);
-          return true;
-        }
+        ((SizeParameterHolder) parameters).setSize(newSize);
+        return true;
       }
     }
-
-    if (this.canvasWidget.mouseScrolled(mouseX, mouseY, delta)) {
-      return true;
-    }*/
 
     return false;
   }
@@ -577,6 +572,7 @@ public class PaintingScreen extends Screen {
 
   public void onClose() {
     this.paletteAccessor.writeColors();
+    // @todo: Send packet to remove player and palette from the entity
     super.onClose();
   }
 

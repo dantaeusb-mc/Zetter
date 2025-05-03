@@ -41,7 +41,15 @@ public class PaintingItem extends CanvasItem
         super(properties);
     }
 
-    // @todo: [HIGH] Canvas data could be null!!!
+    /**
+     * Shows painting screen if the painting is available,
+     * requests painting if it's not with following
+     * screen opening callback
+     * @param world
+     * @param player
+     * @param hand
+     * @return
+     */
     @Override
     public InteractionResultHolder<ItemStack> use(Level world, Player player, InteractionHand hand) {
         ItemStack paintingStack = player.getItemInHand(hand);

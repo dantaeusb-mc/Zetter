@@ -7,7 +7,7 @@ import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.core.EaselStateListener;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
+import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -29,6 +29,7 @@ import java.util.*;
  * It keeps painting states at different moments (snapshots)
  * action history, processes sync signals
  *
+ * Maybe we should create it only with canvas and destroy when canvas removed
  * @todo: [LOW] Make it capability?
  */
 public class CanvasState {
@@ -48,11 +49,11 @@ public class CanvasState {
 
     private static int SYNC_TICKS = SYNC_INTERVAL / TICK_INTERVAL;
 
-    private final EaselEntity easel;
+    private final CanvasHolderEntity canvasHolder;
     private List<EaselStateListener> listeners;
 
     /**
-     * Flag for cilent if it assumes that current state
+     * Flag for client if it assumes that current state
      * is actual state. Used for history packets:
      * if the last history packed is marked as "actual"
      * (no more unsent actions at the time of generating packet)
@@ -102,8 +103,8 @@ public class CanvasState {
      */
     private boolean historyDirty = false;
 
-    public CanvasState(EaselEntity entity) {
-        this.easel = entity;
+    public CanvasState(CanvasHolderEntity entity) {
+        this.canvasHolder = entity;
 
         if (entity.level().isClientSide()) {
             this.snapshots = new ArrayList<>(CLIENT_SNAPSHOT_HISTORY_SIZE + 1);
@@ -127,7 +128,7 @@ public class CanvasState {
         this.unfreeze();
 
         this.updateSnapshots();
-        if (!this.easel.level().isClientSide() && this.getCanvasCode() != null) {
+        if (!this.canvasHolder.level().isClientSide() && this.getCanvasCode() != null) {
             this.performHistorySyncForServerPlayer(player);
         }
     }
@@ -140,7 +141,7 @@ public class CanvasState {
     public void removePlayer(Player player) {
         this.players.remove(player);
 
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             this.freeze();
         } else {
             this.playerLastSyncedAction.remove(player.getUUID());
@@ -166,7 +167,7 @@ public class CanvasState {
      */
     public void reset(boolean sync) {
         // To avoid removing data from current stroke
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             this.performHistorySyncClient(true);
         }
 
@@ -175,8 +176,8 @@ public class CanvasState {
         this.playerLastSyncedAction.clear();
         this.playerLastSyncedSnapshot.clear();
 
-        if (!this.easel.level().isClientSide() && sync && this.getCanvasData() != null) {
-            SEaselResetPacket resetPacket = new SEaselResetPacket(this.easel.getId());
+        if (!this.canvasHolder.level().isClientSide() && sync && this.getCanvasData() != null) {
+            SEaselResetPacket resetPacket = new SEaselResetPacket(this.canvasHolder.getId());
 
             for (Player player : this.players) {
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), resetPacket);
@@ -221,7 +222,7 @@ public class CanvasState {
             this.freeze();
         }
 
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             if (this.tick % SYNC_TICKS == 0) {
                 this.performHistorySyncClient(false);
             }
@@ -248,23 +249,15 @@ public class CanvasState {
      * @return
      */
     private CanvasData getCanvasData() {
-        if (this.easel.getEaselContainer().getCanvas() == null) {
-            return null;
-        }
-
-        return this.easel.getEaselContainer().getCanvas().data;
+        return this.canvasHolder.getCanvasData();
     }
 
     /**
      * Get canvas code from canvas holder in container
      * @return
      */
-    private String getCanvasCode() {
-        if (this.easel.getEaselContainer().getCanvas() == null) {
-            return null;
-        }
-
-        return this.easel.getEaselContainer().getCanvas().code;
+    private @Nullable String getCanvasCode() {
+        return this.canvasHolder.getCanvasCode();
     }
 
     /*
@@ -279,7 +272,7 @@ public class CanvasState {
      * @param posY
      */
     public void useTool(Player player, Tool tool, float posX, float posY, int color, AbstractToolParameters parameters) {
-        ItemStack paletteStack = this.easel.getEaselContainer().getPaletteStack();
+        ItemStack paletteStack = this.canvasHolder.getPaletteStack(player);
 
         // No palette or no paints left and player is not creative mode player
         if (paletteStack.isEmpty() ||
@@ -318,7 +311,7 @@ public class CanvasState {
                     int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
 
                     if (!player.isCreative()) {
-                        this.easel.getEaselContainer().damagePalette(damage);
+                        this.canvasHolder.damagePalette(player, damage);
                     }
 
                     CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
@@ -369,7 +362,7 @@ public class CanvasState {
             return;
         }
 
-        if (!this.easel.level().isClientSide()) {
+        if (!this.canvasHolder.level().isClientSide()) {
             if (firstNonRemovedAction != null) {
                 // Update last synced actions tracker
                 // Set false for players that need to have the last synced action updated
@@ -407,7 +400,7 @@ public class CanvasState {
             return;
         }
 
-        if (!this.easel.level().isClientSide()) {
+        if (!this.canvasHolder.level().isClientSide()) {
             if (firstNonRemovedSnapshot != null) {
                 // Update last synced snapshot tracker
                 // Set false for players that need to have the last synced snapshot updated
@@ -505,7 +498,7 @@ public class CanvasState {
      * @return
      */
     public boolean isCanvasInitialized() {
-        ItemStack canvasStack = this.easel.getEaselContainer().getCanvasStack();
+        ItemStack canvasStack = this.canvasHolder.getCanvasStack();
 
         if (canvasStack == null) {
             throw new IllegalStateException("Cannot check canvas initialization: no item in container");
@@ -525,7 +518,7 @@ public class CanvasState {
      * @return boolean True if initialization is successful
      */
     public boolean initializeCanvas(long timestamp) {
-        ItemStack canvasStack = this.easel.getEaselContainer().getCanvasStack();
+        ItemStack canvasStack = this.canvasHolder.getCanvasStack();
 
         if (canvasStack == null) {
             throw new IllegalStateException("Cannot initialize canvas: no item in container");
@@ -549,12 +542,12 @@ public class CanvasState {
 
         assert size != null && size.length == 2; // @todo: Stop menu updates to prevent sending change before initialization packet
 
-        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.easel.level());
+        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.canvasHolder.level());
         canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
-        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode,canvasData, System.currentTimeMillis());
+        SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.canvasHolder.getId(), canvasCode,canvasData, System.currentTimeMillis());
 
-        for (Player player : this.easel.getPlayersUsing()) {
+        for (Player player : this.canvasHolder.getPlayersUsing()) {
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), initPacket);
         }
 
@@ -569,8 +562,8 @@ public class CanvasState {
             }
         }
 
-        this.easel.getEaselContainer().handleCanvasChange(canvasCode);
-        this.easel.getEaselContainer().changed();
+        //this.canvasHolder.handleCanvasChange(canvasCode);
+        //this.canvasHolder.changed();
 
         return true;
     }
@@ -635,9 +628,9 @@ public class CanvasState {
         }
 
         // If tillAction is not sent, just checking flag will be enough, it will be sent with proper canceled status
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             if (tillAction.isSent()) {
-                CCanvasHistoryActionPacket historyPacket = new CCanvasHistoryActionPacket(this.easel.getId(), tillAction.id, cancel);
+                CCanvasHistoryActionPacket historyPacket = new CCanvasHistoryActionPacket(this.canvasHolder.getId(), tillAction.id, cancel);
                 ZetterNetwork.simpleChannel.sendToServer(historyPacket);
             }
         } else {
@@ -663,7 +656,7 @@ public class CanvasState {
                     }
 
                     if (found) {
-                        SCanvasHistoryActionPacket historyPacket = new SCanvasHistoryActionPacket(this.easel.getId(), tillAction.id, cancel);
+                        SCanvasHistoryActionPacket historyPacket = new SCanvasHistoryActionPacket(this.canvasHolder.getId(), tillAction.id, cancel);
                         ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), historyPacket);
                     }
                 }
@@ -919,7 +912,7 @@ public class CanvasState {
             }
         }
 
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
         }
 
@@ -972,7 +965,7 @@ public class CanvasState {
             return;
         }
 
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             if (this.snapshots.isEmpty()) {
                 this.makeSnapshot();
             }
@@ -1032,7 +1025,7 @@ public class CanvasState {
      */
     private void makeSnapshot() {
         assert this.getCanvasData() != null;
-        if (this.easel.level().isClientSide()) {
+        if (this.canvasHolder.level().isClientSide()) {
             this.snapshots.add(CanvasSnapshot.createWeakSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
         } else if (this.snapshots.isEmpty()) {
             this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
@@ -1054,7 +1047,7 @@ public class CanvasState {
     private void cleanupSnapshotHistory() {
         int maxSize = SNAPSHOT_HISTORY_SIZE;
 
-        if (this.easel.level().isClientSide) {
+        if (this.canvasHolder.level().isClientSide) {
             maxSize = CLIENT_SNAPSHOT_HISTORY_SIZE;
         }
 
@@ -1130,7 +1123,7 @@ public class CanvasState {
         }
 
         if (!unsentActions.isEmpty()) {
-            CCanvasActionPacket paintingFrameBufferPacket = new CCanvasActionPacket(this.easel.getId(), unsentActions);
+            CCanvasActionPacket paintingFrameBufferPacket = new CCanvasActionPacket(this.canvasHolder.getId(), unsentActions);
             ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
 
             for (CanvasAction unsentAction : unsentActions) {
@@ -1184,7 +1177,7 @@ public class CanvasState {
         boolean snapshotsSync = !hasUnsyncedSnapshot || unsyncedSnapshot.id == this.getLastSnapshot().id;
 
         SEaselStateSyncPacket syncMessage = new SEaselStateSyncPacket(
-                this.easel.getId(), this.getCanvasCode(), actionsSync && snapshotsSync, unsyncedSnapshot, unsyncedActions
+                this.canvasHolder.getId(), this.getCanvasCode(), actionsSync && snapshotsSync, unsyncedSnapshot, unsyncedActions
         );
 
         ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), syncMessage);
@@ -1294,7 +1287,7 @@ public class CanvasState {
      * @param newActions
      */
     public void processActionServer(Queue<CanvasAction> newActions) {
-        if (this.easel.getCanvasStack().isEmpty()) {
+        if (this.canvasHolder.getCanvasStack().isEmpty()) {
             Zetter.LOG.warn("Got action buffer but no canvas found on easel");
             return;
         }
@@ -1388,9 +1381,16 @@ public class CanvasState {
      * @param doDamageClient apply damage to palette on client when applying action, server determines it by "sync" state
      */
     public void applyAction(CanvasAction action, boolean doDamageClient) {
-        boolean client = this.easel.level().isClientSide();
+        boolean client = this.canvasHolder.level().isClientSide();
 
         action.getSubActionStream().forEach((CanvasAction.CanvasSubAction subAction) -> {
+            final Player actingPlayer = this.players.stream().filter((player) -> player.getUUID().equals(action.getAuthorUUID())).findFirst().orElse(null);
+
+            if (actingPlayer == null) {
+                Zetter.LOG.error("Unable to find player for action " + action.id);
+                return;
+            }
+
             // Apply subAction directly
             int damage = action.tool.getTool().apply(
                     this.getCanvasData(),
@@ -1402,14 +1402,14 @@ public class CanvasState {
 
             if (client) {
                 if (doDamageClient) {
-                    this.easel.getEaselContainer().damagePalette(damage);
+                    this.canvasHolder.damagePalette(actingPlayer, damage);
                 }
             } else {
                 if (!action.isSync()) {
                     Optional<Player> author = this.players.stream().filter(player -> player.getUUID().equals(action.getAuthorUUID())).findFirst();
 
                     if (author.isEmpty() || !author.get().isCreative()) {
-                        this.easel.getEaselContainer().damagePalette(damage);
+                        this.canvasHolder.damagePalette(actingPlayer, damage);
                     }
                 }
             }
@@ -1579,8 +1579,8 @@ public class CanvasState {
      * is no longer up to date (tracker will decide when to sync)
      */
     private void markDesync() {
-        if (!this.easel.level().isClientSide()) {
-            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.easel.level())).markCanvasDesync(this.getCanvasCode());
+        if (!this.canvasHolder.level().isClientSide()) {
+            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.canvasHolder.level())).markCanvasDesync(this.getCanvasCode());
         }
     }
 

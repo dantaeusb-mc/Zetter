@@ -37,4 +37,8 @@ abstract public class AbstractArtistTableWidget extends AbstractWidget implement
     protected void updateWidgetNarration(NarrationElementOutput narrationElementOutput) {
         narrationElementOutput.add(NarratedElementType.TITLE, this.createNarrationMessage());
     }
+
+    public static boolean isInRect(int x, int y, int xSize, int ySize, final int mouseX, final int mouseY) {
+        return ((mouseX >= x && mouseX <= x + xSize) && (mouseY >= y && mouseY <= y + ySize));
+    }
 }

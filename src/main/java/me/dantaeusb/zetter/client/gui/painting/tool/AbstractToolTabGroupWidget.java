@@ -9,11 +9,11 @@ import net.minecraft.network.chat.Component;
 import java.util.Map;
 
 public abstract class AbstractToolTabGroupWidget extends AbstractTabGroupWidget {
-  protected final static int X = 31;
-  protected final static int Y = 136;
+  public final static int X = 31;
+  public final static int Y = 136;
 
-  protected final static int WIDTH = 164;
-  protected final static int HEIGHT = 120;
+  public final static int WIDTH = 164;
+  public final static int HEIGHT = 120;
 
   private final Tool tool;
 

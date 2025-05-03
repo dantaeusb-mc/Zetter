@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.client.gui.painting.colorpicker;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
-import me.dantaeusb.zetter.menu.EaselMenu;
+import me.dantaeusb.zetter.item.PaletteItem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
@@ -17,7 +17,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
 
     final static int PALETTE_COLS = 2;
     final static int HEIGHT = PALETTE_OFFSET * PALETTE_COLS + 1;
-    final static int WIDTH = ((EaselMenu.PALETTE_SLOTS / PALETTE_COLS) * PALETTE_OFFSET) + 1;
+    final static int WIDTH = ((PaletteItem.PALETTE_SIZE / PALETTE_COLS) * PALETTE_OFFSET) + 1;
 
     public static final int SWAP_HOTKEY = GLFW.GLFW_KEY_X;
 
@@ -52,7 +52,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
             return false;
         }
 
-        for (int i = 0; i < EaselMenu.PALETTE_SLOTS; i++) {
+        for (int i = 0; i < PaletteItem.PALETTE_SIZE; i++) {
             int slotX = this.getX() + (i % 2) * PALETTE_OFFSET;
             int slotY = this.getY() + (i / 2) * PALETTE_OFFSET;
 
@@ -88,7 +88,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
         if (this.orientation == Orientation.HORIZONTAL) {
             guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), PALETTE_HORIZONTAL_U, PALETTE_HORIZONTAL_V, WIDTH, HEIGHT);
 
-            for (int i = 0; i < EaselMenu.PALETTE_SLOTS; i++) {
+            for (int i = 0; i < PaletteItem.PALETTE_SIZE; i++) {
                 int fromX = this.getX() + 1 + (i / 2) * PALETTE_OFFSET;
                 int fromY = this.getY() + 1 + (i % 2) * PALETTE_OFFSET;
 
@@ -99,7 +99,7 @@ public class PaletteWidget extends AbstractPaintingWidget implements Renderable 
         } else {
             guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), PALETTE_VERTICAL_U, PALETTE_VERTICAL_V, HEIGHT, WIDTH);
 
-            for (int i = 0; i < EaselMenu.PALETTE_SLOTS; i++) {
+            for (int i = 0; i < PaletteItem.PALETTE_SIZE; i++) {
                 int fromX = this.getX() + 1 + (i % 2) * PALETTE_OFFSET;
                 int fromY = this.getY() + 1 + (i / 2) * PALETTE_OFFSET;
 
