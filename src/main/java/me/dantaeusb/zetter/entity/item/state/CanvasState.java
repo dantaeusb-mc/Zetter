@@ -498,13 +498,13 @@ public class CanvasState {
      * @return
      */
     public boolean isCanvasInitialized() {
-        ItemStack canvasStack = this.canvasHolder.getCanvasStack();
+        /*ItemStack canvasStack = this.canvasHolder.getCanvasCode();
 
         if (canvasStack == null) {
             throw new IllegalStateException("Cannot check canvas initialization: no item in container");
-        }
+        }*/
 
-        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+        String canvasCode = this.canvasHolder.getCanvasCode();
 
         return canvasCode != null;
     }
@@ -527,7 +527,7 @@ public class CanvasState {
         String canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
         if (canvasCode != null) {
-            // Already
+            // Already initialized
             return false;
         }
 
