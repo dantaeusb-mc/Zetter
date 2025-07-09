@@ -1,0 +1,15 @@
+{
+  "type": "zetter:canvas_stitching",
+  "pattern": [
+    "C",
+    "C"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:canvas"
+    }
+  },
+  "result": {
+    "item": "zetter:canvas"
+  }
+}
