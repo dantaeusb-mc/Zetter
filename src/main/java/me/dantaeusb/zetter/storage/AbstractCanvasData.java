@@ -228,6 +228,10 @@ public abstract class AbstractCanvasData extends SavedData {
       this.numeric = numeric;
     }
 
+    /**
+     * Returns resolution in pixels
+     * @return
+     */
     public int getNumeric() {
       return this.numeric;
     }

@@ -3,27 +3,29 @@ package me.dantaeusb.zetter.client.gui.painting.tool.pencil;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
+import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 
 public class PencilParametersWidget extends AbstractPaintingWidget implements Renderable {
+  private final static int SLIDER_POSITION_X = 5;
+  private final static int SLIDER_DISTANCE_GAP = 14;
+
   private final SliderWidget intensitySlider;
   private final SliderWidget sizeSlider;
 
   public PencilParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
     super(parentScreen, x, y, width, height, title);
 
-    final int INTENSITY_POSITION_X = 0;
     final int INTENSITY_POSITION_Y = 0;//BlendingWidget.HEIGHT + 14;
 
-    final int SIZE_POSITION_X = 0;
-    final int SIZE_POSITION_Y = 67;
+    final int SIZE_POSITION_Y = SLIDER_DISTANCE_GAP + SliderWidget.HORIZONTAL_HEIGHT;
 
     this.intensitySlider = new SliderWidget(
         parentScreen,
-        this.getX() + INTENSITY_POSITION_X,
+        this.getX() + SLIDER_POSITION_X,
         this.getY() + INTENSITY_POSITION_Y,
         Component.translatable("container.zetter.painting.sliders.intensity"),
         this::getIntensity,
@@ -34,7 +36,7 @@ public class PencilParametersWidget extends AbstractPaintingWidget implements Re
 
     this.sizeSlider = new SliderWidget(
         parentScreen,
-        this.getX() + SIZE_POSITION_X,
+        this.getX() + SLIDER_POSITION_X,
         this.getY() + SIZE_POSITION_Y,
         Component.translatable("container.zetter.painting.sliders.size"),
         this::getSize,
@@ -79,7 +81,24 @@ public class PencilParametersWidget extends AbstractPaintingWidget implements Re
 
   @Override
   protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.intensitySlider.getMessage().getString(),
+        this.getX() + SLIDER_POSITION_X + 3,
+        this.getY() + SliderWidget.HORIZONTAL_HEIGHT * 2 + SLIDER_DISTANCE_GAP * 2 + 4,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
     this.intensitySlider.render(guiGraphics, mouseX, mouseY, partialTick);
+
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.sizeSlider.getMessage().getString(),
+        this.getX() + SLIDER_POSITION_X + 3,
+        this.getY() + SliderWidget.HORIZONTAL_HEIGHT * 2 + SLIDER_DISTANCE_GAP * 2 + 4,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
     this.sizeSlider.render(guiGraphics, mouseX, mouseY, partialTick);
   }
 }

@@ -1,8 +1,9 @@
 package me.dantaeusb.zetter.item;
 
-import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import net.minecraft.client.Minecraft;
+import me.dantaeusb.zetter.network.packet.CPaletteUseCanvasHolderPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.InteractionHand;
@@ -15,7 +16,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.UUID;
@@ -86,12 +86,12 @@ public class PaletteItem extends Item {
       return InteractionResultHolder.fail(player.getItemInHand(hand));
     }
 
-    if (level.isClientSide()) {
-      Minecraft.getInstance().setScreen(
-          new PaintingScreen(paletteStack, closestCanvasHolder)
+    if (!level.isClientSide()) {
+      CPaletteUseCanvasHolderPacket useCanvasHolder = new CPaletteUseCanvasHolderPacket(
+          closestCanvasHolder.getId(),
+          paletteStack
       );
-    } else {
-
+      ZetterNetwork.simpleChannel.sendToServer(useCanvasHolder);
     }
 
     ItemStack itemstack = player.getItemInHand(hand);
@@ -101,6 +101,10 @@ public class PaletteItem extends Item {
   }
 
   public static UUID getPaletteUuid(ItemStack stack) {
+    if (stack.isEmpty() || !(stack.getItem() instanceof PaletteItem)) {
+      return null;
+    }
+
     CompoundTag compoundNBT = stack.getTag();
 
     if (compoundNBT != null && compoundNBT.contains(NBT_TAG_NAME_PALETTE_UUID)) {
@@ -110,7 +114,7 @@ public class PaletteItem extends Item {
     compoundNBT = stack.getOrCreateTag();
     compoundNBT.putUUID(NBT_TAG_NAME_PALETTE_UUID, UUID.randomUUID());
 
-    return null;
+    return compoundNBT.getUUID(NBT_TAG_NAME_PALETTE_UUID);
   }
 
   public static int[] getPaletteColors(ItemStack stack) {

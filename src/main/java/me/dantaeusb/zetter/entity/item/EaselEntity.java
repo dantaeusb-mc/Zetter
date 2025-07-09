@@ -43,466 +43,471 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
 public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerListener {
-  private static final String NBT_TAG_EASEL_STORAGE = "storage";
-  private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
+    private static final String NBT_TAG_EASEL_STORAGE = "storage";
+    private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
-  private static final Vector3f CANVAS_OFFSET = new Vector3f(-0.5f, 0.78125f, -0.25f);
+    private static final Vector3f CANVAS_OFFSET = new Vector3f(-0.5f, 0.78125f, -0.25f);
 
-  protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> entity instanceof EaselEntity;
+    protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> entity instanceof EaselEntity;
 
-  private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(EaselEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(EaselEntity.class, EntityDataSerializers.STRING);
 
-  protected BlockPos pos;
-  protected EaselContainer easelContainer;
-  protected Vector3f canvasOffset;
-  protected Vector3f canvasNormal;
-  protected Vector3f canvasU;
-  protected Vector3f canvasV;
+    protected BlockPos pos;
+    protected EaselContainer easelContainer;
+    protected Vector3f canvasOffset;
+    protected Vector3f canvasNormal;
+    protected Vector3f canvasU;
+    protected Vector3f canvasV;
 
-  protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
+    protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
-  private int tick;
+    private int tick;
 
-  public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
-    super(type, world);
-    this.createInventory();
-  }
-
-  @Override
-  public void setYRot(float yRot) {
-    super.setYRot(yRot);
-
-    Vector3f offset = new Vector3f(CANVAS_OFFSET);
-    Vector3f normal = new Vector3f(0.0f, 0.0f, -1.0f);
-    Vector3f u = new Vector3f(-1.0f, 0.0f, 0.0f);
-    Vector3f v = new Vector3f(0.0f, -1.0f, 0.0f);
-
-    Quaternionf canvasXRotation = Axis.XP.rotationDegrees(10.0f);
-    Quaternionf entityYRotation = Axis.YP.rotationDegrees(180.0F - yRot);
-
-    this.canvasOffset = entityYRotation.transform(offset);
-    this.canvasNormal = entityYRotation.transform(canvasXRotation.transform(normal));
-    this.canvasU = entityYRotation.transform(canvasXRotation.transform(u));
-    this.canvasV = entityYRotation.transform(canvasXRotation.transform(v));
-  }
-
-  protected void defineSynchedData() {
-    this.entityData.define(DATA_ID_CANVAS_CODE, "");
-  }
-
-  public @Nullable String getCanvasCode() {
-    String canvasCode = this.entityData.get(DATA_ID_CANVAS_CODE);
-
-    if (canvasCode.isEmpty()) {
-      return null;
+    public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
+        super(type, world);
+        this.createInventory();
     }
 
-    return canvasCode;
-  }
+    @Override
+    public void setYRot(float yRot) {
+        super.setYRot(yRot);
 
-  public @Nullable CanvasData getCanvasData() {
-    CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
-    return canvasTracker.getCanvasData(this.getCanvasCode());
-  }
+        Vector3f offset = new Vector3f(CANVAS_OFFSET);
+        Vector3f normal = new Vector3f(0.0f, 0.0f, -1.0f);
+        Vector3f u = new Vector3f(-1.0f, 0.0f, 0.0f);
+        Vector3f v = new Vector3f(0.0f, -1.0f, 0.0f);
 
-  /**
-   * Set canvas code for referencing without loading the items to
-   * render canvas on easel
-   *
-   * @param canvasCode
-   */
-  protected void setCanvasCode(@Nullable String canvasCode) {
-    if (canvasCode != null) {
-      this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
-    } else {
-      this.entityData.set(DATA_ID_CANVAS_CODE, "");
-    }
-  }
+        Quaternionf canvasXRotation = Axis.XP.rotationDegrees(10.0f);
+        Quaternionf entityYRotation = Axis.YP.rotationDegrees(180.0F - yRot);
 
-  @Override
-  public Vector3f getCanvasOffset() {
-    return this.canvasOffset;
-  }
-
-  @Override
-  public Vector3f getCanvasNormal() {
-    return this.canvasNormal;
-  }
-
-  @Override
-  public Vector3f getCanvasU() {
-    return this.canvasU;
-  }
-
-  @Override
-  public Vector3f getCanvasV() {
-    return this.canvasV;
-  }
-
-  @Override
-  public Optional<Matrix4f> getCanvasMatrixTransform(float partialTicks) {
-    CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
-    CanvasData canvasData = canvasTracker.getCanvasData(this.getCanvasCode());
-    ;
-
-    if (canvasData == null) {
-      return Optional.empty();
+        this.canvasOffset = entityYRotation.transform(offset);
+        this.canvasNormal = entityYRotation.transform(canvasXRotation.transform(normal));
+        this.canvasU = entityYRotation.transform(canvasXRotation.transform(u));
+        this.canvasV = entityYRotation.transform(canvasXRotation.transform(v));
     }
 
-    final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
-    final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
+    protected void defineSynchedData() {
+        this.entityData.define(DATA_ID_CANVAS_CODE, "");
+    }
 
-    final float scaleFactor = 1.0F / 16.0F;
+    public @Nullable String getCanvasCode() {
+        String canvasCode = this.entityData.get(DATA_ID_CANVAS_CODE);
 
-    Matrix4f matrixTransform = new Matrix4f();
-    // Not using getter as we already applied rotation
-    matrixTransform.translate(CANVAS_OFFSET);
-    matrixTransform.scale(scaleFactor, scaleFactor, scaleFactor);
-    matrixTransform.rotate(Axis.XP.rotation(0.1745f));
-    matrixTransform.rotate(Axis.ZP.rotationDegrees(180.0f));
-    matrixTransform.translate(-8.0f - (8.0f * canvasBlockWidth), -16.0f * canvasBlockHeight, 0.0f);
-
-    return Optional.of(matrixTransform);
-  }
-
-  @Override
-  public boolean playerCanDraw(Player player) {
-    // @todo: Add frustum check?
-    return this.hasCanvas();
-  }
-
-  public Packet<ClientGamePacketListener> getAddEntityPacket() {
-    return NetworkHooks.getEntitySpawningPacket(this);
-  }
-
-  protected void createInventory() {
-    EaselContainer currentEaselStorage = this.easelContainer;
-    this.easelContainer = new EaselContainer(this);
-
-    if (currentEaselStorage != null) {
-      currentEaselStorage.removeListener(this);
-      int i = Math.min(currentEaselStorage.getSlots(), this.easelContainer.getSlots());
-
-      for (int j = 0; j < i; ++j) {
-        ItemStack itemstack = currentEaselStorage.getStackInSlot(j);
-        if (!itemstack.isEmpty()) {
-          this.easelContainer.setStackInSlot(j, itemstack.copy());
+        if (canvasCode.isEmpty()) {
+            return null;
         }
-      }
+
+        return canvasCode;
     }
 
-    this.easelContainer.addListener(this);
-    //this.updateDataFromInventory();
-  }
-
-  /**
-   * If canvas does not exist, set to null
-   * If exists but not initialized, set to default
-   * If exists and initialized, use code
-   */
-  protected void updateEntityDataFromInventory() {
-    ItemStack canvasStack = this.easelContainer.getCanvasStack();
-
-    if (canvasStack.isEmpty()) {
-      this.setCanvasCode(null);
-      return;
+    public @Nullable CanvasData getCanvasData() {
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
+        return canvasTracker.getCanvasData(this.getCanvasCode());
     }
 
-    String canvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-    if (canvasCode == null) {
-      int[] size = CanvasItem.getBlockSize(canvasStack);
-      assert size != null && size.length == 2;
-
-      canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
+    /**
+     * Set canvas code for referencing without loading the items to
+     * render canvas on easel
+     *
+     * @param canvasCode
+     */
+    protected void setCanvasCode(@Nullable String canvasCode) {
+        if (canvasCode != null) {
+            this.entityData.set(DATA_ID_CANVAS_CODE, canvasCode);
+        } else {
+            this.entityData.set(DATA_ID_CANVAS_CODE, "");
+        }
     }
 
-    this.setCanvasCode(canvasCode);
-  }
-
-  public boolean canPlayerAccessInventory(Player player) {
-    // @todo: [HIGH] Implement check
-    return true;
-  }
-
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-    if (capability == ForgeCapabilities.ITEM_HANDLER
-        && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
-      return this.easelContainerOptional.cast();
+    @Override
+    public Vector3f getCanvasOffset() {
+        return this.canvasOffset;
     }
 
-    return super.getCapability(capability, direction);
-  }
-
-  /**
-   * This is temporary for migrating from BE to Entity
-   *
-   * @return
-   */
-  public EaselContainer getEaselContainer() {
-    return this.easelContainer;
-  }
-
-  public void addAdditionalSaveData(CompoundTag compoundTag) {
-    compoundTag.put(NBT_TAG_EASEL_STORAGE, this.easelContainer.serializeNBT());
-
-    if (this.getCanvasCode() != null) {
-      compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getCanvasCode());
-    }
-  }
-
-  public void readAdditionalSaveData(CompoundTag compoundTag) {
-    this.createInventory();
-
-    this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_EASEL_STORAGE));
-
-    final String canvasCode = compoundTag.getString(NBT_TAG_CANVAS_CODE);
-
-    if (canvasCode != null) {
-      this.setCanvasCode(canvasCode);
-    }
-  }
-
-  /**
-   * Needed for entity interaction
-   *
-   * @return
-   */
-  public boolean isPickable() {
-    return !this.isRemoved();
-  }
-
-  public boolean isPushable() {
-    return false;
-  }
-
-  @Override
-  public InteractionResult interact(Player player, InteractionHand hand) {
-    ItemStack heldItem = player.getItemInHand(hand);
-
-    if (player.isCrouching() && heldItem.isEmpty()) {
-      ItemStack canvasStack = this.easelContainer.extractCanvasStack();
-      player.setItemInHand(hand, canvasStack);
-      return InteractionResult.sidedSuccess(this.level().isClientSide());
+    @Override
+    public Vector3f getCanvasNormal() {
+        return this.canvasNormal;
     }
 
-    if (heldItem.is(ZetterItems.CANVAS.get())) {
-      if (this.easelContainer.getCanvasStack().isEmpty() && this.easelContainer.isItemValid(EaselContainer.CANVAS_SLOT, heldItem)) {
-        this.easelContainer.setCanvasStack(heldItem);
-        player.setItemInHand(hand, ItemStack.EMPTY);
-
-        return InteractionResult.sidedSuccess(this.level().isClientSide());
-      }
+    @Override
+    public Vector3f getCanvasU() {
+        return this.canvasU;
     }
 
-    return InteractionResult.PASS;
-  }
-
-  /**
-   * Check history, check that still exists,
-   * check if need to keep information
-   */
-  public void tick() {
-    super.tick();
-    this.tick++;
-
-    // No need to check correctness and players on client side
-    if (this.level().isClientSide()) {
-      return;
+    @Override
+    public Vector3f getCanvasV() {
+        return this.canvasV;
     }
 
-    this.checkBelowWorld();
-    if (this.tick % 200 == 0) {
-      this.checkPlayersUsing();
+    @Override
+    public Optional<Matrix4f> getCanvasMatrixTransform(float partialTicks) {
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
+        CanvasData canvasData = canvasTracker.getCanvasData(this.getCanvasCode());
+        ;
+
+        if (canvasData == null) {
+            return Optional.empty();
+        }
+
+        final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
+        final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
+
+        final float scaleFactor = 1.0F / 16.0F;
+
+        Matrix4f matrixTransform = new Matrix4f();
+        // Not using getter as we already applied rotation
+        matrixTransform.translate(CANVAS_OFFSET);
+        matrixTransform.scale(scaleFactor, scaleFactor, scaleFactor);
+        matrixTransform.rotate(Axis.XP.rotation(0.1745f));
+        matrixTransform.rotate(Axis.ZP.rotationDegrees(180.0f));
+        matrixTransform.translate(-8.0f - (8.0f * canvasBlockWidth), -16.0f * canvasBlockHeight, 0.0f);
+
+        return Optional.of(matrixTransform);
     }
 
-    if (this.tick % 100 == 0) {
-      if (!this.isRemoved() && !this.survives()) {
-        this.discard();
-        this.dropItem(null);
-        this.dropAllContents(this.level(), this.getPos());
-      }
+    @Override
+    public boolean playerCanDraw(Player player) {
+        // @todo: Add frustum check?
+        return this.hasCanvas();
     }
-  }
 
-  public boolean survives() {
-    if (!this.level().noCollision(this)) {
-      return false;
-    } else {
-      BlockPos posBelow = this.getPos().below();
-      BlockState blockBelowState = this.level().getBlockState(posBelow);
+    public Packet<ClientGamePacketListener> getAddEntityPacket() {
+        return NetworkHooks.getEntitySpawningPacket(this);
+    }
 
-      if (!blockBelowState.isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
+    protected void createInventory() {
+        EaselContainer currentEaselStorage = this.easelContainer;
+        this.easelContainer = new EaselContainer(this);
+
+        if (currentEaselStorage != null) {
+            currentEaselStorage.removeListener(this);
+            int i = Math.min(currentEaselStorage.getSlots(), this.easelContainer.getSlots());
+
+            for (int j = 0; j < i; ++j) {
+                ItemStack itemstack = currentEaselStorage.getStackInSlot(j);
+                if (!itemstack.isEmpty()) {
+                    this.easelContainer.setStackInSlot(j, itemstack.copy());
+                }
+            }
+        }
+
+        this.easelContainer.addListener(this);
+        //this.updateDataFromInventory();
+    }
+
+    /**
+     * If canvas does not exist, set to null
+     * If exists but not initialized, set to default
+     * If exists and initialized, use code
+     */
+    protected void updateEntityDataFromInventory() {
+        ItemStack canvasStack = this.easelContainer.getCanvasStack();
+
+        if (canvasStack.isEmpty()) {
+            this.setCanvasCode(null);
+            return;
+        }
+
+        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+        if (canvasCode == null) {
+            int[] size = CanvasItem.getBlockSize(canvasStack);
+            assert size != null && size.length == 2;
+
+            canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
+        }
+
+        this.setCanvasCode(canvasCode);
+    }
+
+    public boolean canPlayerAccessInventory(Player player) {
+        // @todo: [HIGH] Implement check
+        return true;
+    }
+
+    @Override
+    public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
+        if (capability == ForgeCapabilities.ITEM_HANDLER
+            && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
+            return this.easelContainerOptional.cast();
+        }
+
+        return super.getCapability(capability, direction);
+    }
+
+    /**
+     * This is temporary for migrating from BE to Entity
+     *
+     * @return
+     */
+    public EaselContainer getEaselContainer() {
+        return this.easelContainer;
+    }
+
+    public void addAdditionalSaveData(CompoundTag compoundTag) {
+        compoundTag.put(NBT_TAG_EASEL_STORAGE, this.easelContainer.serializeNBT());
+
+        if (this.getCanvasCode() != null) {
+            compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getCanvasCode());
+        }
+    }
+
+    public void readAdditionalSaveData(CompoundTag compoundTag) {
+        this.createInventory();
+
+        this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_EASEL_STORAGE));
+
+        final String canvasCode = compoundTag.getString(NBT_TAG_CANVAS_CODE);
+
+        if (canvasCode != null) {
+            this.setCanvasCode(canvasCode);
+        }
+    }
+
+    /**
+     * Needed for entity interaction
+     *
+     * @return
+     */
+    public boolean isPickable() {
+        return !this.isRemoved();
+    }
+
+    public boolean isPushable() {
         return false;
-      }
-
-      return this.level().getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
-    }
-  }
-
-  // specific
-
-  public boolean hasCanvas() {
-    return this.getCanvasCode() != null;
-  }
-
-  public @Nullable ItemStack getCanvasStack() {
-    return this.easelContainer.getCanvasStack();
-  }
-
-  public @Nullable ItemStack getPaletteStack(Player player) {
-    return this.playersPalettes.get(player.getUUID());
-  }
-
-  public void containerChanged(ItemStackHandler easelContainer, int slot) {
-    ItemStack canvasStack = ((EaselContainer) easelContainer).getCanvasStack();
-    String newCanvasCode = null;
-    String existingCanvasCode = null;
-
-    if (!canvasStack.isEmpty()) {
-      newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-      // Initialize canvas
-      if (newCanvasCode == null) {
-        CanvasItem.getCanvasData(canvasStack, this.level());
-        newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
-      }
     }
 
-    if (this.getEaselContainer().getCanvas() != null) {
-      existingCanvasCode = this.getEaselContainer().getCanvas().code;
-    }
+    @Override
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        ItemStack heldItem = player.getItemInHand(hand);
 
-    // @todo: [HIGH] Supposedly won't work on client if new canvas is not yet initialized, because it'll have nullish code
-    // Canvas changed, drop state
-    if (newCanvasCode == null || !newCanvasCode.equals(existingCanvasCode)) {
-      this.canvasState.reset();
-    }
-
-    this.updateEntityDataFromInventory();
-  }
-
-  /**
-   * Normally players subscribe and unsubscribe manually when stopping drawing
-   * but sometimes we might miss unsubscribing, i.e. in case of player disconnect.
-   * We are ticking updates to check if player still could be using easel.
-   *
-   * @return
-   */
-  public List<Player> checkPlayersUsing() {
-    List<Player> possiblyUsingPlayers = this.level().getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)));
-
-    for (Player player : this.playersUsing) {
-      if (!possiblyUsingPlayers.contains(player)) {
-        this.removePlayerUsing(player);
-      }
-    }
-
-    return this.playersUsing;
-  }
-
-  public void setPos(double x, double y, double z) {
-    this.pos = new BlockPos((int) x, (int) y, (int) z);
-    this.setPosRaw(x, y, z);
-    this.setBoundingBox(this.makeBoundingBox());
-    this.hasImpulse = true;
-  }
-
-  public BlockPos getPos() {
-    return this.pos;
-  }
-
-  /**
-   * Drop contents and item then die when moved or hurt
-   */
-
-  public boolean hurt(DamageSource damageSource, float pAmount) {
-    if (this.isInvulnerableTo(damageSource)) {
-      return false;
-    } else {
-      if (!this.level().isClientSide()) {
-        if (!this.isRemoved()) {
-          this.kill();
-          this.markHurt();
-          this.dropItem(damageSource.getEntity());
-          this.dropAllContents(this.level(), this.pos);
+        if (player.isCrouching() && heldItem.isEmpty()) {
+            ItemStack canvasStack = this.easelContainer.extractCanvasStack();
+            player.setItemInHand(hand, canvasStack);
+            return InteractionResult.sidedSuccess(this.level().isClientSide());
         }
-      }
-      return true;
-    }
-  }
 
-  public void move(MoverType mover, Vec3 move) {
-    if (!this.level().isClientSide() && !this.isRemoved() && move.lengthSqr() > 0.0D) {
-      this.kill();
-      this.dropItem(null);
-      this.dropAllContents(this.level(), this.pos);
-    }
-  }
+        if (heldItem.is(ZetterItems.CANVAS.get())) {
+            if (this.easelContainer.getCanvasStack().isEmpty() && this.easelContainer.isItemValid(EaselContainer.CANVAS_SLOT, heldItem)) {
+                this.easelContainer.setCanvasStack(heldItem);
+                player.setItemInHand(hand, ItemStack.EMPTY);
 
-  /**
-   * @param x
-   * @param y
-   * @param z
-   * @todo: [LOW] Rename params
-   */
-  public void push(double x, double y, double z) {
-    if (!this.level().isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
-      this.kill();
-      this.dropItem(null);
-      this.dropAllContents(this.level(), this.pos);
-    }
-  }
-
-  /**
-   * Drop an item associated with this entity
-   *
-   * @param entity
-   */
-  public void dropItem(@Nullable Entity entity) {
-    if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
-      this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
-      if (entity instanceof Player) {
-        Player player = (Player) entity;
-        if (player.getAbilities().instabuild) {
-          return;
+                return InteractionResult.sidedSuccess(this.level().isClientSide());
+            }
         }
-      }
 
-      this.spawnAtLocation(ZetterItems.EASEL.get());
+        return InteractionResult.PASS;
     }
-  }
 
-  /**
-   * When this tile entity is destroyed, drop all of its contents into the world
-   *
-   * @param level
-   * @param blockPos
-   */
-  public void dropAllContents(Level level, BlockPos blockPos) {
-    for (int i = 0; i < this.easelContainer.getSlots(); i++) {
-      Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
+    /**
+     * Check history, check that still exists,
+     * check if need to keep information
+     */
+    public void tick() {
+        super.tick();
+        this.tick++;
+
+        // No need to check correctness and players on client side
+        if (this.level().isClientSide()) {
+            return;
+        }
+
+        this.checkBelowWorld();
+        if (this.tick % 200 == 0) {
+            this.checkPlayersUsing();
+        }
+
+        if (this.tick % 100 == 0) {
+            if (!this.isRemoved() && !this.survives()) {
+                this.discard();
+                this.dropItem(null);
+                this.dropAllContents(this.level(), this.getPos());
+            }
+        }
     }
-  }
 
-  @Override
-  public ItemStack getPickResult() {
-    return new ItemStack(ZetterItems.EASEL.get());
-  }
+    public boolean survives() {
+        if (!this.level().noCollision(this)) {
+            return false;
+        } else {
+            BlockPos posBelow = this.getPos().below();
+            BlockState blockBelowState = this.level().getBlockState(posBelow);
 
-  /**
-   * Copied from armor stand
-   *
-   * @return
-   */
+            if (!blockBelowState.isSolid() && !DiodeBlock.isDiode(blockBelowState)) {
+                return false;
+            }
 
-  public SoundEvent getRemoveItemSound() {
-    return SoundEvents.ARMOR_STAND_BREAK;
-  }
+            return this.level().getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
+        }
+    }
+
+    // specific
+
+    public boolean hasCanvas() {
+        return this.getCanvasCode() != null;
+    }
+
+    public @Nullable ItemStack getCanvasStack() {
+        return this.easelContainer.getCanvasStack();
+    }
+
+    public @Nullable ItemStack getPaletteStack(Player player) {
+        return this.playersPalettes.get(player.getUUID());
+    }
+
+    public void containerChanged(ItemStackHandler easelContainer, int slot) {
+        ItemStack canvasStack = ((EaselContainer) easelContainer).getCanvasStack();
+        String newCanvasCode = null;
+        String existingCanvasCode = null;
+
+        if (!canvasStack.isEmpty()) {
+            newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
+
+            // Initialize canvas
+            if (newCanvasCode == null) {
+                CanvasItem.getCanvasData(canvasStack, this.level());
+                newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
+            }
+        }
+
+        if (this.getEaselContainer().getCanvas() != null) {
+            existingCanvasCode = this.getEaselContainer().getCanvas().code;
+        }
+
+        // @todo: [HIGH] Supposedly won't work on client if new canvas is not yet initialized, because it'll have nullish code
+        // Canvas changed, drop state
+        if (newCanvasCode == null || !newCanvasCode.equals(existingCanvasCode)) {
+            this.canvasState.reset();
+        }
+
+        this.updateEntityDataFromInventory();
+    }
+
+    /**
+     * Normally players subscribe and unsubscribe manually when stopping drawing
+     * but sometimes we might miss unsubscribing, i.e. in case of player disconnect.
+     * We are ticking updates to check if player still could be using easel.
+     *
+     * @return
+     */
+    public List<Player> checkPlayersUsing() {
+        List<Player> possiblyUsingPlayers = this.level().getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)));
+
+        /**
+         * @todo: [MED] Sending a packet just in case?
+         */
+        this.playersUsing.removeIf(player ->
+            !possiblyUsingPlayers.contains(player)
+                || !this.canPlayerAccessInventory(player)
+                || !player.isAlive()
+                || !player.getItemInHand(player.getUsedItemHand()).is(ZetterItems.PALETTE.get())
+        );
+
+        return this.playersUsing;
+    }
+
+    public void setPos(double x, double y, double z) {
+        this.pos = new BlockPos((int) x, (int) y, (int) z);
+        this.setPosRaw(x, y, z);
+        this.setBoundingBox(this.makeBoundingBox());
+        this.hasImpulse = true;
+    }
+
+    public BlockPos getPos() {
+        return this.pos;
+    }
+
+    /**
+     * Drop contents and item then die when moved or hurt
+     */
+
+    public boolean hurt(DamageSource damageSource, float pAmount) {
+        if (this.isInvulnerableTo(damageSource)) {
+            return false;
+        } else {
+            if (!this.level().isClientSide()) {
+                if (!this.isRemoved()) {
+                    this.kill();
+                    this.markHurt();
+                    this.dropItem(damageSource.getEntity());
+                    this.dropAllContents(this.level(), this.pos);
+                }
+            }
+            return true;
+        }
+    }
+
+    public void move(MoverType mover, Vec3 move) {
+        if (!this.level().isClientSide() && !this.isRemoved() && move.lengthSqr() > 0.0D) {
+            this.kill();
+            this.dropItem(null);
+            this.dropAllContents(this.level(), this.pos);
+        }
+    }
+
+    /**
+     * @param x
+     * @param y
+     * @param z
+     * @todo: [LOW] Rename params
+     */
+    public void push(double x, double y, double z) {
+        if (!this.level().isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
+            this.kill();
+            this.dropItem(null);
+            this.dropAllContents(this.level(), this.pos);
+        }
+    }
+
+    /**
+     * Drop an item associated with this entity
+     *
+     * @param entity
+     */
+    public void dropItem(@Nullable Entity entity) {
+        if (this.level().getGameRules().getBoolean(GameRules.RULE_DOENTITYDROPS)) {
+            this.playSound(SoundEvents.PAINTING_BREAK, 1.0F, 1.0F);
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
+                if (player.getAbilities().instabuild) {
+                    return;
+                }
+            }
+
+            this.spawnAtLocation(ZetterItems.EASEL.get());
+        }
+    }
+
+    /**
+     * When this tile entity is destroyed, drop all of its contents into the world
+     *
+     * @param level
+     * @param blockPos
+     */
+    public void dropAllContents(Level level, BlockPos blockPos) {
+        for (int i = 0; i < this.easelContainer.getSlots(); i++) {
+            Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
+        }
+    }
+
+    @Override
+    public ItemStack getPickResult() {
+        return new ItemStack(ZetterItems.EASEL.get());
+    }
+
+    /**
+     * Copied from armor stand
+     *
+     * @return
+     */
+
+    public SoundEvent getRemoveItemSound() {
+        return SoundEvents.ARMOR_STAND_BREAK;
+    }
 }

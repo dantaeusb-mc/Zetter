@@ -29,8 +29,8 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
   final static int ZOOM_BUTTON_WIDTH = 12;
   final static int ZOOM_BUTTON_HEIGHT = 12;
 
-  final static int ZOOM_BUTTONS_U = 208;
-  final static int ZOOM_BUTTONS_V = 197;
+  final static int ZOOM_BUTTONS_U = 0;
+  final static int ZOOM_BUTTONS_V = 202;
 
   public ZoomWidget(PaintingScreen parentScreen, int x, int y) {
     // Add borders
@@ -39,12 +39,12 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
     this.buttons = new ArrayList<>() {{
       add(new ZoomButton(
           ZoomWidget.this::canIncreaseCanvasScale, ZoomWidget.this::increaseCanvasScale,
-          ZOOM_BUTTONS_U, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
+          ZOOM_BUTTONS_U + ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
           Component.translatable("container.zetter.painting.zoom.in"))
       );
       add(new ZoomButton(
           ZoomWidget.this::canDecreaseCanvasScale, ZoomWidget.this::decreaseCanvasScale,
-          ZOOM_BUTTONS_U + ZOOM_BUTTON_WIDTH, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
+          ZOOM_BUTTONS_U + ZOOM_BUTTON_WIDTH * 3, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH, ZOOM_BUTTON_HEIGHT,
           Component.translatable("container.zetter.painting.zoom.out"))
       );
     }};
@@ -165,18 +165,16 @@ public class ZoomWidget extends AbstractPaintingWidget implements Renderable {
     RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
     RenderSystem.setShaderTexture(0, AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE);
 
-    guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), ZOOM_BUTTONS_U - ZOOM_BUTTON_WIDTH * 2, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
+    guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), ZOOM_BUTTONS_U, ZOOM_BUTTONS_V, ZOOM_BUTTON_WIDTH * this.buttons.size(), ZOOM_BUTTON_HEIGHT);
+
+    if (this.parentScreen.getEaselState().canvasMode() != PaintingScreen.CanvasMode.OVERLAY) {
+      return;
+    }
 
     int i = 0;
     for (ZoomButton zoomButton : this.buttons) {
       int fromX = this.getX() + i * ZOOM_BUTTON_WIDTH;
-      int uOffset;
-
-      if (this.parentScreen.getEaselState().canvasMode() == PaintingScreen.CanvasMode.OVERLAY) {
-        uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);
-      } else {
-        uOffset = zoomButton.uPosition - ZOOM_BUTTON_WIDTH * 2;
-      }
+      int uOffset = zoomButton.uPosition + (zoomButton.active.get() ? 0 : ZOOM_BUTTON_WIDTH * 2);;
 
       guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, fromX, this.getY(), uOffset, zoomButton.vPosition, zoomButton.width, zoomButton.height);
       i++;

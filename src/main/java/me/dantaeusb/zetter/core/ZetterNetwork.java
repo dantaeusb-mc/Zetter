@@ -19,7 +19,7 @@ public class ZetterNetwork {
     public static SimpleChannel simpleChannel;
     // @todo: [LOW] Rename this on release, it's zetter:zetter_channel 0.1
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
-    public static final String MESSAGE_PROTOCOL_VERSION = "0.3";
+    public static final String MESSAGE_PROTOCOL_VERSION = "0.4";
 
     public static final byte PAINTING_FRAME = 21;
     public static final byte CANVAS_REQUEST = 22;
@@ -47,6 +47,11 @@ public class ZetterNetwork {
     public static final byte CANVAS_REQUEST_EXPORT = 40;
     public static final byte CANVAS_EXPORT = 41;
     public static final byte CANVAS_EXPORT_ERROR = 42;
+
+    public static final byte CANVAS_HOLDER_USE_PALETTE = 43;
+    public static final byte CANVAS_HOLDER_ACCEPT_USE = 44;
+
+    public static final byte CANVAS_HOLDER_STOP_USING = 45;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -146,6 +151,16 @@ public class ZetterNetwork {
         simpleChannel.registerMessage(CANVAS_EXPORT_ERROR, SCanvasSyncExportErrorPacket.class,
             SCanvasSyncExportErrorPacket::writePacketData, SCanvasSyncExportErrorPacket::readPacketData,
             SCanvasSyncExportErrorPacket::handle,
+            Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(CANVAS_HOLDER_USE_PALETTE, CPaletteUseCanvasHolderPacket.class,
+            CPaletteUseCanvasHolderPacket::writePacketData, CPaletteUseCanvasHolderPacket::readPacketData,
+            CPaletteUseCanvasHolderPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
+
+        simpleChannel.registerMessage(CANVAS_HOLDER_ACCEPT_USE, SCanvasHolderAcceptPacket.class,
+            SCanvasHolderAcceptPacket::writePacketData, SCanvasHolderAcceptPacket::readPacketData,
+            SCanvasHolderAcceptPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
     }
 

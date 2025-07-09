@@ -54,10 +54,7 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      * Returns palette damage!
      */
     public int apply(CanvasData canvas, T params, int color, float posX, float posY) {
-        int result = this.useTool(canvas, params, color, posX, posY);
-        this.applyListeners(canvas, params, color, posX, posY);
-
-        return result;
+        return useTool(canvas, params, color, posX, posY);
     }
 
     protected abstract int useTool(CanvasData canvas, T params, int color, float posX, float posY);
@@ -93,28 +90,6 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      * Get cursor shape
      */
     public abstract ToolShape getShape(T params);
-
-    private void applyListeners(CanvasData canvas, T params, int color, float posX, float posY) {
-        for (ActionListener actionListener : this.actionListeners) {
-            actionListener.useToolCallback(canvas, this, params, color, posX, posY);
-        }
-    }
-
-    public void addActionListener(ActionListener actionListener) {
-        if (this.actionListeners.contains(actionListener)) {
-            return;
-        }
-
-        this.actionListeners.add(actionListener);
-    }
-
-    public void removeActionListener(ActionListener actionListener) {
-        if (!this.actionListeners.contains(actionListener)) {
-            return;
-        }
-
-        this.actionListeners.remove(actionListener);
-    }
 
     public static class ToolShape {
         protected final int[][] matrix;

@@ -6,6 +6,7 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -18,6 +19,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -112,6 +114,38 @@ public class ServerHandler {
             SCanvasSyncViewPacket canvasSyncViewMessage = new SCanvasSyncViewPacket(canvasName, canvasData, System.currentTimeMillis(), packetIn.getHand());
 
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncViewMessage);
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * When player uses palette item on canvas holder
+     * we need to update canvas holder's palette and
+     * add player to current users
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    public static void processPaletteUseCanvasHolder(final CPaletteUseCanvasHolderPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            ItemStack paletteStack = Helper.lookupPaletteStackByPlayer(sendingPlayer, PaletteItem.getPaletteUuid(packetIn.getPaletteStack()));
+
+            if (paletteStack.isEmpty()) {
+                Zetter.LOG.error("Unable to process palette use canvas holder - item in slot is not a palette");
+                return;
+            }
+
+            Entity canvasHolder = sendingPlayer.level().getEntity(packetIn.getCanvasHolderId());
+
+            if (!(canvasHolder instanceof CanvasHolderEntity)) {
+                Zetter.LOG.error("Unable to process palette use canvas holder - entity is not found or not a canvas holder");
+                return;
+            }
+
+            ((CanvasHolderEntity) canvasHolder).addPlayerUsing(sendingPlayer, paletteStack);
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), new SCanvasHolderAcceptPacket(canvasHolder.getId(), paletteStack));
         } catch (Exception e) {
             Zetter.LOG.error(e.getMessage());
             throw e;

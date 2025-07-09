@@ -2,10 +2,13 @@ package me.dantaeusb.zetter.network;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
+import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
+import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
@@ -13,6 +16,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -49,6 +55,7 @@ public class ClientHandler {
     /**
      * Process SCanvasSyncViewMessage, open screen depending on
      * the type of canvas (basic or painting)
+     *
      * @param packetIn
      * @param world
      */
@@ -70,8 +77,46 @@ public class ClientHandler {
     }
 
     /**
+     * Processes acknowledge that the canvas holder registered that this player
+     * is using a certain palette (that it now tracks) for painting.
+     * @param packetIn
+     * @param world
+     */
+    public static void processCanvasHolderAcceptPacket(final SCanvasHolderAcceptPacket packetIn, Level world) {
+        try {
+            assert Minecraft.getInstance().player != null;
+            ItemStack paletteStack = Helper.lookupPaletteStackByPlayer(Minecraft.getInstance().player, PaletteItem.getPaletteUuid(packetIn.getPaletteStack()));
+
+            if (paletteStack.isEmpty()) {
+                Zetter.LOG.error("Unable to process palette use canvas holder - item in slot is not a palette");
+                return;
+            }
+
+            Entity canvasHolder = world.getEntity(packetIn.getCanvasHolderId());
+
+            if (!(canvasHolder instanceof CanvasHolderEntity)) {
+                Zetter.LOG.error("Unable to process palette use canvas holder - entity is not found or not a canvas holder");
+                return;
+            }
+
+            ((CanvasHolderEntity) canvasHolder).addPlayerUsing(
+                Minecraft.getInstance().player,
+                paletteStack
+            );
+
+            Minecraft.getInstance().setScreen(
+                new PaintingScreen(paletteStack, (CanvasHolderEntity) canvasHolder)
+            );
+        } catch (Exception e) {
+            Zetter.LOG.error(e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
      * Process SCanvasSyncViewMessage, open screen depending on
      * the type of canvas (basic or painting)
+     *
      * @param packetIn
      * @param world
      */
@@ -124,7 +169,6 @@ public class ClientHandler {
     }
 
     /**
-     *
      * @param packetIn
      * @param world
      */
@@ -145,6 +189,7 @@ public class ClientHandler {
 
     /**
      * Undo and redo packets from other players
+     *
      * @param packetIn
      * @param world
      */
@@ -192,6 +237,7 @@ public class ClientHandler {
 
     /**
      * When the canvas
+     *
      * @param packetIn
      * @param world
      */

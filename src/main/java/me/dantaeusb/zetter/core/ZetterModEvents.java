@@ -19,10 +19,25 @@ public class ZetterModEvents {
      * @param event
      */
     @SubscribeEvent
-    public static void onCanvasPostRegistered(CanvasRegisterEvent.Post event) {
+    public static void onPaintingCanvasRegistered(CanvasRegisterEvent.Post event) {
         if (!event.level.isClientSide() && event.canvasData instanceof PaintingData) {
             PaintingRegistry registry = Helper.getLevelPaintingRegistry(event.level);
             registry.addPaintingCanvasCode(event.canvasCode);
+        }
+    }
+
+    /**
+     * On client side – if we register a canvas that was requested during crafting in grid,
+     * we need to update combined canvas preview.
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onStitchedCanvasRegistered(CanvasRegisterEvent.Post event) {
+        if (event.level.isClientSide()) {
+            ClientCombinedCanvasHelper.getInstance().handleCanvasRegistration(
+                event.canvasCode,
+                event.canvasData
+            );
         }
     }
 }

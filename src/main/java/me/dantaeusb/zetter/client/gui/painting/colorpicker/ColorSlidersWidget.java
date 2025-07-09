@@ -17,17 +17,30 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
   private final SliderWidget saturationSlider;
   private final SliderWidget lightnessSlider;
 
-  private final static int SLIDER_POSITION_X = 7;
+  private final static int SLIDER_POSITION_X = 5;
   private final static int SLIDER_DISTANCE_GAP = 14;
+
+  private final PaletteWidget paletteWidget;
+  private final ColorCodeWidget colorCodeWidget;
 
   public ColorSlidersWidget(PaintingScreen parentScreen, int x, int y) {
     super(parentScreen, x, y, 164, 120, Component.translatable("screen.zetter.painting.color_picker.sliders"));
+
+    final int PALETTE_WIDGET_POSITION_X = 31;
+    final int PALETTE_WIDGET_POSITION_Y = 95;
+
+    this.paletteWidget = new PaletteWidget(
+        parentScreen,
+        x + PALETTE_WIDGET_POSITION_X,
+        y + PALETTE_WIDGET_POSITION_Y,
+        PaletteWidget.Orientation.HORIZONTAL
+    );
 
     this.hueSlider = new SliderWidget(
         parentScreen,
         x + SLIDER_POSITION_X,
         y + SLIDER_DISTANCE_GAP,
-        Component.translatable("screen.zetter.painting.color_picker.hue"),
+        Component.translatable("screen.zetter.painting.color_picker.sliders.hue"),
         this::getHue,
         this::updateHue,
         SliderWidget.Orientation.HORIZONTAL,
@@ -39,7 +52,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         parentScreen,
         x + SLIDER_POSITION_X,
         y + SliderWidget.HORIZONTAL_HEIGHT + SLIDER_DISTANCE_GAP * 2,
-        Component.translatable("screen.zetter.painting.color_picker.saturation"),
+        Component.translatable("screen.zetter.painting.color_picker.sliders.saturation"),
         this::getSaturation,
         this::updateSaturation,
         SliderWidget.Orientation.HORIZONTAL,
@@ -51,12 +64,18 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         parentScreen,
         x + SLIDER_POSITION_X,
         y + SliderWidget.HORIZONTAL_HEIGHT * 2 + SLIDER_DISTANCE_GAP * 3,
-        Component.translatable("screen.zetter.painting.color_picker.lightness"),
+        Component.translatable("screen.zetter.painting.color_picker.sliders.lightness"),
         this::getLightness,
         this::updateLightness,
         SliderWidget.Orientation.HORIZONTAL,
         this::renderLightnessSliderBackground,
         null
+    );
+
+    this.colorCodeWidget = new ColorCodeWidget(
+        parentScreen,
+        x + 164 - ColorCodeWidget.TEXTBOX_WIDTH - SLIDER_POSITION_X,
+        y + SliderWidget.HORIZONTAL_HEIGHT * 3 + SLIDER_DISTANCE_GAP * 3 + 4
     );
   }
 
@@ -175,9 +194,46 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
 
   @Override
   public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.hueSlider.getMessage().getString(),
+        this.getX() + SLIDER_POSITION_X,
+        this.getY() + 4,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
     this.hueSlider.render(guiGraphics, mouseX, mouseY, partialTick);
+
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.saturationSlider.getMessage().getString(),
+        this.getX() + SLIDER_POSITION_X,
+        this.getY() + SliderWidget.HORIZONTAL_HEIGHT + SLIDER_DISTANCE_GAP + 4,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
     this.saturationSlider.render(guiGraphics, mouseX, mouseY, partialTick);
+
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.lightnessSlider.getMessage().getString(),
+        this.getX() + SLIDER_POSITION_X,
+        this.getY() + SliderWidget.HORIZONTAL_HEIGHT * 2 + SLIDER_DISTANCE_GAP * 2 + 4,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
     this.lightnessSlider.render(guiGraphics, mouseX, mouseY, partialTick);
+
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.colorCodeWidget.getMessage(),
+        this.getX() + SLIDER_POSITION_X,
+        this.getY() + SliderWidget.HORIZONTAL_HEIGHT * 3 + SLIDER_DISTANCE_GAP * 3 + 8,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
+    this.colorCodeWidget.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
+    this.paletteWidget.render(guiGraphics, mouseX, mouseY, partialTick);
   }
 
   public void renderHueSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {

@@ -1,24 +1,18 @@
 package me.dantaeusb.zetter.item.crafting;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
+import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.item.PaintingItem;
-import me.dantaeusb.zetter.item.PaletteItem;
-import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.GsonHelper;
 import net.minecraft.world.inventory.CraftingContainer;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
@@ -28,231 +22,95 @@ import java.util.Arrays;
 /**
  * Only for frames, toggle
  */
-public class CopyingRecipe extends CustomRecipe {
-    private final Ingredient inputPainting;
-    private final Ingredient inputCanvas;
-    private final Ingredient inputPalette;
+public class StitchingRecipe extends CustomRecipe {
+    final int[][] shapes;
 
-    public CopyingRecipe(ResourceLocation id, Ingredient inputPainting, Ingredient inputCanvas, Ingredient inputPalette) {
+    public StitchingRecipe(ResourceLocation id, int[][] shapes) {
         super(id, CraftingBookCategory.MISC);
 
-        this.inputPainting = inputPainting;
-        this.inputCanvas = inputCanvas;
-        this.inputPalette = inputPalette;
+        this.shapes = shapes;
     }
 
     @Override
     public String toString() {
-        return "FramingRecipe [inputPainting=" + this.inputPainting + ", inputCanvas=" + this.inputCanvas + ", inputPalette=" + this.inputPalette + "]";
+        return "StitchingRecipe [shapes=" + Arrays.deepToString(this.shapes) + "]";
+    }
+
+    @Override
+    public boolean isSpecial() {
+        return false;
+    }
+
+    @Override
+    public @NotNull ItemStack getResultItem(@NotNull RegistryAccess registryAccess) {
+        return new ItemStack(ZetterItems.CANVAS.get());
     }
 
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingContainer craftingInventory, Level world) {
-        ItemStack paintingStack = ItemStack.EMPTY;
-        ItemStack canvasStack = ItemStack.EMPTY;
-        ItemStack paletteStack = ItemStack.EMPTY;
+    public boolean matches(@NotNull CraftingContainer craftingInventory, @NotNull Level world) {
+        CombinedCanvasHelper.CanvasGridRectangle canvasGridRectangle = CombinedCanvasHelper.getCraftingContainerCanvasRectangle(craftingInventory);
 
-        for (int i = 0; i < craftingInventory.getContainerSize(); ++i) {
-            if (craftingInventory.getItem(i).isEmpty()) {
-                continue;
-            }
+        if (canvasGridRectangle == null) {
+            return false;
+        }
 
-            if (this.inputPainting.test(craftingInventory.getItem(i))) {
-                if (!paintingStack.isEmpty()) {
-                    return false;
-                }
+        int blockWidth = canvasGridRectangle.width * canvasGridRectangle.canvasBlockSize[0];
+        int blockHeight = canvasGridRectangle.height * canvasGridRectangle.canvasBlockSize[1];
 
-                paintingStack = craftingInventory.getItem(i);
-            } else if (this.inputCanvas.test(craftingInventory.getItem(i))) {
-                if (!canvasStack.isEmpty()) {
-                    return false;
-                }
+        // Just a single canvas
+        if (blockWidth == canvasGridRectangle.canvasBlockSize[0] && blockHeight == canvasGridRectangle.canvasBlockSize[1]) {
+            return false;
+        }
 
-                canvasStack = craftingInventory.getItem(i);
-            } else if (this.inputPalette.test(craftingInventory.getItem(i))) {
-                if (!paletteStack.isEmpty()) {
-                    return false;
-                }
-
-                paletteStack = craftingInventory.getItem(i);
-            } else {
-                // We have something else in the grid
-                return false;
+        // Final block size should be of allowed shapes
+        boolean shapeAvailable = false;
+        for (int[] shape : this.shapes) {
+            if (blockWidth == shape[0] && blockHeight == shape[1]) {
+                shapeAvailable = true;
+                break;
             }
         }
 
-        // Check that we actually have items
-        if (paintingStack.isEmpty() || canvasStack.isEmpty() || paletteStack.isEmpty()) {
+        if (!shapeAvailable) {
             return false;
         }
 
-        // There's no painting data
-        if (PaintingItem.isEmpty(paintingStack)) {
-            return false;
-        }
-
-        // Canvas to copy is not empty and could be overwritten
-        if (!CanvasItem.isEmpty(canvasStack)) {
-            return false;
-        }
-
-        // Check if we have enough paints in palette
-        int paletteDamage = paletteStack.getDamageValue();
-        final int maxDamage = paletteStack.getMaxDamage() - 1;
-        int newDamage = paletteDamage + calculatePaletteDamage(paintingStack);
-
-        if (newDamage > maxDamage) {
-            return false;
-        }
-
-        // Check that the sizes are equal
-        int[] paintingSize = PaintingItem.getBlockSize(paintingStack);
-        int[] canvasSize = CanvasItem.getBlockSize(canvasStack);
-
-        if (!Arrays.equals(paintingSize, canvasSize)) {
-            return false;
+        if (world.isClientSide()) {
+            ClientCombinedCanvasHelper.getInstance().getOrRequestCombinedCanvas(craftingInventory, world);
         }
 
         return true;
     }
 
     /**
-     * Returns an Item that is the result of this recipe
+     * Returns an Item that is the result of this recipe.
+     * The actual canvas on that item will be written after the recipe is actually used,
+     * by handling an event (Forge: PlayerContainerEvent.ItemCraftedEvent)
+     *
+     * I am avoiding full canvas registration here, as that would trash the canvas data
+     * storage with potentially thousands of discarded canvases.
      */
-    public @NotNull ItemStack assemble(CraftingContainer craftingInventory, RegistryAccess registryAccess) {
-        ItemStack paintingStack = ItemStack.EMPTY;
-        ItemStack canvasStack = ItemStack.EMPTY;
-        ItemStack paletteStack = ItemStack.EMPTY;
+    public @NotNull ItemStack assemble(@NotNull CraftingContainer craftingInventory, @NotNull RegistryAccess registryAccess) {
+        CombinedCanvasHelper.CanvasGridRectangle canvasGridRectangle = CombinedCanvasHelper.getCraftingContainerCanvasRectangle(craftingInventory);
 
-        for (int i = 0; i < craftingInventory.getContainerSize(); ++i) {
-            if (this.inputPainting.test(craftingInventory.getItem(i))) {
-                if (!paintingStack.isEmpty()) {
-                    return ItemStack.EMPTY;
-                }
-
-                paintingStack = craftingInventory.getItem(i);
-            } else if (this.inputCanvas.test(craftingInventory.getItem(i))) {
-                if (!canvasStack.isEmpty()) {
-                    return ItemStack.EMPTY;
-                }
-
-                canvasStack = craftingInventory.getItem(i);
-            } else if (this.inputPalette.test(craftingInventory.getItem(i))) {
-                if (!paletteStack.isEmpty()) {
-                    return ItemStack.EMPTY;
-                }
-
-                paletteStack = craftingInventory.getItem(i);
-            }
-        }
-
-        if (paintingStack.isEmpty() || !paintingStack.hasTag()) {
+        if (canvasGridRectangle == null) {
             return ItemStack.EMPTY;
         }
 
-        // There's no painting data
-        if (PaintingItem.isEmpty(paintingStack)) {
-            return ItemStack.EMPTY;
-        }
+        ItemStack outCanvas = new ItemStack(ZetterItems.CANVAS.get());
+        outCanvas.setCount(1);
+        CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
+        CanvasItem.setBlockSize(outCanvas, canvasGridRectangle.canvasBlockSize[0], canvasGridRectangle.canvasBlockSize[1]);
 
-        // Canvas to copy is not empty and could be overwritten
-        if (!CanvasItem.isEmpty(canvasStack)) {
-            return ItemStack.EMPTY;
-        }
-
-        // Check if we have enough paints in palette
-        int paletteDamage = paletteStack.getDamageValue();
-        final int maxDamage = paletteStack.getMaxDamage() - 1;
-        int newDamage = paletteDamage + calculatePaletteDamage(paintingStack);
-
-        if (newDamage > maxDamage) {
-            return ItemStack.EMPTY;
-        }
-
-        int[] paintingSize = PaintingItem.getBlockSize(paintingStack);
-        int[] canvasSize = CanvasItem.getBlockSize(canvasStack);
-
-        if (!Arrays.equals(paintingSize, canvasSize)) {
-            return ItemStack.EMPTY;
-        }
-
-        ItemStack outStack = paintingStack.copy();
-        outStack.setCount(1);
-
-        CompoundTag compoundTag = paintingStack.getTag().copy();
-        outStack.setTag(compoundTag);
-
-        int generation = Math.min(PaintingItem.GENERATION_COPY_OF_COPY, PaintingItem.getGeneration(paintingStack) + 1);
-        PaintingItem.setGeneration(outStack, generation);
-
-        return outStack;
-    }
-
-    @Override
-    public NonNullList<ItemStack> getRemainingItems(CraftingContainer inv) {
-        NonNullList<ItemStack> remainingItems = NonNullList.withSize(inv.getContainerSize(), ItemStack.EMPTY);
-        ItemStack originalPaintingStack = null;
-        ItemStack paletteStack = null;
-        int paletteDamage = 0;
-
-        for (int i = 0; i < remainingItems.size(); ++i) {
-            ItemStack stackInSlot = inv.getItem(i);
-
-            if (stackInSlot.getItem() instanceof PaintingItem) {
-                Item originalPainting = stackInSlot.getItem();
-
-                originalPaintingStack = new ItemStack(originalPainting);
-                originalPaintingStack.setCount(1);
-
-                CompoundTag compoundTag = stackInSlot.getTag().copy();
-
-                originalPaintingStack.setTag(compoundTag);
-
-                remainingItems.set(i, originalPaintingStack);
-            } else if (stackInSlot.getItem() instanceof PaletteItem) {
-                Item palette = stackInSlot.getItem();
-                paletteDamage = stackInSlot.getDamageValue();
-
-                paletteStack = new ItemStack(palette);
-                paletteStack.setCount(1);
-
-                CompoundTag compoundTag = stackInSlot.getTag().copy();
-
-                paletteStack.setTag(compoundTag);
-                paletteStack.setDamageValue(stackInSlot.getDamageValue());
-
-                remainingItems.set(i, paletteStack);
-            }
-        }
-
-        if (originalPaintingStack != null && paletteStack != null) {
-            final int maxDamage = paletteStack.getMaxDamage() - 1;
-            int newDamage = paletteDamage + calculatePaletteDamage(originalPaintingStack);
-            newDamage = Math.min(newDamage, maxDamage);
-
-            paletteStack.setDamageValue(newDamage);
-        }
-
-        return remainingItems;
-    }
-
-    private static int calculatePaletteDamage(ItemStack painting) {
-        int[] paintingSize = PaintingItem.getBlockSize(painting);
-
-        if (paintingSize == null || paintingSize.length != 2) {
-            Zetter.LOG.error("Cannot find painting size to damage palette");
-            return 0;
-        }
-
-        return (paintingSize[0] * PaintingItem.getResolution(painting)) * (paintingSize[1] * PaintingItem.getResolution(painting));
+        return outCanvas;
     }
 
     /**
      * @return
      */
-    public RecipeSerializer<?> getSerializer() {
+    public @NotNull RecipeSerializer<?> getSerializer() {
         return ZetterCraftingRecipes.COPYING.get();
     }
 
@@ -260,37 +118,56 @@ public class CopyingRecipe extends CustomRecipe {
      * Used to determine if this recipe can fit in a grid of the given width/height
      */
     public boolean canCraftInDimensions(int width, int height) {
-        return width >= 2 && height >= 2;
+        return width >= 2 || height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<CopyingRecipe> {
+    public static class Serializer implements RecipeSerializer<StitchingRecipe> {
         @Override
-        public CopyingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputPaintingJson = GsonHelper.getAsJsonObject(json, "painting");
-            final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
+        public @NotNull StitchingRecipe fromJson(@NotNull ResourceLocation recipeId, @NotNull JsonObject json) {
+            final JsonArray shapesJson = GsonHelper.getAsJsonArray(json, "shapes");
+            final int[][] shapes = new int[shapesJson.size()][2];
 
-            final JsonElement inputCanvasJson = GsonHelper.getAsJsonObject(json, "canvas");
-            final Ingredient inputCanvas = Ingredient.fromJson(inputCanvasJson);
+            for (int i = 0; i < shapesJson.size(); i++) {
+                JsonElement shapeElement = shapesJson.get(i);
+                if (shapeElement.isJsonArray()) {
+                    JsonArray shapeArray = shapeElement.getAsJsonArray();
+                    if (shapeArray.size() == 2) {
+                        shapes[i][0] = GsonHelper.convertToInt(shapeArray.get(0), "width");
+                        shapes[i][1] = GsonHelper.convertToInt(shapeArray.get(1), "height");
+                    } else {
+                        throw new IllegalArgumentException("Shape must be an array of two integers: [width, height]");
+                    }
+                } else {
+                    throw new IllegalArgumentException("Shape must be an array: " + shapeElement);
+                }
+            }
 
-            final JsonElement inputPaletteJson = GsonHelper.getAsJsonObject(json, "palette");
-            final Ingredient inputPalette = Ingredient.fromJson(inputPaletteJson);
-
-            return new CopyingRecipe(recipeId, inputPainting, inputCanvas, inputPalette);
+            return new StitchingRecipe(recipeId, shapes);
         }
 
         @Override
-        public CopyingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
-            Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
-            Ingredient canvasIngredient = Ingredient.fromNetwork(buffer);
-            Ingredient paletteIngredient = Ingredient.fromNetwork(buffer);
-            return new CopyingRecipe(recipeId, paintingIngredient, canvasIngredient, paletteIngredient);
+        public StitchingRecipe fromNetwork(@NotNull ResourceLocation recipeId, FriendlyByteBuf buffer) {
+            int shapeCount = buffer.readVarInt();
+            int[][] shapes = new int[shapeCount][2];
+
+            for (int i = 0; i < shapeCount; i++) {
+                shapes[i][0] = buffer.readVarInt();
+                shapes[i][1] = buffer.readVarInt();
+            }
+
+            return new StitchingRecipe(recipeId, shapes);
         }
 
         @Override
-        public void toNetwork(FriendlyByteBuf buffer, CopyingRecipe recipe) {
-            recipe.inputPainting.toNetwork(buffer);
-            recipe.inputCanvas.toNetwork(buffer);
-            recipe.inputPalette.toNetwork(buffer);
+        public void toNetwork(FriendlyByteBuf buffer, StitchingRecipe recipe) {
+            buffer.writeVarInt(recipe.shapes.length);
+            for (int[] shape : recipe.shapes) {
+                if (shape.length != 2) {
+                    throw new IllegalArgumentException("Shape must be an array of two integers: [width, height]");
+                }
+                buffer.writeVarInt(shape[0]);
+                buffer.writeVarInt(shape[1]);
+            }
         }
     }
 }

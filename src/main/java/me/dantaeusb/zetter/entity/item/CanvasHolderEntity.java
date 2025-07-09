@@ -36,14 +36,17 @@ public abstract class CanvasHolderEntity extends Entity {
     return this.playersUsing;
   }
 
-  public void addPlayerUsing(Player player) {
+  public void addPlayerUsing(Player player, ItemStack paletteStack) {
     if (!this.playersUsing.contains(player)) {
       this.playersUsing.add(player);
     }
+
+    this.playersPalettes.put(player.getUUID(), paletteStack);
   }
 
   public void removePlayerUsing(Player player) {
     this.playersUsing.remove(player);
+    this.playersPalettes.remove(player.getUUID());
   }
 
   public CanvasState getCanvasState() {
@@ -99,6 +102,11 @@ public abstract class CanvasHolderEntity extends Entity {
    */
   public abstract ItemStack getPaletteStack(Player player);
 
+  /**
+   * For the reasons of rapidly declining mental function,
+   * this returns bottom left corner of the canvas.
+   * @return
+   */
   public abstract Vector3f getCanvasOffset();
 
   public abstract Vector3f getCanvasNormal();

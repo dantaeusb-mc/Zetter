@@ -13,14 +13,10 @@ public record CanvasOverlayState(
     int canvasScale
 ) {
     public static final int MIN_SCALE = 1;
-    public static final int MAX_SCALE = 3;
+    public static final int MAX_SCALE = 6;
 
-    public CanvasOverlayState withCanvasOffsetX(int canvasOffsetX) {
-        return new CanvasOverlayState(canvasOffsetX, this.canvasOffsetY, this.canvasScale);
-    }
-
-    public CanvasOverlayState withCanvasOffsetY(int canvasOffsetY) {
-        return new CanvasOverlayState(this.canvasOffsetX, canvasOffsetY, this.canvasScale);
+    public CanvasOverlayState withCanvasOffset(int canvasOffsetX, int canvasOffsetY) {
+        return new CanvasOverlayState(canvasOffsetX, canvasOffsetY, this.canvasScale);
     }
 
     public CanvasOverlayState withCanvasScale(int canvasScale) {

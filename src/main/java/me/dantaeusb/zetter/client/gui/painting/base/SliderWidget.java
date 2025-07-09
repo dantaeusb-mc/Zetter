@@ -16,11 +16,14 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
   /**
    * Size in horizontal mode, swapped in vertical mode
    */
-  public final static int HORIZONTAL_WIDTH = 150;
+  public final static int HORIZONTAL_WIDTH = 156;
   public final static int HORIZONTAL_HEIGHT = 9;
 
   public final static int VERTICAL_WIDTH = 9;
   public final static int VERTICAL_HEIGHT = 120;
+
+  protected final static int SLIDER_CONTENT_SIDE_OFFSET = 1;
+  protected final static int SLIDER_CONTENT_PADDING = SLIDER_CONTENT_SIDE_OFFSET + 1;
 
   private final Orientation orientation;
 
@@ -88,10 +91,28 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
   }
 
   @Override
+  public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+    if (!this.sliderDragging) {
+      return false;
+    }
+
+    return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+  }
+
+  @Override
   protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
     if (this.sliderDragging) {
       this.handleSliderInteraction(mouseX, mouseY);
     }
+  }
+
+  @Override
+  public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    if (!this.sliderDragging) {
+      return false;
+    }
+
+    return super.mouseReleased(mouseX, mouseY, button);
   }
 
   @Override
@@ -105,12 +126,12 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
   }
 
   protected void drawSliderBackground(GuiGraphics guiGraphics) {
-    final int SLIDER_HORIZONTAL_POSITION_U = 106;
+    final int SLIDER_HORIZONTAL_POSITION_U = 102;
     final int SLIDER_HORIZONTAL_POSITION_V = 120;
     final int SLIDER_VERTICAL_POSITION_U = 72;
     final int SLIDER_VERTICAL_POSITION_V = 120;
 
-    int sliderContentGlobalLeft = this.getX() + 3;
+    int sliderContentGlobalLeft = this.getX() + SLIDER_CONTENT_SIDE_OFFSET;
     int sliderContentGlobalTop = this.getY() + 3;
 
     float value = this.valueSupplier.get();
@@ -125,7 +146,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
       guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_WIDTH, HORIZONTAL_HEIGHT);
 
       if (this.backgroundLambda != null) {
-        int sliderContentWidth = HORIZONTAL_WIDTH - 6;
+        int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2;
         int sliderContentHeight = 3;
 
         if (this.sliderDragging) {
@@ -146,7 +167,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
 
       if (this.backgroundLambda != null) {
         int sliderContentWidth = 3;
-        int sliderContentHeight = VERTICAL_HEIGHT - 6;
+        int sliderContentHeight = VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2;
 
         if (this.sliderDragging) {
           sliderContentGlobalLeft -= 2;
@@ -168,9 +189,9 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     float percent;
 
     if (this.orientation == Orientation.HORIZONTAL) {
-      percent = (float) (mouseX - this.getX() - 3) / (HORIZONTAL_WIDTH - 7);
+      percent = (float) (mouseX - this.getX() - SLIDER_CONTENT_SIDE_OFFSET) / (HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2);
     } else {
-      percent = 1.0f - (float) (mouseY - this.getY() - 3) / (VERTICAL_HEIGHT - 7);
+      percent = 1.0f - (float) (mouseY - this.getY() - 3) / (VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2);
     }
 
     percent = Mth.clamp(percent, 0.0f, 1.0f);
@@ -191,12 +212,14 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     final int HANDLER_WIDTH = 5;
     final int HANDLER_HEIGHT = 11;
 
+    final int HANDLER_OFFSET = 2;
+
     float value = this.valueSupplier.get();
 
     if (this.orientation == Orientation.HORIZONTAL) {
-      int sliderContentWidth = HORIZONTAL_WIDTH - 7;
+      int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
 
-      int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * value) + 3 - 2;
+      int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * value) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
       int sliderGlobalTop = this.getY() - 1;
 
       int sliderV = HANDLER_HORIZONTAL_POSITION_V;

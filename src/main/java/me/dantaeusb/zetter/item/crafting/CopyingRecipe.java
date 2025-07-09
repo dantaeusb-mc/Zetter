@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
+import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.item.PaletteItem;
@@ -44,6 +45,16 @@ public class CopyingRecipe extends CustomRecipe {
     @Override
     public String toString() {
         return "FramingRecipe [inputPainting=" + this.inputPainting + ", inputCanvas=" + this.inputCanvas + ", inputPalette=" + this.inputPalette + "]";
+    }
+
+    @Override
+    public boolean isSpecial() {
+        return false;
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess registryAccess) {
+        return new ItemStack(ZetterItems.PAINTING.get());
     }
 
     /**

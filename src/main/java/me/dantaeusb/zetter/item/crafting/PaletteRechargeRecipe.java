@@ -37,6 +37,16 @@ public class PaletteRechargeRecipe extends CustomRecipe {
         return "PaletteRechargeRecipe [inputPalette=" + this.inputPalette + ", inputRecharge=" + this.inputRecharge + "]";
     }
 
+    @Override
+    public boolean isSpecial() {
+        return false;
+    }
+
+    @Override
+    public ItemStack getResultItem(RegistryAccess registryAccess) {
+        return new ItemStack(ZetterItems.PALETTE.get());
+    }
+
     /**
      * Used to check if a recipe matches current crafting inventory
      */
