@@ -4,9 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.crafting.StitchingRecipe;
-import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
@@ -60,28 +58,19 @@ public class ZetterGameEvents {
     @SubscribeEvent
     public static void onItemCraftedEvent(PlayerContainerEvent.ItemCraftedEvent event) {
         Player player = event.getEntity();
+
         if (player == null || player.level().isClientSide()) {
             return;
         }
 
-        if (event.getCrafting().is(ZetterItems.CANVAS.get()) && event.getInventory() instanceof CraftingContainer) {
+        if (event.getCrafting().is(ZetterItems.CANVAS.get()) && event.getInventory() instanceof CraftingContainer craftingContainer) {
             player.level().getRecipeManager().getRecipeFor(
                 RecipeType.CRAFTING,
-                (CraftingContainer) event.getInventory(),
+                craftingContainer,
                 player.level()
             ).ifPresent(recipe -> {
                 if (!player.level().isClientSide && recipe instanceof StitchingRecipe) {
-                    CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level());
-
-                    CanvasData combinedCanvasData = CombinedCanvasHelper.createCanvasData(
-
-                    );
-
-                    final int newId = canvasTracker.getFreeCanvasId();
-                    final String newCode = CanvasData.getCanvasCode(newId);
-
-                    canvasTracker.registerCanvasData(newCode, combinedCanvasData);
-                    CanvasItem.storeCanvasData(event.getCrafting(), newCode, combinedCanvasData);
+                    CanvasStitchingHelper.createStitchedCanvasAndWriteNewCanvasData(craftingContainer, event.getCrafting(), player);
                 }
             });
         }

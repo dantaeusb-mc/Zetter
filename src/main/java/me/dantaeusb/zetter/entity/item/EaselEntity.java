@@ -43,16 +43,16 @@ import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Vector;
 import java.util.function.Predicate;
 
 public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerListener {
     private static final String NBT_TAG_EASEL_STORAGE = "storage";
     private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
-    private static final Vector3f CANVAS_OFFSET = new Vector3f(-0.5f, 0.78125f, -0.25f);
+    private static final Vector3f CANVAS_CENTER_OFFSET = new Vector3f(-0.5f, 0.78125f, -0.25f);
 
     protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> entity instanceof EaselEntity;
 
@@ -60,10 +60,12 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
 
     protected BlockPos pos;
     protected EaselContainer easelContainer;
+
     protected Vector3f canvasOffset;
     protected Vector3f canvasNormal;
     protected Vector3f canvasU;
     protected Vector3f canvasV;
+    protected Matrix4f canvasMatrix;
 
     protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
@@ -78,18 +80,52 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
     public void setYRot(float yRot) {
         super.setYRot(yRot);
 
-        Vector3f offset = new Vector3f(CANVAS_OFFSET);
+        this.updateCanvasVectors();
+    }
+
+    protected void updateCanvasVectors() {
+        final float scaleFactor = 1.0F / 16.0F;
+
+        Vector3f offset = new Vector3f(CANVAS_CENTER_OFFSET);
         Vector3f normal = new Vector3f(0.0f, 0.0f, -1.0f);
         Vector3f u = new Vector3f(-1.0f, 0.0f, 0.0f);
         Vector3f v = new Vector3f(0.0f, -1.0f, 0.0f);
 
         Quaternionf canvasXRotation = Axis.XP.rotationDegrees(10.0f);
-        Quaternionf entityYRotation = Axis.YP.rotationDegrees(180.0F - yRot);
+        Quaternionf entityYRotation = Axis.YP.rotationDegrees(180.0F - this.getYRot());
 
         this.canvasOffset = entityYRotation.transform(offset);
         this.canvasNormal = entityYRotation.transform(canvasXRotation.transform(normal));
         this.canvasU = entityYRotation.transform(canvasXRotation.transform(u));
         this.canvasV = entityYRotation.transform(canvasXRotation.transform(v));
+
+        this.canvasMatrix = new Matrix4f();
+        // Not using getter as we already applied rotation
+        this.canvasMatrix.translate(CANVAS_CENTER_OFFSET);
+        this.canvasMatrix.scale(scaleFactor, scaleFactor, scaleFactor);
+        this.canvasMatrix.rotate(Axis.XP.rotation(0.1745f));
+        this.canvasMatrix.rotate(Axis.ZP.rotationDegrees(180.0f));
+
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
+        CanvasData canvasData = canvasTracker.getCanvasData(this.getCanvasCode());
+
+        if (canvasData == null) {
+            return;
+        }
+
+        final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
+        final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
+
+        Vector3f canvasUOffset = new Vector3f(this.canvasU);
+        canvasUOffset.mul(0.5f + -0.5f * canvasBlockWidth);
+
+        Vector3f canvasVOffset = new Vector3f(this.canvasV);
+        canvasVOffset.mul(1.0f -canvasBlockHeight);
+
+        this.canvasOffset.add(canvasUOffset);
+        this.canvasOffset.add(canvasVOffset);
+
+        this.canvasMatrix.translate(-8.0f - (8.0f * canvasBlockWidth), -16.0f * canvasBlockHeight, 0.0f);
     }
 
     protected void defineSynchedData() {
@@ -146,29 +182,8 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
     }
 
     @Override
-    public Optional<Matrix4f> getCanvasMatrixTransform(float partialTicks) {
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.level());
-        CanvasData canvasData = canvasTracker.getCanvasData(this.getCanvasCode());
-        ;
-
-        if (canvasData == null) {
-            return Optional.empty();
-        }
-
-        final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
-        final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
-
-        final float scaleFactor = 1.0F / 16.0F;
-
-        Matrix4f matrixTransform = new Matrix4f();
-        // Not using getter as we already applied rotation
-        matrixTransform.translate(CANVAS_OFFSET);
-        matrixTransform.scale(scaleFactor, scaleFactor, scaleFactor);
-        matrixTransform.rotate(Axis.XP.rotation(0.1745f));
-        matrixTransform.rotate(Axis.ZP.rotationDegrees(180.0f));
-        matrixTransform.translate(-8.0f - (8.0f * canvasBlockWidth), -16.0f * canvasBlockHeight, 0.0f);
-
-        return Optional.of(matrixTransform);
+    public Matrix4f getCanvasMatrixTransform(float partialTicks) {
+        return this.canvasMatrix;
     }
 
     @Override
@@ -211,6 +226,7 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
 
         if (canvasStack.isEmpty()) {
             this.setCanvasCode(null);
+            this.updateCanvasVectors();
             return;
         }
 
@@ -224,6 +240,7 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
         }
 
         this.setCanvasCode(canvasCode);
+        this.updateCanvasVectors();
     }
 
     public boolean canPlayerAccessInventory(Player player) {
@@ -349,6 +366,7 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
 
     // specific
 
+    @Override
     public boolean hasCanvas() {
         return this.getCanvasCode() != null;
     }

@@ -7,7 +7,8 @@ import me.dantaeusb.zetter.client.gui.painting.*;
 import me.dantaeusb.zetter.client.gui.painting.canvaslayer.CanvasLayerAbstract;
 import me.dantaeusb.zetter.client.gui.painting.canvaslayer.CanvasLayerImmersive;
 import me.dantaeusb.zetter.client.gui.painting.canvaslayer.CanvasLayerOverlay;
-import me.dantaeusb.zetter.client.gui.painting.colorpicker.PaletteWidget;
+import me.dantaeusb.zetter.client.gui.painting.colorpicker.ColorPaletteWidget;
+import me.dantaeusb.zetter.client.gui.painting.colorpicker.ColorPreviewWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolTabGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.BrushTabGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.BucketTabGroupWidget;
@@ -438,7 +439,7 @@ public class PaintingScreen extends Screen {
             case Hand.QUICK_TOOL_KEY:
                 this.activateQuickTool(Tool.HAND);
                 return true;
-            case PaletteWidget.SWAP_HOTKEY: {
+            case ColorPreviewWidget.SWAP_HOTKEY: {
                 final int row = this.getPaletteState().currentPaletteSlot() / 2;
                 final int offset = this.getPaletteState().currentPaletteSlot() % 2;
 

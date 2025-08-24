@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.event.CanvasRegisterEvent;
+import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,21 +24,6 @@ public class ZetterModEvents {
         if (!event.level.isClientSide() && event.canvasData instanceof PaintingData) {
             PaintingRegistry registry = Helper.getLevelPaintingRegistry(event.level);
             registry.addPaintingCanvasCode(event.canvasCode);
-        }
-    }
-
-    /**
-     * On client side – if we register a canvas that was requested during crafting in grid,
-     * we need to update combined canvas preview.
-     * @param event
-     */
-    @SubscribeEvent
-    public static void onStitchedCanvasRegistered(CanvasRegisterEvent.Post event) {
-        if (event.level.isClientSide()) {
-            ClientCombinedCanvasHelper.getInstance().handleCanvasRegistration(
-                event.canvasCode,
-                event.canvasData
-            );
         }
     }
 }

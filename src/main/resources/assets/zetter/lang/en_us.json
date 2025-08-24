@@ -116,5 +116,6 @@
 	"screen.zetter.painting.color_picker.color_wheel": "Color Wheel",
 	"screen.zetter.painting.tool.brush": "Brush",
 	"screen.zetter.painting.tool.bucket": "Bucket",
-	"screen.zetter.painting.tool.pencil": "Pencil"
+	"screen.zetter.painting.tool.pencil": "Pencil",
+	"container.zetter.painting.color_preview": "Color Preview"
 }

@@ -90,13 +90,6 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
         return 1;
     }
 
-    @Nullable
-    public static CanvasData getCanvasData(Level world, String canvasName) {
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
-
-        return canvasTracker.getCanvasData(canvasName);
-    }
-
     public @Nullable
     Component getTooltip(int mouseX, int mouseY) {
         switch (this.parentScreen.getMenu().getActionState()) {

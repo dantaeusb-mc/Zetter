@@ -13,7 +13,6 @@ import org.joml.Vector3f;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.UUID;
 
 public abstract class CanvasHolderEntity extends Entity {
@@ -93,6 +92,8 @@ public abstract class CanvasHolderEntity extends Entity {
 
   public abstract @Nullable CanvasData getCanvasData();
 
+  public abstract boolean hasCanvas();
+
   public abstract ItemStack getCanvasStack();
 
   /**
@@ -115,7 +116,7 @@ public abstract class CanvasHolderEntity extends Entity {
 
   public abstract Vector3f getCanvasV();
 
-  public abstract Optional<Matrix4f> getCanvasMatrixTransform(float partialTicks);
+  public abstract Matrix4f getCanvasMatrixTransform(float partialTicks);
 
   public abstract boolean playerCanDraw(Player player);
 }

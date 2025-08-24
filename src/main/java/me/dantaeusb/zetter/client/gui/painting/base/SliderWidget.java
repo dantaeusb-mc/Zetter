@@ -19,8 +19,14 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
   public final static int HORIZONTAL_WIDTH = 156;
   public final static int HORIZONTAL_HEIGHT = 9;
 
+  public final static int HORIZONTAL_SPRITE_WIDTH = 154;
+  public final static int HORIZONTAL_SPRITE_HEIGHT = 9;
+
   public final static int VERTICAL_WIDTH = 9;
-  public final static int VERTICAL_HEIGHT = 120;
+  public final static int VERTICAL_HEIGHT = 122;
+
+  public final static int VERTICAL_SPRITE_WIDTH = 9;
+  public final static int VERTICAL_SPRITE_HEIGHT = 120;
 
   protected final static int SLIDER_CONTENT_SIDE_OFFSET = 1;
   protected final static int SLIDER_CONTENT_PADDING = SLIDER_CONTENT_SIDE_OFFSET + 1;
@@ -131,19 +137,19 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     final int SLIDER_VERTICAL_POSITION_U = 72;
     final int SLIDER_VERTICAL_POSITION_V = 120;
 
-    int sliderContentGlobalLeft = this.getX() + SLIDER_CONTENT_SIDE_OFFSET;
-    int sliderContentGlobalTop = this.getY() + 3;
-
     float value = this.valueSupplier.get();
 
     if (this.orientation == Orientation.HORIZONTAL) {
+      int sliderContentGlobalLeft = this.getX() + SLIDER_CONTENT_SIDE_OFFSET;
+      int sliderContentGlobalTop = this.getY() + 3;
+
       int sliderV = SLIDER_HORIZONTAL_POSITION_V;
 
       if (this.sliderDragging) {
         sliderV += HORIZONTAL_HEIGHT;
       }
 
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_WIDTH, HORIZONTAL_HEIGHT);
+      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_SPRITE_WIDTH, HORIZONTAL_SPRITE_HEIGHT);
 
       if (this.backgroundLambda != null) {
         int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2;
@@ -157,13 +163,16 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
         this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
       }
     } else {
+      int sliderContentGlobalLeft = this.getX() + 3;
+      int sliderContentGlobalTop = this.getY() + SLIDER_CONTENT_SIDE_OFFSET;
+
       int sliderU = SLIDER_VERTICAL_POSITION_U;
 
       if (this.sliderDragging) {
         sliderU += VERTICAL_WIDTH;
       }
 
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), sliderU, SLIDER_VERTICAL_POSITION_V, VERTICAL_WIDTH, VERTICAL_HEIGHT);
+      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), sliderU, SLIDER_VERTICAL_POSITION_V, VERTICAL_SPRITE_WIDTH, VERTICAL_SPRITE_HEIGHT);
 
       if (this.backgroundLambda != null) {
         int sliderContentWidth = 3;
@@ -191,7 +200,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     if (this.orientation == Orientation.HORIZONTAL) {
       percent = (float) (mouseX - this.getX() - SLIDER_CONTENT_SIDE_OFFSET) / (HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2);
     } else {
-      percent = 1.0f - (float) (mouseY - this.getY() - 3) / (VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2);
+      percent = 1.0f - (float) (mouseY - this.getY() - SLIDER_CONTENT_SIDE_OFFSET) / (VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2);
     }
 
     percent = Mth.clamp(percent, 0.0f, 1.0f);

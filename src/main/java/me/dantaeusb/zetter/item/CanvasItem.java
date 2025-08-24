@@ -177,8 +177,7 @@ public class CanvasItem extends Item
      * @param world
      * @return
      */
-    @Nullable
-    public static CanvasData getCanvasData(ItemStack stack, Level world) {
+    public static @Nullable CanvasData getCanvasData(ItemStack stack, Level world) {
         Item canvas = stack.getItem();
 
         if (canvas instanceof CanvasItem) {

@@ -72,13 +72,12 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
         final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
-        Optional<Matrix4f> matrixTransform = easelEntity.getCanvasMatrixTransform(partialTicks);
-
-        if (matrixTransform.isEmpty()) {
+        if (!easelEntity.hasCanvas()) {
             return;
         }
 
-        poseStack.mulPoseMatrix(matrixTransform.get());
+        Matrix4f matrixTransform = easelEntity.getCanvasMatrixTransform(partialTicks);
+        poseStack.mulPoseMatrix(matrixTransform);
 
         CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getCanvasCode(), canvasData, packedLight);
 
@@ -98,7 +97,6 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
     }
 
     private void renderBack(Matrix4f matrix4f, VertexConsumer vertexConsumer, int canvasBlockWidth, int canvasBlockHeight, int packedLight) {
-
         for (int x = 0; x < canvasBlockWidth; x++) {
             for (int y = 0; y < canvasBlockHeight; y++) {
                 float[] uv = getUV(x, y, canvasBlockWidth, canvasBlockHeight, Direction.SOUTH);

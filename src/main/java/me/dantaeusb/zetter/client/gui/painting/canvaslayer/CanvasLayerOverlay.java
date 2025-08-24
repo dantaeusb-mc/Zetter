@@ -321,7 +321,7 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
         final int width = this.width + checkerboardScale;
         final int height = this.height + checkerboardScale;
 
-        float x1 = this.leftPos - offsetX;
+         float x1 = this.leftPos - offsetX;
         float x2 = x1 + width;
         float y1 = this.topPos - offsetY;
         float y2 = y1 + height;

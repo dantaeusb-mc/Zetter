@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.item.CanvasItem;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -49,8 +50,8 @@ public class StitchingRecipe extends CustomRecipe {
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(@NotNull CraftingContainer craftingInventory, @NotNull Level world) {
-        CombinedCanvasHelper.CanvasGridRectangle canvasGridRectangle = CombinedCanvasHelper.getCraftingContainerCanvasRectangle(craftingInventory);
+    public boolean matches(@NotNull CraftingContainer craftingInventory, @NotNull Level level) {
+        CanvasStitchingHelper.CanvasGridRectangle canvasGridRectangle = CanvasStitchingHelper.getCraftingContainerCanvasRectangle(craftingInventory);
 
         if (canvasGridRectangle == null) {
             return false;
@@ -77,9 +78,19 @@ public class StitchingRecipe extends CustomRecipe {
             return false;
         }
 
-        if (world.isClientSide()) {
-            ClientCombinedCanvasHelper.getInstance().getOrRequestCombinedCanvas(craftingInventory, world);
-        }
+        // @todo: It's never client side!
+        /*if (level.isClientSide()) {
+            ClientCombinedCanvasHelper.getInstance().cleanupCombinedCanvas(level);
+            DummyCanvasData combinedCanvasData = ClientCombinedCanvasHelper.getInstance().getOrRequestCanvasesForStitching(craftingInventory, level);
+
+            *//**
+             * Otherwise it'll be registered when all parts are ready
+             * @see {@link ClientCombinedCanvasHelper#updateCombinedCanvas}
+             *//*
+            if (combinedCanvasData != null) {
+                Helper.getLevelCanvasTracker(level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
+            }
+        }*/
 
         return true;
     }
@@ -93,16 +104,22 @@ public class StitchingRecipe extends CustomRecipe {
      * storage with potentially thousands of discarded canvases.
      */
     public @NotNull ItemStack assemble(@NotNull CraftingContainer craftingInventory, @NotNull RegistryAccess registryAccess) {
-        CombinedCanvasHelper.CanvasGridRectangle canvasGridRectangle = CombinedCanvasHelper.getCraftingContainerCanvasRectangle(craftingInventory);
+        CanvasStitchingHelper.CanvasGridRectangle canvasGridRectangle = CanvasStitchingHelper.getCraftingContainerCanvasRectangle(craftingInventory);
 
         if (canvasGridRectangle == null) {
             return ItemStack.EMPTY;
         }
 
+        boolean anyCanvasHasData = craftingInventory.hasAnyMatching(stack -> !CanvasItem.isEmpty(stack));
+
         ItemStack outCanvas = new ItemStack(ZetterItems.CANVAS.get());
         outCanvas.setCount(1);
-        CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
-        CanvasItem.setBlockSize(outCanvas, canvasGridRectangle.canvasBlockSize[0], canvasGridRectangle.canvasBlockSize[1]);
+        // Should use combined code only if there's painting data
+        if (anyCanvasHasData) {
+            CanvasStitchingHelper.createStitchedCanvasData(craftingInventory, canvasGridRectangle, Minecraft.getInstance().level);
+            CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
+        }
+        CanvasItem.setBlockSize(outCanvas, canvasGridRectangle.width, canvasGridRectangle.height);
 
         return outCanvas;
     }

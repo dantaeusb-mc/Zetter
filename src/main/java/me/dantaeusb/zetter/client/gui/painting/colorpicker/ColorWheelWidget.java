@@ -21,8 +21,9 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
   private final int COLOR_WHEEL_WIDTH = 120;
   private final int COLOR_WHEEL_HEIGHT = 120;
 
-  private final PaletteWidget paletteWidget;
+  private final ColorPaletteWidget colorPaletteWidget;
   private final SliderWidget wheelLightnessSlider;
+  private final ColorPreviewWidget colorPreviewWidget;
 
   public ColorWheelWidget(PaintingScreen parentScreen, int x, int y) {
     super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("screen.zetter.painting.color_picker.color_wheel"));
@@ -33,11 +34,11 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
     final int WHEEL_LIGHTNESS_SLIDER_POSITION_X = 150;
     final int WHEEL_LIGHTNESS_SLIDER_POSITION_Y = 3;
 
-    this.paletteWidget = new PaletteWidget(
+    this.colorPaletteWidget = new ColorPaletteWidget(
         parentScreen,
         x + PALETTE_WIDGET_POSITION_X,
         y + PALETTE_WIDGET_POSITION_Y,
-        PaletteWidget.Orientation.VERTICAL
+        ColorPaletteWidget.Orientation.VERTICAL
     );
 
     this.wheelLightnessSlider = new SliderWidget(
@@ -50,6 +51,12 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
         SliderWidget.Orientation.VERTICAL,
         this::renderLightnessVerticalSliderBackground,
         null
+    );
+
+    this.colorPreviewWidget = new ColorPreviewWidget(
+        parentScreen,
+        x + PALETTE_WIDGET_POSITION_X,
+        y + PALETTE_WIDGET_POSITION_Y + ColorPaletteWidget.PALETTE_LENGTH + 3
     );
   }
 
@@ -103,8 +110,9 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
     guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX() + COLOR_WHEEL_POSITION_X, this.getY() + COLOR_WHEEL_POSITION_Y, COLOR_WHEEL_U, COLOR_WHEEL_V, COLOR_WHEEL_WIDTH, COLOR_WHEEL_HEIGHT);
     this.renderCurrentColor(guiGraphics, mouseX, mouseY, partialTick);
 
-    this.paletteWidget.render(guiGraphics, mouseX, mouseY, partialTick);
+    this.colorPaletteWidget.render(guiGraphics, mouseX, mouseY, partialTick);
     this.wheelLightnessSlider.render(guiGraphics, mouseX, mouseY, partialTick);
+    this.colorPreviewWidget.render(guiGraphics, mouseX, mouseY, partialTick);
   }
 
   private boolean handleWheelInteraction(double mouseX, double mouseY) {
@@ -170,11 +178,15 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
       return true;
     }
 
-    if (this.paletteWidget.mouseClicked(mouseX, mouseY, button)) {
+    if (this.colorPaletteWidget.mouseClicked(mouseX, mouseY, button)) {
       return true;
     }
 
     if (this.wheelLightnessSlider.mouseClicked(mouseX, mouseY, button)) {
+      return true;
+    }
+
+    if (this.colorPreviewWidget.mouseClicked(mouseX, mouseY, button)) {
       return true;
     }
 
@@ -244,11 +256,9 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
         this.getY() + COLOR_WHEEL_POSITION_Y + 2 + offsetY - 5,
         CURRENT_COLOR_U,
         CURRENT_COLOR_V,
-        10,
-        10
+        CURRENT_COLOR_WIDTH,
+        CURRENT_COLOR_HEIGHT
     );
-
-    guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX() + 150, this.getY() + 16, CURRENT_COLOR_U, CURRENT_COLOR_V, CURRENT_COLOR_WIDTH, CURRENT_COLOR_HEIGHT);
   }
 
   protected void renderLightnessVerticalSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {

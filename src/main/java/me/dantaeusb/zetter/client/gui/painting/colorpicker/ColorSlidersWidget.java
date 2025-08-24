@@ -20,20 +20,30 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
   private final static int SLIDER_POSITION_X = 5;
   private final static int SLIDER_DISTANCE_GAP = 14;
 
-  private final PaletteWidget paletteWidget;
+  private final ColorPaletteWidget colorPaletteWidget;
   private final ColorCodeWidget colorCodeWidget;
+  private final ColorPreviewWidget colorPreviewWidget;
 
   public ColorSlidersWidget(PaintingScreen parentScreen, int x, int y) {
     super(parentScreen, x, y, 164, 120, Component.translatable("screen.zetter.painting.color_picker.sliders"));
 
-    final int PALETTE_WIDGET_POSITION_X = 31;
-    final int PALETTE_WIDGET_POSITION_Y = 95;
+    final int COLOR_PREVIEW_WIDGET_POSITION_X = 5;
+    final int COLOR_PREVIEW_WIDGET_POSITION_Y = 95;
 
-    this.paletteWidget = new PaletteWidget(
+    final int PALETTE_WIDGET_POSITION_X = 5 + ColorPreviewWidget.COLOR_PREVIEW_TOOL_WIDTH + 4;
+    final int PALETTE_WIDGET_POSITION_Y = 98;
+
+    this.colorPreviewWidget = new ColorPreviewWidget(
+        parentScreen,
+        x + COLOR_PREVIEW_WIDGET_POSITION_X,
+        y + COLOR_PREVIEW_WIDGET_POSITION_Y
+    );
+
+    this.colorPaletteWidget = new ColorPaletteWidget(
         parentScreen,
         x + PALETTE_WIDGET_POSITION_X,
         y + PALETTE_WIDGET_POSITION_Y,
-        PaletteWidget.Orientation.HORIZONTAL
+        ColorPaletteWidget.Orientation.HORIZONTAL
     );
 
     this.hueSlider = new SliderWidget(
@@ -94,6 +104,10 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
     }
 
     if (this.lightnessSlider.mouseClicked(mouseX, mouseY, button)) {
+      return true;
+    }
+
+    if (this.colorCodeWidget.mouseClicked(mouseX, mouseY, button)) {
       return true;
     }
 
@@ -233,7 +247,8 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
     );
 
     this.colorCodeWidget.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
-    this.paletteWidget.render(guiGraphics, mouseX, mouseY, partialTick);
+    this.colorPaletteWidget.render(guiGraphics, mouseX, mouseY, partialTick);
+    this.colorPreviewWidget.render(guiGraphics, mouseX, mouseY, partialTick);
   }
 
   public void renderHueSliderBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {

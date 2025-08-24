@@ -325,11 +325,11 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
     private @Nullable Matrix4f getCanvasViewMatrix(float partialTicks) {
         Minecraft minecraft = Minecraft.getInstance();
 
-        Optional<Matrix4f> canvasTransform = this.parentScreen.getCanvasHolderEntity().getCanvasMatrixTransform(partialTicks);
-
-        if (canvasTransform.isEmpty()) {
+        if (!this.parentScreen.getCanvasHolderEntity().hasCanvas()) {
             return null;
         }
+
+        Matrix4f canvasTransform = this.parentScreen.getCanvasHolderEntity().getCanvasMatrixTransform(partialTicks);
 
         Vec3 entityPosition = this.parentScreen.getCanvasHolderEntity().getPosition(partialTicks);
         Camera camera = minecraft.gameRenderer.getMainCamera();
@@ -347,7 +347,7 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
         viewMatrix.rotate(Axis.YP.rotationDegrees(180.0F - this.parentScreen.getCanvasHolderEntity().getYRot()));
 
         // Canvas transformations
-        viewMatrix.mul(canvasTransform.get());
+        viewMatrix.mul(canvasTransform);
 
         return viewMatrix;
     }

@@ -1,10 +1,13 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.util.Tuple;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -16,24 +19,53 @@ import java.util.Arrays;
 /**
  * Helper to handle events and combination of the combined canvas when stitching.
  */
-public class CombinedCanvasHelper {
-    public static @Nullable DummyCanvasData createCanvasData(CraftingContainer craftingInventory, Level world) {
-        final CanvasGridRectangle canvasGridRectangle = getCraftingContainerCanvasRectangle(craftingInventory);
+public class CanvasStitchingHelper {
+    public static void createStitchedCanvasAndWriteNewCanvasData(CraftingContainer craftingContainer, ItemStack canvasItemStack, Player player) {
+        final CanvasStitchingHelper.CanvasGridRectangle canvasGridRectangle = CanvasStitchingHelper.getCraftingContainerCanvasRectangle(craftingContainer);
 
         if (canvasGridRectangle == null) {
             Zetter.LOG.warn("Failed to create combined canvas data: No valid canvas rectangle found in crafting inventory.");
             Zetter.LOG.debug("At this point, the crafting inventory should contain a valid rectangle of canvases.");
-            return null;
+            return;
         }
 
+        DummyCanvasData combinedCanvasData = CanvasStitchingHelper.createStitchedCanvasData(
+            craftingContainer,
+            canvasGridRectangle,
+            player.level()
+        );
+
+        CanvasStitchingHelper.writeNewCanvasData(canvasItemStack, canvasGridRectangle, combinedCanvasData, player);
+    }
+
+    /**
+     * Will create stitched canvas from container grid.
+     * Will not request missing canvas data on client,
+     * any item without data will be filled with default color!
+     * This might be expected when stitching with empty canvases.
+     * <p>
+     * On client, make sure you loaded all parts before stitching.
+     *
+     * @param craftingInventory
+     * @param canvasGridRectangle
+     * @param level
+     * @return
+     */
+    public static @Nullable DummyCanvasData createStitchedCanvasData(CraftingContainer craftingInventory, CanvasGridRectangle canvasGridRectangle, Level level) {
+        final int COLOR_SIZE = 4;
         final int pixelWidth = canvasGridRectangle.width * canvasGridRectangle.canvasBlockSize[0] * Helper.getResolution().getNumeric();
         final int pixelHeight = canvasGridRectangle.height * canvasGridRectangle.canvasBlockSize[1] * Helper.getResolution().getNumeric();
         boolean hasColorData = false;
+        AbstractCanvasData.Resolution resolution = Helper.getResolution();
 
         for (int i = 0; i < craftingInventory.getContainerSize(); i++) {
-            if (CanvasItem.getCanvasData(craftingInventory.getItem(i), world) != null) {
+            final ItemStack itemStack = craftingInventory.getItem(i);
+
+            if (CanvasItem.getCanvasData(itemStack, level) != null) {
                 hasColorData = true;
                 break;
+            } else if (CanvasItem.getCanvasCode(itemStack) != null) {
+                throw new IllegalStateException("Unable to stitch canvases: canvas has a code " + CanvasItem.getCanvasCode(itemStack) + ", but no data");
             }
         }
 
@@ -43,12 +75,12 @@ public class CombinedCanvasHelper {
             byte[] color = new byte[
                 canvasGridRectangle.width * resolutionPixels *
                     canvasGridRectangle.height * resolutionPixels *
-                    4
+                    COLOR_SIZE
                 ];
             ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
             for (int x = 0; x < canvasGridRectangle.width * resolutionPixels * canvasGridRectangle.height * resolutionPixels; x++) {
-                defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
+                defaultColorBuffer.putInt(x * COLOR_SIZE, Helper.CANVAS_COLOR);
             }
 
             return ZetterCanvasTypes.DUMMY.get().createWrap(
@@ -59,36 +91,28 @@ public class CombinedCanvasHelper {
             );
         }
 
-        ByteBuffer color = ByteBuffer.allocate(pixelWidth * pixelHeight * 4);
+        ByteBuffer color = ByteBuffer.allocate(pixelWidth * pixelHeight * COLOR_SIZE);
 
         for (int slotY = canvasGridRectangle.y; slotY < canvasGridRectangle.y + canvasGridRectangle.height; slotY++) {
             for (int slotX = canvasGridRectangle.x; slotX < canvasGridRectangle.x + canvasGridRectangle.width; slotX++) {
-                ItemStack canvasStack = craftingInventory.getItem(slotY * 4 + slotX);
+                ItemStack canvasStack = craftingInventory.getItem(slotY * craftingInventory.getWidth() + slotX);
 
-                CanvasData smallCanvasData = CanvasItem.getCanvasData(canvasStack, world);
+                CanvasData smallCanvasData = CanvasItem.getCanvasData(canvasStack, level);
 
                 int relativeX = slotX - canvasGridRectangle.x;
                 int relativeY = slotY - canvasGridRectangle.y;
 
-                if (smallCanvasData != null) {
-                    for (int smallY = 0; smallY < smallCanvasData.getHeight(); smallY++) {
-                        for (int smallX = 0; smallX < smallCanvasData.getWidth(); smallX++) {
-                            final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
-                            final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
+                // @todo: add resolution!
+                for (int smallY = 0; smallY < resolution.getNumeric() * canvasGridRectangle.y; smallY++) {
+                    for (int smallX = 0; smallX < resolution.getNumeric() * canvasGridRectangle.x; smallX++) {
+                        final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
+                        final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
 
-                            final int colorIndex = (bigY * pixelWidth + bigX) * 4;
+                        final int colorIndex = (bigY * pixelWidth + bigX) * COLOR_SIZE;
 
+                        if (smallCanvasData != null) {
                             color.putInt(colorIndex, smallCanvasData.getColorAt(smallX, smallY));
-                        }
-                    }
-                } else {
-                    for (int smallY = 0; smallY < Helper.getResolution().getNumeric(); smallY++) {
-                        for (int smallX = 0; smallX < Helper.getResolution().getNumeric(); smallX++) {
-                            final int bigX = relativeX * Helper.getResolution().getNumeric() + smallX;
-                            final int bigY = relativeY * Helper.getResolution().getNumeric() + smallY;
-
-                            final int colorIndex = (bigY * pixelWidth + bigX) * 4;
-
+                        } else {
                             color.putInt(colorIndex, Helper.CANVAS_COLOR);
                         }
                     }
@@ -96,35 +120,61 @@ public class CombinedCanvasHelper {
             }
         }
 
-        DummyCanvasData combinedCanvasData = ZetterCanvasTypes.DUMMY.get().createWrap(
+        return ZetterCanvasTypes.DUMMY.get().createWrap(
             Helper.getResolution(),
             pixelWidth,
             pixelHeight,
             color.array()
         );
-
-        return combinedCanvasData;
     }
 
-    public static @Nullable CanvasGridRectangle getCraftingContainerCanvasRectangle(CraftingContainer craftingInventory) {
+    /**
+     * Writes and registers canvas after stitching with dummy canvas data.
+     * If data is empty, an empty canvas of a new size is created.
+     *
+     * @param canvasItemStack
+     * @param dummyCanvasData
+     */
+    public static void writeNewCanvasData(ItemStack canvasItemStack, CanvasGridRectangle canvasGridRectangle, @Nullable DummyCanvasData dummyCanvasData, Player player) {
+        CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level());
+
+        if (dummyCanvasData != null) {
+            CanvasData combinedCanvasData = CanvasData.BUILDER.createWrap(
+                dummyCanvasData.getResolution(),
+                dummyCanvasData.getWidth(),
+                dummyCanvasData.getHeight(),
+                dummyCanvasData.getColorData()
+            );
+
+            final int newId = canvasTracker.getFreeCanvasId();
+            final String newCode = CanvasData.getCanvasCode(newId);
+
+            canvasTracker.registerCanvasData(newCode, combinedCanvasData);
+            CanvasItem.storeCanvasData(canvasItemStack, newCode, combinedCanvasData);
+        } else {
+            CanvasItem.setBlockSize(canvasItemStack, canvasGridRectangle.width, canvasGridRectangle.height);
+        }
+    }
+
+    public static @Nullable CanvasGridRectangle getCraftingContainerCanvasRectangle(CraftingContainer craftingContainer) {
         Tuple<Integer, Integer> min = null;
         Tuple<Integer, Integer> max = null;
 
         int[] canvasBlockSize = null;
 
-        for (int y = 0; y < craftingInventory.getHeight(); y++) {
-            for (int x = 0; x < craftingInventory.getWidth(); x++) {
-                ItemStack itemStack = craftingInventory.getItem(y * 4 + x);
+        for (int y = 0; y < craftingContainer.getHeight(); y++) {
+            for (int x = 0; x < craftingContainer.getWidth(); x++) {
+                ItemStack itemStack = craftingContainer.getItem(y * craftingContainer.getWidth() + x);
 
                 if (itemStack != ItemStack.EMPTY) {
-                    if (!craftingInventory.getItem(y * 4 + x).is(ZetterItems.CANVAS.get())) {
+                    if (!craftingContainer.getItem(y * craftingContainer.getWidth() + x).is(ZetterItems.CANVAS.get())) {
                         // We only expect canvases
                         return null;
                     }
 
                     if (canvasBlockSize == null) {
                         canvasBlockSize = CanvasItem.getBlockSize(itemStack);
-                    } else if (Arrays.equals(canvasBlockSize, CanvasItem.getBlockSize(itemStack))) {
+                    } else if (!Arrays.equals(canvasBlockSize, CanvasItem.getBlockSize(itemStack))) {
                         // We expect canvases to have the same resolution
                         return null;
                     }
@@ -153,11 +203,11 @@ public class CombinedCanvasHelper {
         }
 
         // Verify there are no empty slots in the rectangle
-        for (int y = 0; y < craftingInventory.getHeight(); y++) {
-            for (int x = 0; x < craftingInventory.getWidth(); x++) {
-                ItemStack currentStack = craftingInventory.getItem(y * 4 + x);
+        for (int y = 0; y < craftingContainer.getHeight(); y++) {
+            for (int x = 0; x < craftingContainer.getWidth(); x++) {
+                ItemStack currentStack = craftingContainer.getItem(y * craftingContainer.getWidth() + x);
 
-                if (currentStack == ItemStack.EMPTY) {
+                if (currentStack.isEmpty()) {
                     if (x >= min.getA() && x <= max.getA()) {
                         if (y >= min.getB() && (y <= max.getB())) {
                             return null;
@@ -174,7 +224,7 @@ public class CombinedCanvasHelper {
         int width = max.getA() + 1 - min.getA();
         int height = max.getB() + 1 - min.getB();
 
-        return  new CanvasGridRectangle(min.getA(), min.getB(), width, height, canvasBlockSize);
+        return new CanvasGridRectangle(min.getA(), min.getB(), width, height, canvasBlockSize);
     }
 
     public static class CanvasGridRectangle {
