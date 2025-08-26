@@ -73,15 +73,11 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
                 );
             }
 
+            CanvasOverlayState updatedCanvasOverlayState = this.getUpdatedCanvasOverlayState(diff);
+
             // Hand tool is special, it just moves canvas
-            this.parentScreen.setEaselState(
-                this.parentScreen.getEaselState().withCanvasOverlayState(
-                    this.parentScreen.getEaselState().canvasOverlayState().withCanvasOffset(
-                        (int) (this.dragCanvasOffset.x + (diff.x / this.getCanvasScale())),
-                        (int) (this.dragCanvasOffset.y + (diff.y / this.getCanvasScale()))
-                    )
-                )
-            );
+            this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(updatedCanvasOverlayState));
+
             return true;
         }
 
@@ -91,6 +87,30 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
         );
 
         return true;
+    }
+
+    private @NotNull CanvasOverlayState getUpdatedCanvasOverlayState(Vector2d diff) {
+        final double limitOffsetX = this.width / (2.0 * this.getCanvasScale());
+        final double limitOffsetY = this.height / (2.0 * this.getCanvasScale());
+
+        CanvasOverlayState currentState = this.parentScreen.getEaselState().canvasOverlayState();
+
+        double currentOffsetX = this.dragCanvasOffset != null ? this.dragCanvasOffset.x : currentState.canvasOffsetX();
+        double currentOffsetY = this.dragCanvasOffset != null ? this.dragCanvasOffset.y : currentState.canvasOffsetY();
+
+        double updatedOffsetX = (int) (currentOffsetX + (diff.x / this.getCanvasScale()));
+        double updatedOffsetY = (int) (currentOffsetY + (diff.y / this.getCanvasScale()));
+
+        if (Math.abs(updatedOffsetX) > limitOffsetX) {
+            updatedOffsetX = limitOffsetX * (updatedOffsetX < 0 ? -1 : 1);
+        }
+
+        if (Math.abs(updatedOffsetY) > limitOffsetY) {
+            updatedOffsetY = limitOffsetY * (updatedOffsetY < 0 ? -1 : 1);
+        }
+
+        return this.parentScreen.getEaselState().canvasOverlayState()
+            .withCanvasOffset((int) updatedOffsetX, (int) updatedOffsetY);
     }
 
     /**
@@ -181,6 +201,9 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
 
     private void decreaseCanvasScale() {
         this.parentScreen.setEaselState(this.parentScreen.getEaselState().decreaseCanvasScale());
+        this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(
+            this.getUpdatedCanvasOverlayState(new Vector2d(0, 0))
+        ));
     }
 
     private boolean canIncreaseCanvasScale() {
@@ -189,6 +212,9 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
 
     private void increaseCanvasScale() {
         this.parentScreen.setEaselState(this.parentScreen.getEaselState().increaseCanvasScale());
+        this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(
+            this.getUpdatedCanvasOverlayState(new Vector2d(0, 0))
+        ));
     }
 
     public void tick() {
@@ -314,14 +340,14 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
         final int checkerboardScale = canvasScale * 4;
 
         // Checkerboard is 4x4
-        final int offsetX = Mth.abs(checkerboardScale - (canvasX - this.leftPos) % checkerboardScale);
-        final int offsetY = Mth.abs(checkerboardScale - (canvasY - this.topPos) % checkerboardScale);
+        final int offsetX = checkerboardScale - Mth.abs(canvasX - this.leftPos) % checkerboardScale;
+        final int offsetY = checkerboardScale - Mth.abs(canvasY - this.topPos) % checkerboardScale;
 
         // Add one full checkerboard to the right and bottom
         final int width = this.width + checkerboardScale;
         final int height = this.height + checkerboardScale;
 
-         float x1 = this.leftPos - offsetX;
+        float x1 = this.leftPos - offsetX;
         float x2 = x1 + width;
         float y1 = this.topPos - offsetY;
         float y2 = y1 + height;

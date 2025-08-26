@@ -16,9 +16,9 @@ public class PencilTabGroupWidget extends AbstractToolTabGroupWidget implements 
         Component.translatable("screen.zetter.painting.tool.pencil"),
         Tool.PENCIL,
         new TabsWidget.Tab[]{
-            new TabsWidget.Tab("brush", Component.translatable("screen.zetter.painting.tool.pencil"), parentScreen.getFont()),
+            new TabsWidget.Tab("pencil", Component.translatable("screen.zetter.painting.tool.pencil"), parentScreen.getFont()),
         }, Map.of(
-            "brush", new PencilParametersWidget(
+            "pencil", new PencilParametersWidget(
                 parentScreen, X, Y + 13, WIDTH, HEIGHT - 13, Component.translatable("screen.zetter.painting.tool.pencil")
             )
         ));

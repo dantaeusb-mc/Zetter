@@ -46,15 +46,15 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerListener {
-    private static final String NBT_TAG_EASEL_STORAGE = "storage";
+public class WallEaselEntity extends CanvasHolderEntity implements ItemStackHandlerListener {
+    private static final String NBT_TAG_EASEL_STORAGE = "Storage";
     private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
-    private static final Vector3f CANVAS_CENTER_OFFSET = new Vector3f(-0.5f, 0.78125f, -0.25f);
+    private static final Vector3f CANVAS_CENTER_OFFSET = new Vector3f(-2.5f, 0.0625f, -2.5f);
 
-    protected static final Predicate<Entity> IS_EASEL_ENTITY = (entity) -> entity instanceof EaselEntity;
+    protected static final Predicate<Entity> IS_WALL_EASEL_ENTITY = (entity) -> entity instanceof WallEaselEntity;
 
-    private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(EaselEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(WallEaselEntity.class, EntityDataSerializers.STRING);
 
     protected BlockPos pos;
     protected CanvasContainer easelContainer;
@@ -69,7 +69,7 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
 
     private int tick;
 
-    public EaselEntity(EntityType<? extends EaselEntity> type, Level world) {
+    public WallEaselEntity(EntityType<? extends WallEaselEntity> type, Level world) {
         super(type, world);
         this.createInventory();
     }
@@ -358,7 +358,7 @@ public class EaselEntity extends CanvasHolderEntity implements ItemStackHandlerL
                 return false;
             }
 
-            return this.level().getEntities(this, this.getBoundingBox(), IS_EASEL_ENTITY).isEmpty();
+            return this.level().getEntities(this, this.getBoundingBox(), IS_WALL_EASEL_ENTITY).isEmpty();
         }
     }
 

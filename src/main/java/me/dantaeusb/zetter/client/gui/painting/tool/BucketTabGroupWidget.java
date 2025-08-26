@@ -19,7 +19,7 @@ public class BucketTabGroupWidget extends AbstractToolTabGroupWidget implements 
             new TabsWidget.Tab("bucket", Component.translatable("screen.zetter.painting.tool.bucket"), parentScreen.getFont()),
         },
         Map.of(
-            "brush", new BucketParametersWidget(
+            "bucket", new BucketParametersWidget(
                 parentScreen, X, Y + 13, WIDTH, HEIGHT - 13, Component.translatable("screen.zetter.painting.tool.brush")
             )
         ));

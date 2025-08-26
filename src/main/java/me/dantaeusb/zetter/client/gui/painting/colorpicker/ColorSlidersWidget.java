@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.gui.painting.colorpicker;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
+import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.client.gui.painting.util.ZetterColorPickerRenderer;
 import me.dantaeusb.zetter.core.ZetterRenderTypes;
@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-public class ColorSlidersWidget extends AbstractPaintingWidget implements Renderable {
+public class ColorSlidersWidget extends AbstractPaintingGroupWidget implements Renderable {
   private final SliderWidget hueSlider;
   private final SliderWidget saturationSlider;
   private final SliderWidget lightnessSlider;
@@ -38,6 +38,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         x + COLOR_PREVIEW_WIDGET_POSITION_X,
         y + COLOR_PREVIEW_WIDGET_POSITION_Y
     );
+    this.addWidget(this.colorPreviewWidget);
 
     this.colorPaletteWidget = new ColorPaletteWidget(
         parentScreen,
@@ -45,6 +46,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         y + PALETTE_WIDGET_POSITION_Y,
         ColorPaletteWidget.Orientation.HORIZONTAL
     );
+    this.addWidget(this.colorPaletteWidget);
 
     this.hueSlider = new SliderWidget(
         parentScreen,
@@ -57,6 +59,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         this::renderHueSliderBackground,
         null
     );
+    this.addWidget(this.hueSlider);
 
     this.saturationSlider = new SliderWidget(
         parentScreen,
@@ -69,6 +72,7 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         this::renderSaturationSliderBackground,
         null
     );
+    this.addWidget(this.saturationSlider);
 
     this.lightnessSlider = new SliderWidget(
         parentScreen,
@@ -81,69 +85,14 @@ public class ColorSlidersWidget extends AbstractPaintingWidget implements Render
         this::renderLightnessSliderBackground,
         null
     );
+    this.addWidget(this.lightnessSlider);
 
     this.colorCodeWidget = new ColorCodeWidget(
         parentScreen,
         x + 164 - ColorCodeWidget.TEXTBOX_WIDTH - SLIDER_POSITION_X,
         y + SliderWidget.HORIZONTAL_HEIGHT * 3 + SLIDER_DISTANCE_GAP * 3 + 4
     );
-  }
-
-  @Override
-  public boolean mouseClicked(double mouseX, double mouseY, int button) {
-    if (!this.isMouseOver(mouseX, mouseY) || !this.isValidClickButton(button)) {
-      return false;
-    }
-
-    if (this.hueSlider.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    if (this.saturationSlider.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    if (this.lightnessSlider.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    if (this.colorCodeWidget.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  @Override
-  public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-    if (!this.active || !this.visible || !this.isValidClickButton(button)) {
-      return false;
-    }
-
-    if (this.hueSlider.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
-      return true;
-    }
-
-    if (this.saturationSlider.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
-      return true;
-    }
-
-    if (this.lightnessSlider.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
-      return true;
-    }
-
-    return false;
-  }
-
-  @Override
-  public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (!this.active || !this.visible || !this.isValidClickButton(button)) {
-      return false;
-    }
-
-    return this.hueSlider.mouseReleased(mouseX, mouseY, button)
-        || this.saturationSlider.mouseReleased(mouseX, mouseY, button)
-        || this.lightnessSlider.mouseReleased(mouseX, mouseY, button);
+    this.addWidget(this.colorCodeWidget);
   }
 
   private float getHue() {

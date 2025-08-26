@@ -60,7 +60,22 @@ public class ColorPreviewWidget extends AbstractPaintingWidget implements Render
         final int PALETTE_CURRENT_COLOR_SWAP_TOOL_U = 120;
         final int PALETTE_CURRENT_COLOR_SWAP_TOOL_V = 89;
 
+        final int PALETTE_CURRENT_COLOR_SWAP_ICON_U = 120;
+        final int PALETTE_CURRENT_COLOR_SWAP_ICON_V = 105;
+
+        final int PALETTE_CURRENT_COLOR_SWAP_ICON_SIZE = 9;
+
         final int offset = COLOR_PREVIEW_TOOL_WIDTH - COLOR_PREVIEW_TOOL_BLOCK_WIDTH;
+
+        guiGraphics.blit(
+            PAINTING_WIDGETS_TEXTURE_RESOURCE,
+            this.getX() + COLOR_PREVIEW_TOOL_BLOCK_WIDTH + 1,
+            this.getY(),
+            PALETTE_CURRENT_COLOR_SWAP_ICON_U,
+            PALETTE_CURRENT_COLOR_SWAP_ICON_V,
+            PALETTE_CURRENT_COLOR_SWAP_ICON_SIZE,
+            PALETTE_CURRENT_COLOR_SWAP_ICON_SIZE
+        );
 
         guiGraphics.blit(
             PAINTING_WIDGETS_TEXTURE_RESOURCE,

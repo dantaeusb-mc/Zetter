@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * Helper to handle events and combination of the combined canvas when stitching.
@@ -69,26 +70,8 @@ public class CanvasStitchingHelper {
             }
         }
 
-        // Return default canvas instead
         if (!hasColorData) {
-            final int resolutionPixels = Helper.getResolution().getNumeric();
-            byte[] color = new byte[
-                canvasGridRectangle.width * resolutionPixels *
-                    canvasGridRectangle.height * resolutionPixels *
-                    COLOR_SIZE
-                ];
-            ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
-
-            for (int x = 0; x < canvasGridRectangle.width * resolutionPixels * canvasGridRectangle.height * resolutionPixels; x++) {
-                defaultColorBuffer.putInt(x * COLOR_SIZE, Helper.CANVAS_COLOR);
-            }
-
-            return ZetterCanvasTypes.DUMMY.get().createWrap(
-                Helper.getResolution(),
-                canvasGridRectangle.width * resolutionPixels,
-                canvasGridRectangle.height * resolutionPixels,
-                color
-            );
+            return null;
         }
 
         ByteBuffer color = ByteBuffer.allocate(pixelWidth * pixelHeight * COLOR_SIZE);
@@ -225,6 +208,10 @@ public class CanvasStitchingHelper {
         int height = max.getB() + 1 - min.getB();
 
         return new CanvasGridRectangle(min.getA(), min.getB(), width, height, canvasBlockSize);
+    }
+
+    public static String generateCombinedCanvasCode(CanvasGridRectangle canvasGridRectangle) {
+        return "combined_" + UUID.randomUUID();
     }
 
     public static class CanvasGridRectangle {

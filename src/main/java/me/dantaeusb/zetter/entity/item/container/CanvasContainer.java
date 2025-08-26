@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
+import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.CanvasData;
@@ -17,7 +18,7 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 
-public class EaselContainer extends ItemStackHandler {
+public class CanvasContainer extends ItemStackHandler {
     public static final int STORAGE_SIZE = 1;
     public static final int CANVAS_SLOT = 0;
 
@@ -40,17 +41,17 @@ public class EaselContainer extends ItemStackHandler {
      * Entity and listeners
      */
 
-    private EaselEntity easel;
+    private CanvasHolderEntity canvasHolder;
     private List<ItemStackHandlerListener> listeners;
 
-    public EaselContainer(EaselEntity easelEntity) {
+    public CanvasContainer(CanvasHolderEntity easelEntity) {
         super(STORAGE_SIZE);
 
-        this.easel = easelEntity;
+        this.canvasHolder = easelEntity;
     }
 
     @Deprecated
-    public EaselContainer() {
+    public CanvasContainer() {
         super(STORAGE_SIZE);
     }
 
@@ -91,7 +92,7 @@ public class EaselContainer extends ItemStackHandler {
             return;
         }
 
-        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.easel.level());
+        CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(this.canvasHolder.level());
         CanvasData canvas = canvasTracker.getCanvasData(canvasCode);
 
         if (canvas == null) {
@@ -110,8 +111,8 @@ public class EaselContainer extends ItemStackHandler {
      * @return
      */
     public boolean stillValid(Player player) {
-        if (this.easel != null && this.easel.isAlive()) {
-            return player.distanceToSqr((double)this.easel.getPos().getX() + 0.5D, (double)this.easel.getPos().getY() + 0.5D, (double)this.easel.getPos().getZ() + 0.5D) <= 64.0D;
+        if (this.canvasHolder != null && this.canvasHolder.isAlive()) {
+            return player.distanceToSqr(this.canvasHolder.getX() + 0.5D, this.canvasHolder.getY() + 0.5D, this.canvasHolder.getZ() + 0.5D) <= 64.0D;
         }
 
         return false;

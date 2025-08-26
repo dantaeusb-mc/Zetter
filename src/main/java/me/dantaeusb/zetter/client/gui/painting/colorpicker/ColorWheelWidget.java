@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.client.gui.painting.colorpicker;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
+import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.client.gui.painting.util.ZetterColorPickerRenderer;
 import me.dantaeusb.zetter.core.ZetterRenderTypes;
@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-public class ColorWheelWidget extends AbstractPaintingWidget implements Renderable {
+public class ColorWheelWidget extends AbstractPaintingGroupWidget implements Renderable {
   private final static int WIDTH = 164;
   private final static int HEIGHT = 135;
 
@@ -40,6 +40,7 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
         y + PALETTE_WIDGET_POSITION_Y,
         ColorPaletteWidget.Orientation.VERTICAL
     );
+    this.addWidget(this.colorPaletteWidget);
 
     this.wheelLightnessSlider = new SliderWidget(
         parentScreen,
@@ -52,12 +53,14 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
         this::renderLightnessVerticalSliderBackground,
         null
     );
+    this.addWidget(this.wheelLightnessSlider);
 
     this.colorPreviewWidget = new ColorPreviewWidget(
         parentScreen,
         x + PALETTE_WIDGET_POSITION_X,
         y + PALETTE_WIDGET_POSITION_Y + ColorPaletteWidget.PALETTE_LENGTH + 3
     );
+    this.addWidget(this.colorPreviewWidget);
   }
 
   private float getLightness() {
@@ -178,19 +181,7 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
       return true;
     }
 
-    if (this.colorPaletteWidget.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    if (this.wheelLightnessSlider.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    if (this.colorPreviewWidget.mouseClicked(mouseX, mouseY, button)) {
-      return true;
-    }
-
-    return false;
+    return super.mouseClicked(mouseX, mouseY, button);
   }
 
   @Override
@@ -203,11 +194,7 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
       return true;
     }
 
-    if (this.wheelLightnessSlider.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
-      return true;
-    }
-
-    return false;
+    return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
   }
 
   @Override
@@ -216,7 +203,7 @@ public class ColorWheelWidget extends AbstractPaintingWidget implements Renderab
       return false;
     }
 
-    return this.wheelLightnessSlider.mouseReleased(mouseX, mouseY, button);
+    return super.mouseReleased(mouseX, mouseY, button);
   }
 
   protected void renderCurrentColor(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {

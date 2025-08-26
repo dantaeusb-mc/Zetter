@@ -89,6 +89,7 @@ public class PaintingScreen extends Screen {
     private BrushTabGroupWidget brushToolWidget;
     private PencilTabGroupWidget pencilToolWidget;
     private BucketTabGroupWidget bucketToolWidget;
+    private HistoryWidget historyWidget;
 
     public PaintingScreen(ItemStack paletteStack, CanvasHolderEntity canvasHolderEntity) {
         super(Component.translatable("screen.zetter.painting"));
@@ -128,10 +129,12 @@ public class PaintingScreen extends Screen {
 
         final int TOOLS_WIDGET_POSITION_X = 4;
         final int TOOLS_WIDGET_POSITION_Y = 16;
-        final int ZOOM_WIDGET_POSITION_X = 4;
-        final int ZOOM_WIDGET_POSITION_Y = 205;
+        final int HISTORY_WIDGET_POSITION_X = 4;
+        final int HISTORY_WIDGET_POSITION_Y = 152;
         final int CANVAS_MODE_WIDGET_POSITION_X = 4;
         final int CANVAS_MODE_WIDGET_POSITION_Y = 152;
+        final int ZOOM_WIDGET_POSITION_X = 4;
+        final int ZOOM_WIDGET_POSITION_Y = 205;
         final int COLOR_PICKER_WIDGET_POSITION_X = 31;
         final int COLOR_PICKER_WIDGET_POSITION_Y = 0;
 
@@ -146,10 +149,12 @@ public class PaintingScreen extends Screen {
 
         this.toolsWidget = new ToolsWidget(this, TOOLS_WIDGET_POSITION_X, TOOLS_WIDGET_POSITION_Y);
         this.addPaintingWidget(this.toolsWidget);
-        this.zoomWidget = new ZoomWidget(this, ZOOM_WIDGET_POSITION_X, ZOOM_WIDGET_POSITION_Y);
-        this.addPaintingWidget(this.zoomWidget);
+        this.historyWidget = new HistoryWidget(this, HISTORY_WIDGET_POSITION_X, HISTORY_WIDGET_POSITION_Y);
+        this.addPaintingWidget(this.historyWidget);
         this.canvasModeWidget = new CanvasModeWidget(this, CANVAS_MODE_WIDGET_POSITION_X, CANVAS_MODE_WIDGET_POSITION_Y);
         this.addPaintingWidget(this.canvasModeWidget);
+        this.zoomWidget = new ZoomWidget(this, ZOOM_WIDGET_POSITION_X, ZOOM_WIDGET_POSITION_Y);
+        this.addPaintingWidget(this.zoomWidget);
 
         this.colorPickerWidget = new ColorPickerWidget(this, COLOR_PICKER_WIDGET_POSITION_X, COLOR_PICKER_WIDGET_POSITION_Y);
         this.addPaintingWidget(this.colorPickerWidget);

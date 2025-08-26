@@ -27,6 +27,12 @@ public class CanvasServerTracker implements CanvasTracker {
     protected BitSet canvasIds = new BitSet(1);
     protected int lastPaintingId = 0;
 
+    /**
+     * Virtual canvases - those that are not saved in world storage
+     * and are kept in memory only for short time (i.e. during
+     * stitching/sewing process)
+     */
+    private final Map<String, AbstractCanvasData> virtualCanvases = new HashMap<>();
     private final Map<String, Vector<PlayerTrackingCanvas>> trackedCanvases = new HashMap<>();
     private final Vector<String> desyncCanvases = new Vector<>();
     private int ticksFromLastSync = 0;
@@ -126,6 +132,10 @@ public class CanvasServerTracker implements CanvasTracker {
             return null;
         }
 
+        if (this.virtualCanvases.containsKey(canvasCode)) {
+            return (T) this.virtualCanvases.get(canvasCode);
+        }
+
         return this.level.getServer().overworld().getDataStorage().get(
             (compoundTag) -> {
                 int canvasTypeInt = -1;
@@ -150,12 +160,6 @@ public class CanvasServerTracker implements CanvasTracker {
                     }
                 }
 
-                // Minor beta versions were saving data without modid separator
-                boolean deprecatedType = !canvasResourceLocation.contains(":");
-                if (deprecatedType) {
-                    canvasResourceLocation = Zetter.MOD_ID + ":" + canvasResourceLocation;
-                }
-
                 final String finalCanvasResourceLocation = canvasResourceLocation;
                 Optional<? extends CanvasDataType<?>> type = ZetterRegistries.CANVAS_TYPE.get().getEntries().stream()
                     .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
@@ -168,11 +172,6 @@ public class CanvasServerTracker implements CanvasTracker {
 
                 T canvasData = (T) type.get().loadFromNbt(compoundTag);
                 canvasData.correctData(this.level);
-
-                // Remove deprecated tags
-                if (canvasTypeInt != -1 || deprecatedType) {
-                    canvasData.setDirty();
-                }
 
                 return canvasData;
             },

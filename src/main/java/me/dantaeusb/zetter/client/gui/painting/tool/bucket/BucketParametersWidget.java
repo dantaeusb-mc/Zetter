@@ -2,13 +2,14 @@ package me.dantaeusb.zetter.client.gui.painting.tool.bucket;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
+import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.painting.parameters.BucketParameters;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 
-public class BucketParametersWidget extends AbstractPaintingWidget implements Renderable {
+public class BucketParametersWidget extends AbstractPaintingGroupWidget implements Renderable {
   private final SliderWidget intensitySlider;
 
   public BucketParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
@@ -27,6 +28,7 @@ public class BucketParametersWidget extends AbstractPaintingWidget implements Re
         this::renderIntensityBackground,
         this::renderIntensityState
     );
+    this.addWidget(this.intensitySlider);
   }
 
   private float getIntensity() {

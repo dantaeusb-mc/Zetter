@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
@@ -116,7 +117,8 @@ public class StitchingRecipe extends CustomRecipe {
         outCanvas.setCount(1);
         // Should use combined code only if there's painting data
         if (anyCanvasHasData) {
-            CanvasStitchingHelper.createStitchedCanvasData(craftingInventory, canvasGridRectangle, Minecraft.getInstance().level);
+            DummyCanvasData stitchedCanvas = CanvasStitchingHelper.createStitchedCanvasData(craftingInventory, canvasGridRectangle, Minecraft.getInstance().level);
+            //stitchedCanvas
             CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
         }
         CanvasItem.setBlockSize(outCanvas, canvasGridRectangle.width, canvasGridRectangle.height);

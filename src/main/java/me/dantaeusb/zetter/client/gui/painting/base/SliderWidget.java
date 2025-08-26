@@ -13,294 +13,294 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class SliderWidget extends AbstractPaintingWidget implements Renderable {
-  /**
-   * Size in horizontal mode, swapped in vertical mode
-   */
-  public final static int HORIZONTAL_WIDTH = 156;
-  public final static int HORIZONTAL_HEIGHT = 9;
+    /**
+     * Size in horizontal mode, swapped in vertical mode
+     */
+    public final static int HORIZONTAL_WIDTH = 156;
+    public final static int HORIZONTAL_HEIGHT = 9;
 
-  public final static int HORIZONTAL_SPRITE_WIDTH = 154;
-  public final static int HORIZONTAL_SPRITE_HEIGHT = 9;
+    public final static int HORIZONTAL_SPRITE_WIDTH = 154;
+    public final static int HORIZONTAL_SPRITE_HEIGHT = 9;
 
-  public final static int VERTICAL_WIDTH = 9;
-  public final static int VERTICAL_HEIGHT = 122;
+    public final static int VERTICAL_WIDTH = 9;
+    public final static int VERTICAL_HEIGHT = 118;
 
-  public final static int VERTICAL_SPRITE_WIDTH = 9;
-  public final static int VERTICAL_SPRITE_HEIGHT = 120;
+    public final static int VERTICAL_SPRITE_WIDTH = 9;
+    public final static int VERTICAL_SPRITE_HEIGHT = 116;
 
-  protected final static int SLIDER_CONTENT_SIDE_OFFSET = 1;
-  protected final static int SLIDER_CONTENT_PADDING = SLIDER_CONTENT_SIDE_OFFSET + 1;
+    protected final static int SLIDER_CONTENT_SIDE_OFFSET = 1;
+    protected final static int SLIDER_CONTENT_PADDING = SLIDER_CONTENT_SIDE_OFFSET + 1;
 
-  private final Orientation orientation;
+    private final Orientation orientation;
 
-  private boolean sliderDragging = false;
+    private boolean sliderDragging = false;
 
-  /**
-   * The function to paint slider's background (i.e. checkerboard)
-   */
-  private final @Nullable PaintConsumer backgroundLambda;
-  /**
-   * The function to paint slider's foreground (i.e. gradient)
-   */
-  private final @Nullable PaintConsumer handlerLambda;
-  private final @NotNull Supplier<Float> valueSupplier;
-  private Consumer<Float> positionConsumer;
+    /**
+     * The function to paint slider's background (i.e. checkerboard)
+     */
+    private final @Nullable PaintConsumer backgroundLambda;
+    /**
+     * The function to paint slider's foreground (i.e. gradient)
+     */
+    private final @Nullable PaintConsumer handlerLambda;
+    private final @NotNull Supplier<Float> valueSupplier;
+    private Consumer<Float> positionConsumer;
 
-  public SliderWidget(
-      PaintingScreen parentScreen, int x, int y, Component translatableComponent,
-      Supplier<Float> valueSupplier,
-      Consumer<Float> positionConsumer,
-      Orientation orientation,
-      @Nullable PaintConsumer backgroundLambda, @Nullable PaintConsumer handlerLambda
-  ) {
-    super(
-        parentScreen, x, y,
-        orientation == Orientation.HORIZONTAL ? HORIZONTAL_WIDTH : VERTICAL_WIDTH,
-        orientation == Orientation.HORIZONTAL ? HORIZONTAL_HEIGHT : VERTICAL_HEIGHT,
-        translatableComponent
-    );
+    public SliderWidget(
+        PaintingScreen parentScreen, int x, int y, Component translatableComponent,
+        Supplier<Float> valueSupplier,
+        Consumer<Float> positionConsumer,
+        Orientation orientation,
+        @Nullable PaintConsumer backgroundLambda, @Nullable PaintConsumer handlerLambda
+    ) {
+        super(
+            parentScreen, x, y,
+            orientation == Orientation.HORIZONTAL ? HORIZONTAL_WIDTH : VERTICAL_WIDTH,
+            orientation == Orientation.HORIZONTAL ? HORIZONTAL_HEIGHT : VERTICAL_HEIGHT,
+            translatableComponent
+        );
 
-    this.orientation = orientation;
+        this.orientation = orientation;
 
-    this.valueSupplier = valueSupplier;
-    this.positionConsumer = positionConsumer;
+        this.valueSupplier = valueSupplier;
+        this.positionConsumer = positionConsumer;
 
-    this.backgroundLambda = backgroundLambda;
-    this.handlerLambda = handlerLambda;
-  }
-
-  public SliderWidget(
-      PaintingScreen parentScreen, int x, int y, Component translatableComponent,
-      Supplier<Float> valueSupplier,
-      Consumer<Float> positionConsumer,
-      @Nullable PaintConsumer backgroundLambda, @Nullable PaintConsumer handlerLambda
-  ) {
-    this(parentScreen, x, y, translatableComponent, valueSupplier, positionConsumer, Orientation.HORIZONTAL, backgroundLambda, handlerLambda);
-  }
-
-  @Override
-  public @Nullable Component getTooltip(int mouseX, int mouseY) {
-    return null;
-  }
-
-  @Override
-  public boolean mouseClicked(double mouseX, double mouseY, int button) {
-    if (!this.isMouseOver(mouseX, mouseY) || !this.isValidClickButton(button)) {
-      return false;
+        this.backgroundLambda = backgroundLambda;
+        this.handlerLambda = handlerLambda;
     }
 
-    int iMouseX = (int) mouseX;
-    int iMouseY = (int) mouseY;
-
-    this.handleSliderInteraction(iMouseX, iMouseY);
-    return true;
-  }
-
-  @Override
-  public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-    if (!this.sliderDragging) {
-      return false;
+    public SliderWidget(
+        PaintingScreen parentScreen, int x, int y, Component translatableComponent,
+        Supplier<Float> valueSupplier,
+        Consumer<Float> positionConsumer,
+        @Nullable PaintConsumer backgroundLambda, @Nullable PaintConsumer handlerLambda
+    ) {
+        this(parentScreen, x, y, translatableComponent, valueSupplier, positionConsumer, Orientation.HORIZONTAL, backgroundLambda, handlerLambda);
     }
 
-    return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-  }
-
-  @Override
-  protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-    if (this.sliderDragging) {
-      this.handleSliderInteraction(mouseX, mouseY);
-    }
-  }
-
-  @Override
-  public boolean mouseReleased(double mouseX, double mouseY, int button) {
-    if (!this.sliderDragging) {
-      return false;
+    @Override
+    public @Nullable Component getTooltip(int mouseX, int mouseY) {
+        return null;
     }
 
-    return super.mouseReleased(mouseX, mouseY, button);
-  }
-
-  @Override
-  public void onRelease(double mouseX, double mouseY) {
-    this.sliderDragging = false;
-  }
-
-  protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-    this.drawSliderBackground(guiGraphics);
-    this.drawHandler(guiGraphics);
-  }
-
-  protected void drawSliderBackground(GuiGraphics guiGraphics) {
-    final int SLIDER_HORIZONTAL_POSITION_U = 102;
-    final int SLIDER_HORIZONTAL_POSITION_V = 120;
-    final int SLIDER_VERTICAL_POSITION_U = 72;
-    final int SLIDER_VERTICAL_POSITION_V = 120;
-
-    float value = this.valueSupplier.get();
-
-    if (this.orientation == Orientation.HORIZONTAL) {
-      int sliderContentGlobalLeft = this.getX() + SLIDER_CONTENT_SIDE_OFFSET;
-      int sliderContentGlobalTop = this.getY() + 3;
-
-      int sliderV = SLIDER_HORIZONTAL_POSITION_V;
-
-      if (this.sliderDragging) {
-        sliderV += HORIZONTAL_HEIGHT;
-      }
-
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_SPRITE_WIDTH, HORIZONTAL_SPRITE_HEIGHT);
-
-      if (this.backgroundLambda != null) {
-        int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2;
-        int sliderContentHeight = 3;
-
-        if (this.sliderDragging) {
-          sliderContentGlobalTop -= 2;
-          sliderContentHeight += 4;
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.isMouseOver(mouseX, mouseY) || !this.isValidClickButton(button)) {
+            return false;
         }
 
-        this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
-      }
-    } else {
-      int sliderContentGlobalLeft = this.getX() + 3;
-      int sliderContentGlobalTop = this.getY() + SLIDER_CONTENT_SIDE_OFFSET;
+        int iMouseX = (int) mouseX;
+        int iMouseY = (int) mouseY;
 
-      int sliderU = SLIDER_VERTICAL_POSITION_U;
+        this.handleSliderInteraction(iMouseX, iMouseY);
+        return true;
+    }
 
-      if (this.sliderDragging) {
-        sliderU += VERTICAL_WIDTH;
-      }
-
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), sliderU, SLIDER_VERTICAL_POSITION_V, VERTICAL_SPRITE_WIDTH, VERTICAL_SPRITE_HEIGHT);
-
-      if (this.backgroundLambda != null) {
-        int sliderContentWidth = 3;
-        int sliderContentHeight = VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2;
-
-        if (this.sliderDragging) {
-          sliderContentGlobalLeft -= 2;
-          sliderContentWidth += 4;
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (!this.sliderDragging) {
+            return false;
         }
 
-        this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
-      }
-    }
-  }
-
-  /**
-   * @param mouseX
-   * @param mouseY
-   */
-  protected void handleSliderInteraction(final double mouseX, final double mouseY) {
-    this.sliderDragging = true;
-
-    float percent;
-
-    if (this.orientation == Orientation.HORIZONTAL) {
-      percent = (float) (mouseX - this.getX() - SLIDER_CONTENT_SIDE_OFFSET) / (HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2);
-    } else {
-      percent = 1.0f - (float) (mouseY - this.getY() - SLIDER_CONTENT_SIDE_OFFSET) / (VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2);
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
-    percent = Mth.clamp(percent, 0.0f, 1.0f);
-
-    this.positionConsumer.accept(percent);
-  }
-
-  /**
-   * Handlers
-   */
-
-  protected void drawHandler(GuiGraphics guiGraphics) {
-    final int HANDLER_HORIZONTAL_POSITION_U = 90;
-    final int HANDLER_HORIZONTAL_POSITION_V = 119;
-    final int HANDLER_VERTICAL_POSITION_U = 90;
-    final int HANDLER_VERTICAL_POSITION_V = 141;
-
-    final int HANDLER_WIDTH = 5;
-    final int HANDLER_HEIGHT = 11;
-
-    final int HANDLER_OFFSET = 2;
-
-    float value = this.valueSupplier.get();
-
-    if (this.orientation == Orientation.HORIZONTAL) {
-      int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
-
-      int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * value) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
-      int sliderGlobalTop = this.getY() - 1;
-
-      int sliderV = HANDLER_HORIZONTAL_POSITION_V;
-
-      if (this.sliderDragging) {
-        sliderV += HANDLER_HEIGHT;
-      }
-
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, sliderGlobalLeft, sliderGlobalTop, HANDLER_HORIZONTAL_POSITION_U, sliderV, HANDLER_WIDTH, HANDLER_HEIGHT);
-
-      if (this.handlerLambda != null) {
-        int offsetX = sliderGlobalLeft;
-        int offsetY = sliderGlobalTop;
-        int width = 1;
-        int height = 3;
-
+    @Override
+    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
         if (this.sliderDragging) {
-          offsetX += 1;
-          offsetY += 4;
+            this.handleSliderInteraction(mouseX, mouseY);
+        }
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (!this.sliderDragging) {
+            return false;
+        }
+
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public void onRelease(double mouseX, double mouseY) {
+        this.sliderDragging = false;
+    }
+
+    protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        this.drawSliderBackground(guiGraphics);
+        this.drawHandler(guiGraphics);
+    }
+
+    protected void drawSliderBackground(GuiGraphics guiGraphics) {
+        final int SLIDER_HORIZONTAL_POSITION_U = 102;
+        final int SLIDER_HORIZONTAL_POSITION_V = 120;
+        final int SLIDER_VERTICAL_POSITION_U = 72;
+        final int SLIDER_VERTICAL_POSITION_V = 120;
+
+        float value = this.valueSupplier.get();
+
+        if (this.orientation == Orientation.HORIZONTAL) {
+            int sliderContentGlobalLeft = this.getX() + SLIDER_CONTENT_SIDE_OFFSET;
+            int sliderContentGlobalTop = this.getY() + 3;
+
+            int sliderV = SLIDER_HORIZONTAL_POSITION_V;
+
+            if (this.sliderDragging) {
+                sliderV += HORIZONTAL_HEIGHT;
+            }
+
+            guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_SPRITE_WIDTH, HORIZONTAL_SPRITE_HEIGHT);
+
+            if (this.backgroundLambda != null) {
+                int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2;
+                int sliderContentHeight = 3;
+
+                if (this.sliderDragging) {
+                    sliderContentGlobalTop -= 2;
+                    sliderContentHeight += 4;
+                }
+
+                this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
+            }
         } else {
-          offsetX += 2;
-          offsetY += 4;
-          width = 3;
+            int sliderContentGlobalLeft = this.getX() + 3;
+            int sliderContentGlobalTop = this.getY() + SLIDER_CONTENT_SIDE_OFFSET;
+
+            int sliderU = SLIDER_VERTICAL_POSITION_U;
+
+            if (this.sliderDragging) {
+                sliderU += VERTICAL_WIDTH;
+            }
+
+            guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), sliderU, SLIDER_VERTICAL_POSITION_V, VERTICAL_SPRITE_WIDTH, VERTICAL_SPRITE_HEIGHT);
+
+            if (this.backgroundLambda != null) {
+                int sliderContentWidth = 3;
+                int sliderContentHeight = VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2;
+
+                if (this.sliderDragging) {
+                    sliderContentGlobalLeft -= 2;
+                    sliderContentWidth += 4;
+                }
+
+                this.backgroundLambda.accept(guiGraphics, sliderContentGlobalLeft, sliderContentGlobalTop, sliderContentWidth, sliderContentHeight, value);
+            }
         }
-
-        this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
-      }
-    } else {
-      int sliderContentHeight = VERTICAL_HEIGHT - 7;
-
-      int sliderGlobalLeft = this.getX() - 1;
-      int sliderGlobalTop = this.getY() + (int) (sliderContentHeight * (1.0f - value)) + 3 - 2;
-
-      int sliderV = HANDLER_VERTICAL_POSITION_V;
-
-      if (this.sliderDragging) {
-        sliderV += HANDLER_WIDTH;
-      }
-
-      // Intentionally swapped width and height
-      final int handlerWidth = HANDLER_HEIGHT;
-      final int handlerHeight = HANDLER_WIDTH;
-
-      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, sliderGlobalLeft, sliderGlobalTop, HANDLER_VERTICAL_POSITION_U, sliderV, handlerWidth, handlerHeight);
-
-      if (this.handlerLambda != null) {
-        int offsetX = sliderGlobalLeft;
-        int offsetY = sliderGlobalTop;
-        int height = 1;
-        int width = 3;
-
-        if (this.sliderDragging) {
-          offsetX += 4;
-          offsetY += 1;
-        } else {
-          offsetX += 4;
-          offsetY += 2;
-          height = 3;
-        }
-
-        this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
-      }
     }
-  }
 
-  @FunctionalInterface
-  public interface PaintConsumer {
-    public void accept(GuiGraphics guiGraphics, int x, int y, int width, int height, float value);
-  }
+    /**
+     * @param mouseX
+     * @param mouseY
+     */
+    protected void handleSliderInteraction(final double mouseX, final double mouseY) {
+        this.sliderDragging = true;
 
-  public enum Orientation {
-    HORIZONTAL,
-    VERTICAL
-  }
+        float percent;
+
+        if (this.orientation == Orientation.HORIZONTAL) {
+            percent = (float) (mouseX - this.getX() - SLIDER_CONTENT_SIDE_OFFSET) / (HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2);
+        } else {
+            percent = 1.0f - (float) (mouseY - this.getY() - SLIDER_CONTENT_SIDE_OFFSET) / (VERTICAL_HEIGHT - SLIDER_CONTENT_PADDING * 2);
+        }
+
+        percent = Mth.clamp(percent, 0.0f, 1.0f);
+
+        this.positionConsumer.accept(percent);
+    }
+
+    /**
+     * Handlers
+     */
+
+    protected void drawHandler(GuiGraphics guiGraphics) {
+        final int HANDLER_HORIZONTAL_POSITION_U = 90;
+        final int HANDLER_HORIZONTAL_POSITION_V = 119;
+        final int HANDLER_VERTICAL_POSITION_U = 90;
+        final int HANDLER_VERTICAL_POSITION_V = 141;
+
+        final int HANDLER_WIDTH = 5;
+        final int HANDLER_HEIGHT = 11;
+
+        final int HANDLER_OFFSET = 2;
+
+        float value = this.valueSupplier.get();
+
+        if (this.orientation == Orientation.HORIZONTAL) {
+            int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
+
+            int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * value) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
+            int sliderGlobalTop = this.getY() - 1;
+
+            int sliderV = HANDLER_HORIZONTAL_POSITION_V;
+
+            if (this.sliderDragging) {
+                sliderV += HANDLER_HEIGHT;
+            }
+
+            guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, sliderGlobalLeft, sliderGlobalTop, HANDLER_HORIZONTAL_POSITION_U, sliderV, HANDLER_WIDTH, HANDLER_HEIGHT);
+
+            if (this.handlerLambda != null) {
+                int offsetX = sliderGlobalLeft;
+                int offsetY = sliderGlobalTop;
+                int width = 1;
+                int height = 3;
+
+                if (this.sliderDragging) {
+                    offsetX += 1;
+                    offsetY += 4;
+                } else {
+                    offsetX += 2;
+                    offsetY += 4;
+                    width = 3;
+                }
+
+                this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
+            }
+        } else {
+            int sliderContentHeight = VERTICAL_HEIGHT - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
+
+            int sliderGlobalLeft = this.getX() - 1;
+            int sliderGlobalTop = this.getY() + (int) (sliderContentHeight * (1.0f - value)) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
+
+            int sliderV = HANDLER_VERTICAL_POSITION_V;
+
+            if (this.sliderDragging) {
+                sliderV += HANDLER_WIDTH;
+            }
+
+            // Intentionally swapped width and height
+            final int handlerWidth = HANDLER_HEIGHT;
+            final int handlerHeight = HANDLER_WIDTH;
+
+            guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, sliderGlobalLeft, sliderGlobalTop, HANDLER_VERTICAL_POSITION_U, sliderV, handlerWidth, handlerHeight);
+
+            if (this.handlerLambda != null) {
+                int offsetX = sliderGlobalLeft;
+                int offsetY = sliderGlobalTop;
+                int height = 1;
+                int width = 3;
+
+                if (this.sliderDragging) {
+                    offsetX += 4;
+                    offsetY += 1;
+                } else {
+                    offsetX += 4;
+                    offsetY += 2;
+                    height = 3;
+                }
+
+                this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
+            }
+        }
+    }
+
+    @FunctionalInterface
+    public interface PaintConsumer {
+        public void accept(GuiGraphics guiGraphics, int x, int y, int width, int height, float value);
+    }
+
+    public enum Orientation {
+        HORIZONTAL,
+        VERTICAL
+    }
 }

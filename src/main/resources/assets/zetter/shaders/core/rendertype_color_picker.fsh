@@ -468,7 +468,7 @@ bool in_bounds(in vec3 v) {
  * RGB_LIGHTNESS_VERTICAL(9);
  */
 void main() {
-    float h, s, l;
+    float h, s, l, o;
     vec2 zeroHue = vec2(0.0, 1.0);
     vec2 colorPosition;
     float colorPositionLength;
@@ -613,33 +613,29 @@ void main() {
             break;
         // OK_OPACITY_HORIZONTAL
         case 10:
-            {
-                float o = texCoord0.x;
+            o = texCoord0.x;
 
-                h = HSL.x;
-                s = HSL.y;
-                l = HSL.z;
+            h = HSL.x;
+            s = HSL.y;
+            l = HSL.z;
 
-                rgb = okhsl_to_srgb(vec3(h, s, l));
-                rgb = clamp(rgb, 0.0, 1.0);
+            rgb = okhsl_to_srgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-                fragColor = vec4(rgb, o)/* * ColorModulator*/;
-            }
+            fragColor = vec4(rgb, o)/* * ColorModulator*/;
             break;
         // RGB_OPACITY_HORIZONTAL
         case 11:
-            {
-                float o = texCoord0.x;
+            o = texCoord0.x;
 
-                h = HSL.x;
-                s = HSL.y;
-                l = HSL.z;
+            h = HSL.x;
+            s = HSL.y;
+            l = HSL.z;
 
-                rgb = hsl_to_linear_rgb(vec3(h, s, l));
-                rgb = clamp(rgb, 0.0, 1.0);
+            rgb = hsl_to_linear_rgb(vec3(h, s, l));
+            rgb = clamp(rgb, 0.0, 1.0);
 
-                fragColor = vec4(rgb, o)/* * ColorModulator*/;
-            }
+            fragColor = vec4(rgb, o)/* * ColorModulator*/;
             break;
         default:
             discard;
