@@ -130,7 +130,7 @@ public class PaintingScreen extends Screen {
         final int TOOLS_WIDGET_POSITION_X = 4;
         final int TOOLS_WIDGET_POSITION_Y = 16;
         final int HISTORY_WIDGET_POSITION_X = 4;
-        final int HISTORY_WIDGET_POSITION_Y = 152;
+        final int HISTORY_WIDGET_POSITION_Y = 11;
         final int CANVAS_MODE_WIDGET_POSITION_X = 4;
         final int CANVAS_MODE_WIDGET_POSITION_Y = 152;
         final int ZOOM_WIDGET_POSITION_X = 4;

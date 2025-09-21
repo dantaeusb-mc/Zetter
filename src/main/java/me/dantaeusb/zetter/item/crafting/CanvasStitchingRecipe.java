@@ -21,13 +21,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 
-/**
- * Only for frames, toggle
- */
-public class StitchingRecipe extends CustomRecipe {
+public class CanvasStitchingRecipe extends CustomRecipe {
     final int[][] shapes;
 
-    public StitchingRecipe(ResourceLocation id, int[][] shapes) {
+    public CanvasStitchingRecipe(ResourceLocation id, int[][] shapes) {
         super(id, CraftingBookCategory.MISC);
 
         this.shapes = shapes;
@@ -35,7 +32,7 @@ public class StitchingRecipe extends CustomRecipe {
 
     @Override
     public String toString() {
-        return "StitchingRecipe [shapes=" + Arrays.deepToString(this.shapes) + "]";
+        return "CanvasStitchingRecipe [shapes=" + Arrays.deepToString(this.shapes) + "]";
     }
 
     @Override
@@ -140,9 +137,9 @@ public class StitchingRecipe extends CustomRecipe {
         return width >= 2 || height >= 2;
     }
 
-    public static class Serializer implements RecipeSerializer<StitchingRecipe> {
+    public static class Serializer implements RecipeSerializer<CanvasStitchingRecipe> {
         @Override
-        public @NotNull StitchingRecipe fromJson(@NotNull ResourceLocation recipeId, @NotNull JsonObject json) {
+        public @NotNull CanvasStitchingRecipe fromJson(@NotNull ResourceLocation recipeId, @NotNull JsonObject json) {
             final JsonArray shapesJson = GsonHelper.getAsJsonArray(json, "shapes");
             final int[][] shapes = new int[shapesJson.size()][2];
 
@@ -161,11 +158,11 @@ public class StitchingRecipe extends CustomRecipe {
                 }
             }
 
-            return new StitchingRecipe(recipeId, shapes);
+            return new CanvasStitchingRecipe(recipeId, shapes);
         }
 
         @Override
-        public StitchingRecipe fromNetwork(@NotNull ResourceLocation recipeId, FriendlyByteBuf buffer) {
+        public CanvasStitchingRecipe fromNetwork(@NotNull ResourceLocation recipeId, FriendlyByteBuf buffer) {
             int shapeCount = buffer.readVarInt();
             int[][] shapes = new int[shapeCount][2];
 
@@ -174,11 +171,11 @@ public class StitchingRecipe extends CustomRecipe {
                 shapes[i][1] = buffer.readVarInt();
             }
 
-            return new StitchingRecipe(recipeId, shapes);
+            return new CanvasStitchingRecipe(recipeId, shapes);
         }
 
         @Override
-        public void toNetwork(FriendlyByteBuf buffer, StitchingRecipe recipe) {
+        public void toNetwork(FriendlyByteBuf buffer, CanvasStitchingRecipe recipe) {
             buffer.writeVarInt(recipe.shapes.length);
             for (int[] shape : recipe.shapes) {
                 if (shape.length != 2) {

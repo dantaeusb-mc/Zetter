@@ -4,7 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.item.crafting.StitchingRecipe;
+import me.dantaeusb.zetter.item.crafting.CanvasStitchingRecipe;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
@@ -69,7 +69,7 @@ public class ZetterGameEvents {
                 craftingContainer,
                 player.level()
             ).ifPresent(recipe -> {
-                if (!player.level().isClientSide && recipe instanceof StitchingRecipe) {
+                if (!player.level().isClientSide && recipe instanceof CanvasStitchingRecipe) {
                     CanvasStitchingHelper.createStitchedCanvasAndWriteNewCanvasData(craftingContainer, event.getCrafting(), player);
                 }
             });

@@ -5,47 +5,39 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
-import me.dantaeusb.zetter.client.model.EaselModel;
+import me.dantaeusb.zetter.client.model.WallEaselModel;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
+import me.dantaeusb.zetter.entity.item.WallEaselEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
-import org.joml.Matrix4f;
 
-import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Optional;
 
-public class EaselRenderer extends EntityWithCanvasRenderer<EaselEntity> {
-    public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
+public class WallEaselRenderer extends EntityWithCanvasRenderer<WallEaselEntity> {
+    public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/wall_easel.png");
     public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
 
-    protected EaselModel model;
-    protected final List<RenderLayer<EaselEntity, EntityModel<EaselEntity>>> layers = Lists.newArrayList();
+    protected WallEaselModel<WallEaselEntity> model;
+    protected final List<RenderLayer<WallEaselEntity, EntityModel<WallEaselEntity>>> layers = Lists.newArrayList();
     protected int canvasRequestTimeout = 0;
 
-    public EaselRenderer(EntityRendererProvider.Context context) {
+    public WallEaselRenderer(EntityRendererProvider.Context context) {
         super(context);
 
-        this.model = new EaselModel<>(context.bakeLayer(EaselModel.EASEL_BODY_LAYER));
+        this.model = new WallEaselModel<>(context.bakeLayer(WallEaselModel.EASEL_BODY_LAYER));
     }
 
-    public final boolean addLayer(RenderLayer<EaselEntity, EntityModel<EaselEntity>> layer) {
+    public final boolean addLayer(RenderLayer<WallEaselEntity, EntityModel<WallEaselEntity>> layer) {
         return this.layers.add(layer);
     }
 
-    public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public void render(WallEaselEntity easelEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
 
         poseStack.pushPose();
@@ -73,7 +65,7 @@ public class EaselRenderer extends EntityWithCanvasRenderer<EaselEntity> {
      * @todo: do something with this
      */
     @Override
-    public ResourceLocation getTextureLocation(EaselEntity entity) {
+    public ResourceLocation getTextureLocation(WallEaselEntity entity) {
         return TEXTURE;
     }
 }

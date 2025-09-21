@@ -28,12 +28,12 @@ public class EaselModel<T extends EaselEntity> extends ListModel<T> {
     private final ModelPart frontLeftLeg;
     private final ModelPart frontRightLeg;
 
-    public EaselModel(ModelPart part) {
-        this.rack = part.getChild(RACK);
-        this.topPlank = part.getChild(TOP_PLANK);
-        this.backLeg = part.getChild(BACK_LEG);
-        this.frontLeftLeg = part.getChild(FRONT_LEFT_LEG);
-        this.frontRightLeg = part.getChild(FRONT_RIGHT_LEG);
+    public EaselModel(ModelPart root) {
+        this.rack = root.getChild(RACK);
+        this.topPlank = root.getChild(TOP_PLANK);
+        this.backLeg = root.getChild(BACK_LEG);
+        this.frontLeftLeg = root.getChild(FRONT_LEFT_LEG);
+        this.frontRightLeg = root.getChild(FRONT_RIGHT_LEG);
     }
 
     public static LayerDefinition createBodyLayer() {

@@ -24,8 +24,8 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
     final static int HISTORY_BUTTON_WIDTH = 22;
     final static int HISTORY_BUTTON_HEIGHT = 13;
 
-    final static int HISTORY_BUTTONS_U = 209;
-    final static int HISTORY_BUTTONS_V = 210;
+    final static int HISTORY_BUTTONS_U = 0;
+    final static int HISTORY_BUTTONS_V = 214;
 
     public HistoryWidget(PaintingScreen parentScreen, int x, int y) {
         // Add borders

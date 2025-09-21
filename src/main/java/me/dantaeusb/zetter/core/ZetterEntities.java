@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
+import me.dantaeusb.zetter.entity.item.WallEaselEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -21,6 +22,9 @@ public class ZetterEntities {
     public static RegistryObject<EntityType<EaselEntity>> EASEL_ENTITY = ENTITIES.register("easel_entity", () -> EntityType.Builder.<EaselEntity>of(EaselEntity::new, MobCategory.MISC)
             .sized(0.8F, 1.8F)
             .build(Zetter.MOD_ID + "_easel_entity"));
+    public static RegistryObject<EntityType<WallEaselEntity>> WALL_EASEL_ENTITY = ENTITIES.register("wall_easel_entity", () -> EntityType.Builder.<WallEaselEntity>of(WallEaselEntity::new, MobCategory.MISC)
+        .sized(0.8F, 1.8F)
+        .build(Zetter.MOD_ID + "_wall_easel_entity"));
 
     public static void init(IEventBus bus) {
         ENTITIES.register(bus);
