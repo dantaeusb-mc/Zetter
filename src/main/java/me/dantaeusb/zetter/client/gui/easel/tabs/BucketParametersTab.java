@@ -44,7 +44,7 @@ public class BucketParametersTab extends AbstractTab {
     @Override
     public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            fill(matrixStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
+            this.renderOverlay(matrixStack);
 
             if (this.parentScreen.getMenu().getCurrentToolParameters() instanceof BlendingParameterHolder) {
                 this.blendingWidget.render(matrixStack);

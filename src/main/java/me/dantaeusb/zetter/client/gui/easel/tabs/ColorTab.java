@@ -48,7 +48,7 @@ public class ColorTab extends AbstractTab {
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTicks) {
         if (this.visible) {
-            fill(poseStack, this.x, this.y, this.x + this.width, this.y + this.height, Color.SCREEN_GRAY.getRGB());
+            this.renderOverlay(poseStack);
 
             this.hsbWidget.render(poseStack);
             this.colorCodeWidget.render(poseStack, this.x, this.y, partialTicks);

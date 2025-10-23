@@ -29,6 +29,9 @@ public class AbstractTab extends AbstractPaintingWidget {
             widget.renderLabels(matrixStack, mouseX, mouseY);
         }
     }
+    public void renderOverlay(PoseStack matrixStack) {
+        blit(matrixStack, this.x, this.y, 0, 106, this.width, this.height, 256, 256);
+    }
 
     public void containerTick() {
 
