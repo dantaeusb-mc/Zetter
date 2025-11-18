@@ -30,7 +30,7 @@ public class WallEaselRenderer extends EntityWithCanvasRenderer<WallEaselEntity>
     public WallEaselRenderer(EntityRendererProvider.Context context) {
         super(context);
 
-        this.model = new WallEaselModel<>(context.bakeLayer(WallEaselModel.EASEL_BODY_LAYER));
+        this.model = new WallEaselModel<>(context.bakeLayer(WallEaselModel.WALL_EASEL_BODY_LAYER));
     }
 
     public final boolean addLayer(RenderLayer<WallEaselEntity, EntityModel<WallEaselEntity>> layer) {

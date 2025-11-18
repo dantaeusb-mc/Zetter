@@ -81,6 +81,51 @@ public class WallEaselEntity extends CanvasHolderEntity implements ItemStackHand
         this.updateCanvasVectors();
     }
 
+    /**
+     * Updates the entity bounding box based on current facing
+     */
+    /*protected void recalculateBoundingBox() {
+            double xCenter = (double)this.pos.getX() + 0.5D;
+            double yCenter = (double)this.pos.getY() + 0.5D;
+            double zCenter = (double)this.pos.getZ() + 0.5D;
+
+            double thicknessOffset = 0.5D - (1.0D / 32.0D);
+
+            double hCenterOffset = this.offs(this.getWidth());
+            double vCenterOffset = this.offs(this.getHeight());
+
+            xCenter = xCenter - (double)this.direction.getStepX() * thicknessOffset;
+            zCenter = zCenter - (double)this.direction.getStepZ() * thicknessOffset;
+
+            yCenter = yCenter + vCenterOffset;
+
+            Direction direction = this.direction.getCounterClockWise();
+
+            xCenter = xCenter + hCenterOffset * (double)direction.getStepX();
+            zCenter = zCenter + hCenterOffset * (double)direction.getStepZ();
+
+            this.setPosRaw(xCenter, yCenter, zCenter);
+
+            double xWidth = this.getWidth();
+            double yHeight = this.getHeight();
+            double zWidth = this.getWidth();
+
+            if (this.direction.getAxis() == Direction.Axis.Z) {
+                zWidth = 1.0D;
+            } else {
+                xWidth = 1.0D;
+            }
+
+            xWidth = xWidth / 16.0D / 2.0D;
+            yHeight = yHeight / 16.0D / 2.0D;
+            zWidth = zWidth / 16.0D / 2.0D;
+
+            this.setBoundingBox(new AABB(
+                xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
+                xCenter + xWidth, yCenter + yHeight, zCenter + zWidth
+            ));
+    }*/
+
     protected void updateCanvasVectors() {
         final float scaleFactor = 1.0F / 16.0F;
 
@@ -496,7 +541,7 @@ public class WallEaselEntity extends CanvasHolderEntity implements ItemStackHand
                 }
             }
 
-            this.spawnAtLocation(ZetterItems.EASEL.get());
+            this.spawnAtLocation(ZetterItems.WALL_EASEL.get());
         }
     }
 
@@ -514,7 +559,7 @@ public class WallEaselEntity extends CanvasHolderEntity implements ItemStackHand
 
     @Override
     public ItemStack getPickResult() {
-        return new ItemStack(ZetterItems.EASEL.get());
+        return new ItemStack(ZetterItems.WALL_EASEL.get());
     }
 
     /**

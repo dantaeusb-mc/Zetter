@@ -19,6 +19,7 @@ public class ZetterCreativeTabs
         } else if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(ZetterItems.ARTIST_TABLE);
             event.accept(ZetterItems.EASEL);
+            event.accept(ZetterItems.WALL_EASEL);
 
             for (RegistryObject<FrameItem> frameItem : ZetterItems.FRAMES.values()) {
                 event.accept(frameItem);

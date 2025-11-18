@@ -2,8 +2,10 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.model.EaselModel;
+import me.dantaeusb.zetter.client.model.WallEaselModel;
 import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
+import me.dantaeusb.zetter.client.renderer.entity.WallEaselRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -27,6 +29,7 @@ public class ZetterModels
     public static void onEntityRenderersRegistryEvent(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), FramedPaintingRenderer::new);
         event.registerEntityRenderer(ZetterEntities.EASEL_ENTITY.get(), EaselRenderer::new);
+        event.registerEntityRenderer(ZetterEntities.WALL_EASEL_ENTITY.get(), WallEaselRenderer::new);
     }
 
     @SubscribeEvent
@@ -35,5 +38,6 @@ public class ZetterModels
     {
         event.registerLayerDefinition(EaselModel.EASEL_BODY_LAYER, EaselModel::createBodyLayer);
         event.registerLayerDefinition(FramedPaintingRenderer.PAINTING_PLATE_LAYER, FramedPaintingRenderer::createPlateLayer);
+        event.registerLayerDefinition(WallEaselModel.WALL_EASEL_BODY_LAYER, WallEaselModel::createBodyLayer);
     }
 }

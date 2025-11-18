@@ -37,18 +37,18 @@ public abstract class EntityWithCanvasRenderer<T extends CanvasHolderEntity> ext
         return canvasTracker.getCanvasData(canvasName);
     }
 
-    public void renderCanvas(EaselEntity easelEntity, CanvasData canvasData, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    public void renderCanvas(CanvasHolderEntity canvasHolderEntity, CanvasData canvasData, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         final int canvasBlockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
         final int canvasBlockHeight = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
-        if (!easelEntity.hasCanvas()) {
+        if (!canvasHolderEntity.hasCanvas()) {
             return;
         }
 
-        Matrix4f matrixTransform = easelEntity.getCanvasMatrixTransform(partialTicks);
+        Matrix4f matrixTransform = canvasHolderEntity.getCanvasMatrixTransform(partialTicks);
         poseStack.mulPoseMatrix(matrixTransform);
 
-        me.dantaeusb.zetter.client.renderer.CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, easelEntity.getCanvasCode(), canvasData, packedLight);
+        me.dantaeusb.zetter.client.renderer.CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, canvasHolderEntity.getCanvasCode(), canvasData, packedLight);
 
         /**
          * Rendering canvas back and sides
