@@ -19,7 +19,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -179,7 +179,7 @@ public class EaselState {
             SEaselResetPacket resetPacket = new SEaselResetPacket(this.easel.getId());
 
             for (Player player : this.players) {
-                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), resetPacket);
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer((ServerPlayer) player, resetPacket);
             }
         }
 
@@ -555,7 +555,7 @@ public class EaselState {
         SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.easel.getId(), canvasCode,canvasData, System.currentTimeMillis());
 
         for (Player player : this.easel.getPlayersUsing()) {
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), initPacket);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer((ServerPlayer) player, initPacket);
         }
 
         // Drop things but not sync yet
@@ -638,7 +638,7 @@ public class EaselState {
         if (this.easel.level().isClientSide()) {
             if (tillAction.isSent()) {
                 CCanvasHistoryActionPacket historyPacket = new CCanvasHistoryActionPacket(this.easel.getId(), tillAction.id, cancel);
-                ZetterNetwork.simpleChannel.sendToServer(historyPacket);
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(historyPacket);
             }
         } else {
             for (Player player : this.players) {
@@ -664,7 +664,7 @@ public class EaselState {
 
                     if (found) {
                         SCanvasHistoryActionPacket historyPacket = new SCanvasHistoryActionPacket(this.easel.getId(), tillAction.id, cancel);
-                        ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), historyPacket);
+                        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer((ServerPlayer) player, historyPacket);
                     }
                 }
             }
@@ -1131,7 +1131,7 @@ public class EaselState {
 
         if (!unsentActions.isEmpty()) {
             CCanvasActionPacket paintingFrameBufferPacket = new CCanvasActionPacket(this.easel.getId(), unsentActions);
-            ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(paintingFrameBufferPacket);
 
             for (CanvasAction unsentAction : unsentActions) {
                 unsentAction.setSent();
@@ -1187,7 +1187,7 @@ public class EaselState {
                 this.easel.getId(), this.getCanvasCode(), actionsSync && snapshotsSync, unsyncedSnapshot, unsyncedActions
         );
 
-        ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), syncMessage);
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer((ServerPlayer) player, syncMessage);
 
         if (hasUnsyncedActions) {
             this.playerLastSyncedAction.put(player.getUUID(), unsyncedActions.get(unsyncedActions.size() - 1).id);

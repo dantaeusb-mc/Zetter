@@ -20,8 +20,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -471,7 +471,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
 
         CPaletteUpdatePacket paletteUpdatePacket = new CPaletteUpdatePacket(this.currentPaletteSlot, this.getCurrentColor());
         Zetter.LOG.debug("Sending Palette Update: " + paletteUpdatePacket);
-        ZetterNetwork.simpleChannel.sendToServer(paletteUpdatePacket);
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(paletteUpdatePacket);
     }
 
     /**

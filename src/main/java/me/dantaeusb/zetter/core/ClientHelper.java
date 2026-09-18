@@ -15,7 +15,7 @@ import net.minecraft.client.gui.screens.ConfirmLinkScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -33,60 +33,39 @@ public class ClientHelper {
         return openUriAllowed() && ZetterConfig.CLIENT.enableHelpButton.get();
     }
 
-    /**
-     * Thanks to gigaherz
-     * @link {https://github.com/gigaherz/Guidebook/blob/master/src/main/java/dev/gigaherz/guidebook/guidebook/util/LinkHelper.java#L128-L193}
-     * @link {Screen#handleComponentClicked(Style style)}}
-     *
-     * @param parentScreen
-     * @param href
-     */
-    public static void openUriPrompt(Screen parentScreen, String href)
-    {
-        Minecraft mc = Minecraft.getInstance();
-
+    public static void openUriPrompt(Screen parentScreen, String href) {
         if (!ClientHelper.openUriAllowed()) {
             return;
         }
 
-        try
-        {
+        try {
             URI uri = new URI(href);
             String s = uri.getScheme();
             if (s == null) {
                 throw new URISyntaxException(href, "Missing protocol");
             }
 
-            if (!ALLOWED_PROTOCOLS.contains(s.toLowerCase(Locale.ROOT))) {
-                throw new URISyntaxException(href, "Unsupported protocol: " + s.toLowerCase(Locale.ROOT));
+            String s1 = s.toLowerCase(Locale.ROOT);
+            if (!ALLOWED_PROTOCOLS.contains(s1)) {
+                throw new URISyntaxException(href, "Unsupported protocol: " + s1);
             }
 
+            Minecraft mc = Minecraft.getInstance();
             if (mc.options.chatLinksPrompt().get()) {
-                mc.setScreen(new ConfirmLinkScreen((result) -> {
-                    if (result) {
-                        ClientHelper.openUri(uri);
+                mc.setScreen(new ConfirmLinkScreen((confirmed) -> {
+                    if (confirmed) {
+                        openUri(uri);
                     }
-
                     mc.setScreen(parentScreen);
                 }, href, true));
             } else {
-                ClientHelper.openUri(uri);
+                openUri(uri);
             }
-        }
-        catch (URISyntaxException e)
-        {
-            Zetter.LOG.error("Can't open url {}", href, e);
+        } catch (URISyntaxException urisyntaxexception) {
+            Zetter.LOG.error("Can't open url for {}", href, urisyntaxexception);
         }
     }
 
-    /**
-     * Show signing screen for canvases
-     *
-     * @param player
-     * @param canvasCode
-     * @param canvasData
-     * @param hand
-     */
     public static void openCanvasScreen(Player player, String canvasCode, CanvasData canvasData, InteractionHand hand) {
         Minecraft.getInstance().setScreen(
                 PaintingScreen.createScreenForCanvas(
@@ -98,14 +77,6 @@ public class ClientHelper {
         );
     }
 
-    /**
-     * Show view screen for paintings
-     *
-     * @param player
-     * @param canvasCode
-     * @param canvasData
-     * @param hand
-     */
     public static void openPaintingScreen(Player player, String canvasCode, PaintingData canvasData, InteractionHand hand) {
         Minecraft.getInstance().setScreen(
                 PaintingScreen.createScreenForPainting(
@@ -117,8 +88,7 @@ public class ClientHelper {
         );
     }
 
-    private static void openUri(URI uri)
-    {
+    private static void openUri(URI uri) {
         Util.getPlatform().openUri(uri);
     }
 
@@ -128,6 +98,6 @@ public class ClientHelper {
         }
 
         CanvasOverlayViewEvent<?> viewEvent = new CanvasOverlayViewEvent<>(data);
-        MinecraftForge.EVENT_BUS.post(viewEvent);
+        NeoForge.EVENT_BUS.post(viewEvent);
     }
 }

@@ -6,7 +6,6 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.PaintingItem;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -36,7 +35,7 @@ public class RestoreCommand {
             );
     }
 
-    private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
+    private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandSyntaxException {
         ItemStack paintingItem = new ItemStack(ZetterItems.PAINTING.get());
 
         if (!paintingInput.hasPaintingData(level)) {

@@ -1,0 +1,6 @@
+{
+  "type": "zetter:copying",
+  "painting": {"item": "zetter:painting"},
+  "canvas": {"item": "zetter:canvas"},
+  "palette": {"item": "zetter:palette"}
+}

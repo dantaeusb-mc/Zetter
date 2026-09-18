@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    [
+      {"tag": "c:dyes/red"},
+      {"item": "minecraft:red_dye"}
+    ],
+    [
+      {"tag": "c:dyes/green"},
+      {"item": "minecraft:green_dye"}
+    ],
+    [
+      {"tag": "c:dyes/blue"},
+      {"item": "minecraft:blue_dye"}
+    ],
+    [
+      {"tag": "c:dyes/white"},
+      {"item": "minecraft:white_dye"}
+    ],
+    [
+      {"tag": "c:dyes/black"},
+      {"item": "minecraft:black_dye"}
+    ]
+  ],
+  "result": {
+    "id": "zetter:paints",
+    "count": 3
+  }
+}

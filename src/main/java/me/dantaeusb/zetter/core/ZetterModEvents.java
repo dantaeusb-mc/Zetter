@@ -4,10 +4,10 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
 import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.storage.PaintingData;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = Zetter.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class ZetterModEvents {
     /**
      * Handle canvas registration on event, some menus/screens

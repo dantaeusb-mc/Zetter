@@ -1,4 +1,8 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterRegistries;
@@ -9,14 +13,26 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class SCanvasSyncViewPacket<T extends AbstractCanvasData> extends SCanvasSyncPacket<T> {
+public class SCanvasSyncViewPacket<T extends AbstractCanvasData> extends SCanvasSyncPacket<T> implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SCanvasSyncViewPacket<?>> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "canvas_sync_view"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SCanvasSyncViewPacket<?>> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SCanvasSyncViewPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     private final InteractionHand hand;
 
     public SCanvasSyncViewPacket(String canvasCode, T canvasData, long timestamp, InteractionHand hand) {
@@ -36,7 +52,7 @@ public class SCanvasSyncViewPacket<T extends AbstractCanvasData> extends SCanvas
             byte handCode = networkBuffer.readByte();
             InteractionHand hand = InteractionHand.values()[handCode];
 
-            CanvasDataType<?> canvasDataType = ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(type));
+            CanvasDataType<?> canvasDataType = ZetterRegistries.CANVAS_TYPE.get().get(net.minecraft.resources.ResourceLocation.parse(type));
 
             if (canvasDataType == null) {
                 throw new IllegalArgumentException("Unable to find canvas type " + type);
@@ -60,7 +76,7 @@ public class SCanvasSyncViewPacket<T extends AbstractCanvasData> extends SCanvas
         networkBuffer.writeLong(this.timestamp);
         networkBuffer.writeByte(this.hand.ordinal());
 
-        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.getType().resourceLocation);
+        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().get(this.canvasData.getType().resourceLocation);
 
         assert canvasDataType != null;
         canvasDataType.writePacketData(this.canvasData, networkBuffer);
@@ -71,18 +87,14 @@ public class SCanvasSyncViewPacket<T extends AbstractCanvasData> extends SCanvas
         return this.hand;
     }
 
-    public static void handle(final SCanvasSyncViewPacket<?> packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+    public static void handle(final SCanvasSyncViewPacket<?> packetIn, IPayloadContext context) {
+        Optional<Level> clientWorld = Optional.of(context.player().level());
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SCanvasSyncViewMessage context could not provide a ClientWorld.");
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processCanvasSyncView(packetIn, clientWorld.get()));
+        context.enqueueWork(() -> ClientHandler.processCanvasSyncView(packetIn, clientWorld.get()));
     }
 
     @Override

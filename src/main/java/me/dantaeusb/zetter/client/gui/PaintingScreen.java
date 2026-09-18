@@ -24,8 +24,10 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
 import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 
 public class PaintingScreen extends Screen {
+    private static final ByteBufferBuilder ALLOCATOR = new ByteBufferBuilder(2048);
     private static final Component DEFAULT_TITLE = Component.translatable("item.zetter.painting.unnamed");
 
     private final Player owner;
@@ -121,7 +123,7 @@ public class PaintingScreen extends Screen {
         String title = this.title.isEmpty() ? DEFAULT_TITLE.getString() : this.title;
 
         CSignPaintingPacket signPaintingPacket = new CSignPaintingPacket(slot, title);
-        ZetterNetwork.simpleChannel.sendToServer(signPaintingPacket);
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(signPaintingPacket);
 
         this.minecraft.player.closeContainer();
     }
@@ -200,7 +202,7 @@ public class PaintingScreen extends Screen {
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         this.setFocused((GuiEventListener)null);
 
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
@@ -230,7 +232,7 @@ public class PaintingScreen extends Screen {
         poseStack.translate(this.paintingOffsetX, this.paintingOffsetY, 1.0F);
         poseStack.scale(this.paintingScale, this.paintingScale, 1.0F);
 
-        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(ALLOCATOR);
         CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, this.canvasCode, this.canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
@@ -272,5 +274,15 @@ public class PaintingScreen extends Screen {
 
     private String getClipboard() {
         return this.minecraft != null ? TextFieldHelper.getClipboardContents(this.minecraft) : "";
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        this.renderTransparentBackground(guiGraphics);
+    }
+
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 }

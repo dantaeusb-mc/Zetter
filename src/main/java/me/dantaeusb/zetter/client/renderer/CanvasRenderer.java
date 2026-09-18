@@ -9,14 +9,13 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.client.Timer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 import org.joml.Matrix4f;
 
 import javax.annotation.Nullable;
@@ -32,7 +31,7 @@ public class CanvasRenderer implements AutoCloseable {
     private final TextureManager textureManager;
     private final Map<String, CanvasRenderer.Instance> canvasRendererInstances = Maps.newHashMap();
 
-    private final Timer timer = new Timer(20.0F, 0L);
+    private long lastGameTime = -1;
 
     /**
      * Canvasses marked as managed will be unloaded after some time
@@ -54,6 +53,9 @@ public class CanvasRenderer implements AutoCloseable {
     }
 
     public static CanvasRenderer getInstance() {
+        if (instance == null) {
+            instance = new CanvasRenderer(net.minecraft.client.Minecraft.getInstance().getTextureManager());
+        }
         return instance;
     }
 
@@ -118,9 +120,13 @@ public class CanvasRenderer implements AutoCloseable {
      * @param gameTime
      */
     public void update(long gameTime) {
-        int partialTicks = this.timer.advanceTime(gameTime);
-
+        if (lastGameTime == -1) {
+            lastGameTime = gameTime;
+            return;
+        }
+        int partialTicks = (int) (gameTime - lastGameTime);
         if (partialTicks > 0) {
+            lastGameTime = gameTime;
             this.updateTicksSinceRender(partialTicks);
             this.updateTextureRequestTimeout(partialTicks);
         }
@@ -228,7 +234,7 @@ public class CanvasRenderer implements AutoCloseable {
 
     protected void requestCanvasTexture(TextureRequest request) {
         CCanvasRequestPacket requestSyncPacket = new CCanvasRequestPacket(request.getCanvasCode());
-        ZetterNetwork.simpleChannel.sendToServer(requestSyncPacket);
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(requestSyncPacket);
 
         request.update();
     }
@@ -288,7 +294,8 @@ public class CanvasRenderer implements AutoCloseable {
 
         private Instance(String canvasCode, int width, int height, AbstractCanvasData.Resolution resolution) {
             this.code = canvasCode;
-            this.canvasTexture = new DynamicTexture(width, height, true);
+            this.canvasTexture = new DynamicTexture(width, height, false);
+            this.canvasTexture.setFilter(false, false);
             ResourceLocation dynamicTextureLocation = CanvasRenderer.this.textureManager.register("canvas/" + canvasCode, this.canvasTexture);
             this.renderType = RenderType.text(dynamicTextureLocation);
 
@@ -314,6 +321,7 @@ public class CanvasRenderer implements AutoCloseable {
             }
 
             this.canvasTexture.upload();
+            this.canvasTexture.setFilter(false, false);
         }
 
         private int ARGBtoABGR(int x)
@@ -329,10 +337,10 @@ public class CanvasRenderer implements AutoCloseable {
             Matrix4f matrix4f = matrixStack.last().pose();
             VertexConsumer ivertexbuilder = renderTypeBuffer.getBuffer(this.renderType);
 
-            ivertexbuilder.vertex(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(0.0F, 1.0F).uv2(combinedLight).endVertex();
-            ivertexbuilder.vertex(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).color(255, 255, 255, 255).uv(1.0F, 1.0F).uv2(combinedLight).endVertex();
-            ivertexbuilder.vertex(matrix4f, (float) this.blockPixelWidth, 0.0F, 0F).color(255, 255, 255, 255).uv(1.0F, 0.0F).uv2(combinedLight).endVertex();
-            ivertexbuilder.vertex(matrix4f, 0.0F, 0.0F, 0F).color(255, 255, 255, 255).uv(0.0F, 0.0F).uv2(combinedLight).endVertex();
+            ivertexbuilder.addVertex(matrix4f, 0.0F, (float) this.blockPixelHeight, 0F).setColor(255, 255, 255, 255).setUv(0.0F, 1.0F).setLight(combinedLight);
+            ivertexbuilder.addVertex(matrix4f, (float) this.blockPixelWidth, (float) this.blockPixelHeight, 0F).setColor(255, 255, 255, 255).setUv(1.0F, 1.0F).setLight(combinedLight);
+            ivertexbuilder.addVertex(matrix4f, (float) this.blockPixelWidth, 0.0F, 0F).setColor(255, 255, 255, 255).setUv(1.0F, 0.0F).setLight(combinedLight);
+            ivertexbuilder.addVertex(matrix4f, 0.0F, 0.0F, 0F).setColor(255, 255, 255, 255).setUv(0.0F, 0.0F).setLight(combinedLight);
         }
 
         public void close() {

@@ -3,7 +3,7 @@ package me.dantaeusb.zetter.network;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.core.ZetterCapabilities;
+import me.dantaeusb.zetter.core.ZetterAttachments;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.network.packet.*;
@@ -14,7 +14,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
+import net.neoforged.neoforge.common.NeoForge;
 
 import java.io.IOException;
 
@@ -36,8 +36,7 @@ public class ClientHandler {
             final AbstractCanvasData canvasData = packetIn.canvasData;
             final long timestamp = packetIn.timestamp;
 
-            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
-                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
+            CanvasTracker canvasTracker = world.getData(ZetterAttachments.CANVAS_TRACKER);
 
             canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
         } catch (Exception e) {
@@ -60,7 +59,7 @@ public class ClientHandler {
 
             CanvasViewEvent event = new CanvasViewEvent(player, canvasCode, canvasData, packetIn.getHand());
 
-            MinecraftForge.EVENT_BUS.post(event);
+            NeoForge.EVENT_BUS.post(event);
 
             processCanvasSync(packetIn, world);
         } catch (Exception e) {
@@ -181,8 +180,7 @@ public class ClientHandler {
             final String canvasCode = packetIn.canvasCode();
             final long timestamp = packetIn.timestamp();
 
-            CanvasTracker canvasTracker = world.getCapability(ZetterCapabilities.CANVAS_TRACKER)
-                .orElseThrow(() -> new RuntimeException("Cannot find world canvas capability"));
+            CanvasTracker canvasTracker = world.getData(ZetterAttachments.CANVAS_TRACKER);
 
             canvasTracker.unregisterCanvasData(canvasCode);
         } catch (Exception e) {

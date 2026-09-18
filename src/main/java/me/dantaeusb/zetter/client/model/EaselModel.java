@@ -14,7 +14,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.resources.ResourceLocation;
 
 public class EaselModel<T extends EaselEntity> extends ListModel<T> {
-    public static final ModelLayerLocation EASEL_BODY_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "easel"), "body_layer");
+    public static final ModelLayerLocation EASEL_BODY_LAYER = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "easel"), "body_layer");
 
     private static final String RACK = "rack";
     private static final String TOP_PLANK = "top";

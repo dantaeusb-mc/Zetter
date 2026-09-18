@@ -81,10 +81,6 @@ public class ColorCodeWidget extends AbstractEaselWidget implements Renderable {
         //this.parentScreen.pipeWidget(this.textField);
     }
 
-    public void tick() {
-        this.textField.tick();
-    }
-
     public void updateColorValue(int color) {
         // Drop alpha channel
         color = color & 0x00FFFFFF;

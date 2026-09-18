@@ -5,15 +5,15 @@ import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod;
 
 import java.util.HashMap;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@net.neoforged.fml.common.EventBusSubscriber(modid = me.dantaeusb.zetter.Zetter.MOD_ID, bus = net.neoforged.fml.common.EventBusSubscriber.Bus.MOD, value = net.neoforged.api.distmarker.Dist.CLIENT)
 public class ZetterOverlays {
     /**
      * Storage for all overlays
@@ -32,9 +32,9 @@ public class ZetterOverlays {
     public static final String PAINTING_INFO_OVERLAY = "painting_info";
 
     @SubscribeEvent
-    public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
+    public static void onRegisterGuiLayers(RegisterGuiLayersEvent event) {
         PaintingInfoOverlay overlay = new PaintingInfoOverlay();
         OVERLAYS.put(PaintingData.OVERLAY_KEY, overlay);
-        event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), overlay.getId(), overlay);
+        event.registerAbove(VanillaGuiLayers.HOTBAR, ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, overlay.getId()), overlay);
     }
 }

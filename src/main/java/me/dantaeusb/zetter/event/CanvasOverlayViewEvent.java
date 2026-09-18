@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.event;
 
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
 
 /**
  * Called when painting overlay shown

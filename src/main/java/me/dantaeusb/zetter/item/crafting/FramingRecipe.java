@@ -1,23 +1,20 @@
 package me.dantaeusb.zetter.item.crafting;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.PaintingItem;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
 /**
  * Only for frames, toggle
@@ -26,44 +23,46 @@ public class FramingRecipe extends CustomRecipe {
     private final Ingredient inputFrame;
     private final Ingredient inputPainting;
 
-    public FramingRecipe(ResourceLocation id, Ingredient inputFrame, Ingredient inputPainting) {
-        super(id, CraftingBookCategory.MISC);
-
+    public FramingRecipe(Ingredient inputFrame, Ingredient inputPainting) {
+        super(CraftingBookCategory.MISC);
         this.inputFrame = inputFrame;
         this.inputPainting = inputPainting;
     }
 
     @Override
-    public String toString () {
+    public String toString() {
         return "FramingRecipe [inputFrame=" + this.inputFrame + ", inputPainting=" + this.inputPainting + "]";
     }
 
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingContainer craftingInventory, Level world) {
+    public boolean matches(CraftingInput craftingInventory, Level world) {
         ItemStack frameStack = ItemStack.EMPTY;
         ItemStack paintingStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
-            if (craftingInventory.getItem(i).isEmpty()) {
+        for (int i = 0; i < craftingInventory.size(); ++i) {
+            ItemStack stack = craftingInventory.getItem(i);
+            if (stack.isEmpty()) {
                 continue;
             }
 
-            if (this.inputFrame.test(craftingInventory.getItem(i))) {
+            if (this.inputFrame.test(stack)) {
                 if (!frameStack.isEmpty()) {
+                    Zetter.LOG.debug("FramingRecipe: matches failed because multiple frames found");
                     return false;
                 }
 
-                frameStack = craftingInventory.getItem(i);
-            } else if (this.inputPainting.test(craftingInventory.getItem(i))) {
+                frameStack = stack;
+            } else if (this.inputPainting.test(stack)) {
                 if (!paintingStack.isEmpty()) {
+                    Zetter.LOG.debug("FramingRecipe: matches failed because multiple paintings found");
                     return false;
                 }
 
-                paintingStack = craftingInventory.getItem(i);
+                paintingStack = stack;
             } else {
-                // We have something else in the grid
+                Zetter.LOG.debug("FramingRecipe: matches failed because unrelated item found: " + stack.getItem());
                 return false;
             }
         }
@@ -72,58 +71,71 @@ public class FramingRecipe extends CustomRecipe {
             return false;
         }
 
-        if (!paintingStack.hasTag()) {
+        if (!Helper.hasTag(paintingStack)) {
+            Zetter.LOG.debug("FramingRecipe: matches failed because painting has no tag");
             return false;
         }
 
-        if (!FrameItem.isEmpty(frameStack) || PaintingItem.isEmpty(paintingStack)) {
+        if (!FrameItem.isEmpty(frameStack)) {
+            Zetter.LOG.debug("FramingRecipe: matches failed because frame is not empty");
             return false;
         }
 
+        if (PaintingItem.isEmpty(paintingStack)) {
+            Zetter.LOG.debug("FramingRecipe: matches failed because painting is empty");
+            return false;
+        }
+
+        Zetter.LOG.debug("FramingRecipe: MATCHED SUCCESS!");
         return true;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public @NotNull ItemStack assemble(CraftingContainer craftingInventory, RegistryAccess registryAccess) {
+    public @NotNull ItemStack assemble(CraftingInput craftingInventory, HolderLookup.Provider registries) {
         ItemStack frameStack = ItemStack.EMPTY;
         ItemStack paintingStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
-            if (this.inputFrame.test(craftingInventory.getItem(i))) {
+        for (int i = 0; i < craftingInventory.size(); ++i) {
+            ItemStack stack = craftingInventory.getItem(i);
+            if (this.inputFrame.test(stack)) {
                 if (!frameStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                frameStack = craftingInventory.getItem(i);
-            } else if (this.inputPainting.test(craftingInventory.getItem(i))) {
+                frameStack = stack;
+            } else if (this.inputPainting.test(stack)) {
                 if (!paintingStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                paintingStack = craftingInventory.getItem(i);
+                paintingStack = stack;
             }
         }
 
         if (frameStack.isEmpty() || paintingStack.isEmpty()) {
+            Zetter.LOG.debug("FramingRecipe: assemble failed: empty inputs");
             return ItemStack.EMPTY;
         }
 
-        if (!paintingStack.hasTag()) {
+        if (!Helper.hasTag(paintingStack)) {
+            Zetter.LOG.debug("FramingRecipe: assemble failed: painting has no tag");
             return ItemStack.EMPTY;
         }
 
         if (!FrameItem.isEmpty(frameStack) || PaintingItem.isEmpty(paintingStack)) {
+            Zetter.LOG.debug("FramingRecipe: assemble failed: frame not empty or painting empty");
             return ItemStack.EMPTY;
         }
 
         ItemStack outStack = frameStack.copy();
         outStack.setCount(1);
 
-        CompoundTag compoundTag = paintingStack.getTag().copy();
-        outStack.setTag(compoundTag);
+        CompoundTag compoundTag = Helper.getTag(paintingStack).copy();
+        Helper.setTag(outStack, compoundTag);
 
+        Zetter.LOG.debug("FramingRecipe: assemble success, returning output stack: " + outStack);
         return outStack;
     }
 
@@ -141,29 +153,26 @@ public class FramingRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
+    public static final MapCodec<FramingRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        Ingredient.CODEC.fieldOf("frame").forGetter(recipe -> recipe.inputFrame),
+        Ingredient.CODEC.fieldOf("painting").forGetter(recipe -> recipe.inputPainting)
+    ).apply(instance, FramingRecipe::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, FramingRecipe> STREAM_CODEC = StreamCodec.composite(
+        Ingredient.CONTENTS_STREAM_CODEC, recipe -> recipe.inputFrame,
+        Ingredient.CONTENTS_STREAM_CODEC, recipe -> recipe.inputPainting,
+        FramingRecipe::new
+    );
+
     public static class Serializer implements RecipeSerializer<FramingRecipe> {
         @Override
-        public FramingRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "frame");
-            final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
-
-            final JsonElement inputPaintingJson = GsonHelper.getAsJsonObject(json, "painting");
-            final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
-
-            return new FramingRecipe(recipeId, inputFrame, inputPainting);
+        public MapCodec<FramingRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public FramingRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
-            Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
-            Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
-            return new FramingRecipe(recipeId, frameIngredient, paintingIngredient);
-        }
-
-        @Override
-        public void toNetwork(FriendlyByteBuf buffer, FramingRecipe recipe) {
-            recipe.inputFrame.toNetwork(buffer);
-            recipe.inputPainting.toNetwork(buffer);
+        public StreamCodec<RegistryFriendlyByteBuf, FramingRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

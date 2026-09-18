@@ -16,11 +16,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
-
+import com.mojang.serialization.MapCodec;
 import javax.annotation.Nullable;
 
 public class ArtistTableBlock extends BaseEntityBlock {
+    public static final MapCodec<ArtistTableBlock> CODEC = simpleCodec(ArtistTableBlock::new);
+
+    @Override
+    protected MapCodec<? extends BaseEntityBlock> codec() {
+        return CODEC;
+    }
+
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 
     public ArtistTableBlock(Properties properties) {
@@ -34,7 +40,7 @@ public class ArtistTableBlock extends BaseEntityBlock {
         return new ArtistTableBlockEntity(pos, state);
     }
 
-    public InteractionResult use(BlockState state, Level worldIn, BlockPos pos, Player player, InteractionHand handIn, BlockHitResult hit) {
+    public InteractionResult useWithoutItem(BlockState state, Level worldIn, BlockPos pos, Player player, BlockHitResult hit) {
         if (worldIn.isClientSide) {
             return InteractionResult.SUCCESS;
         } else {
@@ -51,8 +57,8 @@ public class ArtistTableBlock extends BaseEntityBlock {
         BlockEntity currentTileEntity = level.getBlockEntity(pos);
 
         if (currentTileEntity instanceof ArtistTableBlockEntity) {
-            if (!level.isClientSide()) {
-                NetworkHooks.openScreen((ServerPlayer) player, (ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
+            if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu((ArtistTableBlockEntity) currentTileEntity, (packetBuffer) -> {
                     SArtistTableMenuCreatePacket packet = new SArtistTableMenuCreatePacket(currentTileEntity.getBlockPos(), ((ArtistTableBlockEntity) currentTileEntity).getMode());
                     packet.writePacketData(packetBuffer);
                 });

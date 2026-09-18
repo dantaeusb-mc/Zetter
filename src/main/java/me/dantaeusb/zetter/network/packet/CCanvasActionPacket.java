@@ -1,11 +1,15 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import javax.annotation.Nullable;
 import java.util.ArrayDeque;
@@ -15,7 +19,19 @@ import java.util.function.Supplier;
 /**
  * Painting update - get frame buffer from client when they're making changes
  */
-public class CCanvasActionPacket {
+public class CCanvasActionPacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<CCanvasActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "canvas_action"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, CCanvasActionPacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        CCanvasActionPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     public final int easelEntityId;
     public final Queue<CanvasAction> paintingActions;
 
@@ -66,15 +82,12 @@ public class CCanvasActionPacket {
         }
     }
 
-    public static void handle(final CCanvasActionPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        ctx.setPacketHandled(true);
-
-        final ServerPlayer sendingPlayer = ctx.getSender();
+    public static void handle(final CCanvasActionPacket packetIn, IPayloadContext context) {
+        final ServerPlayer sendingPlayer = (net.minecraft.server.level.ServerPlayer) context.player();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processAction(packetIn, sendingPlayer));
+        context.enqueueWork(() -> ServerHandler.processAction(packetIn, sendingPlayer));
     }
 }

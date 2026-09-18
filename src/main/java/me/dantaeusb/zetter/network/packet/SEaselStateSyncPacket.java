@@ -1,4 +1,8 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
@@ -6,9 +10,9 @@ import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
 import me.dantaeusb.zetter.network.ClientHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -19,7 +23,19 @@ import java.util.function.Supplier;
  * Send snapshot of a canvas and actions to keep every
  * using player history of changes up to date
  */
-public class SEaselStateSyncPacket {
+public class SEaselStateSyncPacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SEaselStateSyncPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "easel_state_sync"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SEaselStateSyncPacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SEaselStateSyncPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     public static final int MAX_ACTIONS = 50;
 
     public final int easelEntityId;
@@ -124,18 +140,14 @@ public class SEaselStateSyncPacket {
         }
     }
 
-    public static void handle(final SEaselStateSyncPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+    public static void handle(final SEaselStateSyncPacket packetIn, IPayloadContext context) {
+        Optional<Level> clientWorld = Optional.of(context.player().level());
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SEaselStateSync context could not provide a ClientWorld.");
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processEaselStateSync(packetIn, clientWorld.get()));
+        context.enqueueWork(() -> ClientHandler.processEaselStateSync(packetIn, clientWorld.get()));
     }
 
     @Override

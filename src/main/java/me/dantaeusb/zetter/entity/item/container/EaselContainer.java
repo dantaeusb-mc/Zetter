@@ -11,7 +11,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 import java.util.List;

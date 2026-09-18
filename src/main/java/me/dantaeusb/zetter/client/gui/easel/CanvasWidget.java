@@ -30,9 +30,10 @@ import static com.mojang.blaze3d.platform.GlConst.GL_FUNC_SUBTRACT;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class CanvasWidget extends AbstractEaselWidget implements Renderable {
+    private static final ByteBufferBuilder ALLOCATOR = new ByteBufferBuilder(2048);
     public static final int SIZE = 128;
 
-    public static final ResourceLocation PAINTING_CHECKER_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel/checker.png");
+    public static final ResourceLocation PAINTING_CHECKER_RESOURCE = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/gui/easel/checker.png");
 
     private boolean canvasDragging = false;
 
@@ -115,7 +116,8 @@ public class CanvasWidget extends AbstractEaselWidget implements Renderable {
      * @return
      */
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        double delta = scrollY;
         if (this.isMouseOver(mouseX, mouseY)) {
             this.scrollDistance += delta;
             this.scrollTimestamp = System.currentTimeMillis();
@@ -191,7 +193,7 @@ public class CanvasWidget extends AbstractEaselWidget implements Renderable {
         poseStack.translate(this.getX() + this.parentScreen.getMenu().getCanvasOffsetX(), this.getY() + this.parentScreen.getMenu().getCanvasOffsetY(), 0.0F);
         poseStack.scale(this.getCanvasScale(), this.getCanvasScale(), 1.0F);
 
-        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+        MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(ALLOCATOR);
         CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
@@ -249,13 +251,12 @@ public class CanvasWidget extends AbstractEaselWidget implements Renderable {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, PAINTING_CHECKER_RESOURCE);
 
-        BufferBuilder bufferBuilder = Tesselator.getInstance().getBuilder();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-        bufferBuilder.vertex(matrix, x1, y2, 0).uv(u1, v2).endVertex();
-        bufferBuilder.vertex(matrix, x2, y2, 0).uv(u2, v2).endVertex();
-        bufferBuilder.vertex(matrix, x2, y1, 0).uv(u2, v1).endVertex();
-        bufferBuilder.vertex(matrix, x1, y1, 0).uv(u1, v1).endVertex();
-        BufferUploader.drawWithShader(bufferBuilder.end());
+        BufferBuilder bufferBuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+        bufferBuilder.addVertex(matrix, x1, y2, 0).setUv(u1, v2);
+        bufferBuilder.addVertex(matrix, x2, y2, 0).setUv(u2, v2);
+        bufferBuilder.addVertex(matrix, x2, y1, 0).setUv(u2, v1);
+        bufferBuilder.addVertex(matrix, x1, y1, 0).setUv(u1, v1);
+        BufferUploader.drawWithShader(bufferBuilder.buildOrThrow());
 
         poseStack.popPose();
     }

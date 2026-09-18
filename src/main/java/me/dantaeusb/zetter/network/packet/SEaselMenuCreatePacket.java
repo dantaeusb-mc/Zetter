@@ -1,11 +1,27 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import net.minecraft.network.FriendlyByteBuf;
 
 import javax.annotation.Nullable;
 
-public class SEaselMenuCreatePacket {
+public class SEaselMenuCreatePacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SEaselMenuCreatePacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "easel_menu_create"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SEaselMenuCreatePacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SEaselMenuCreatePacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     public final int easelEntityId;
     public final @Nullable String canvasCode;
 

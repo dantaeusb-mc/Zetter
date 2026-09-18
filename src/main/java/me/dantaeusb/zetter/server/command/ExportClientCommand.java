@@ -6,7 +6,6 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestExportPacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -34,11 +33,11 @@ public class ExportClientCommand {
             );
     }
 
-    private static int execute(CommandSourceStack source, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
+    private static int execute(CommandSourceStack source, PaintingInput paintingInput) throws CommandSyntaxException {
         CCanvasRequestExportPacket requestExportPacket = new CCanvasRequestExportPacket(paintingInput.getPaintingCode(), paintingInput.getPaintingTitle());
 
         try {
-            ZetterNetwork.simpleChannel.sendToServer(requestExportPacket);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(requestExportPacket);
 
             String input = paintingInput.getPaintingCode() != null ? paintingInput.getPaintingCode() : paintingInput.getPaintingTitle();
             Minecraft.getInstance().getChatListener().handleSystemMessage(

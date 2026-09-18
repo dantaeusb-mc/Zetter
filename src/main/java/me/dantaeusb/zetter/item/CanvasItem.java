@@ -22,8 +22,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
@@ -77,7 +77,7 @@ public class CanvasItem extends Item
                 // If data is not loaded, request and show screen after
                 CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(canvasCode, hand);
                 Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
-                ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(requestViewPacket);
             }
 
         }
@@ -90,7 +90,7 @@ public class CanvasItem extends Item
 
     @Override
     public Component getName(ItemStack stack) {
-        if (stack.hasTag()) {
+        if (Helper.hasTag(stack)) {
             String canvasCode = getCanvasCode(stack);
 
             if (!StringUtil.isNullOrEmpty(canvasCode)) {
@@ -136,7 +136,9 @@ public class CanvasItem extends Item
         int heightBlocks = canvasData.getHeight() / canvasData.getResolution().getNumeric();
 
         CanvasItem.setBlockSize(stack, widthBlocks, heightBlocks);
-        stack.getOrCreateTag().putInt(NBT_TAG_CACHED_RESOLUTION, canvasData.getResolution().getNumeric());
+        CompoundTag tag = Helper.getOrCreateTag(stack);
+        tag.putInt(NBT_TAG_CACHED_RESOLUTION, canvasData.getResolution().getNumeric());
+        Helper.setTag(stack, tag);
     }
 
     /**
@@ -209,7 +211,7 @@ public class CanvasItem extends Item
             return null;
         }
 
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         String canvasCode = null;
 
@@ -230,7 +232,9 @@ public class CanvasItem extends Item
      * @param stack
      */
     public static void setCanvasCode(ItemStack stack, String canvasCode) {
-        stack.getOrCreateTag().putString(NBT_TAG_CANVAS_CODE, canvasCode);
+        CompoundTag tag = Helper.getOrCreateTag(stack);
+        tag.putString(NBT_TAG_CANVAS_CODE, canvasCode);
+        Helper.setTag(stack, tag);
     }
 
     /**
@@ -251,7 +255,9 @@ public class CanvasItem extends Item
     public static void setBlockSize(ItemStack stack, int widthBlocks, int heightBlocks) {
         final int[] size = new int[]{widthBlocks, heightBlocks};
 
-        stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
+        CompoundTag tag = Helper.getOrCreateTag(stack);
+        tag.putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
+        Helper.setTag(stack, tag);
     }
 
     /**
@@ -265,7 +271,7 @@ public class CanvasItem extends Item
      */
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null || !compoundNBT.contains(NBT_TAG_CACHED_BLOCK_SIZE)) {
             return new int[]{1, 1};
@@ -285,7 +291,7 @@ public class CanvasItem extends Item
     }
 
     public static int getResolution(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return Helper.getResolution().getNumeric();
@@ -293,6 +299,7 @@ public class CanvasItem extends Item
 
         if (!compoundNBT.contains(NBT_TAG_CACHED_RESOLUTION)) {
             compoundNBT.putInt(NBT_TAG_CACHED_RESOLUTION, Helper.getResolution().getNumeric());
+            Helper.setTag(stack, compoundNBT);
         }
 
         return compoundNBT.getInt(NBT_TAG_CACHED_RESOLUTION);

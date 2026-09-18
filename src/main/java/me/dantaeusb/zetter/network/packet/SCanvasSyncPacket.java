@@ -1,4 +1,8 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterRegistries;
@@ -8,14 +12,26 @@ import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class SCanvasSyncPacket<T extends AbstractCanvasData> {
+public class SCanvasSyncPacket<T extends AbstractCanvasData> implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SCanvasSyncPacket<?>> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "canvas_sync"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SCanvasSyncPacket<?>> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SCanvasSyncPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     public final String canvasCode;
     public final long timestamp;
     public final T canvasData;
@@ -35,7 +51,7 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
             final String canvasCode = networkBuffer.readUtf(128);
             final long timestamp = networkBuffer.readLong();
 
-            CanvasDataType<?> canvasDataType = ZetterRegistries.CANVAS_TYPE.get().getValue(new ResourceLocation(type));
+            CanvasDataType<?> canvasDataType = ZetterRegistries.CANVAS_TYPE.get().get(net.minecraft.resources.ResourceLocation.parse(type));
 
             if (canvasDataType == null) {
                 throw new IllegalArgumentException("Unable to find canvas type " + type);
@@ -58,24 +74,20 @@ public class SCanvasSyncPacket<T extends AbstractCanvasData> {
         networkBuffer.writeUtf(this.canvasCode, 128);
         networkBuffer.writeLong(this.timestamp);
 
-        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().getValue(this.canvasData.getType().resourceLocation);
+        CanvasDataType<T> canvasDataType = (CanvasDataType<T>) ZetterRegistries.CANVAS_TYPE.get().get(this.canvasData.getType().resourceLocation);
 
         assert canvasDataType != null;
         canvasDataType.writePacketData(this.canvasData, networkBuffer);
     }
 
-    public static void handle(final SCanvasSyncPacket<?> packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+    public static void handle(final SCanvasSyncPacket<?> packetIn, IPayloadContext context) {
+        Optional<Level> clientWorld = Optional.of(context.player().level());
         if (clientWorld.isEmpty()) {
             Zetter.LOG.error("SCanvasSyncMessage context could not provide a ClientWorld.");
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processCanvasSync(packetIn, clientWorld.get()));
+        context.enqueueWork(() -> ClientHandler.processCanvasSync(packetIn, clientWorld.get()));
     }
 
     @Override

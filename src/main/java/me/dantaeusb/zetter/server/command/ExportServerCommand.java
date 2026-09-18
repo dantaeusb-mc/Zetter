@@ -4,7 +4,6 @@ import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import me.dantaeusb.zetter.core.Helper;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -42,13 +41,13 @@ public class ExportServerCommand {
             );
     }
 
-    private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandRuntimeException, CommandSyntaxException {
+    private static int execute(CommandSourceStack source, Player player, Level level, PaintingInput paintingInput) throws CommandSyntaxException {
         if (!paintingInput.hasPaintingData(level)) {
             throw ERROR_PAINTING_NOT_FOUND.create(paintingInput.getPaintingCode());
         }
 
         try {
-            Helper.exportPainting(level.getServer().getServerDirectory(), paintingInput.getPaintingCode(), paintingInput.getPaintingData());
+            Helper.exportPainting(level.getServer().getServerDirectory().toFile(), paintingInput.getPaintingCode(), paintingInput.getPaintingData());
         } catch (IOException e) {
             throw ERROR_CANNOT_CREATE_FILE.create(e.getMessage());
         }

@@ -2,11 +2,10 @@ package me.dantaeusb.zetter.event;
 
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.eventbus.api.Cancelable;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
-@Cancelable
-public abstract class CanvasRegisterEvent extends Event {
+public abstract class CanvasRegisterEvent extends Event implements ICancellableEvent {
     public final String canvasCode;
     public final AbstractCanvasData canvasData;
     public final Level level;

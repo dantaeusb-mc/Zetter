@@ -31,7 +31,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
     protected final Component titleLabel = TITLE;
 
     // This is the resource location for the background image
-    public static final ResourceLocation ARTIST_TABLE_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/artist_table.png");
+    public static final ResourceLocation ARTIST_TABLE_GUI_TEXTURE_RESOURCE = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/gui/artist_table.png");
 
     private final List<AbstractArtistTableWidget> artistTableWidgets = Lists.newArrayList();
 
@@ -104,7 +104,7 @@ public class ArtistTableScreen extends AbstractContainerScreen<ArtistTableMenu> 
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
 
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
         this.renderTooltip(guiGraphics, mouseX, mouseY);

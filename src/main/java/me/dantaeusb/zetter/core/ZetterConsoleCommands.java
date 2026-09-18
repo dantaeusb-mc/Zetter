@@ -7,20 +7,20 @@ import me.dantaeusb.zetter.server.command.ZetterServerCommand;
 import net.minecraft.commands.synchronization.ArgumentTypeInfo;
 import net.minecraft.commands.synchronization.ArgumentTypeInfos;
 import net.minecraft.commands.synchronization.SingletonArgumentInfo;
-import net.minecraftforge.client.event.RegisterClientCommandsEvent;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.core.registries.Registries;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = Zetter.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class ZetterConsoleCommands {
-    private static final DeferredRegister<ArgumentTypeInfo<?, ?>> ARGUMENT_TYPES_INFO = DeferredRegister.create(ForgeRegistries.COMMAND_ARGUMENT_TYPES, Zetter.MOD_ID);
+    private static final DeferredRegister<ArgumentTypeInfo<?, ?>> ARGUMENT_TYPES_INFO = DeferredRegister.create(Registries.COMMAND_ARGUMENT_TYPE, Zetter.MOD_ID);
 
-    public static final RegistryObject<SingletonArgumentInfo<PaintingLookupArgument>> ARGUMENT_TYPE_PAINTING_LOOKUP = ARGUMENT_TYPES_INFO.register(
+    public static final DeferredHolder<ArgumentTypeInfo<?, ?>, SingletonArgumentInfo<PaintingLookupArgument>> ARGUMENT_TYPE_PAINTING_LOOKUP = ARGUMENT_TYPES_INFO.register(
         "painting_lookup",
         () -> ArgumentTypeInfos.registerByClass(PaintingLookupArgument.class, SingletonArgumentInfo.contextFree(PaintingLookupArgument::painting))
     );
