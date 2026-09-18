@@ -46,7 +46,7 @@ public class Zetter
         ZetterConsoleCommands.init(MOD_EVENT_BUS);
 
         // Custom types and registries
-        ZetterCapabilities.init(MOD_EVENT_BUS);
+        ZetterAttachments.init(MOD_EVENT_BUS);
         ZetterRegistries.init(MOD_EVENT_BUS);
         ZetterCanvasTypes.init(MOD_EVENT_BUS);
     }

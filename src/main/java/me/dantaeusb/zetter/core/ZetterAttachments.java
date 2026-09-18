@@ -13,7 +13,7 @@ import net.neoforged.bus.api.IEventBus;
 
 import java.util.function.Supplier;
 
-public class ZetterCapabilities
+public class ZetterAttachments
 {
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, Zetter.MOD_ID);
 
@@ -31,10 +31,6 @@ public class ZetterCapabilities
     public static final Supplier<AttachmentType<PaintingRegistry>> PAINTING_REGISTRY = ATTACHMENT_TYPES.register("painting_registry", () -> AttachmentType.serializable(
             holder -> {
                 if (holder instanceof Level world) {
-                    if (!world.isClientSide()) {
-                        return new PaintingRegistry(world);
-                    }
-                    // For client level, return a dummy registry, as the build method requires returning a non-null object for initialization
                     return new PaintingRegistry(world);
                 }
                 throw new IllegalArgumentException("PaintingRegistry can only be attached to a Level");

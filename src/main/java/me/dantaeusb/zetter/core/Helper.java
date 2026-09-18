@@ -97,9 +97,9 @@ public class Helper {
 
         if (!level.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = level.getServer().overworld().getData(ZetterCapabilities.CANVAS_TRACKER);
+            canvasTracker = level.getServer().overworld().getData(ZetterAttachments.CANVAS_TRACKER);
         } else {
-            canvasTracker = level.getData(ZetterCapabilities.CANVAS_TRACKER);
+            canvasTracker = level.getData(ZetterAttachments.CANVAS_TRACKER);
         }
 
         return canvasTracker;
@@ -110,7 +110,7 @@ public class Helper {
 
         if (!world.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            paintingRegistry = world.getServer().overworld().getData(ZetterCapabilities.PAINTING_REGISTRY);
+            paintingRegistry = world.getServer().overworld().getData(ZetterAttachments.PAINTING_REGISTRY);
         } else {
             throw new IllegalArgumentException("Painting Registry is not supposed to exist on client");
         }

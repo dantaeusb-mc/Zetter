@@ -1,26 +1,42 @@
-﻿# Gradle
-.gradle/
-build/
-out/
+# eclipse
 bin/
-!gradle/wrapper/gradle-wrapper.jar
+*.launch
+.settings/
+.metadata
+.classpath
+.project
+eclipse/
 
-# IDE
-.idea/
-*.iml
+# idea
+out/
 *.ipr
 *.iws
-.project
-.classpath
-.settings/
+*.iml
+.idea/
+
+# vscode
 .vscode/
+
+# gradle
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Files from Forge MDK
+forge*changelog.txt
+
+# run & logs
+run/
+crash-reports/
+logs/
+debug.log
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Run & Logs
-run/
-crash-reports/
-logs/
-debug.log
+# node
+node_modules/
+
+# local maven publish target
+mcmodsrepo/

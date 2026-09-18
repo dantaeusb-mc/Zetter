@@ -28,8 +28,8 @@ public class ZetterCapabilityMigration {
             return;
         }
 
-        boolean migrateCanvasTracker = !level.hasData(ZetterCapabilities.CANVAS_TRACKER);
-        boolean migratePaintingRegistry = !level.hasData(ZetterCapabilities.PAINTING_REGISTRY);
+        boolean migrateCanvasTracker = !level.hasData(ZetterAttachments.CANVAS_TRACKER);
+        boolean migratePaintingRegistry = !level.hasData(ZetterAttachments.PAINTING_REGISTRY);
 
         if (!migrateCanvasTracker && !migratePaintingRegistry) {
             return;
@@ -44,14 +44,14 @@ public class ZetterCapabilityMigration {
         HolderLookup.Provider registries = level.registryAccess();
 
         if (migrateCanvasTracker && legacyData.contains(LEGACY_CANVAS_TRACKER_KEY)) {
-            CanvasTracker canvasTracker = level.getData(ZetterCapabilities.CANVAS_TRACKER);
+            CanvasTracker canvasTracker = level.getData(ZetterAttachments.CANVAS_TRACKER);
             canvasTracker.deserializeNBT(registries, legacyData.getCompound(LEGACY_CANVAS_TRACKER_KEY));
 
             Zetter.LOG.info("Migrated canvas tracker from Forge capability data");
         }
 
         if (migratePaintingRegistry && legacyData.contains(LEGACY_PAINTING_REGISTRY_KEY)) {
-            PaintingRegistry paintingRegistry = level.getData(ZetterCapabilities.PAINTING_REGISTRY);
+            PaintingRegistry paintingRegistry = level.getData(ZetterAttachments.PAINTING_REGISTRY);
             paintingRegistry.deserializeNBT(registries, legacyData.getCompound(LEGACY_PAINTING_REGISTRY_KEY));
 
             Zetter.LOG.info("Migrated painting registry from Forge capability data");
