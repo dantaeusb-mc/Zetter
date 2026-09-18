@@ -1,14 +1,30 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.function.Supplier;
 
-public class CCanvasHistoryActionPacket {
+public class CCanvasHistoryActionPacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<CCanvasHistoryActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "canvas_history_action"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, CCanvasHistoryActionPacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        CCanvasHistoryActionPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     public final int easelEntityId;
     public final int actionId;
     public final boolean canceled;
@@ -40,15 +56,12 @@ public class CCanvasHistoryActionPacket {
         buffer.writeBoolean(this.canceled);
     }
 
-    public static void handle(final CCanvasHistoryActionPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        ctx.setPacketHandled(true);
-
-        final ServerPlayer sendingPlayer = ctx.getSender();
+    public static void handle(final CCanvasHistoryActionPacket packetIn, IPayloadContext context) {
+        final ServerPlayer sendingPlayer = (net.minecraft.server.level.ServerPlayer) context.player();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCanvasHistoryPacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processCanvasHistory(packetIn, sendingPlayer));
+        context.enqueueWork(() -> ServerHandler.processCanvasHistory(packetIn, sendingPlayer));
     }
 }

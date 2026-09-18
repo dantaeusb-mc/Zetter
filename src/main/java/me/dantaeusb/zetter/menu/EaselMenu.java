@@ -20,8 +20,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -96,6 +96,8 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
 
         this.container = easelContainer;
         this.state = stateHandler;
+
+        this.state.addPlayer(this.player);
 
         final int CANVAS_SLOT_X = 180;
         final int CANVAS_SLOT_Y = 9;
@@ -471,7 +473,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
 
         CPaletteUpdatePacket paletteUpdatePacket = new CPaletteUpdatePacket(this.currentPaletteSlot, this.getCurrentColor());
         Zetter.LOG.debug("Sending Palette Update: " + paletteUpdatePacket);
-        ZetterNetwork.simpleChannel.sendToServer(paletteUpdatePacket);
+        net.neoforged.neoforge.network.PacketDistributor.sendToServer(paletteUpdatePacket);
     }
 
     /**
@@ -611,10 +613,7 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         this.state.removeListener(this);
         this.container.removeListener(this);
 
-        // PlayerContainerEvent are not happening on client
-        if (this.player.isLocalPlayer()) {
-            this.state.removePlayer(player);
-        }
+        this.state.removePlayer(player);
     }
 
     /**

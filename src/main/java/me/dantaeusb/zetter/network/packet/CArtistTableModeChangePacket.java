@@ -1,16 +1,32 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.function.Supplier;
 
-public class CArtistTableModeChangePacket {
+public class CArtistTableModeChangePacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<CArtistTableModeChangePacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "artist_table_mode_change"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, CArtistTableModeChangePacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        CArtistTableModeChangePacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     private final int windowId;
     private final ArtistTableMenu.Mode mode;
 
@@ -47,21 +63,12 @@ public class CArtistTableModeChangePacket {
         return this.mode;
     }
 
-    public static void handle(final CArtistTableModeChangePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("ArtistTableModeChange received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayer sendingPlayer = ctx.getSender();
+    public static void handle(final CArtistTableModeChangePacket packetIn, IPayloadContext context) {
+        final ServerPlayer sendingPlayer = (net.minecraft.server.level.ServerPlayer) context.player();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when ArtistTableModeChange was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processArtistTableModeChange(packetIn, sendingPlayer));
+        context.enqueueWork(() -> ServerHandler.processArtistTableModeChange(packetIn, sendingPlayer));
     }
 }

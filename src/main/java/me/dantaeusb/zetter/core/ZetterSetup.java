@@ -10,15 +10,18 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.InterModComms;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.InterModComms;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
+import net.neoforged.fml.event.lifecycle.InterModProcessEvent;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@net.neoforged.fml.common.EventBusSubscriber(modid = me.dantaeusb.zetter.Zetter.MOD_ID, bus = net.neoforged.fml.common.EventBusSubscriber.Bus.MOD)
 public class ZetterSetup
 {
     @SubscribeEvent
@@ -27,18 +30,20 @@ public class ZetterSetup
         event.enqueueWork(() -> {
             // Not registering PaintingScreen as it's client-side only
 
-            MenuScreens.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
-            MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
-
             // @todo: [CRIT] Broke icons with paintings!
-            for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
-                ItemProperties.register(frame.get(), new ResourceLocation("painting"), FrameItem::getHasPaintingPropertyOverride);
-                ItemProperties.register(frame.get(), new ResourceLocation("plate"), FrameItem::getHasPaintingPropertyOverride);
+            for (DeferredHolder<Item, FrameItem> frame : ZetterItems.FRAMES.values()) {
+                ItemProperties.register(frame.get(), ResourceLocation.parse("painting"), FrameItem::getHasPaintingPropertyOverride);
+                ItemProperties.register(frame.get(), ResourceLocation.parse("plate"), FrameItem::getHasPaintingPropertyOverride);
             }
 
-            new CanvasRenderer(Minecraft.getInstance().getTextureManager());
             new ClientPaintingToolParameters();
         });
+    }
+
+    @SubscribeEvent
+    public static void registerScreens(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
+        event.register(ZetterContainerMenus.EASEL.get(), EaselScreen::new);
+        event.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
     }
 
     @SubscribeEvent
@@ -49,9 +54,18 @@ public class ZetterSetup
         InterModComms.sendTo("carryon", "blacklistBlock", () -> "zetter:easel");
     }
 
-    @SubscribeEvent
-    @SuppressWarnings("unused")
-    public void registerListeners(InterModProcessEvent event) {
 
+    @SubscribeEvent
+    public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ZetterBlockEntities.ARTIST_TABLE_BLOCK_ENTITY.get(),
+                (be, side) -> be.getArtistTableGridContainer()
+        );
+        event.registerEntity(
+                Capabilities.ItemHandler.ENTITY,
+                ZetterEntities.EASEL_ENTITY.get(),
+                (entity, context) -> entity.getEaselContainer()
+        );
     }
 }

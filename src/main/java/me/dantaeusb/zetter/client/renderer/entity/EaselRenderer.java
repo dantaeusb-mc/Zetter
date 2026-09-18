@@ -28,8 +28,8 @@ import javax.annotation.Nullable;
 import java.util.List;
 
 public class EaselRenderer extends EntityRenderer<EaselEntity> {
-    public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
-    public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
+    public static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/entity/easel.png");
+    public static final ResourceLocation CANVAS_TEXTURE = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/entity/canvas.png");
 
     protected EaselModel model;
     protected final List<RenderLayer<EaselEntity, EntityModel<EaselEntity>>> layers = Lists.newArrayList();
@@ -52,8 +52,7 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
 
-        // last are r, g, b, a
-        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
 
         if (easelEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
@@ -182,10 +181,10 @@ public class EaselRenderer extends EntityRenderer<EaselEntity> {
     }
 
     private void renderFace(Matrix4f matrix4f, VertexConsumer vertexConsumer, float x0, float x1, float y0, float y1, float z0, float z1, float z2, float z3, float u0, float u1, float v0, float v1, int packedLight) {
-        vertexConsumer.vertex(matrix4f, x0, y0, z0).color(255, 255, 255, 255).uv(u0, v1).uv2(packedLight).endVertex();
-        vertexConsumer.vertex(matrix4f, x1, y0, z1).color(255, 255, 255, 255).uv(u1, v1).uv2(packedLight).endVertex();
-        vertexConsumer.vertex(matrix4f, x1, y1, z2).color(255, 255, 255, 255).uv(u1, v0).uv2(packedLight).endVertex();
-        vertexConsumer.vertex(matrix4f, x0, y1, z3).color(255, 255, 255, 255).uv(u0, v0).uv2(packedLight).endVertex();
+        vertexConsumer.addVertex(matrix4f, x0, y0, z0).setColor(255, 255, 255, 255).setUv(u0, v1).setLight(packedLight);
+        vertexConsumer.addVertex(matrix4f, x1, y0, z1).setColor(255, 255, 255, 255).setUv(u1, v1).setLight(packedLight);
+        vertexConsumer.addVertex(matrix4f, x1, y1, z2).setColor(255, 255, 255, 255).setUv(u1, v0).setLight(packedLight);
+        vertexConsumer.addVertex(matrix4f, x0, y1, z3).setColor(255, 255, 255, 255).setUv(u0, v0).setLight(packedLight);
     }
 
     private float[] getUV(int x, int y, int width, int height, Direction direction) {

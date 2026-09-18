@@ -1,22 +1,19 @@
 package me.dantaeusb.zetter.item.crafting;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.core.ZetterItems;
-import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.GsonHelper;
-import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
-import net.minecraft.world.item.crafting.CustomRecipe;
-import net.minecraft.world.item.crafting.Ingredient;
-import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
 /**
  * Only for frames, toggle
@@ -25,72 +22,80 @@ public class PaletteRechargeRecipe extends CustomRecipe {
     private final Ingredient inputPalette;
     private final Ingredient inputRecharge;
 
-    public PaletteRechargeRecipe(ResourceLocation id, Ingredient inputPalette, Ingredient inputRecharge) {
-        super(id, CraftingBookCategory.MISC);
-
+    public PaletteRechargeRecipe(Ingredient inputPalette, Ingredient inputRecharge) {
+        super(CraftingBookCategory.MISC);
         this.inputPalette = inputPalette;
         this.inputRecharge = inputRecharge;
     }
 
     @Override
-    public String toString () {
+    public String toString() {
         return "PaletteRechargeRecipe [inputPalette=" + this.inputPalette + ", inputRecharge=" + this.inputRecharge + "]";
     }
 
     /**
      * Used to check if a recipe matches current crafting inventory
      */
-    public boolean matches(CraftingContainer craftingInventory, Level world) {
+    public boolean matches(CraftingInput craftingInventory, Level world) {
         ItemStack paletteStack = ItemStack.EMPTY;
         ItemStack rechargeStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
-            if (craftingInventory.getItem(i).isEmpty()) {
+        for (int i = 0; i < craftingInventory.size(); ++i) {
+            ItemStack stack = craftingInventory.getItem(i);
+            if (stack.isEmpty()) {
                 continue;
             }
 
-            if (this.inputPalette.test(craftingInventory.getItem(i))) {
+            if (this.inputPalette.test(stack)) {
                 if (!paletteStack.isEmpty()) {
+                    Zetter.LOG.info("PaletteRechargeRecipe: matches failed because multiple palettes found");
                     return false;
                 }
 
-                paletteStack = craftingInventory.getItem(i);
-            } else if (this.inputRecharge.test(craftingInventory.getItem(i))) {
+                paletteStack = stack;
+            } else if (this.inputRecharge.test(stack)) {
                 if (!rechargeStack.isEmpty()) {
+                    Zetter.LOG.info("PaletteRechargeRecipe: matches failed because multiple recharges found");
                     return false;
                 }
 
-                rechargeStack = craftingInventory.getItem(i);
+                rechargeStack = stack;
+            } else {
+                Zetter.LOG.info("PaletteRechargeRecipe: matches failed because unrelated item found: " + stack.getItem());
+                return false;
             }
         }
 
-        return (!paletteStack.isEmpty() && paletteStack.hasTag() && paletteStack.getDamageValue() > 0) && !rechargeStack.isEmpty();
+        boolean matched = (!paletteStack.isEmpty() && paletteStack.getDamageValue() > 0) && !rechargeStack.isEmpty();
+        Zetter.LOG.info("PaletteRechargeRecipe: matches result: " + matched + " (palette empty: " + paletteStack.isEmpty() + ", damage: " + paletteStack.getDamageValue() + ", recharge empty: " + rechargeStack.isEmpty() + ")");
+        return matched;
     }
 
     /**
      * Returns an Item that is the result of this recipe
      */
-    public @NotNull ItemStack assemble(CraftingContainer craftingInventory, RegistryAccess registryAccess) {
+    public @NotNull ItemStack assemble(CraftingInput craftingInventory, HolderLookup.Provider registries) {
         ItemStack paletteStack = ItemStack.EMPTY;
         ItemStack rechargeStack = ItemStack.EMPTY;
 
-        for(int i = 0; i < craftingInventory.getContainerSize(); ++i) {
-            if (this.inputPalette.test(craftingInventory.getItem(i))) {
+        for (int i = 0; i < craftingInventory.size(); ++i) {
+            ItemStack stack = craftingInventory.getItem(i);
+            if (this.inputPalette.test(stack)) {
                 if (!paletteStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                paletteStack = craftingInventory.getItem(i);
-            } else if (this.inputRecharge.test(craftingInventory.getItem(i))) {
+                paletteStack = stack;
+            } else if (this.inputRecharge.test(stack)) {
                 if (!rechargeStack.isEmpty()) {
                     return ItemStack.EMPTY;
                 }
 
-                rechargeStack = craftingInventory.getItem(i);
+                rechargeStack = stack;
             }
         }
 
-        if ((!paletteStack.isEmpty() && paletteStack.hasTag() && paletteStack.getDamageValue() > 0) && !rechargeStack.isEmpty()) {
+        if (!paletteStack.isEmpty() && paletteStack.getDamageValue() > 0 && !rechargeStack.isEmpty()) {
             ItemStack outStack = paletteStack.copy();
 
             int newDamage = paletteStack.getDamageValue();
@@ -102,18 +107,21 @@ public class PaletteRechargeRecipe extends CustomRecipe {
                 newDamage = 0;
             }
 
-            CompoundTag compoundnbt = paletteStack.getTag().copy();
-            outStack.setTag(compoundnbt);
+            if (Helper.hasTag(paletteStack)) {
+                CompoundTag compoundnbt = Helper.getTag(paletteStack).copy();
+                Helper.setTag(outStack, compoundnbt);
+            }
             outStack.setDamageValue(newDamage);
 
+            Zetter.LOG.info("PaletteRechargeRecipe: assemble success, output stack damage: " + newDamage);
             return outStack;
         } else {
+            Zetter.LOG.info("PaletteRechargeRecipe: assemble failed checks");
             return ItemStack.EMPTY;
         }
     }
 
     /**
-     * @todo: Not sure if that's the right thing use CRAFTING_SPECIAL_BOOKCLONING here
      * @return
      */
     public RecipeSerializer<?> getSerializer() {
@@ -127,29 +135,26 @@ public class PaletteRechargeRecipe extends CustomRecipe {
         return width >= 2 && height >= 2;
     }
 
+    public static final MapCodec<PaletteRechargeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+        Ingredient.CODEC.fieldOf("palette").forGetter(recipe -> recipe.inputPalette),
+        Ingredient.CODEC.fieldOf("recharge").forGetter(recipe -> recipe.inputRecharge)
+    ).apply(instance, PaletteRechargeRecipe::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, PaletteRechargeRecipe> STREAM_CODEC = StreamCodec.composite(
+        Ingredient.CONTENTS_STREAM_CODEC, recipe -> recipe.inputPalette,
+        Ingredient.CONTENTS_STREAM_CODEC, recipe -> recipe.inputRecharge,
+        PaletteRechargeRecipe::new
+    );
+
     public static class Serializer implements RecipeSerializer<PaletteRechargeRecipe> {
         @Override
-        public PaletteRechargeRecipe fromJson(ResourceLocation recipeId, JsonObject json) {
-            final JsonElement inputFrameJson = GsonHelper.getAsJsonObject(json, "palette");
-            final Ingredient inputFrame = Ingredient.fromJson(inputFrameJson);
-
-            final JsonElement inputPaintingJson = GsonHelper.getAsJsonObject(json, "recharge");
-            final Ingredient inputPainting = Ingredient.fromJson(inputPaintingJson);
-
-            return new PaletteRechargeRecipe(recipeId, inputFrame, inputPainting);
+        public MapCodec<PaletteRechargeRecipe> codec() {
+            return CODEC;
         }
 
         @Override
-        public PaletteRechargeRecipe fromNetwork(ResourceLocation recipeId, FriendlyByteBuf buffer) {
-            Ingredient frameIngredient = Ingredient.fromNetwork(buffer);
-            Ingredient paintingIngredient = Ingredient.fromNetwork(buffer);
-            return new PaletteRechargeRecipe(recipeId, frameIngredient, paintingIngredient);
-        }
-
-        @Override
-        public void toNetwork(FriendlyByteBuf buffer, PaletteRechargeRecipe recipe) {
-            recipe.inputPalette.toNetwork(buffer);
-            recipe.inputRecharge.toNetwork(buffer);
+        public StreamCodec<RegistryFriendlyByteBuf, PaletteRechargeRecipe> streamCodec() {
+            return STREAM_CODEC;
         }
     }
 }

@@ -37,7 +37,7 @@ import java.util.List;
 
 public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements ContainerListener, ActionListener {
     // This is the resource location for the background image
-    public static final ResourceLocation EASEL_GUI_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel.png");
+    public static final ResourceLocation EASEL_GUI_TEXTURE_RESOURCE = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/gui/easel.png");
 
     private final List<AbstractEaselWidget> paintingWidgets = Lists.newArrayList();
 
@@ -220,7 +220,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTicks);
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
         this.renderTooltip(guiGraphics, mouseX, mouseY);
     }
@@ -512,7 +512,8 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        double delta = scrollY;
         if (hasControlDown()) {
             if (this.getMenu().getCurrentTool() == Tools.BRUSH) {
                 AbstractToolParameters parameters = this.getMenu().getCurrentToolParameters();
@@ -537,7 +538,7 @@ public class EaselScreen extends AbstractContainerScreen<EaselMenu> implements C
             }
         }
 
-        if (this.canvasWidget.mouseScrolled(mouseX, mouseY, delta)) {
+        if (this.canvasWidget.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
             return true;
         }
 

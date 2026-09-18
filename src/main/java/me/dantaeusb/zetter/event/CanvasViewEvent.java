@@ -3,11 +3,10 @@ package me.dantaeusb.zetter.event;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.eventbus.api.Cancelable;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
-@Cancelable
-public class CanvasViewEvent extends Event {
+public class CanvasViewEvent extends Event implements ICancellableEvent {
     public final Player player;
     public final String canvasCode;
     public final AbstractCanvasData canvasData;

@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 
 abstract public class AbstractEaselWidget extends AbstractWidget implements GuiEventListener {
     // This is the resource location for the background image
-    public static final ResourceLocation EASEL_WIDGETS_TEXTURE_RESOURCE = new ResourceLocation(Zetter.MOD_ID, "textures/gui/easel/widgets.png");
+    public static final ResourceLocation EASEL_WIDGETS_TEXTURE_RESOURCE = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/gui/easel/widgets.png");
 
     protected final EaselScreen parentScreen;
 

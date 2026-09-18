@@ -21,8 +21,10 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 
 public class PreviewWidget extends AbstractArtistTableWidget implements Renderable, GuiEventListener {
+    private static final ByteBufferBuilder ALLOCATOR = new ByteBufferBuilder(2048);
     private static final Component EMPTY_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.empty");
     private static final Component INVALID_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.invalid");
     private static final Component LOADING_TITLE = Component.translatable("container.zetter.artist_table.combined_canvas.loading");
@@ -57,7 +59,7 @@ public class PreviewWidget extends AbstractArtistTableWidget implements Renderab
             poseStack.translate(displacement.getA(), displacement.getB(), 1.0F);
             poseStack.scale(scale, scale, 1.0F);
 
-            MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(Tesselator.getInstance().getBuilder());
+            MultiBufferSource.BufferSource renderTypeBufferImpl = MultiBufferSource.immediate(ALLOCATOR);
             CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, Helper.COMBINED_CANVAS_CODE, canvasData, 0xF000F0);
             renderTypeBufferImpl.endBatch();
 

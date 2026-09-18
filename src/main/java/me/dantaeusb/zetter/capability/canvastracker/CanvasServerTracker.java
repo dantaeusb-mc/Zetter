@@ -15,8 +15,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -126,8 +126,9 @@ public class CanvasServerTracker implements CanvasTracker {
             return null;
         }
 
-        return this.level.getServer().overworld().getDataStorage().get(
-            (compoundTag) -> {
+        net.minecraft.world.level.saveddata.SavedData.Factory<T> factory = new net.minecraft.world.level.saveddata.SavedData.Factory<>(
+            () -> { throw new IllegalStateException("Cannot create fresh canvas data inside getCanvasData"); },
+            (compoundTag, registries) -> {
                 int canvasTypeInt = -1;
                 String canvasResourceLocation = compoundTag.getString(AbstractCanvasData.NBT_TAG_TYPE);
 
@@ -157,27 +158,21 @@ public class CanvasServerTracker implements CanvasTracker {
                 }
 
                 final String finalCanvasResourceLocation = canvasResourceLocation;
-                Optional<? extends CanvasDataType<?>> type = ZetterRegistries.CANVAS_TYPE.get().getEntries().stream()
-                    .filter((entry) -> entry.getKey().location().toString().equals(finalCanvasResourceLocation))
-                    .map(Map.Entry::getValue)
-                    .findFirst();
+                CanvasDataType<?> canvasType = ZetterRegistries.CANVAS_TYPE.get().get(net.minecraft.resources.ResourceLocation.parse(finalCanvasResourceLocation));
 
-                if (type.isEmpty()) {
+                if (canvasType == null) {
                     throw new IllegalStateException("No type of canvas " + canvasResourceLocation + " is registered");
                 }
 
-                T canvasData = (T) type.get().loadFromNbt(compoundTag);
+                T canvasData = (T) canvasType.loadFromNbt(compoundTag);
                 canvasData.correctData(this.level);
-
-                // Remove deprecated tags
-                if (canvasTypeInt != -1 || deprecatedType) {
-                    canvasData.setDirty();
-                }
 
                 return canvasData;
             },
-            canvasCode
+            net.minecraft.util.datafix.DataFixTypes.LEVEL
         );
+
+        return this.level.getServer().overworld().getDataStorage().get(factory, canvasCode);
     }
 
     /**
@@ -195,12 +190,12 @@ public class CanvasServerTracker implements CanvasTracker {
         }
 
         CanvasRegisterEvent.Pre preEvent = new CanvasRegisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
-        MinecraftForge.EVENT_BUS.post(preEvent);
+        NeoForge.EVENT_BUS.post(preEvent);
 
         this.level.getServer().overworld().getDataStorage().set(canvasCode, canvasData);
 
         CanvasRegisterEvent.Post postEvent = new CanvasRegisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
-        MinecraftForge.EVENT_BUS.post(postEvent);
+        NeoForge.EVENT_BUS.post(postEvent);
     }
 
     /**
@@ -226,7 +221,7 @@ public class CanvasServerTracker implements CanvasTracker {
         long timestamp = System.currentTimeMillis();
 
         CanvasUnregisterEvent.Pre preEvent = new CanvasUnregisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
-        MinecraftForge.EVENT_BUS.post(preEvent);
+        NeoForge.EVENT_BUS.post(preEvent);
 
         int canvasId = Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
         this.clearCanvasId(canvasId);
@@ -237,15 +232,12 @@ public class CanvasServerTracker implements CanvasTracker {
             for (PlayerTrackingCanvas trackingPlayer : trackingPlayers) {
                 SCanvasRemovalPacket canvasRemovalPacket = new SCanvasRemovalPacket(canvasCode, System.currentTimeMillis());
 
-                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(
-                    () -> (ServerPlayer) this.level.getPlayerByUUID(trackingPlayer.playerId)),
-                    canvasRemovalPacket
-                );
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer((ServerPlayer) this.level.getPlayerByUUID(trackingPlayer.playerId), canvasRemovalPacket);
             }
         }
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
-        MinecraftForge.EVENT_BUS.post(postEvent);
+        NeoForge.EVENT_BUS.post(postEvent);
     }
 
     /**
@@ -269,7 +261,7 @@ public class CanvasServerTracker implements CanvasTracker {
                 ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
 
                 SCanvasSyncPacket<?> canvasSyncMessage = new SCanvasSyncPacket(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
-                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(playerEntity, canvasSyncMessage);
             }
         }
 
@@ -321,5 +313,34 @@ public class CanvasServerTracker implements CanvasTracker {
             this.playerId = playerId;
             this.canvasName = canvasName;
         }
+    }
+
+    @Override
+    public net.minecraft.nbt.CompoundTag serializeNBT(net.minecraft.core.HolderLookup.Provider provider) {
+        net.minecraft.nbt.CompoundTag compoundTag = new net.minecraft.nbt.CompoundTag();
+
+        if (this.getLevel() == null || this.getLevel().isClientSide()) {
+            return compoundTag;
+        }
+
+        net.minecraft.nbt.Tag canvasTrackerTag = CanvasTrackerStorage.save(this);
+        compoundTag.put("canvasTracker", canvasTrackerTag);
+
+        return compoundTag;
+    }
+
+    @Override
+    public void deserializeNBT(net.minecraft.core.HolderLookup.Provider provider, net.minecraft.nbt.CompoundTag compoundTag) {
+        if (this.getLevel() == null || this.getLevel().isClientSide()) {
+            return;
+        }
+
+        net.minecraft.nbt.Tag canvasTrackerTag = compoundTag.get("canvasTracker");
+
+        if (canvasTrackerTag == null) {
+            return;
+        }
+
+        CanvasTrackerStorage.load(this, canvasTrackerTag);
     }
 }

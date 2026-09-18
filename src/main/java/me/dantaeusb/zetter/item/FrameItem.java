@@ -16,6 +16,7 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gameevent.GameEvent;
 
+import me.dantaeusb.zetter.core.Helper;
 import javax.annotation.Nullable;
 import java.util.Optional;
 
@@ -38,7 +39,7 @@ public class FrameItem extends PaintingItem {
      */
     @Override
     public Component getName(ItemStack stack) {
-        if (stack.hasTag()) {
+        if (Helper.hasTag(stack)) {
             String paintingName = getCachedPaintingName(stack);
 
             if (StringUtil.isNullOrEmpty(paintingName)) {

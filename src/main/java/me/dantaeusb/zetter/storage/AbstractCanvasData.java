@@ -188,7 +188,8 @@ public abstract class AbstractCanvasData extends SavedData {
         // Do nothing
     }
 
-    public CompoundTag save(CompoundTag compoundTag) {
+    @Override
+    public CompoundTag save(CompoundTag compoundTag, net.minecraft.core.HolderLookup.Provider registries) {
         compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);

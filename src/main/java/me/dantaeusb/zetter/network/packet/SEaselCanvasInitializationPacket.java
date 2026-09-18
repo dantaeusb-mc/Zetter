@@ -1,4 +1,8 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.Helper;
@@ -7,9 +11,9 @@ import me.dantaeusb.zetter.network.ClientHandler;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -23,6 +27,17 @@ import java.util.function.Supplier;
  * if canvas item was changed
  */
 public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasData> {
+    public static final Type<SEaselCanvasInitializationPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "easel_canvas_initialization"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SEaselCanvasInitializationPacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SEaselCanvasInitializationPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
     public final int easelEntityId;
 
     public SEaselCanvasInitializationPacket(int easelEntityId, String canvasCode, CanvasData canvasData, long timestamp) {
@@ -60,18 +75,14 @@ public class SEaselCanvasInitializationPacket extends SCanvasSyncPacket<CanvasDa
         ZetterCanvasTypes.CANVAS.get().writePacketData(this.canvasData, networkBuffer);
     }
 
-    public static void handle(final SEaselCanvasInitializationPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+    public static void handle(final SEaselCanvasInitializationPacket packetIn, IPayloadContext context) {
+        Optional<Level> clientWorld = Optional.of(context.player().level());
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SEaselReset context could not provide a ClientWorld.");
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processEaselCanvasInitialization(packetIn, clientWorld.get()));
+        context.enqueueWork(() -> ClientHandler.processEaselCanvasInitialization(packetIn, clientWorld.get()));
     }
 
     @Override

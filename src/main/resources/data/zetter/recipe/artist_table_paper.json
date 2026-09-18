@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","pattern":["PA","WW","WW"],"key":{"A":{"item":"zetter:paints"},"P":{"item":"minecraft:paper"},"W":{"tag":"minecraft:planks"}},"result":{"id":"zetter:artist_table"}}

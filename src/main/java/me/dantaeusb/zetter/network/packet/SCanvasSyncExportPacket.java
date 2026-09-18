@@ -1,4 +1,8 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
@@ -6,14 +10,25 @@ import me.dantaeusb.zetter.network.ClientHandler;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.util.LogicalSidedProvider;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.Optional;
 import java.util.function.Supplier;
 
 public class SCanvasSyncExportPacket extends SCanvasSyncPacket<PaintingData> {
+    public static final Type<SCanvasSyncExportPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "canvas_sync_export"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SCanvasSyncExportPacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SCanvasSyncExportPacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
     public SCanvasSyncExportPacket(String canvasCode, PaintingData paintingData, long timestamp) {
         super(canvasCode, paintingData, timestamp);
     }
@@ -45,18 +60,14 @@ public class SCanvasSyncExportPacket extends SCanvasSyncPacket<PaintingData> {
         ZetterCanvasTypes.PAINTING.get().writePacketData(this.canvasData, networkBuffer);
     }
 
-    public static void handle(final SCanvasSyncExportPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        Optional<Level> clientWorld = LogicalSidedProvider.CLIENTWORLD.get(sideReceived);
+    public static void handle(final SCanvasSyncExportPacket packetIn, IPayloadContext context) {
+        Optional<Level> clientWorld = Optional.of(context.player().level());
         if (!clientWorld.isPresent()) {
             Zetter.LOG.warn("SCanvasSyncExportPacket context could not provide a ClientWorld.");
             return;
         }
 
-        ctx.enqueueWork(() -> ClientHandler.processCanvasSyncExportError(packetIn, clientWorld.get()));
+        context.enqueueWork(() -> ClientHandler.processCanvasSyncExportError(packetIn, clientWorld.get()));
     }
 
     @Override

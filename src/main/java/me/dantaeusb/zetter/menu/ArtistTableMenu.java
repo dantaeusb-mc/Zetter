@@ -14,8 +14,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -251,7 +251,7 @@ public class ArtistTableMenu extends AbstractContainerMenu implements ItemStackH
 
         if (this.player.isLocalPlayer()) {
             CArtistTableModeChangePacket unloadPacket = new CArtistTableModeChangePacket(this.containerId, mode);
-            ZetterNetwork.simpleChannel.sendToServer(unloadPacket);
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(unloadPacket);
         }
     }
 

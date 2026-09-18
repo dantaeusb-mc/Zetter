@@ -3,10 +3,10 @@ package me.dantaeusb.zetter.client.gui.overlay;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.gui.LayeredDraw;
 
-public interface CanvasOverlay<T extends AbstractCanvasData> extends IGuiOverlay {
+public interface CanvasOverlay<T extends AbstractCanvasData> extends LayeredDraw.Layer {
     String getId();
 
     CanvasDataType<T> getType();
@@ -15,7 +15,8 @@ public interface CanvasOverlay<T extends AbstractCanvasData> extends IGuiOverlay
 
     void hide();
 
-    void render(ForgeGui gui, GuiGraphics poseStack, float partialTick, int screenWidth, int screenHeight);
+    @Override
+    void render(GuiGraphics guiGraphics, DeltaTracker deltaTracker);
 
     void tick();
 }

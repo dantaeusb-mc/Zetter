@@ -11,7 +11,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FastColor;
 import net.minecraft.util.StringUtil;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
+import net.minecraft.client.DeltaTracker;
 
 public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
     private static final Component BANNED_TEXT = Component.translatable("painting.zetter.banned");
@@ -41,7 +41,7 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
     }
 
     @Override
-    public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
+    public void render(GuiGraphics guiGraphics, DeltaTracker deltaTracker) {
         if (this.paintingData == null) {
             return;
         }
@@ -70,6 +70,7 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
             title = BANNED_TEXT;
         }
 
+        float partialTick = deltaTracker.getGameTimeDeltaTicks();
         float ticksLeft = (float)this.overlayMessageTime - partialTick;
         int msLeft = (int)(ticksLeft * 255.0F / 20.0F);
         if (msLeft > 255) {
@@ -79,16 +80,19 @@ public class PaintingInfoOverlay implements CanvasOverlay<PaintingData> {
         PoseStack poseStack = guiGraphics.pose();
         if (msLeft > 8) {
             poseStack.pushPose();
-            poseStack.translate(screenWidth / 2, screenHeight - 68, 0.0D);
+            int screenWidth = guiGraphics.guiWidth();
+            int screenHeight = guiGraphics.guiHeight();
+            poseStack.translate(screenWidth / 2.0F, screenHeight - 68.0F, 0.0D);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
 
             int textColor = 0xFFFFFF;
             int transparencyMask = msLeft << 24 & 0xFF000000;
 
-            int titleLength = gui.getFont().width(title);
+            net.minecraft.client.gui.Font font = Minecraft.getInstance().font;
+            int titleLength = font.width(title);
             this.drawBackdrop(guiGraphics, -4, titleLength, 0xFFFFFF | transparencyMask);
-            guiGraphics.drawString(gui.getFont(), title, -titleLength / 2, -4, textColor | transparencyMask, true);
+            guiGraphics.drawString(font, title, -titleLength / 2, -4, textColor | transparencyMask, true);
             RenderSystem.disableBlend();
 
             poseStack.popPose();

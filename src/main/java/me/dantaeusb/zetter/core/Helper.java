@@ -14,6 +14,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
+
 import javax.annotation.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -30,6 +35,27 @@ import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
  * @todo: [MID] Get rid of this class, all functions can be moved to the classes with execution context
  */
 public class Helper {
+    public static CompoundTag getTag(ItemStack stack) {
+        CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+        return customData != null ? customData.copyTag() : null;
+    }
+
+    public static boolean hasTag(ItemStack stack) {
+        return stack.has(DataComponents.CUSTOM_DATA);
+    }
+
+    public static CompoundTag getOrCreateTag(ItemStack stack) {
+        CustomData customData = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        return customData.copyTag();
+    }
+
+    public static void setTag(ItemStack stack, CompoundTag tag) {
+        if (tag == null || tag.isEmpty()) {
+            stack.remove(DataComponents.CUSTOM_DATA);
+        } else {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        }
+    }
     public static final int DUMMY_BLACK_COLOR = 0xFF000000;
     public static final int DUMMY_PINK_COLOR = 0xFFFF00FF;
     public static final int CANVAS_COLOR = 0xFFE0DACE;
@@ -71,9 +97,9 @@ public class Helper {
 
         if (!level.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            canvasTracker = level.getServer().overworld().getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = level.getServer().overworld().getData(ZetterCapabilities.CANVAS_TRACKER);
         } else {
-            canvasTracker = level.getCapability(ZetterCapabilities.CANVAS_TRACKER).orElse(null);
+            canvasTracker = level.getData(ZetterCapabilities.CANVAS_TRACKER);
         }
 
         return canvasTracker;
@@ -84,7 +110,7 @@ public class Helper {
 
         if (!world.isClientSide()) {
             // looking for a server canvas tracker in the overworld, since canvases are world-independent
-            paintingRegistry = world.getServer().overworld().getCapability(ZetterCapabilities.PAINTING_REGISTRY).orElse(null);
+            paintingRegistry = world.getServer().overworld().getData(ZetterCapabilities.PAINTING_REGISTRY);
         } else {
             throw new IllegalArgumentException("Painting Registry is not supposed to exist on client");
         }

@@ -19,8 +19,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -68,7 +68,7 @@ public class PaintingItem extends CanvasItem
                 // If data is not loaded, request and show screen after
                 CCanvasRequestViewPacket requestViewPacket = new CCanvasRequestViewPacket(paintingCode, hand);
                 Zetter.LOG.debug("Sending request view packet: " + requestViewPacket);
-                ZetterNetwork.simpleChannel.sendToServer(requestViewPacket);
+                net.neoforged.neoforge.network.PacketDistributor.sendToServer(requestViewPacket);
             }
         }
 
@@ -87,23 +87,25 @@ public class PaintingItem extends CanvasItem
      * @param generation
      */
     public static void storePaintingData(ItemStack stack, String paintingCode, PaintingData paintingData, int generation) {
-        stack.getOrCreateTag().putString(NBT_TAG_PAINTING_CODE, paintingCode);
+        CompoundTag tag = Helper.getOrCreateTag(stack);
+        tag.putString(NBT_TAG_PAINTING_CODE, paintingCode);
 
-        stack.getOrCreateTag().putString(NBT_TAG_CACHED_AUTHOR_NAME, paintingData.getAuthorName());
-        stack.getOrCreateTag().putString(NBT_TAG_CACHED_PAINTING_TITLE, paintingData.getPaintingName());
+        tag.putString(NBT_TAG_CACHED_AUTHOR_NAME, paintingData.getAuthorName());
+        tag.putString(NBT_TAG_CACHED_PAINTING_TITLE, paintingData.getPaintingName());
 
         int widthBlocks = paintingData.getWidth() / paintingData.getResolution().getNumeric();
         int heightBlocks = paintingData.getHeight() / paintingData.getResolution().getNumeric();
 
         final int[] size = new int[]{widthBlocks, heightBlocks};
 
-        stack.getOrCreateTag().putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
-        stack.getOrCreateTag().putInt(NBT_TAG_GENERATION, generation);
+        tag.putIntArray(NBT_TAG_CACHED_BLOCK_SIZE, size);
+        tag.putInt(NBT_TAG_GENERATION, generation);
+        Helper.setTag(stack, tag);
     }
 
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
-        if (stack.hasTag()) {
+        if (Helper.hasTag(stack)) {
             String authorName = getCachedAuthorName(stack);
 
             if (StringUtil.isNullOrEmpty(authorName)) {
@@ -125,7 +127,7 @@ public class PaintingItem extends CanvasItem
 
     @Override
     public Component getName(ItemStack stack) {
-        if (stack.hasTag()) {
+        if (Helper.hasTag(stack)) {
             String paintingName = getCachedPaintingName(stack);
 
             if (StringUtil.isNullOrEmpty(paintingName)) {
@@ -151,7 +153,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getPaintingCode(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return null;
@@ -202,7 +204,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getCachedAuthorName(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return null;
@@ -213,7 +215,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getCachedPaintingName(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return null;
@@ -224,7 +226,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static int[] getBlockSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return null;
@@ -235,7 +237,7 @@ public class PaintingItem extends CanvasItem
 
     @Nullable
     public static String getStringSize(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return null;
@@ -251,11 +253,13 @@ public class PaintingItem extends CanvasItem
     }
 
     public static void setGeneration(ItemStack stack, int generation) {
-        stack.getOrCreateTag().putInt(NBT_TAG_GENERATION, generation);
+        CompoundTag tag = Helper.getOrCreateTag(stack);
+        tag.putInt(NBT_TAG_GENERATION, generation);
+        Helper.setTag(stack, tag);
     }
 
     public static int getGeneration(ItemStack stack) {
-        CompoundTag compoundNBT = stack.getTag();
+        CompoundTag compoundNBT = Helper.getTag(stack);
 
         if (compoundNBT == null) {
             return 0;

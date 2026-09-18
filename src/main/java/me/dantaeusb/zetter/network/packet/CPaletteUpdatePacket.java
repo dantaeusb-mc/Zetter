@@ -1,15 +1,31 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.network.ServerHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.fml.LogicalSide;
-import net.minecraftforge.network.NetworkEvent;
+
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.util.function.Supplier;
 
-public class CPaletteUpdatePacket {
+public class CPaletteUpdatePacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<CPaletteUpdatePacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "palette_update"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, CPaletteUpdatePacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        CPaletteUpdatePacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     private int slotIndex;
     private int color;
 
@@ -49,21 +65,12 @@ public class CPaletteUpdatePacket {
         return this.color;
     }
 
-    public static void handle(final CPaletteUpdatePacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
-        NetworkEvent.Context ctx = ctxSupplier.get();
-        LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
-        ctx.setPacketHandled(true);
-
-        if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("PaletteUpdatePacket received on wrong side:" + ctx.getDirection().getReceptionSide());
-            return;
-        }
-
-        final ServerPlayer sendingPlayer = ctx.getSender();
+    public static void handle(final CPaletteUpdatePacket packetIn, IPayloadContext context) {
+        final ServerPlayer sendingPlayer = (net.minecraft.server.level.ServerPlayer) context.player();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when PaletteUpdatePacket was received");
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processPaletteUpdate(packetIn, sendingPlayer));
+        context.enqueueWork(() -> ServerHandler.processPaletteUpdate(packetIn, sendingPlayer));
     }
 }

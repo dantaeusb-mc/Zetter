@@ -1,10 +1,26 @@
 package me.dantaeusb.zetter.network.packet;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.codec.StreamCodec;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
+
 
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 
-public class SArtistTableMenuCreatePacket {
+public class SArtistTableMenuCreatePacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+    public static final Type<SArtistTableMenuCreatePacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "artist_table_menu_create"));
+
+    public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, SArtistTableMenuCreatePacket> STREAM_CODEC = StreamCodec.of(
+        (buf, packet) -> packet.writePacketData(buf),
+        SArtistTableMenuCreatePacket::readPacketData
+    );
+
+    @Override
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
     private final BlockPos artistTablePos;
     private final ArtistTableMenu.Mode mode;
 

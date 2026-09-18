@@ -1,33 +1,26 @@
-# eclipse
-bin
-*.launch
-.settings
-.metadata
-.classpath
-.project
+﻿# Gradle
+.gradle/
+build/
+out/
+bin/
+!gradle/wrapper/gradle-wrapper.jar
 
-# idea
-out
+# IDE
+.idea/
+*.iml
 *.ipr
 *.iws
-*.iml
-.idea
+.project
+.classpath
+.settings/
+.vscode/
 
-# gradle
-build
-.gradle
-
-# other
-eclipse
-run
-
-# Files from Forge MDK
-forge*changelog.txt
-
-# Mac
+# OS
 .DS_Store
+Thumbs.db
 
-# node
-node_modules
-
-mcmodsrepo
+# Run & Logs
+run/
+crash-reports/
+logs/
+debug.log

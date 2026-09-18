@@ -1,6 +1,7 @@
 Zetter: Credits/Thank You
 
 StuarteLitro/@ppblitto for fancy icons and Portuguese translation
+Dimitriy Garutt for taking time to port mod to neoforge 1.21.1
 diesieben07#0714 from Forge Discord for absolutely insane amount of help
 gigaherz#9173 from Forge Discord for consultations about Forge and GUI
 

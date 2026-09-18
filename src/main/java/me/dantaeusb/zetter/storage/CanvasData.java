@@ -46,8 +46,9 @@ public class CanvasData extends AbstractCanvasData {
         return ZetterCanvasTypes.CANVAS.get();
     }
 
-    public CompoundTag save(CompoundTag compoundTag) {
-        return super.save(compoundTag);
+    @Override
+    public CompoundTag save(CompoundTag compoundTag, net.minecraft.core.HolderLookup.Provider registries) {
+        return super.save(compoundTag, registries);
     }
 
     private static class CanvasCanvasDataBuilder implements CanvasDataBuilder<CanvasData> {

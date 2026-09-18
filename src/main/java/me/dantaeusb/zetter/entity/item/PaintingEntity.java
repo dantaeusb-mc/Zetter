@@ -27,16 +27,18 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
-import net.minecraftforge.entity.IEntityAdditionalSpawnData;
-import net.minecraftforge.network.NetworkHooks;
+import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.apache.commons.lang3.Validate;
+
+import net.minecraft.network.syncher.SynchedEntityData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Map;
 
-public class PaintingEntity extends HangingEntity implements IEntityAdditionalSpawnData {
+public class PaintingEntity extends HangingEntity implements IEntityWithComplexSpawn {
     public static final String NBT_TAG_FACING = "Facing";
     public static final String NBT_TAG_BLOCK_SIZE = "BlockSize";
     public static final String NBT_TAG_MATERIAL = "Material";
@@ -61,6 +63,10 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
 
     public PaintingEntity(EntityType<? extends PaintingEntity> type, Level world) {
         super(type, world);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
     }
 
     public PaintingEntity(Level world, BlockPos pos, Direction facing, Materials material, boolean hasPlate, String canvasCode, int[] blockSize, int generation) {
@@ -126,51 +132,45 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         this.recalculateBoundingBox();
     }
 
-    /**
-     * Updates the entity bounding box based on current facing
-     */
-    protected void recalculateBoundingBox() {
-        if (this.direction != null) {
-            double xCenter = (double)this.pos.getX() + 0.5D;
-            double yCenter = (double)this.pos.getY() + 0.5D;
-            double zCenter = (double)this.pos.getZ() + 0.5D;
+    @Override
+    protected AABB calculateBoundingBox(BlockPos pos, Direction direction) {
+        double xCenter = (double)pos.getX() + 0.5D;
+        double yCenter = (double)pos.getY() + 0.5D;
+        double zCenter = (double)pos.getZ() + 0.5D;
 
-            double thicknessOffset = 0.5D - (1.0D / 32.0D);
+        double thicknessOffset = 0.5D - (1.0D / 32.0D);
 
-            double hCenterOffset = this.offs(this.getWidth());
-            double vCenterOffset = this.offs(this.getHeight());
+        double hCenterOffset = this.offs(this.getWidth());
+        double vCenterOffset = this.offs(this.getHeight());
 
-            xCenter = xCenter - (double)this.direction.getStepX() * thicknessOffset;
-            zCenter = zCenter - (double)this.direction.getStepZ() * thicknessOffset;
+        xCenter = xCenter - (double)direction.getStepX() * thicknessOffset;
+        zCenter = zCenter - (double)direction.getStepZ() * thicknessOffset;
 
-            yCenter = yCenter + vCenterOffset;
+        yCenter = yCenter + vCenterOffset;
 
-            Direction direction = this.direction.getCounterClockWise();
+        Direction counterClockwise = direction.getCounterClockWise();
 
-            xCenter = xCenter + hCenterOffset * (double)direction.getStepX();
-            zCenter = zCenter + hCenterOffset * (double)direction.getStepZ();
+        xCenter = xCenter + hCenterOffset * (double)counterClockwise.getStepX();
+        zCenter = zCenter + hCenterOffset * (double)counterClockwise.getStepZ();
 
-            this.setPosRaw(xCenter, yCenter, zCenter);
+        double xWidth = this.getWidth();
+        double yHeight = this.getHeight();
+        double zWidth = this.getWidth();
 
-            double xWidth = this.getWidth();
-            double yHeight = this.getHeight();
-            double zWidth = this.getWidth();
-
-            if (this.direction.getAxis() == Direction.Axis.Z) {
-                zWidth = 1.0D;
-            } else {
-                xWidth = 1.0D;
-            }
-
-            xWidth = xWidth / 16.0D / 2.0D;
-            yHeight = yHeight / 16.0D / 2.0D;
-            zWidth = zWidth / 16.0D / 2.0D;
-
-            this.setBoundingBox(new AABB(
-                xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
-                xCenter + xWidth, yCenter + yHeight, zCenter + zWidth
-            ));
+        if (direction.getAxis() == Direction.Axis.Z) {
+            zWidth = 1.0D;
+        } else {
+            xWidth = 1.0D;
         }
+
+        xWidth = xWidth / 16.0D / 2.0D;
+        yHeight = yHeight / 16.0D / 2.0D;
+        zWidth = zWidth / 16.0D / 2.0D;
+
+        return new AABB(
+            xCenter - xWidth, yCenter - yHeight, zCenter - zWidth,
+            xCenter + xWidth, yCenter + yHeight, zCenter + zWidth
+        );
     }
 
     /**
@@ -215,6 +215,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         return InteractionResult.CONSUME;
     }
 
+    @Override
     public void addAdditionalSaveData(CompoundTag compoundTag) {
         compoundTag.putByte(NBT_TAG_FACING, (byte)this.direction.get2DDataValue());
         compoundTag.putString(PaintingItem.NBT_TAG_PAINTING_CODE, this.paintingCode);
@@ -229,6 +230,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
     /**
      * (abstract) Protected helper method to read subclass entity data from NBT.
      */
+    @Override
     public void readAdditionalSaveData(CompoundTag compound) {
         this.direction = Direction.from2DDataValue(compound.getByte(NBT_TAG_FACING));
         this.paintingCode = compound.getString(PaintingItem.NBT_TAG_PAINTING_CODE);
@@ -263,7 +265,8 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         this.setDirection(this.direction);
     }
 
-    public void writeSpawnData(FriendlyByteBuf buffer) {
+    @Override
+    public void writeSpawnData(RegistryFriendlyByteBuf buffer) {
         buffer.writeBlockPos(this.pos);
         buffer.writeByte((byte)this.direction.get2DDataValue());
 
@@ -276,7 +279,8 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
         buffer.writeBoolean(this.hasPlate);
     }
 
-    public void readSpawnData(FriendlyByteBuf buffer) {
+    @Override
+    public void readSpawnData(RegistryFriendlyByteBuf buffer) {
         this.pos = buffer.readBlockPos();
         this.direction = Direction.from2DDataValue(buffer.readByte());
 
@@ -355,14 +359,15 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
 
     @Override
     public ItemStack getPickResult() {
-        return new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.getMaterial(), this.hasPlate())).get());
+        ItemStack canvasStack = new ItemStack(ZetterItems.FRAMES.get(Helper.getFrameKey(this.getMaterial(), this.hasPlate())).get());
+        PaintingData paintingData = Helper.getLevelCanvasTracker(this.level()).getCanvasData(this.paintingCode);
+        if (paintingData != null) {
+            FrameItem.storePaintingData(canvasStack, this.paintingCode, paintingData, this.generation);
+        }
+        return canvasStack;
     }
 
-    @Nonnull
-    @Override
-    public Packet<ClientGamePacketListener> getAddEntityPacket() {
-        return NetworkHooks.getEntitySpawningPacket(this);
-    }
+
 
     public enum Materials {
         ACACIA("acacia", true, true),

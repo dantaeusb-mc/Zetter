@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.event;
 
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
 
 public abstract class CanvasUnregisterEvent extends Event {
     public final String canvasCode;

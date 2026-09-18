@@ -21,7 +21,7 @@ import java.util.UUID;
 public class PaintingData extends AbstractCanvasData {
     public static final String TYPE = "painting";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
-    public static final ResourceLocation OVERLAY_KEY = new ResourceLocation(Zetter.MOD_ID, ZetterOverlays.PAINTING_INFO_OVERLAY);
+    public static final ResourceLocation OVERLAY_KEY = ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, ZetterOverlays.PAINTING_INFO_OVERLAY);
     
     public static final CanvasDataBuilder<PaintingData> BUILDER = new PaintingDataBuilder();
 
@@ -109,8 +109,9 @@ public class PaintingData extends AbstractCanvasData {
         }
     }
 
-    public CompoundTag save(CompoundTag compoundTag) {
-        super.save(compoundTag);
+    @Override
+    public CompoundTag save(CompoundTag compoundTag, net.minecraft.core.HolderLookup.Provider registries) {
+        super.save(compoundTag, registries);
 
         compoundTag.putUUID(NBT_TAG_AUTHOR_UUID, this.authorUuid);
         compoundTag.putString(NBT_TAG_AUTHOR_NAME, this.authorName);

@@ -1,6 +1,6 @@
 package me.dantaeusb.zetter;
 
-import net.minecraftforge.common.ForgeConfigSpec;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
@@ -8,28 +8,28 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ZetterConfig {
-    static final ForgeConfigSpec serverSpec;
+    static final ModConfigSpec serverSpec;
     public static final ZetterConfig.Server SERVER;
 
-    static final ForgeConfigSpec clientSpec;
+    static final ModConfigSpec clientSpec;
     public static final ZetterConfig.Client CLIENT;
 
     static {
-        Pair<ZetterConfig.Server, ForgeConfigSpec> serverPair = new ForgeConfigSpec.Builder()
+        Pair<ZetterConfig.Server, ModConfigSpec> serverPair = new ModConfigSpec.Builder()
             .configure(ZetterConfig.Server::new);
         serverSpec = serverPair.getRight();
         SERVER = serverPair.getLeft();
 
-        Pair<ZetterConfig.Client, ForgeConfigSpec> clientPair = new ForgeConfigSpec.Builder()
+        Pair<ZetterConfig.Client, ModConfigSpec> clientPair = new ModConfigSpec.Builder()
             .configure(ZetterConfig.Client::new);
         clientSpec = clientPair.getRight();
         CLIENT = clientPair.getLeft();
     }
 
     public static class Server {
-        public final ForgeConfigSpec.ConfigValue<String> resolution;
+        public final ModConfigSpec.ConfigValue<String> resolution;
 
-        public Server(ForgeConfigSpec.Builder builder) {
+        public Server(ModConfigSpec.Builder builder) {
             builder.comment("Painting options");
             builder.push("painting");
 
@@ -45,9 +45,9 @@ public class ZetterConfig {
     }
 
     public static class Client {
-        public final ForgeConfigSpec.ConfigValue<Boolean> enableHelpButton;
+        public final ModConfigSpec.ConfigValue<Boolean> enableHelpButton;
 
-        public Client(ForgeConfigSpec.Builder builder) {
+        public Client(ModConfigSpec.Builder builder) {
             builder.comment("GUI options");
             builder.push("gui");
 

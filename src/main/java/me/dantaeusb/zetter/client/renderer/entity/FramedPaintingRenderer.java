@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
 import java.util.HashMap;
 
 public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
-    public static ModelLayerLocation PAINTING_PLATE_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "custom_painting"), "plate_layer");
+    public static ModelLayerLocation PAINTING_PLATE_LAYER = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "custom_painting"), "plate_layer");
 
     public static final String[] MODEL_CODES = {
         "1x1",
@@ -72,15 +72,15 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
     static {
         for (String modelCode: FramedPaintingRenderer.MODEL_CODES) {
             for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
-                // I don't know why vanilla uses "inventory" even for non-inventory models, but we copy that
-                FramedPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation(new ResourceLocation(Zetter.MOD_ID, "frame/" + material + "/" + modelCode), ""));
+                // Side-loaded models in 1.21+ must use the 'standalone' variant and correct models/block/ path prefix
+                FramedPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "block/frame/" + material + "/" + modelCode), "standalone"));
             }
         }
 
         for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
             if (material.canHavePlate()) {
                 // @todo: [HIGH] Use baked parts
-                FramedPaintingRenderer.PLATE_TEXTURES.put(material.toString(), new ResourceLocation(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
+                FramedPaintingRenderer.PLATE_TEXTURES.put(material.toString(), ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "textures/entity/frame/plate/" + material + ".png"));
             }
         }
     }
@@ -235,7 +235,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
 
             final String material = entity.getMaterial().toString();
             VertexConsumer vertexBuilder = renderBuffers.getBuffer(RenderType.entityCutout(PLATE_TEXTURES.get(material)));
-            this.platePart.render(matrixStack, vertexBuilder, combinedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+            this.platePart.render(matrixStack, vertexBuilder, combinedLight, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
 
             matrixStack.popPose();
         }
@@ -257,7 +257,7 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
         rendererDispatcher.getModelRenderer().renderModel(
                 currentMatrix, vertexBuffer, null, frameModel,
                 1.0F, 1.0F, 1.0F, combinedLight, OverlayTexture.NO_OVERLAY,
-                net.minecraftforge.client.model.data.ModelData.EMPTY,
+                net.neoforged.neoforge.client.model.data.ModelData.EMPTY,
                 RenderType.cutout()
         );
     }

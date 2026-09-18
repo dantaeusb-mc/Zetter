@@ -16,13 +16,17 @@ import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RenderTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.RegistryObject;
+import net.minecraft.world.item.Item;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderTooltipEvent;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import net.minecraft.Util;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@EventBusSubscriber(modid = Zetter.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public class ZetterClientModEvents {
     /**
      * Handle event when canvas is viewed. Because canvas types are
@@ -133,10 +137,21 @@ public class ZetterClientModEvents {
             event.getTooltipElements().add(0, Either.right(new CanvasTooltipRenderer.CanvasComponent(event.getItemStack())));
         }
 
-        for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {
+        for (DeferredHolder<Item, FrameItem> frame : ZetterItems.FRAMES.values()) {
             if (event.getItemStack().getItem() == frame.get() && FrameItem.getPaintingCode(event.getItemStack()) != null) {
                 event.getTooltipElements().add(0, Either.right(new CanvasTooltipRenderer.CanvasComponent(event.getItemStack())));
             }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onRenderTickStart(ClientTickEvent.Post event) {
+        if (Minecraft.getInstance().level != null) {
+            CanvasRenderer.getInstance().update(Util.getMillis());
+        }
+
+        for (CanvasOverlay<?> overlay : ZetterOverlays.OVERLAYS.values()) {
+            overlay.tick();
         }
     }
 }

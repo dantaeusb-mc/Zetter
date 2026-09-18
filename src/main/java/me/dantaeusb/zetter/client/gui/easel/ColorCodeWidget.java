@@ -82,7 +82,6 @@ public class ColorCodeWidget extends AbstractEaselWidget implements Renderable {
     }
 
     public void tick() {
-        this.textField.tick();
     }
 
     public void updateColorValue(int color) {

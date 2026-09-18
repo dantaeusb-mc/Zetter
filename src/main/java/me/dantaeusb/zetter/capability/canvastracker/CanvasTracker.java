@@ -1,11 +1,13 @@
 package me.dantaeusb.zetter.capability.canvastracker;
 
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.common.util.INBTSerializable;
 
 import java.util.BitSet;
 
-public interface CanvasTracker {
+public interface CanvasTracker extends INBTSerializable<CompoundTag> {
     void setLevel(Level level);
     Level getLevel();
 

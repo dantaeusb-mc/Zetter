@@ -2,46 +2,46 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTrackerProvider;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasClientTracker;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistry;
-import me.dantaeusb.zetter.capability.paintingregistry.PaintingRegistryProvider;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.capabilities.CapabilityToken;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import net.neoforged.bus.api.IEventBus;
 
-@Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+import java.util.function.Supplier;
+
 public class ZetterCapabilities
 {
-    private static final ResourceLocation CANVAS_TRACKER_CAPABILITY_LOCATION = new ResourceLocation(Zetter.MOD_ID, "canvas_tracker_capability");
-    private static final ResourceLocation PAINTING_REGISTRY_CAPABILITY_LOCATION = new ResourceLocation(Zetter.MOD_ID, "painting_registry_capability");
+    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, Zetter.MOD_ID);
 
-    public static Capability<CanvasTracker> CANVAS_TRACKER = CapabilityManager.get(new CapabilityToken<>(){});
-    public static Capability<PaintingRegistry> PAINTING_REGISTRY = CapabilityManager.get(new CapabilityToken<>(){});
-
-    @SubscribeEvent
-    public static void attachCapabilityToWorldHandler(AttachCapabilitiesEvent<Level> event) {
-        Level world = event.getObject();
-
-        // For client, it doesn't matter which world we're attaching to.
-        // For server, it's always saved with overworld.
-        if (world.isClientSide() || world.dimension() == Level.OVERWORLD) {
-            event.addCapability(CANVAS_TRACKER_CAPABILITY_LOCATION, new CanvasTrackerProvider(world));
-
-            if (!world.isClientSide()) {
-                event.addCapability(PAINTING_REGISTRY_CAPABILITY_LOCATION, new PaintingRegistryProvider(world));
+    public static final Supplier<AttachmentType<CanvasTracker>> CANVAS_TRACKER = ATTACHMENT_TYPES.register("canvas_tracker", () -> AttachmentType.serializable(
+            holder -> {
+                if (holder instanceof Level world) {
+                    CanvasTracker tracker = world.isClientSide() ? new CanvasClientTracker() : new CanvasServerTracker();
+                    tracker.setLevel(world);
+                    return tracker;
+                }
+                throw new IllegalArgumentException("CanvasTracker can only be attached to a Level");
             }
-        }
-    }
+    ).build());
 
-    @SubscribeEvent
-    public static void registerCapabilityHandler(RegisterCapabilitiesEvent event) {
-        event.register(CanvasTracker.class);
-        event.register(PaintingRegistry.class);
+    public static final Supplier<AttachmentType<PaintingRegistry>> PAINTING_REGISTRY = ATTACHMENT_TYPES.register("painting_registry", () -> AttachmentType.serializable(
+            holder -> {
+                if (holder instanceof Level world) {
+                    if (!world.isClientSide()) {
+                        return new PaintingRegistry(world);
+                    }
+                    // For client level, return a dummy registry, as the build method requires returning a non-null object for initialization
+                    return new PaintingRegistry(world);
+                }
+                throw new IllegalArgumentException("PaintingRegistry can only be attached to a Level");
+            }
+    ).build());
+
+    public static void init(IEventBus bus) {
+        ATTACHMENT_TYPES.register(bus);
     }
 }
