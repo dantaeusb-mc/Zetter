@@ -72,7 +72,6 @@ public class FramedPaintingRenderer extends EntityRenderer<PaintingEntity> {
     static {
         for (String modelCode: FramedPaintingRenderer.MODEL_CODES) {
             for (PaintingEntity.Materials material: PaintingEntity.Materials.values()) {
-                // Side-loaded models in 1.21+ must use the 'standalone' variant and correct models/block/ path prefix
                 FramedPaintingRenderer.FRAME_MODELS.put(material + "/" + modelCode, new ModelResourceLocation(ResourceLocation.fromNamespaceAndPath(Zetter.MOD_ID, "block/frame/" + material + "/" + modelCode), "standalone"));
             }
         }

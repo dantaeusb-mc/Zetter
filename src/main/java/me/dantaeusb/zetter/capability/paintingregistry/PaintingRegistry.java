@@ -43,14 +43,6 @@ public class PaintingRegistry implements INBTSerializable<CompoundTag> {
         return Collections.unmodifiableList(this.paintingCanvasCodeList);
     }
 
-    // Needed because serializable constructor has to accept empty/default. But we need level.
-    // Wait, let's see: we can set it via setter or constructor.
-    // Let's implement setter or let the builder handle level instantiation.
-    private Level level;
-    public void setWorld(Level world) {
-        this.level = world;
-    }
-
     @Override
     public CompoundTag serializeNBT(net.minecraft.core.HolderLookup.Provider provider) {
         CompoundTag compoundTag = new CompoundTag();

@@ -13,7 +13,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import java.util.function.Supplier;
 
 public class CCanvasHistoryActionPacket implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
-    public static final Type<CCanvasHistoryActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "canvas_history_action"));
+    public static final Type<CCanvasHistoryActionPacket> TYPE = new Type<>(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(me.dantaeusb.zetter.Zetter.MOD_ID, "c_canvas_history_action"));
 
     public static final StreamCodec<net.minecraft.network.FriendlyByteBuf, CCanvasHistoryActionPacket> STREAM_CODEC = StreamCodec.of(
         (buf, packet) -> packet.writePacketData(buf),

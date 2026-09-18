@@ -53,10 +53,6 @@ public class ColorTab extends AbstractTab {
         this.colorCodeWidget.render(guiGraphics, mouseX, mouseY, partialTicks);
     }
 
-    public void containerTick() {
-        this.colorCodeWidget.tick();
-    }
-
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.active) {
