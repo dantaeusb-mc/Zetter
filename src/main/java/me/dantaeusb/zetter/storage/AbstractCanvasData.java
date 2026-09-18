@@ -2,6 +2,7 @@ package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -189,7 +190,7 @@ public abstract class AbstractCanvasData extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag compoundTag, net.minecraft.core.HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider registries) {
         compoundTag.putString(NBT_TAG_TYPE, this.getType().resourceLocation.toString());
         compoundTag.putInt(NBT_TAG_WIDTH, this.width);
         compoundTag.putInt(NBT_TAG_HEIGHT, this.height);

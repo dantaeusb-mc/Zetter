@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterOverlays;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -110,7 +111,7 @@ public class PaintingData extends AbstractCanvasData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag compoundTag, net.minecraft.core.HolderLookup.Provider registries) {
+    public CompoundTag save(CompoundTag compoundTag, HolderLookup.Provider registries) {
         super.save(compoundTag, registries);
 
         compoundTag.putUUID(NBT_TAG_AUTHOR_UUID, this.authorUuid);
