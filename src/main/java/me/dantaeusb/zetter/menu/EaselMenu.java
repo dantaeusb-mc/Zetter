@@ -97,8 +97,6 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         this.container = easelContainer;
         this.state = stateHandler;
 
-        this.state.addPlayer(this.player);
-
         final int CANVAS_SLOT_X = 180;
         final int CANVAS_SLOT_Y = 9;
 
@@ -613,7 +611,10 @@ public class EaselMenu extends AbstractContainerMenu implements EaselStateListen
         this.state.removeListener(this);
         this.container.removeListener(this);
 
-        this.state.removePlayer(player);
+        // PlayerContainerEvent are not happening on client
+        if (this.player.isLocalPlayer()) {
+            this.state.removePlayer(player);
+        }
     }
 
     /**

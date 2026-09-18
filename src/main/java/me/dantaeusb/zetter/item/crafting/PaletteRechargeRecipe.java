@@ -48,26 +48,26 @@ public class PaletteRechargeRecipe extends CustomRecipe {
 
             if (this.inputPalette.test(stack)) {
                 if (!paletteStack.isEmpty()) {
-                    Zetter.LOG.info("PaletteRechargeRecipe: matches failed because multiple palettes found");
+                    Zetter.LOG.debug("PaletteRechargeRecipe: matches failed because multiple palettes found");
                     return false;
                 }
 
                 paletteStack = stack;
             } else if (this.inputRecharge.test(stack)) {
                 if (!rechargeStack.isEmpty()) {
-                    Zetter.LOG.info("PaletteRechargeRecipe: matches failed because multiple recharges found");
+                    Zetter.LOG.debug("PaletteRechargeRecipe: matches failed because multiple recharges found");
                     return false;
                 }
 
                 rechargeStack = stack;
             } else {
-                Zetter.LOG.info("PaletteRechargeRecipe: matches failed because unrelated item found: " + stack.getItem());
+                Zetter.LOG.debug("PaletteRechargeRecipe: matches failed because unrelated item found: " + stack.getItem());
                 return false;
             }
         }
 
         boolean matched = (!paletteStack.isEmpty() && paletteStack.getDamageValue() > 0) && !rechargeStack.isEmpty();
-        Zetter.LOG.info("PaletteRechargeRecipe: matches result: " + matched + " (palette empty: " + paletteStack.isEmpty() + ", damage: " + paletteStack.getDamageValue() + ", recharge empty: " + rechargeStack.isEmpty() + ")");
+        Zetter.LOG.debug("PaletteRechargeRecipe: matches result: " + matched + " (palette empty: " + paletteStack.isEmpty() + ", damage: " + paletteStack.getDamageValue() + ", recharge empty: " + rechargeStack.isEmpty() + ")");
         return matched;
     }
 
@@ -113,10 +113,10 @@ public class PaletteRechargeRecipe extends CustomRecipe {
             }
             outStack.setDamageValue(newDamage);
 
-            Zetter.LOG.info("PaletteRechargeRecipe: assemble success, output stack damage: " + newDamage);
+            Zetter.LOG.debug("PaletteRechargeRecipe: assemble success, output stack damage: " + newDamage);
             return outStack;
         } else {
-            Zetter.LOG.info("PaletteRechargeRecipe: assemble failed checks");
+            Zetter.LOG.debug("PaletteRechargeRecipe: assemble failed checks");
             return ItemStack.EMPTY;
         }
     }

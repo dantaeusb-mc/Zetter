@@ -49,21 +49,21 @@ public class UnframingRecipe extends CustomRecipe {
 
             if (this.inputFrame.test(stack)) {
                 if (!frameStack.isEmpty()) {
-                    Zetter.LOG.info("UnframingRecipe: matches failed because multiple frames found");
+                    Zetter.LOG.debug("UnframingRecipe: matches failed because multiple frames found");
                     // We already found frame
                     return false;
                 }
 
                 frameStack = stack;
             } else {
-                Zetter.LOG.info("UnframingRecipe: matches failed because unrelated item found: " + stack.getItem());
+                Zetter.LOG.debug("UnframingRecipe: matches failed because unrelated item found: " + stack.getItem());
                 // We have something else in the grid
                 return false;
             }
         }
 
         boolean matched = !frameStack.isEmpty() && PaintingItem.getPaintingCode(frameStack) != null;
-        Zetter.LOG.info("UnframingRecipe: matches result: " + matched + " (frame empty: " + frameStack.isEmpty() + ")");
+        Zetter.LOG.debug("UnframingRecipe: matches result: " + matched + " (frame empty: " + frameStack.isEmpty() + ")");
         return matched;
     }
 
@@ -106,10 +106,10 @@ public class UnframingRecipe extends CustomRecipe {
             ItemStack outStack = new ItemStack(ZetterItems.PAINTING.get());
             CompoundTag compoundnbt = Helper.getTag(frameStack).copy();
             Helper.setTag(outStack, compoundnbt);
-            Zetter.LOG.info("UnframingRecipe: assemble success, output stack: " + outStack);
+            Zetter.LOG.debug("UnframingRecipe: assemble success, output stack: " + outStack);
             return outStack;
         } else {
-            Zetter.LOG.info("UnframingRecipe: assemble failed checks (frame empty or has no tag)");
+            Zetter.LOG.debug("UnframingRecipe: assemble failed checks (frame empty or has no tag)");
             return ItemStack.EMPTY;
         }
     }

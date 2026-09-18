@@ -7,7 +7,7 @@ version = project.mod_version
 group = project.mod_group
 
 base {
-    archivesName = project.mod_id
+    archivesName = project.mod_id + '-' + project.minecraft_version
 }
 
 neoForge {
@@ -47,10 +47,14 @@ java {
 processResources {
     var replaceProperties = [
             minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
             neoforge_version       : neoforge_version,
+            neoforge_version_range : neoforge_version_range,
+            loader_version_range   : loader_version_range,
             mod_id                 : mod_id,
             mod_version            : mod_version,
             mod_name               : mod_name,
+            mod_license            : mod_license,
             mod_authors            : mod_authors,
             mod_description        : mod_description
     ]

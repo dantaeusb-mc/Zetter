@@ -49,20 +49,20 @@ public class FramingRecipe extends CustomRecipe {
 
             if (this.inputFrame.test(stack)) {
                 if (!frameStack.isEmpty()) {
-                    Zetter.LOG.info("FramingRecipe: matches failed because multiple frames found");
+                    Zetter.LOG.debug("FramingRecipe: matches failed because multiple frames found");
                     return false;
                 }
 
                 frameStack = stack;
             } else if (this.inputPainting.test(stack)) {
                 if (!paintingStack.isEmpty()) {
-                    Zetter.LOG.info("FramingRecipe: matches failed because multiple paintings found");
+                    Zetter.LOG.debug("FramingRecipe: matches failed because multiple paintings found");
                     return false;
                 }
 
                 paintingStack = stack;
             } else {
-                Zetter.LOG.info("FramingRecipe: matches failed because unrelated item found: " + stack.getItem());
+                Zetter.LOG.debug("FramingRecipe: matches failed because unrelated item found: " + stack.getItem());
                 return false;
             }
         }
@@ -72,21 +72,21 @@ public class FramingRecipe extends CustomRecipe {
         }
 
         if (!Helper.hasTag(paintingStack)) {
-            Zetter.LOG.info("FramingRecipe: matches failed because painting has no tag");
+            Zetter.LOG.debug("FramingRecipe: matches failed because painting has no tag");
             return false;
         }
 
         if (!FrameItem.isEmpty(frameStack)) {
-            Zetter.LOG.info("FramingRecipe: matches failed because frame is not empty");
+            Zetter.LOG.debug("FramingRecipe: matches failed because frame is not empty");
             return false;
         }
 
         if (PaintingItem.isEmpty(paintingStack)) {
-            Zetter.LOG.info("FramingRecipe: matches failed because painting is empty");
+            Zetter.LOG.debug("FramingRecipe: matches failed because painting is empty");
             return false;
         }
 
-        Zetter.LOG.info("FramingRecipe: MATCHED SUCCESS!");
+        Zetter.LOG.debug("FramingRecipe: MATCHED SUCCESS!");
         return true;
     }
 
@@ -115,12 +115,12 @@ public class FramingRecipe extends CustomRecipe {
         }
 
         if (frameStack.isEmpty() || paintingStack.isEmpty()) {
-            Zetter.LOG.info("FramingRecipe: assemble failed: empty inputs");
+            Zetter.LOG.debug("FramingRecipe: assemble failed: empty inputs");
             return ItemStack.EMPTY;
         }
 
         if (!Helper.hasTag(paintingStack)) {
-            Zetter.LOG.info("FramingRecipe: assemble failed: painting has no tag");
+            Zetter.LOG.debug("FramingRecipe: assemble failed: painting has no tag");
             return ItemStack.EMPTY;
         }
 

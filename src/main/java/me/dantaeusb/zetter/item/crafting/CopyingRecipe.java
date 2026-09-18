@@ -57,27 +57,27 @@ public class CopyingRecipe extends CustomRecipe {
 
             if (this.inputPainting.test(stack)) {
                 if (!paintingStack.isEmpty()) {
-                    Zetter.LOG.info("CopyingRecipe: matches failed because multiple paintings found");
+                    Zetter.LOG.debug("CopyingRecipe: matches failed because multiple paintings found");
                     return false;
                 }
 
                 paintingStack = stack;
             } else if (this.inputCanvas.test(stack)) {
                 if (!canvasStack.isEmpty()) {
-                    Zetter.LOG.info("CopyingRecipe: matches failed because multiple canvases found");
+                    Zetter.LOG.debug("CopyingRecipe: matches failed because multiple canvases found");
                     return false;
                 }
 
                 canvasStack = stack;
             } else if (this.inputPalette.test(stack)) {
                 if (!paletteStack.isEmpty()) {
-                    Zetter.LOG.info("CopyingRecipe: matches failed because multiple palettes found");
+                    Zetter.LOG.debug("CopyingRecipe: matches failed because multiple palettes found");
                     return false;
                 }
 
                 paletteStack = stack;
             } else {
-                Zetter.LOG.info("CopyingRecipe: matches failed because unrelated item found: " + stack.getItem());
+                Zetter.LOG.debug("CopyingRecipe: matches failed because unrelated item found: " + stack.getItem());
                 return false;
             }
         }
@@ -87,12 +87,12 @@ public class CopyingRecipe extends CustomRecipe {
         }
 
         if (PaintingItem.isEmpty(paintingStack)) {
-            Zetter.LOG.info("CopyingRecipe: matches failed because painting is empty");
+            Zetter.LOG.debug("CopyingRecipe: matches failed because painting is empty");
             return false;
         }
 
         if (!CanvasItem.isEmpty(canvasStack)) {
-            Zetter.LOG.info("CopyingRecipe: matches failed because canvas is not empty");
+            Zetter.LOG.debug("CopyingRecipe: matches failed because canvas is not empty");
             return false;
         }
 
@@ -101,7 +101,7 @@ public class CopyingRecipe extends CustomRecipe {
         int newDamage = paletteDamage + calculatePaletteDamage(paintingStack);
 
         if (newDamage > maxDamage) {
-            Zetter.LOG.info("CopyingRecipe: matches failed because palette is too damaged / not enough durability");
+            Zetter.LOG.debug("CopyingRecipe: matches failed because palette is too damaged / not enough durability");
             return false;
         }
 
@@ -109,11 +109,11 @@ public class CopyingRecipe extends CustomRecipe {
         int[] canvasSize = CanvasItem.getBlockSize(canvasStack);
 
         if (!Arrays.equals(paintingSize, canvasSize)) {
-            Zetter.LOG.info("CopyingRecipe: matches failed because painting and canvas size do not match");
+            Zetter.LOG.debug("CopyingRecipe: matches failed because painting and canvas size do not match");
             return false;
         }
 
-        Zetter.LOG.info("CopyingRecipe: MATCHED SUCCESS!");
+        Zetter.LOG.debug("CopyingRecipe: MATCHED SUCCESS!");
         return true;
     }
 
@@ -149,17 +149,17 @@ public class CopyingRecipe extends CustomRecipe {
         }
 
         if (paintingStack.isEmpty() || !Helper.hasTag(paintingStack)) {
-            Zetter.LOG.info("CopyingRecipe: assemble failed: painting empty or has no tag");
+            Zetter.LOG.debug("CopyingRecipe: assemble failed: painting empty or has no tag");
             return ItemStack.EMPTY;
         }
 
         if (PaintingItem.isEmpty(paintingStack)) {
-            Zetter.LOG.info("CopyingRecipe: assemble failed: painting is empty");
+            Zetter.LOG.debug("CopyingRecipe: assemble failed: painting is empty");
             return ItemStack.EMPTY;
         }
 
         if (!CanvasItem.isEmpty(canvasStack)) {
-            Zetter.LOG.info("CopyingRecipe: assemble failed: canvas is not empty");
+            Zetter.LOG.debug("CopyingRecipe: assemble failed: canvas is not empty");
             return ItemStack.EMPTY;
         }
 
@@ -168,7 +168,7 @@ public class CopyingRecipe extends CustomRecipe {
         int newDamage = paletteDamage + calculatePaletteDamage(paintingStack);
 
         if (newDamage > maxDamage) {
-            Zetter.LOG.info("CopyingRecipe: assemble failed: palette too damaged");
+            Zetter.LOG.debug("CopyingRecipe: assemble failed: palette too damaged");
             return ItemStack.EMPTY;
         }
 
@@ -176,7 +176,7 @@ public class CopyingRecipe extends CustomRecipe {
         int[] canvasSize = CanvasItem.getBlockSize(canvasStack);
 
         if (!Arrays.equals(paintingSize, canvasSize)) {
-            Zetter.LOG.info("CopyingRecipe: assemble failed: size mismatch");
+            Zetter.LOG.debug("CopyingRecipe: assemble failed: size mismatch");
             return ItemStack.EMPTY;
         }
 
@@ -189,7 +189,7 @@ public class CopyingRecipe extends CustomRecipe {
         int generation = Math.min(PaintingItem.GENERATION_COPY_OF_COPY, PaintingItem.getGeneration(paintingStack) + 1);
         PaintingItem.setGeneration(outStack, generation);
 
-        Zetter.LOG.info("CopyingRecipe: assemble success, output stack: " + outStack);
+        Zetter.LOG.debug("CopyingRecipe: assemble success, output stack: " + outStack);
         return outStack;
     }
 
