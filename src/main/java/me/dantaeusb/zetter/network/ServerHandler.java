@@ -7,7 +7,6 @@ import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
@@ -347,7 +346,7 @@ public class ServerHandler {
      */
     public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            EaselEntity easelEntity = (EaselEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
+            CanvasHolderEntity easelEntity = (CanvasHolderEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
 
             // We don't trust client and writing our UUIDs
             for (CanvasAction actionBuffer : packetIn.paintingActions) {
@@ -374,7 +373,7 @@ public class ServerHandler {
      */
     public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            EaselEntity easelEntity = (EaselEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
+            CanvasHolderEntity easelEntity = (CanvasHolderEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
 
             // @todo: [MED] Check if player can access entity
 

@@ -11,6 +11,15 @@ import net.minecraft.client.model.geom.builders.*;
 
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Easels are rendered without the flip that living entities have, so the model
+ * space here is the same as the one of the standing easel: Y is pointing up from
+ * the ground, Z is pointing away from the front of the easel, and the canvas
+ * stands in front of the planks, on the ledge of the bottom one.
+ *
+ * Blockbench exports are upside down and back to front for that space: rotate
+ * the model 180 degrees around the X axis before putting the boxes here.
+ */
 public class WallEaselModel<T extends WallEaselEntity> extends ListModel<T> {
     public static final ModelLayerLocation WALL_EASEL_BODY_LAYER = new ModelLayerLocation(new ResourceLocation(Zetter.MOD_ID, "wall_easel"), "body_layer");
 
@@ -35,46 +44,50 @@ public class WallEaselModel<T extends WallEaselEntity> extends ListModel<T> {
         MeshDefinition meshdefinition = new MeshDefinition();
         PartDefinition partdefinition = meshdefinition.getRoot();
 
+        // Braces laying on the wall, bottom and top
         partdefinition.addOrReplaceChild(
             BACK_HORIZONTAL_SUPPORT,
             CubeListBuilder.create()
-                .texOffs(0, 6).
-                addBox(-36.0F, -5.0F, -7.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
+                .texOffs(0, 6)
+                .addBox(-36.0F, 0.0F, 5.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 13)
-                .addBox(-36.0F, -80.0F, -7.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
-            PartPose.offset(0.0F, 80.0F, 0.0F)
+                .addBox(-36.0F, 75.0F, 5.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
+            PartPose.ZERO
         );
 
+        // Posts holding the planks, left, right and in the middle
         partdefinition.addOrReplaceChild(
             BACK_VERTICAL_SUPPORT,
             CubeListBuilder.create()
                 .texOffs(0, 36)
-                .addBox(27.0F, -80.0F, -5.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(27.0F, 0.0F, 3.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(12, 36)
-                .addBox(-30.0F, -80.0F, -5.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-30.0F, 0.0F, 3.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(24, 36)
-                .addBox(-3.0F, -80.0F, -5.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F)),
-            PartPose.offset(0.0F, 80.0F, 0.0F)
+                .addBox(-3.0F, 0.0F, 3.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F)),
+            PartPose.ZERO
         );
 
+        // Plank the canvas is leaning on with a small ledge below it
         partdefinition.addOrReplaceChild(
             TOP_PLANK,
             CubeListBuilder.create()
                 .texOffs(0, 20)
-                .addBox(-36.0F, -80.0F, -3.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-36.0F, 76.0F, 1.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 32)
-                .addBox(-36.0F, -76.0F, -3.0F, 72.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)),
-            PartPose.offset(0.0F, 80.0F, 0.0F)
+                .addBox(-36.0F, 75.0F, 0.0F, 72.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)),
+            PartPose.ZERO
         );
 
+        // Plank the canvas is leaning on with the ledge it stands on
         partdefinition.addOrReplaceChild(
             BOTTOM_PLANK,
             CubeListBuilder.create()
                 .texOffs(0, 26)
-                .addBox(-36.0F, -4.0F, -3.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-36.0F, 0.0F, 1.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 0)
-                .addBox(-36.0F, -5.0F, -3.0F, 72.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)),
-            PartPose.offset(0.0F, 80.0F, 0.0F)
+                .addBox(-36.0F, 4.0F, -2.0F, 72.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)),
+            PartPose.ZERO
         );
 
         return LayerDefinition.create(meshdefinition, 256, 256);

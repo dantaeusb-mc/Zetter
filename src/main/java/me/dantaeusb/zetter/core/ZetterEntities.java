@@ -22,8 +22,9 @@ public class ZetterEntities {
     public static RegistryObject<EntityType<EaselEntity>> EASEL_ENTITY = ENTITIES.register("easel_entity", () -> EntityType.Builder.<EaselEntity>of(EaselEntity::new, MobCategory.MISC)
             .sized(0.8F, 1.8F)
             .build(Zetter.MOD_ID + "_easel_entity"));
+    // Actual bounding box follows the rotation of the easel, see WallEaselEntity#makeBoundingBox
     public static RegistryObject<EntityType<WallEaselEntity>> WALL_EASEL_ENTITY = ENTITIES.register("wall_easel_entity", () -> EntityType.Builder.<WallEaselEntity>of(WallEaselEntity::new, MobCategory.MISC)
-        .sized(0.8F, 1.8F)
+        .sized(4.5F, 5.0F)
         .build(Zetter.MOD_ID + "_wall_easel_entity"));
 
     public static void init(IEventBus bus) {

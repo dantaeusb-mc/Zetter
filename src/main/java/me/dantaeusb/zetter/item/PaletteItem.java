@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.item;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
+import net.minecraft.util.Mth;
 import me.dantaeusb.zetter.network.packet.CPaletteUseCanvasHolderPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.stats.Stats;
@@ -49,9 +50,8 @@ public class PaletteItem extends Item {
         double pickRange = player.getBlockReach();
         Vec3 eyePosition = player.getEyePosition(1.0F);
         Vec3 viewVector = player.getViewVector(1.0F);
-        Vec3 targetPosition = eyePosition.add(viewVector.x * pickRange, viewVector.y * pickRange, viewVector.z * pickRange);
-        // Perhaps needs to be extended to be more of a frustum
-        AABB bb = player.getBoundingBox().expandTowards(targetPosition.scale(pickRange)).inflate(1.0D);
+        // Holders are wider than they are deep, so we look around the player and sort out the ones we can reach below
+        AABB bb = player.getBoundingBox().inflate(pickRange + 1.0D);
 
         List<Entity> canvasHolders = level.getEntities(player, bb, entity -> entity instanceof CanvasHolderEntity);
 
@@ -63,22 +63,26 @@ public class PaletteItem extends Item {
 
         double closestScore = Double.MAX_VALUE;
 
-        for (Entity canvasHolder : canvasHolders) {
-            if (!((CanvasHolderEntity) canvasHolder).playerCanDraw(player)) {
+        for (Entity entity : canvasHolders) {
+            CanvasHolderEntity canvasHolder = (CanvasHolderEntity) entity;
+
+            // Holder has a canvas and is not turned away from us
+            if (!canvasHolder.playerCanDraw(player)) {
                 continue;
             }
 
-            Vec3 vectorToEntity = new Vec3(
-                canvasHolder.getX() - player.getX(),
-                canvasHolder.getY() + canvasHolder.getEyeHeight() - (player.getY() + player.getEyeHeight()),
-                canvasHolder.getZ() - player.getZ()
-            ).normalize();
+            // Aiming at the canvas and not at the entity: canvas can be four blocks wide
+            Vec3 vectorToCanvas = canvasHolder.getClosestCanvasPoint(eyePosition).subtract(eyePosition);
+            double distance = vectorToCanvas.length();
 
-            double angle = Math.acos(player.getViewVector(1.0F).dot(vectorToEntity));
-            double distance = canvasHolder.distanceTo(player);
-            boolean isInFront = player.getViewVector(1.0F).dot(vectorToEntity) > 0;
+            // Distance to the entity keeps the angle sane when standing right next to the easel
+            if (distance > pickRange || canvasHolder.distanceTo(player) < minDistance) {
+                continue;
+            }
 
-            if (angle > Math.toRadians(60) || distance > pickRange || distance < minDistance || !isInFront) {
+            double angle = Math.acos(Mth.clamp(viewVector.dot(vectorToCanvas.normalize()), -1.0D, 1.0D));
+
+            if (angle > Math.toRadians(60)) {
                 continue;
             }
 
@@ -89,7 +93,7 @@ public class PaletteItem extends Item {
 
             if (score < closestScore) {
                 closestScore = score;
-                closestCanvasHolder = (CanvasHolderEntity) canvasHolder;
+                closestCanvasHolder = canvasHolder;
             }
         }
 
@@ -97,7 +101,7 @@ public class PaletteItem extends Item {
             return InteractionResultHolder.fail(player.getItemInHand(hand));
         }
 
-        if (!level.isClientSide()) {
+        if (level.isClientSide()) {
             CPaletteUseCanvasHolderPacket useCanvasHolder = new CPaletteUseCanvasHolderPacket(
                 closestCanvasHolder.getId(),
                 paletteStack

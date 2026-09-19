@@ -1,7 +1,6 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.core.ZetterEntities;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.WallEaselEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -40,7 +39,9 @@ public class WallEaselItem extends Item
             BlockPlaceContext placeContext = new BlockPlaceContext(context);
             BlockPos pos = placeContext.getClickedPos();
             Vec3 vec3 = Vec3.atBottomCenterOf(pos);
-            AABB aabb = ZetterEntities.EASEL_ENTITY.get().getDimensions().makeBoundingBox(vec3.x(), vec3.y(), vec3.z());
+            // Rotate properly
+            float rotation = (float) Mth.floor((Mth.wrapDegrees(context.getRotation() - 180.0F) + 22.5F) / 45.0F) * 45.0F;
+            AABB aabb = WallEaselEntity.makeBoundingBox(vec3, rotation);
 
             if (
                 world.noCollision(null, aabb) &&
@@ -57,10 +58,8 @@ public class WallEaselItem extends Item
                         return InteractionResult.FAIL;
                     }
 
-                    // Rotate properly
-                    float f = (float) Mth.floor((Mth.wrapDegrees(context.getRotation() - 180.0F) + 22.5F) / 45.0F) * 45.0F;
                     easel.setPos(vec3);
-                    easel.setYRot(f);
+                    easel.setYRot(rotation);
 
                     world.addFreshEntity(easel);
 

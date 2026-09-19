@@ -1,79 +1,15 @@
 package me.dantaeusb.zetter.client.renderer.entity;
 
-import com.google.common.collect.Lists;
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.model.EaselModel;
-import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
-import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
-import me.dantaeusb.zetter.storage.CanvasData;
-import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.layers.RenderLayer;
-import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.Level;
-import org.joml.Matrix4f;
-
-import javax.annotation.Nullable;
-import java.util.List;
-import java.util.Optional;
 
 public class EaselRenderer extends EntityWithCanvasRenderer<EaselEntity> {
     public static final ResourceLocation TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/easel.png");
-    public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
-
-    protected EaselModel model;
-    protected final List<RenderLayer<EaselEntity, EntityModel<EaselEntity>>> layers = Lists.newArrayList();
-    protected int canvasRequestTimeout = 0;
 
     public EaselRenderer(EntityRendererProvider.Context context) {
-        super(context);
-
-        this.model = new EaselModel<>(context.bakeLayer(EaselModel.EASEL_BODY_LAYER));
-    }
-
-    public final boolean addLayer(RenderLayer<EaselEntity, EntityModel<EaselEntity>> layer) {
-        return this.layers.add(layer);
-    }
-
-    public void render(EaselEntity easelEntity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(TEXTURE));
-
-        poseStack.pushPose();
-        poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
-
-        // last are r, g, b, a
-        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
-
-        if (easelEntity.hasCanvas()) {
-            // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
-            CanvasData canvasData = getCanvasData(easelEntity.level(), easelEntity.getCanvasCode());
-
-            if (canvasData != null) {
-                this.renderCanvas(easelEntity, canvasData, partialTicks, poseStack, buffer, packedLight);
-            } else {
-                CanvasRenderer.getInstance().queueCanvasTextureUpdate(easelEntity.getCanvasCode());
-            }
-        }
-
-        poseStack.popPose();
-    }
-
-    /**
-     * Returns the location of an entity's texture.
-     * @todo: do something with this
-     */
-    @Override
-    public ResourceLocation getTextureLocation(EaselEntity entity) {
-        return TEXTURE;
+        super(context, new EaselModel<>(context.bakeLayer(EaselModel.EASEL_BODY_LAYER)), TEXTURE);
     }
 }

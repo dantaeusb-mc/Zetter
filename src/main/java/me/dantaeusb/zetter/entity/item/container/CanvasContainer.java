@@ -6,7 +6,6 @@ import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ItemStackHandlerListener;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.util.CanvasHolder;
@@ -21,6 +20,11 @@ import java.util.List;
 public class CanvasContainer extends ItemStackHandler {
     public static final int STORAGE_SIZE = 1;
     public static final int CANVAS_SLOT = 0;
+
+    /**
+     * Used when the container is not attached to a holder, see deprecated constructor
+     */
+    private static final int[] DEFAULT_MAX_CANVAS_BLOCK_SIZE = new int[]{2, 2};
 
     /*
      * Canvas
@@ -119,14 +123,18 @@ public class CanvasContainer extends ItemStackHandler {
     }
 
     public boolean isItemValid(int index, ItemStack stack) {
-        if (index == 0 && stack.getItem() == ZetterItems.CANVAS.get()) {
+        if (index == CANVAS_SLOT && stack.getItem() == ZetterItems.CANVAS.get()) {
             int[] canvasSize = CanvasItem.getBlockSize(stack);
             assert canvasSize != null;
 
-            return canvasSize[0] <= 2 && canvasSize[1] <= 2;
+            int[] maxCanvasSize = this.canvasHolder == null
+                ? DEFAULT_MAX_CANVAS_BLOCK_SIZE
+                : this.canvasHolder.getMaxCanvasBlockSize();
+
+            return canvasSize[0] <= maxCanvasSize[0] && canvasSize[1] <= maxCanvasSize[1];
         }
 
-        return index == 1 && stack.getItem() == ZetterItems.PALETTE.get();
+        return false;
     }
 
     /*

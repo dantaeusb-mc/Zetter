@@ -31,15 +31,14 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         // Add borders
         super(parentScreen, x, y, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * 2 + 3, Component.translatable("container.zetter.painting.history"));
 
-
         this.buttons = new ArrayList<>() {{
             add(new HistoryButton(
                     parentScreen::canUndo, parentScreen::undo,
-                    HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
+                    HISTORY_BUTTONS_U + HISTORY_BUTTON_WIDTH + 3, HISTORY_BUTTONS_V + 1, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
                     Component.translatable("container.zetter.painting.history.undo"))
             );
             add(new HistoryButton(parentScreen::canRedo, parentScreen::redo,
-                    HISTORY_BUTTONS_U, HISTORY_BUTTONS_V + HISTORY_BUTTON_HEIGHT + 1, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
+                    HISTORY_BUTTONS_U + HISTORY_BUTTON_WIDTH + 3, HISTORY_BUTTONS_V + HISTORY_BUTTON_HEIGHT + 2, HISTORY_BUTTON_WIDTH, HISTORY_BUTTON_HEIGHT,
                     Component.translatable("container.zetter.painting.history.redo"))
             );
         }};
@@ -105,7 +104,7 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
     }
 
     public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
-        guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U - HISTORY_BUTTON_WIDTH - 3, HISTORY_BUTTONS_V - 1, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
+        guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), HISTORY_BUTTONS_U, HISTORY_BUTTONS_V, HISTORY_BUTTON_WIDTH + 2, HISTORY_BUTTON_HEIGHT * this.buttons.size() + 3);
 
         int i = 0;
         for (HistoryButton historyButton: this.buttons) {

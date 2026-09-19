@@ -6,7 +6,6 @@ import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCapabilities;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.network.packet.*;
@@ -174,7 +173,7 @@ public class ClientHandler {
      */
     public static void processEaselStateSync(final SEaselStateSyncPacket packetIn, Level world) {
         try {
-            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+            CanvasHolderEntity easel = (CanvasHolderEntity) world.getEntity(packetIn.easelEntityId);
 
             if (easel != null) {
                 easel.getCanvasState().processHistorySyncClient(packetIn.canvasCode, packetIn.sync, packetIn.snapshot, packetIn.unsyncedActions);
@@ -195,7 +194,7 @@ public class ClientHandler {
      */
     public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, Level world) {
         try {
-            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+            CanvasHolderEntity easel = (CanvasHolderEntity) world.getEntity(packetIn.easelEntityId);
             // @todo: [MED] Check if player can access entity
 
             if (easel != null) {
@@ -243,7 +242,7 @@ public class ClientHandler {
      */
     public static void processEaselCanvasInitialization(final SEaselCanvasInitializationPacket packetIn, Level world) {
         try {
-            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+            CanvasHolderEntity easel = (CanvasHolderEntity) world.getEntity(packetIn.easelEntityId);
 
             // Save canvas information in texture manager
             ClientHandler.processCanvasSync(packetIn, world);
@@ -270,7 +269,7 @@ public class ClientHandler {
      */
     public static void processEaselReset(final SEaselResetPacket packetIn, Level world) {
         try {
-            EaselEntity easel = (EaselEntity) world.getEntity(packetIn.easelEntityId);
+            CanvasHolderEntity easel = (CanvasHolderEntity) world.getEntity(packetIn.easelEntityId);
 
             if (easel != null) {
                 easel.getCanvasState().reset();
