@@ -31,6 +31,28 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
     protected final static int SLIDER_CONTENT_SIDE_OFFSET = 1;
     protected final static int SLIDER_CONTENT_PADDING = SLIDER_CONTENT_SIDE_OFFSET + 1;
 
+    /**
+     * Groove the background is painted in: it opens up while the slider is dragged
+     */
+    public final static int HORIZONTAL_CONTENT_WIDTH = HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2;
+    public final static int HORIZONTAL_CONTENT_HEIGHT = 3;
+    public final static int HORIZONTAL_CONTENT_DRAGGING_HEIGHT = HORIZONTAL_CONTENT_HEIGHT + 4;
+
+    /**
+     * Distance the middle of the handle travels along the groove
+     */
+    protected final static int HORIZONTAL_HANDLER_TRAVEL = HORIZONTAL_WIDTH - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
+    protected final static int VERTICAL_HANDLER_TRAVEL = VERTICAL_HEIGHT - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
+
+    /**
+     * Where the middle of the handle sits for the given value, counting from the
+     * left edge of the groove. Anything painted in the background that has to line
+     * up with the handle, like notches of the allowed values, has to use this.
+     */
+    public static int getHorizontalHandlerOffset(float value) {
+        return (int) (HORIZONTAL_HANDLER_TRAVEL * value);
+    }
+
     private final Orientation orientation;
 
     private boolean sliderDragging = false;
@@ -96,34 +118,28 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
         return true;
     }
 
+    /**
+     * Cursor is allowed to leave the slider while dragging it,
+     * we only stop following it when the button is released
+     */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (!this.sliderDragging) {
+        if (!this.sliderDragging || !this.isValidClickButton(button)) {
             return false;
         }
 
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }
-
-    @Override
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        if (this.sliderDragging) {
-            this.handleSliderInteraction(mouseX, mouseY);
-        }
+        this.handleSliderInteraction(mouseX, mouseY);
+        return true;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (!this.sliderDragging) {
+        if (!this.sliderDragging || !this.isValidClickButton(button)) {
             return false;
         }
 
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
-
-    @Override
-    public void onRelease(double mouseX, double mouseY) {
         this.sliderDragging = false;
+        return true;
     }
 
     protected void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
@@ -152,8 +168,8 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
             guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX(), this.getY(), SLIDER_HORIZONTAL_POSITION_U, sliderV, HORIZONTAL_SPRITE_WIDTH, HORIZONTAL_SPRITE_HEIGHT);
 
             if (this.backgroundLambda != null) {
-                int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_PADDING * 2;
-                int sliderContentHeight = 3;
+                int sliderContentWidth = HORIZONTAL_CONTENT_WIDTH;
+                int sliderContentHeight = HORIZONTAL_CONTENT_HEIGHT;
 
                 if (this.sliderDragging) {
                     sliderContentGlobalTop -= 2;
@@ -226,9 +242,7 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
         float value = this.valueSupplier.get();
 
         if (this.orientation == Orientation.HORIZONTAL) {
-            int sliderContentWidth = HORIZONTAL_WIDTH - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
-
-            int sliderGlobalLeft = this.getX() + (int) (sliderContentWidth * value) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
+            int sliderGlobalLeft = this.getX() + getHorizontalHandlerOffset(value) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
             int sliderGlobalTop = this.getY() - 1;
 
             int sliderV = HANDLER_HORIZONTAL_POSITION_V;
@@ -257,10 +271,8 @@ public class SliderWidget extends AbstractPaintingWidget implements Renderable {
                 this.handlerLambda.accept(guiGraphics, offsetX, offsetY, width, height, value);
             }
         } else {
-            int sliderContentHeight = VERTICAL_HEIGHT - SLIDER_CONTENT_SIDE_OFFSET * 2 - 3;
-
             int sliderGlobalLeft = this.getX() - 1;
-            int sliderGlobalTop = this.getY() + (int) (sliderContentHeight * (1.0f - value)) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
+            int sliderGlobalTop = this.getY() + (int) (VERTICAL_HANDLER_TRAVEL * (1.0f - value)) + SLIDER_CONTENT_SIDE_OFFSET - HANDLER_OFFSET;
 
             int sliderV = HANDLER_VERTICAL_POSITION_V;
 

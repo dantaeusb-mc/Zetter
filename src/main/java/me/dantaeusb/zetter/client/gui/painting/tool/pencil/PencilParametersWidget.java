@@ -1,26 +1,20 @@
 package me.dantaeusb.zetter.client.gui.painting.tool.pencil;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
-import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
-import me.dantaeusb.zetter.client.gui.painting.util.ZetterColorPickerRenderer;
-import me.dantaeusb.zetter.core.ZetterRenderTypes;
+import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolParametersWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 
-public class PencilParametersWidget extends AbstractPaintingGroupWidget implements Renderable {
-    private final static int SLIDER_POSITION_X = 5;
-    private final static int SLIDER_DISTANCE_GAP = 14;
-
+public class PencilParametersWidget extends AbstractToolParametersWidget implements Renderable {
     private final SliderWidget intensitySlider;
     private final SliderWidget sizeSlider;
 
     public PencilParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
-        super(parentScreen, x, y, width, height, title);
+        super(parentScreen, x, y, width, height, title, "pencil");
 
         final int INTENSITY_POSITION_Y = SLIDER_DISTANCE_GAP;
         final int SIZE_POSITION_Y = INTENSITY_POSITION_Y + SLIDER_DISTANCE_GAP + SliderWidget.HORIZONTAL_HEIGHT;
@@ -33,7 +27,7 @@ public class PencilParametersWidget extends AbstractPaintingGroupWidget implemen
             this::getIntensity,
             this::updateIntensity,
             this::renderIntensityBackground,
-            this::renderIntensityState
+            this::renderHandlerState
         );
         this.addWidget(this.intensitySlider);
 
@@ -44,8 +38,8 @@ public class PencilParametersWidget extends AbstractPaintingGroupWidget implemen
             Component.translatable("container.zetter.painting.sliders.size"),
             this::getSize,
             this::updateSize,
-            this::renderIntensityBackground,
-            this::renderIntensityState
+            this::renderSizeBackground,
+            this::renderHandlerState
         );
         this.addWidget(this.sizeSlider);
     }
@@ -60,37 +54,30 @@ public class PencilParametersWidget extends AbstractPaintingGroupWidget implemen
         parameters.setIntensity(percent);
     }
 
+    private float getMinSize() {
+        return PencilParameters.MIN_SIZE;
+    }
+
+    private float getMaxSize() {
+        return PencilParameters.MAX_SIZE;
+    }
+
+    @Override
+    protected int getSizeNotches() {
+        return Math.round(this.getMaxSize() - this.getMinSize()) + 1;
+    }
+
     private float getSize() {
         PencilParameters parameters = this.parentScreen.getToolsParameters().getPencilParameters();
-        return parameters.getSize();
+        return (parameters.getSize() - this.getMinSize()) / (this.getMaxSize() - this.getMinSize());
     }
 
+    /**
+     * Pencil picks its shape by the rounded size, so the slider stops at whole pixels
+     */
     private void updateSize(float percent) {
         PencilParameters parameters = this.parentScreen.getToolsParameters().getPencilParameters();
-        parameters.setSize(1f + percent * 5f);
-    }
-
-
-    public void renderIntensityBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-        final int INTENSITY_BACKGROUND_U = 103;
-        final int INTENSITY_BACKGROUND_V = 140;
-
-        guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
-
-        ZetterColorPickerRenderer.renderColorPicker(
-            guiGraphics,
-            ZetterRenderTypes.RenderMode.RGB_OPACITY_HORIZONTAL,
-            this.parentScreen.getCurrentColor().getOkHsl(),
-            x,
-            y,
-            width,
-            height
-        );
-    }
-
-    public void renderIntensityState(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-        final int INTENSITY_STATE_U = 8;
-        final int INTENSITY_STATE_V = 99;
+        parameters.setSize(Math.round(this.getMinSize() + percent * (this.getMaxSize() - this.getMinSize())));
     }
 
     @Override

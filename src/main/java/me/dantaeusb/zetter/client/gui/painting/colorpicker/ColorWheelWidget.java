@@ -25,6 +25,8 @@ public class ColorWheelWidget extends AbstractPaintingGroupWidget implements Ren
   private final SliderWidget wheelLightnessSlider;
   private final ColorPreviewWidget colorPreviewWidget;
 
+  private boolean wheelDragging = false;
+
   public ColorWheelWidget(PaintingScreen parentScreen, int x, int y) {
     super(parentScreen, x, y, WIDTH, HEIGHT, Component.translatable("screen.zetter.painting.color_picker.color_wheel"));
 
@@ -178,19 +180,26 @@ public class ColorWheelWidget extends AbstractPaintingGroupWidget implements Ren
     }
 
     if (this.handleWheelInteraction(mouseX, mouseY)) {
+      this.wheelDragging = true;
       return true;
     }
 
     return super.mouseClicked(mouseX, mouseY, button);
   }
 
+  /**
+   * Wheel only follows the cursor when the color was picked on the wheel
+   * in the first place: otherwise dragging the lightness slider over the
+   * wheel would pick a color at the same time
+   */
   @Override
   public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
     if (!this.active || !this.visible || !this.isValidClickButton(button)) {
       return false;
     }
 
-    if (this.handleWheelInteraction(mouseX, mouseY)) {
+    if (this.wheelDragging) {
+      this.handleWheelInteraction(mouseX, mouseY);
       return true;
     }
 
@@ -203,7 +212,15 @@ public class ColorWheelWidget extends AbstractPaintingGroupWidget implements Ren
       return false;
     }
 
-    return super.mouseReleased(mouseX, mouseY, button);
+    // Children are released in any case, the wheel is not the only thing being dragged
+    boolean handled = super.mouseReleased(mouseX, mouseY, button);
+
+    if (this.wheelDragging) {
+      this.wheelDragging = false;
+      handled = true;
+    }
+
+    return handled;
   }
 
   protected void renderCurrentColor(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {

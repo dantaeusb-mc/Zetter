@@ -47,6 +47,23 @@ abstract public class AbstractPaintingWidget extends AbstractWidget implements G
     }
 
     /**
+     * Vanilla widgets claim drag and release events without checking whether they
+     * are the ones being interacted with, because vanilla only passes those to the
+     * widget under the cursor. We pass them to every widget instead, so that a widget
+     * that is being dragged keeps receiving them when the cursor leaves it, and that
+     * means a widget has to consume them only when it actually handles them.
+     */
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        return false;
+    }
+
+    /**
      * @param x
      * @param y
      * @param xSize

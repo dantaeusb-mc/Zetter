@@ -62,14 +62,22 @@ public abstract class CanvasLayerAbstract implements GuiEventListener, Narratabl
         return true;
     }
 
+    /**
+     * @param offsetX pixel of the canvas the cursor points at, screen coordinates
+     * @param offsetY pixel of the canvas the cursor points at, screen coordinates
+     */
     protected void drawCursor(GuiGraphics guiGraphics, AbstractTool.ToolShape shape, int offsetX, int offsetY, int scale) {
         RenderSystem.blendEquation(GL_FUNC_SUBTRACT);
 
         //GLFW.glfwSetInputMode(Minecraft.getInstance().getWindow().getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
+        final int shapeOffset = -(shape.getSize() / 2) * scale;
+
+        offsetX += shapeOffset;
+        offsetY += shapeOffset;
+
         for (AbstractTool.ShapeLine line : shape.getLines()) {
-            // Relative positions from the cursor "center" in canvas pixels
-            // Center is
+            // Positions of the lines are relative to the first pixel of the shape matrix
             int posX = (line.posX()) * scale;
             int posY = (line.posY()) * scale;
             int length = line.length() * scale;

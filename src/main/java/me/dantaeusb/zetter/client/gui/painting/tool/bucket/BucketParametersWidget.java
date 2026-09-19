@@ -1,32 +1,31 @@
 package me.dantaeusb.zetter.client.gui.painting.tool.bucket;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
-import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingWidget;
-import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
+import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolParametersWidget;
+import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.BucketParameters;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 
-public class BucketParametersWidget extends AbstractPaintingGroupWidget implements Renderable {
+public class BucketParametersWidget extends AbstractToolParametersWidget implements Renderable {
   private final SliderWidget intensitySlider;
 
   public BucketParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
     super(parentScreen, x, y, width, height, title);
 
-    final int INTENSITY_POSITION_X = 0;
-    final int INTENSITY_POSITION_Y = SliderWidget.HORIZONTAL_HEIGHT + 14;
+    final int INTENSITY_POSITION_Y = SLIDER_DISTANCE_GAP;
 
     this.intensitySlider = new SliderWidget(
         parentScreen,
-        this.getX() + INTENSITY_POSITION_X,
+        this.getX() + SLIDER_POSITION_X,
         this.getY() + INTENSITY_POSITION_Y,
         Component.translatable("container.zetter.painting.sliders.intensity"),
         this::getIntensity,
         this::updateIntensity,
         this::renderIntensityBackground,
-        this::renderIntensityState
+        this::renderHandlerState
     );
     this.addWidget(this.intensitySlider);
   }
@@ -38,25 +37,19 @@ public class BucketParametersWidget extends AbstractPaintingGroupWidget implemen
 
   private void updateIntensity(float percent) {
     BucketParameters parameters = this.parentScreen.getToolsParameters().getBucketParameters();
-    parameters.setIntensity(1f + percent * 5f);
-  }
-
-
-  public void renderIntensityBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    final int INTENSITY_BACKGROUND_U = 8;
-    final int INTENSITY_BACKGROUND_V = 99;
-
-    guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, x, y, INTENSITY_BACKGROUND_U, INTENSITY_BACKGROUND_V, width, height);
-  }
-
-  public void renderIntensityState(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    final int INTENSITY_STATE_U = 8;
-    final int INTENSITY_STATE_V = 99;
-
+    parameters.setIntensity(percent);
   }
 
   @Override
   protected void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    guiGraphics.drawString(
+        this.parentScreen.getFont(),
+        this.intensitySlider.getMessage().getString(),
+        this.getX() + SLIDER_POSITION_X,
+        this.getY() + 4,
+        Color.DARK_GRAY.getARGB(), false
+    );
+
     this.intensitySlider.render(guiGraphics, mouseX, mouseY, partialTick);
   }
 }

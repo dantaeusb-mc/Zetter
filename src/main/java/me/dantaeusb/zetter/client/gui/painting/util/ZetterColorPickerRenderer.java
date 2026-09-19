@@ -9,6 +9,9 @@ import org.joml.Vector3f;
 
 public class ZetterColorPickerRenderer {
     public static void renderColorPicker(GuiGraphics guiGraphics, ZetterRenderTypes.RenderMode renderMode, Vector3f hsl, int x, int y, int width, int height) {
+      RenderSystem.enableBlend();
+      RenderSystem.defaultBlendFunc();
+
       RenderSystem.setShader(ZetterRenderTypes::getColorPickerShader);
       ZetterRenderTypes.setColorPickerRenderMode(renderMode);
       ZetterRenderTypes.setColorPickerHsl(hsl);
@@ -22,5 +25,7 @@ public class ZetterColorPickerRenderer {
       bufferbuilder.vertex(matrix4f, x + width, y + height, 0.0f).uv(1, 1).endVertex();
       bufferbuilder.vertex(matrix4f, x + width, y, 0.0f).uv(1, 0).endVertex();
       BufferUploader.drawWithShader(bufferbuilder.end());
+
+      RenderSystem.disableBlend();
     }
 }

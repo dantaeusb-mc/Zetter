@@ -67,31 +67,35 @@ abstract public class AbstractPaintingGroupWidget extends AbstractPaintingWidget
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (!this.isMouseOver(mouseX, mouseY) || !this.isValidClickButton(button)) {
+        if (!this.isValidClickButton(button)) {
             return false;
         }
 
+        boolean handled = false;
+
         for (AbstractPaintingWidget widget : this.widgets) {
             if (widget.visible && widget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) {
-                return true;
+                handled = true;
             }
         }
 
-        return false;
+        return handled;
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (!this.isMouseOver(mouseX, mouseY) || !this.isValidClickButton(button)) {
+        if (!this.isValidClickButton(button)) {
             return false;
         }
 
+        boolean handled = false;
+
         for (AbstractPaintingWidget widget : this.widgets) {
             if (widget.visible && widget.mouseReleased(mouseX, mouseY, button)) {
-                return true;
+                handled = true;
             }
         }
 
-        return false;
+        return handled;
     }
 }

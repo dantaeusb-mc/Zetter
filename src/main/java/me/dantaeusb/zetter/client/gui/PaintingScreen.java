@@ -109,6 +109,9 @@ public class PaintingScreen extends Screen {
     protected void init() {
         super.init();
 
+        this.paintingWidgets.clear();
+        this.toolWidgets.clear();
+
         float aspectRatio = (float) this.width / (float) this.height;
         this.virtualWindowWidth = this.width;
         this.virtualWindowHeight = this.height;
@@ -125,7 +128,12 @@ public class PaintingScreen extends Screen {
         this.canvasWindowHeight = this.virtualWindowHeight - 20;
 
         this.toolsWindowLeftPos = (this.width - this.virtualWindowWidth) / 2 + this.virtualWindowWidth - this.toolsWindowWidth - 10;
-        this.toolsWindowTopPos = (this.height - this.virtualWindowHeight) / 2 + (this.virtualWindowHeight - this.toolsWindowHeight) / 2;
+        /*
+         * Same as centering the tools window on the screen, but the window does not
+         * scale down, so on a short screen centering it puts its top, and with it the
+         * color picker tabs, above the top edge where they cannot be clicked at all
+         */
+        this.toolsWindowTopPos = Math.max(0, (this.height - this.toolsWindowHeight) / 2);
 
         final int TOOLS_WIDGET_POSITION_X = 4;
         final int TOOLS_WIDGET_POSITION_Y = 16;
@@ -563,7 +571,10 @@ public class PaintingScreen extends Screen {
     }
 
     /**
-     * Unfortunately this event is not passed to children
+     * Vanilla only passes this to the focused child, and in screen coordinates,
+     * while our widgets are placed within the tools window and the one that is
+     * being dragged is not necessarily the one under the cursor, so we pass it
+     * to all of them ourselves
      *
      * @param mouseX
      * @param mouseY
@@ -574,31 +585,33 @@ public class PaintingScreen extends Screen {
      */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        for (GuiEventListener eventListener : this.paintingWidgets) {
-            if (eventListener.mouseDragged(
+        boolean handled = false;
+
+        for (AbstractPaintingWidget paintingWidget : this.paintingWidgets) {
+            if (paintingWidget.mouseDragged(
                 mouseX - this.toolsWindowLeftPos,
                 mouseY - this.toolsWindowTopPos,
                 button,
                 dragX,
                 dragY
             )) {
-                this.setFocused(eventListener);
-
-                if (button == 0) {
-                    this.setDragging(true);
-                }
-
-                //return true;
+                handled = true;
             }
         }
 
-        this.canvasLayer.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        // Same as with clicks: dragging a widget should not paint on the canvas
+        if (handled) {
+            return true;
+        }
 
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return this.canvasLayer.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     /**
      * This one not passed when out of widget bounds but we need to track this event to release slider/pencil
+     *
+     * Every widget gets it, otherwise a widget that was left in the middle of an
+     * interaction keeps thinking that its button is still held down
      *
      * @param mouseX
      * @param mouseY
@@ -607,28 +620,25 @@ public class PaintingScreen extends Screen {
      */
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        for (GuiEventListener eventListener : this.paintingWidgets) {
-            if (eventListener.mouseReleased(
+        this.setDragging(false);
+
+        boolean handled = false;
+
+        for (AbstractPaintingWidget paintingWidget : this.paintingWidgets) {
+            if (paintingWidget.mouseReleased(
                 mouseX - this.toolsWindowLeftPos,
                 mouseY - this.toolsWindowTopPos,
                 button
             )) {
-                return true;
+                handled = true;
             }
         }
 
-    /*this.canvasWidget.mouseReleased(mouseX, mouseY, button);
+        if (this.canvasLayer.mouseReleased(mouseX, mouseY, button)) {
+            handled = true;
+        }
 
-    this.getCurrentTab().mouseReleased(mouseX, mouseY, button);
-
-    // Reset dragging
-    if (this.dragStart != null || this.dragCurrent != null || this.dragStartCanvasOffset != null) {
-      this.dragStart = null;
-      this.dragStartCanvasOffset = null;
-      this.dragCurrent = null;
-    }*/
-
-        return super.mouseReleased(mouseX, mouseY, button);
+        return handled;
     }
 
     @Override
