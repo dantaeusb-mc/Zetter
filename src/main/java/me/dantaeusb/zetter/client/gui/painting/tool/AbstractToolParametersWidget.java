@@ -1,11 +1,9 @@
 package me.dantaeusb.zetter.client.gui.painting.tool;
 
-import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.OptionsWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
-import me.dantaeusb.zetter.client.gui.painting.util.SliderTrackTexture;
 import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
 import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
 import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
@@ -15,9 +13,7 @@ import me.dantaeusb.zetter.core.ZetterRenderTypes;
 import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
-import javax.annotation.Nullable;
 import java.util.function.Supplier;
 
 /**
@@ -50,22 +46,16 @@ public abstract class AbstractToolParametersWidget extends AbstractPaintingGroup
   private final static int CHECKERBOARD_V = 139;
 
   /**
-   * Only tools that have a size slider ask for a track, see {@link #getSizeNotches()}
+   * Notched track of the size slider, as tall as the groove of a dragged slider:
+   * a stretch of it with no notch on it, and the notch on its own to stamp over
    */
-  private final @Nullable SliderTrackTexture sizeTrack;
+  private final static int TRACK_V = 147;
+  private final static int TRACK_PLAIN_U = 103;
+  private final static int TRACK_PLAIN_WIDTH = 16;
+  private final static int TRACK_NOTCH_U = 119;
 
   public AbstractToolParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
-    this(parentScreen, x, y, width, height, title, null);
-  }
-
-  public AbstractToolParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title, @Nullable String toolCode) {
     super(parentScreen, x, y, width, height, title);
-
-    this.sizeTrack = toolCode == null ? null : new SliderTrackTexture(
-        new ResourceLocation(Zetter.MOD_ID, "dynamic/" + toolCode + "_size_track"),
-        SliderWidget.HORIZONTAL_CONTENT_WIDTH,
-        SliderWidget.HORIZONTAL_CONTENT_DRAGGING_HEIGHT
-    );
   }
 
   protected OptionsWidget<DitheringPipe.DitheringOption> createDitheringWidget(int x, int y, Supplier<DitheringParameterHolder> parameters) {
@@ -141,18 +131,40 @@ public abstract class AbstractToolParametersWidget extends AbstractPaintingGroup
   }
 
   /**
-   * Track with a notch for every size the tool can be set to
+   * Track with a notch for every size the tool can be set to, repeated out of the
+   * widgets texture and stamped with a notch per value.
+   *
+   * Painted rather than filled with a color picked here: players reskin these
+   * screens, and a color written into the code is one they cannot reach.
    */
   protected void renderSizeBackground(GuiGraphics guiGraphics, int x, int y, int width, int height, float value) {
-    if (this.sizeTrack == null) {
+    final int notches = this.getSizeNotches();
+
+    if (notches <= 0) {
       return;
     }
 
-    guiGraphics.blit(
-        this.sizeTrack.get(this.getSizeNotches()),
-        x, y, 0.0f, 0.0f, width, height,
-        SliderWidget.HORIZONTAL_CONTENT_WIDTH, SliderWidget.HORIZONTAL_CONTENT_DRAGGING_HEIGHT
+    // Anchored to the bottom edge, where the notches stand, so the track keeps its
+    // footing while the groove opens up around the handle being dragged
+    final int v = TRACK_V + SliderWidget.HORIZONTAL_CONTENT_DRAGGING_HEIGHT - height;
+
+    guiGraphics.blitRepeating(
+        PAINTING_WIDGETS_TEXTURE_RESOURCE,
+        x, y, width, height,
+        TRACK_PLAIN_U, v, TRACK_PLAIN_WIDTH, height
     );
+
+    for (int i = 0; i < notches; i++) {
+      // Single value slider would only have a notch where it starts
+      final float notchValue = notches > 1 ? (float) i / (notches - 1) : 0.0f;
+      final int offset = SliderWidget.getHorizontalHandlerOffset(notchValue);
+
+      if (offset < 0 || offset >= width) {
+        continue;
+      }
+
+      guiGraphics.blit(PAINTING_WIDGETS_TEXTURE_RESOURCE, x + offset, y, TRACK_NOTCH_U, v, 1, height);
+    }
   }
 
   /**

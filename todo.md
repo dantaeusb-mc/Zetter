@@ -18,7 +18,6 @@
 * \[HIGH\] When dropping painting, if cannot be loaded, just drop frame (gallery workaround);
 * \[HIGH\] Configuration file for texture size;
 * \[MED\] Reduce saving and sending format to write RGB data instead of RGBA;
-* \[MED\] Make sure that no one can edit canvas unless they're standing in front of the easel;
 * \[MED\] Make sure bucket tool has decent performance;
 * \[MED\] Add data format validation;
 * \[MED\] Use specific light levels for every partial canvas (or not, worth trying at least);

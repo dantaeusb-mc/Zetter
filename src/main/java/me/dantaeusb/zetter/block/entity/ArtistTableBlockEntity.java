@@ -30,8 +30,6 @@ import net.minecraftforge.items.ItemStackHandler;
 import javax.annotation.Nullable;
 
 public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHandlerListener, MenuProvider {
-    // @todo: [LOW] Remove before release: transition 0.16 - 0.17
-    private static final String NBT_TAG_DEPRECATED_ARTIST_TABLE_CANVAS_STORAGE = "canvas_storage";
     private static final String NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE = "CanvasStorage";
     private static final String NBT_TAG_ARTIST_TABLE_MODE = "Mode";
 
@@ -130,15 +128,7 @@ public class ArtistTableBlockEntity extends BlockEntity implements ItemStackHand
     public void load(CompoundTag compoundTag) {
         super.load(compoundTag);
 
-        CompoundTag canvasStorageTag;
-
-        if (compoundTag.contains(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE)) {
-            canvasStorageTag = compoundTag.getCompound(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE);
-        } else {
-            canvasStorageTag = compoundTag.getCompound(NBT_TAG_DEPRECATED_ARTIST_TABLE_CANVAS_STORAGE);
-        }
-
-        this.artistTableGridContainer.deserializeNBT(canvasStorageTag);
+        this.artistTableGridContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_ARTIST_TABLE_CANVAS_STORAGE));
 
         if (this.artistTableGridContainer.getSlots() != ArtistTableGridContainer.STORAGE_SIZE) {
             throw new IllegalArgumentException("Corrupted NBT: Number of inventory slots did not match expected.");

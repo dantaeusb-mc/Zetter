@@ -21,7 +21,7 @@ public class BrushParametersWidget extends AbstractToolParametersWidget implemen
   private final static int OPTIONS_POSITION_Y = SLIDER_DISTANCE_GAP * 3 + SliderWidget.HORIZONTAL_HEIGHT * 2 + OPTIONS_LABEL_GAP;
 
   public BrushParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
-    super(parentScreen, x, y, width, height, title, "brush");
+    super(parentScreen, x, y, width, height, title);
 
     final int INTENSITY_POSITION_Y = SLIDER_DISTANCE_GAP;
     final int SIZE_POSITION_Y = INTENSITY_POSITION_Y + SLIDER_DISTANCE_GAP + SliderWidget.HORIZONTAL_HEIGHT;

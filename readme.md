@@ -10,7 +10,8 @@ Supported versions:
 * 1.17.1 (has an outdated build, won't update),
 * 1.18.2 (0.19), 
 * 1.19.2 (0.20 LTS),
-* 1.19.3 (master)
+* 1.19.4 (0.21),
+* 1.20.1 (0.22, master)
 
 Download with CF: https://www.curseforge.com/minecraft/mc-mods/zetter
 

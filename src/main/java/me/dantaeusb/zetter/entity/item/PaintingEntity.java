@@ -245,12 +245,7 @@ public class PaintingEntity extends HangingEntity implements IEntityAdditionalSp
             this.material = Materials.OAK;
         }
 
-        if (compound.contains(NBT_TAG_HAS_PLATE)) {
-            this.hasPlate = compound.getBoolean(NBT_TAG_HAS_PLATE);
-        } else {
-            // @todo: [LOW] Remove on release after 0.18.x
-            this.hasPlate = false;
-        }
+        this.hasPlate = compound.getBoolean(NBT_TAG_HAS_PLATE);
 
         if (compound.contains(NBT_TAG_GENERATION)) {
             this.generation = compound.getInt(NBT_TAG_GENERATION);
