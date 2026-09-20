@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -55,8 +54,10 @@ public class CanvasStitchingRecipe extends CustomRecipe {
             return false;
         }
 
-        int blockWidth = canvasGridRectangle.width * canvasGridRectangle.canvasBlockSize[0];
-        int blockHeight = canvasGridRectangle.height * canvasGridRectangle.canvasBlockSize[1];
+        final int[] stitchedBlockSize = canvasGridRectangle.getStitchedBlockSize();
+
+        int blockWidth = stitchedBlockSize[0];
+        int blockHeight = stitchedBlockSize[1];
 
         // Just a single canvas
         if (blockWidth == canvasGridRectangle.canvasBlockSize[0] && blockHeight == canvasGridRectangle.canvasBlockSize[1]) {
@@ -112,13 +113,15 @@ public class CanvasStitchingRecipe extends CustomRecipe {
 
         ItemStack outCanvas = new ItemStack(ZetterItems.CANVAS.get());
         outCanvas.setCount(1);
+
         // Should use combined code only if there's painting data
         if (anyCanvasHasData) {
-            DummyCanvasData stitchedCanvas = CanvasStitchingHelper.createStitchedCanvasData(craftingInventory, canvasGridRectangle, Minecraft.getInstance().level);
-            //stitchedCanvas
             CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
         }
-        CanvasItem.setBlockSize(outCanvas, canvasGridRectangle.width, canvasGridRectangle.height);
+
+        final int[] stitchedBlockSize = canvasGridRectangle.getStitchedBlockSize();
+
+        CanvasItem.setBlockSize(outCanvas, stitchedBlockSize[0], stitchedBlockSize[1]);
 
         return outCanvas;
     }

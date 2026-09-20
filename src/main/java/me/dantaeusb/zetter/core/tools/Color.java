@@ -99,7 +99,19 @@ public class Color {
   }
 
   public static int rgbToArgb(Vector3f rgb) {
-    return (0xFF << 24) | ((int) (rgb.x * 255.0f) << 16) | ((int) (rgb.y * 255.0f) << 8) | (int) (rgb.z * 255.0f);
+    return (0xFF << 24) | (toChannel(rgb.x) << 16) | (toChannel(rgb.y) << 8) | toChannel(rgb.z);
+  }
+
+  /**
+   * Conversions overshoot the RGB gamut, and blending takes a color through them
+   * on every stroke, so channels are clamped and rounded rather than truncated:
+   * truncating loses up to a step each pass, and the loss is always downwards.
+   *
+   * @param value
+   * @return
+   */
+  private static int toChannel(float value) {
+    return Math.min(255, Math.max(0, Math.round(value * 255.0f)));
   }
 
   public static Vector3f argbToRgb(int argb) {
@@ -196,36 +208,46 @@ public class Color {
   }
 
   /**
+   * Inverse of {@link #rgbToHsl}, which takes the brightest channel as the third
+   * component: this is HSV, as the sliders it feeds say, and the name is kept only
+   * to pair with {@link Mode#HSL} and the color space the picker offers.
+   *
    * @param hsl
    * @return
-   * @todo: [URG] Incorrect, it's HSV to RGB, not HSL to RGB
    */
   public static Vector3f hslToRgb(Vector3f hsl) {
-    float r = 0.0f, g = 0.0f, b = 0.0f;
-    if (hsl.y == 0) {
-      r = g = b = hsl.z;
-    } else {
-      float q = hsl.z < 0.5f ? hsl.z * (1.0f + hsl.y) : hsl.z + hsl.y - hsl.z * hsl.y;
-      float p = 2.0f * hsl.z - q;
-      r = hueToRgb(p, q, hsl.x + 1.0f / 3.0f);
-      g = hueToRgb(p, q, hsl.x);
-      b = hueToRgb(p, q, hsl.x - 1.0f / 3.0f);
+    if (hsl.y == 0.0f) {
+      return new Vector3f(hsl.z, hsl.z, hsl.z);
     }
-    return new Vector3f(r, g, b);
-  }
 
-  private static float hueToRgb(float p, float q, float t) {
-    if (t < 0.0f) t += 1.0f;
-    if (t > 1.0f) t -= 1.0f;
-    if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
-    if (t < 1.0f / 2.0f) return q;
-    if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
-    return p;
+    final float sector = (hsl.x - (float) Math.floor(hsl.x)) * 6.0f;
+    final float offset = sector - (float) Math.floor(sector);
+
+    final float p = hsl.z * (1.0f - hsl.y);
+    final float q = hsl.z * (1.0f - hsl.y * offset);
+    final float t = hsl.z * (1.0f - hsl.y * (1.0f - offset));
+
+    return switch ((int) sector) {
+      case 0 -> new Vector3f(hsl.z, t, p);
+      case 1 -> new Vector3f(q, hsl.z, p);
+      case 2 -> new Vector3f(p, hsl.z, t);
+      case 3 -> new Vector3f(p, q, hsl.z);
+      case 4 -> new Vector3f(t, p, hsl.z);
+      default -> new Vector3f(hsl.z, p, q);
+    };
   }
 
   public static Vector3f rgbToOkHsl(Vector3f rgb) {
     Vector3f lab = rgbToOklab(rgb);
     float C = (float) Math.sqrt(lab.y * lab.y + lab.z * lab.z);
+
+    // Neither end of the lightness range leaves room for chroma, and a color with
+    // no chroma has no hue to report: the gamut math divides by zero on all three
+    // and hands back NaN, which blending would then spread across the canvas
+    if (C == 0.0f || lab.x >= 1.0f || lab.x <= 0.0f) {
+      return new Vector3f(0.0f, 0.0f, toe(lab.x));
+    }
+
     float a_ = lab.y / C;
     float b_ = lab.z / C;
 

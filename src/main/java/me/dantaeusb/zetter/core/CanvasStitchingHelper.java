@@ -54,8 +54,10 @@ public class CanvasStitchingHelper {
      */
     public static @Nullable DummyCanvasData createStitchedCanvasData(CraftingContainer craftingInventory, CanvasGridRectangle canvasGridRectangle, Level level) {
         final int COLOR_SIZE = 4;
-        final int pixelWidth = canvasGridRectangle.width * canvasGridRectangle.canvasBlockSize[0] * Helper.getResolution().getNumeric();
-        final int pixelHeight = canvasGridRectangle.height * canvasGridRectangle.canvasBlockSize[1] * Helper.getResolution().getNumeric();
+        final int[] stitchedBlockSize = canvasGridRectangle.getStitchedBlockSize();
+
+        final int pixelWidth = stitchedBlockSize[0] * Helper.getResolution().getNumeric();
+        final int pixelHeight = stitchedBlockSize[1] * Helper.getResolution().getNumeric();
         boolean hasColorData = false;
         AbstractCanvasData.Resolution resolution = Helper.getResolution();
 
@@ -135,7 +137,9 @@ public class CanvasStitchingHelper {
             canvasTracker.registerCanvasData(newCode, combinedCanvasData);
             CanvasItem.storeCanvasData(canvasItemStack, newCode, combinedCanvasData);
         } else {
-            CanvasItem.setBlockSize(canvasItemStack, canvasGridRectangle.width, canvasGridRectangle.height);
+            final int[] stitchedBlockSize = canvasGridRectangle.getStitchedBlockSize();
+
+            CanvasItem.setBlockSize(canvasItemStack, stitchedBlockSize[0], stitchedBlockSize[1]);
         }
     }
 
@@ -227,6 +231,19 @@ public class CanvasStitchingHelper {
             this.width = width;
             this.height = height;
             this.canvasBlockSize = canvasBlockSize;
+        }
+
+        /**
+         * Size of the stitched canvas in blocks: the grid counts canvases, and every
+         * canvas in it is canvasBlockSize blocks big
+         *
+         * @return
+         */
+        public int[] getStitchedBlockSize() {
+            return new int[]{
+                this.width * this.canvasBlockSize[0],
+                this.height * this.canvasBlockSize[1]
+            };
         }
     }
 }

@@ -1,10 +1,13 @@
 package me.dantaeusb.zetter.client.gui.painting.tool.pencil;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.painting.base.OptionsWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolParametersWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.PencilParameters;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
@@ -12,6 +15,10 @@ import net.minecraft.network.chat.Component;
 public class PencilParametersWidget extends AbstractToolParametersWidget implements Renderable {
     private final SliderWidget intensitySlider;
     private final SliderWidget sizeSlider;
+    private final OptionsWidget<DitheringPipe.DitheringOption> ditheringWidget;
+    private final OptionsWidget<BlendingPipe.BlendingOption> blendingWidget;
+
+    private final static int OPTIONS_POSITION_Y = SLIDER_DISTANCE_GAP * 3 + SliderWidget.HORIZONTAL_HEIGHT * 2 + OPTIONS_LABEL_GAP;
 
     public PencilParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
         super(parentScreen, x, y, width, height, title, "pencil");
@@ -42,6 +49,20 @@ public class PencilParametersWidget extends AbstractToolParametersWidget impleme
             this::renderHandlerState
         );
         this.addWidget(this.sizeSlider);
+
+        this.ditheringWidget = this.createDitheringWidget(
+            this.getX() + DITHERING_POSITION_X,
+            this.getY() + OPTIONS_POSITION_Y,
+            () -> parentScreen.getToolsParameters().getPencilParameters()
+        );
+        this.addWidget(this.ditheringWidget);
+
+        this.blendingWidget = this.createBlendingWidget(
+            this.getX() + BLENDING_POSITION_X,
+            this.getY() + OPTIONS_POSITION_Y,
+            () -> parentScreen.getToolsParameters().getPencilParameters()
+        );
+        this.addWidget(this.blendingWidget);
     }
 
     private float getIntensity() {
@@ -101,5 +122,7 @@ public class PencilParametersWidget extends AbstractToolParametersWidget impleme
         );
 
         this.sizeSlider.render(guiGraphics, mouseX, mouseY, partialTick);
+
+        this.renderOptions(guiGraphics, mouseX, mouseY, partialTick, OPTIONS_POSITION_Y, this.ditheringWidget, this.blendingWidget);
     }
 }

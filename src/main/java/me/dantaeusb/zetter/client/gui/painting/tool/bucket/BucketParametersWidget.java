@@ -1,16 +1,21 @@
 package me.dantaeusb.zetter.client.gui.painting.tool.bucket;
 
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
+import me.dantaeusb.zetter.client.gui.painting.base.OptionsWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.client.gui.painting.tool.AbstractToolParametersWidget;
 import me.dantaeusb.zetter.core.tools.Color;
 import me.dantaeusb.zetter.painting.parameters.BucketParameters;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.network.chat.Component;
 
 public class BucketParametersWidget extends AbstractToolParametersWidget implements Renderable {
   private final SliderWidget intensitySlider;
+  private final OptionsWidget<BlendingPipe.BlendingOption> blendingWidget;
+
+  private final static int OPTIONS_POSITION_Y = SLIDER_DISTANCE_GAP * 2 + SliderWidget.HORIZONTAL_HEIGHT + OPTIONS_LABEL_GAP;
 
   public BucketParametersWidget(PaintingScreen parentScreen, int x, int y, int width, int height, Component title) {
     super(parentScreen, x, y, width, height, title);
@@ -28,6 +33,13 @@ public class BucketParametersWidget extends AbstractToolParametersWidget impleme
         this::renderHandlerState
     );
     this.addWidget(this.intensitySlider);
+
+    this.blendingWidget = this.createBlendingWidget(
+        this.getX() + DITHERING_POSITION_X,
+        this.getY() + OPTIONS_POSITION_Y,
+        () -> parentScreen.getToolsParameters().getBucketParameters()
+    );
+    this.addWidget(this.blendingWidget);
   }
 
   private float getIntensity() {
@@ -51,5 +63,7 @@ public class BucketParametersWidget extends AbstractToolParametersWidget impleme
     );
 
     this.intensitySlider.render(guiGraphics, mouseX, mouseY, partialTick);
+
+    this.renderOptions(guiGraphics, mouseX, mouseY, partialTick, OPTIONS_POSITION_Y, this.blendingWidget);
   }
 }

@@ -27,7 +27,7 @@ public class BucketParameters extends AbstractToolParameters implements Intensit
     }
 
     public BlendingPipe.BlendingOption getBlending() {
-        return BlendingPipe.BlendingOption.valueOf((String) this.values.get(BlendingParameterHolder.PARAMETER_CODE));
+        return BlendingPipe.BlendingOption.byName(this.values.get(BlendingParameterHolder.PARAMETER_CODE));
     }
 
     public void setBlending(BlendingPipe.BlendingOption blending) {

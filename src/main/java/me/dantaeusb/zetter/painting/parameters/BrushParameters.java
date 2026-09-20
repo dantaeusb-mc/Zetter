@@ -45,7 +45,7 @@ public class BrushParameters extends AbstractToolParameters implements SizeParam
     }
 
     public BlendingPipe.BlendingOption getBlending() {
-        return BlendingPipe.BlendingOption.valueOf((String) this.values.get(BlendingParameterHolder.PARAMETER_CODE));
+        return BlendingPipe.BlendingOption.byName(this.values.get(BlendingParameterHolder.PARAMETER_CODE));
     }
 
     public void setBlending(BlendingPipe.BlendingOption blending) {
@@ -53,7 +53,7 @@ public class BrushParameters extends AbstractToolParameters implements SizeParam
     }
 
     public DitheringPipe.DitheringOption getDithering() {
-        return DitheringPipe.DitheringOption.valueOf((String) this.values.get(DitheringParameterHolder.PARAMETER_CODE));
+        return DitheringPipe.DitheringOption.byName(this.values.get(DitheringParameterHolder.PARAMETER_CODE));
     }
 
     public void setDithering(DitheringPipe.DitheringOption dithering) {

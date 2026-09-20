@@ -75,8 +75,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   protected ArrayList<Player> playersUsing = new ArrayList<>();
   protected HashMap<UUID, ItemStack> playersPalettes = new HashMap<>();
 
-  protected BlockPos pos;
-
   protected Matrix4f canvasMatrix;
   protected Vector3f canvasOffset;
   protected Vector3f canvasNormal;
@@ -666,14 +664,19 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   public void setPos(double x, double y, double z) {
-    this.pos = new BlockPos((int) x, (int) y, (int) z);
     this.setPosRaw(x, y, z);
     this.setBoundingBox(this.makeBoundingBox());
     this.hasImpulse = true;
   }
 
+  /**
+   * Block the easel stands in. Entity#blockPosition is floored, unlike a cast to int,
+   * which in negative coordinates would pick the neighbouring block instead.
+   *
+   * @return
+   */
   public BlockPos getPos() {
-    return this.pos;
+    return this.blockPosition();
   }
 
   /*
@@ -689,7 +692,7 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
           this.kill();
           this.markHurt();
           this.dropItem(damageSource.getEntity());
-          this.dropAllContents(this.level(), this.pos);
+          this.dropAllContents(this.level(), this.getPos());
         }
       }
       return true;
@@ -700,7 +703,7 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     if (!this.level().isClientSide() && !this.isRemoved() && move.lengthSqr() > 0.0D) {
       this.kill();
       this.dropItem(null);
-      this.dropAllContents(this.level(), this.pos);
+      this.dropAllContents(this.level(), this.getPos());
     }
   }
 
@@ -714,7 +717,7 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     if (!this.level().isClientSide && !this.isRemoved() && x * x + y * y + z * z > 0.0D) {
       this.kill();
       this.dropItem(null);
-      this.dropAllContents(this.level(), this.pos);
+      this.dropAllContents(this.level(), this.getPos());
     }
   }
 

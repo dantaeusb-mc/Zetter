@@ -49,9 +49,9 @@ public class WallEaselModel<T extends WallEaselEntity> extends ListModel<T> {
             BACK_HORIZONTAL_SUPPORT,
             CubeListBuilder.create()
                 .texOffs(0, 6)
-                .addBox(-36.0F, 0.0F, 5.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-36.0F, 0.0F, 6.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 13)
-                .addBox(-36.0F, 75.0F, 5.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
+                .addBox(-36.0F, 75.0F, 6.0F, 72.0F, 5.0F, 2.0F, new CubeDeformation(0.0F)),
             PartPose.ZERO
         );
 
@@ -60,11 +60,11 @@ public class WallEaselModel<T extends WallEaselEntity> extends ListModel<T> {
             BACK_VERTICAL_SUPPORT,
             CubeListBuilder.create()
                 .texOffs(0, 36)
-                .addBox(27.0F, 0.0F, 3.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(27.0F, 0.0F, 4.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(12, 36)
-                .addBox(-30.0F, 0.0F, 3.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-30.0F, 0.0F, 4.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(24, 36)
-                .addBox(-3.0F, 0.0F, 3.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F)),
+                .addBox(-3.0F, 0.0F, 4.0F, 4.0F, 80.0F, 2.0F, new CubeDeformation(0.0F)),
             PartPose.ZERO
         );
 
@@ -73,9 +73,9 @@ public class WallEaselModel<T extends WallEaselEntity> extends ListModel<T> {
             TOP_PLANK,
             CubeListBuilder.create()
                 .texOffs(0, 20)
-                .addBox(-36.0F, 76.0F, 1.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-36.0F, 76.0F, 2.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 32)
-                .addBox(-36.0F, 75.0F, 0.0F, 72.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)),
+                .addBox(-36.0F, 75.0F, 1.0F, 72.0F, 1.0F, 3.0F, new CubeDeformation(0.0F)),
             PartPose.ZERO
         );
 
@@ -84,9 +84,9 @@ public class WallEaselModel<T extends WallEaselEntity> extends ListModel<T> {
             BOTTOM_PLANK,
             CubeListBuilder.create()
                 .texOffs(0, 26)
-                .addBox(-36.0F, 0.0F, 1.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
+                .addBox(-36.0F, 0.0F, 2.0F, 72.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
                 .texOffs(0, 0)
-                .addBox(-36.0F, 4.0F, -2.0F, 72.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)),
+                .addBox(-36.0F, 4.0F, -1.0F, 72.0F, 1.0F, 5.0F, new CubeDeformation(0.0F)),
             PartPose.ZERO
         );
 

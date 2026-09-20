@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -15,7 +16,7 @@ public class ZetterCreativeTabs
     public static void buildContents(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ZetterItems.PALETTE);
-            event.accept(ZetterItems.CANVAS);
+            event.accept(CanvasItem.createBlank(1, 1));
         } else if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(ZetterItems.ARTIST_TABLE);
             event.accept(ZetterItems.EASEL);

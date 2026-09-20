@@ -23,37 +23,70 @@ public class DitheringPipe implements Pipe {
 
     @Override
     public int applyPipe(CanvasData canvas, AbstractToolParameters params, int color, int index, float localIntensity) {
-        if (params instanceof DitheringParameterHolder) {
-            if (((DitheringParameterHolder) params).getDithering() == DitheringOption.DENSE_DITHERING) {
-                int posX = index % canvas.getWidth();
-                int posY = index / canvas.getWidth();
-
-                if (posY % 2 == 0) {
-                    return posX % 2 == 0 ? canvas.getColorAt(index) : color;
-                } else {
-                    return posX % 2 == 1 ? canvas.getColorAt(index) : color;
-                }
-            }
+        if (!(params instanceof DitheringParameterHolder)) {
+            return color;
         }
 
-        return color;
+        final int posX = index % canvas.getWidth();
+        final int posY = index / canvas.getWidth();
+
+        if (((DitheringParameterHolder) params).getDithering().paints(posX, posY)) {
+            return color;
+        }
+
+        return canvas.getColorAt(index);
     }
 
+    /**
+     * Listed in the order their buttons appear in the widgets texture
+     */
     public enum DitheringOption {
-        NO_DITHERING(1, 0, Component.translatable("container.zetter.painting.dithering.no")),
-        DENSE_DITHERING(2, 0, Component.translatable("container.zetter.painting.dithering.dense"));
+        NO_DITHERING(Component.translatable("container.zetter.painting.dithering.no")),
+        CHECKER(Component.translatable("container.zetter.painting.dithering.checker")),
+        CHECKER_INVERTED(Component.translatable("container.zetter.painting.dithering.checker_inverted")),
+        SPARSE(Component.translatable("container.zetter.painting.dithering.sparse"));
 
         public static final DitheringOption DEFAULT = NO_DITHERING;
 
-        public final int size;
-        public final int shift;
-
         public final Component translatableComponent;
 
-        DitheringOption(int size, int shift, Component translatableComponent) {
-            this.size = size;
-            this.shift = shift;
+        DitheringOption(Component translatableComponent) {
             this.translatableComponent = translatableComponent;
+        }
+
+        /**
+         * See {@link BlendingPipe.BlendingOption#byName}
+         *
+         * @param name
+         * @return
+         */
+        public static DitheringOption byName(Object name) {
+            for (DitheringOption option : values()) {
+                if (option.name().equals(name)) {
+                    return option;
+                }
+            }
+
+            return DEFAULT;
+        }
+
+        /**
+         * Whether the pixel takes the new color or keeps the one it had. Decided by
+         * the position on the canvas rather than by the position under the cursor, so
+         * that a pattern stays lined up across strokes instead of breaking where one
+         * stroke meets the next.
+         *
+         * @param posX
+         * @param posY
+         * @return
+         */
+        public boolean paints(int posX, int posY) {
+            return switch (this) {
+                case NO_DITHERING -> true;
+                case CHECKER -> (posX + posY) % 2 == 0;
+                case CHECKER_INVERTED -> (posX + posY) % 2 != 0;
+                case SPARSE -> posX % 2 == 0 && posY % 2 == 0;
+            };
         }
     }
 }

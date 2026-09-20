@@ -287,6 +287,46 @@ public class PaintingScreen extends Screen {
         return this.toolsParameters;
     }
 
+    /**
+     * Palette slots are laid out as rows of two, so the slot is row * 2 + column
+     */
+    private static final int PALETTE_COLUMNS = 2;
+
+    /**
+     * Switch between the two colors of the current row, the way the swap button
+     * on the color preview does
+     */
+    public void swapPaletteColumn() {
+        final int currentSlot = this.getPaletteState().currentPaletteSlot();
+        final int row = currentSlot / PALETTE_COLUMNS;
+        final int column = currentSlot % PALETTE_COLUMNS;
+
+        this.setPaletteState(
+            this.getPaletteState().withCurrentPaletteSlot(row * PALETTE_COLUMNS + (PALETTE_COLUMNS - 1 - column))
+        );
+    }
+
+    /**
+     * @param rowOffset rows to move down, negative to move up
+     * @return whether the selection moved
+     */
+    public boolean movePaletteRow(int rowOffset) {
+        final int currentSlot = this.getPaletteState().currentPaletteSlot();
+        final int column = currentSlot % PALETTE_COLUMNS;
+        final int row = currentSlot / PALETTE_COLUMNS;
+        final int newRow = row + rowOffset;
+
+        if (newRow < 0 || newRow >= PaletteItem.PALETTE_SIZE / PALETTE_COLUMNS) {
+            return false;
+        }
+
+        this.setPaletteState(
+            this.getPaletteState().withCurrentPaletteSlot(newRow * PALETTE_COLUMNS + column)
+        );
+
+        return true;
+    }
+
     public Color getPaletteColor(int index) {
         return this.paletteAccessor.getPaletteColor(index);
     }
@@ -454,30 +494,11 @@ public class PaintingScreen extends Screen {
             case Hand.QUICK_TOOL_KEY:
                 this.activateQuickTool(Tool.HAND);
                 return true;
-            case ColorPreviewWidget.SWAP_HOTKEY: {
-                final int row = this.getPaletteState().currentPaletteSlot() / 2;
-                final int offset = this.getPaletteState().currentPaletteSlot() % 2;
-
-                this.setPaletteState(
-                    this.getPaletteState().withCurrentPaletteSlot((row + 1) * 2 + offset)
-                );
-
+            case ColorPreviewWidget.SWAP_HOTKEY:
+                this.swapPaletteColumn();
                 return true;
-            }
-            case GLFW.GLFW_KEY_UP: {
-                final int row = this.getPaletteState().currentPaletteSlot() / 2;
-                final int offset = this.getPaletteState().currentPaletteSlot() % 2;
-
-                if (row <= 0) {
-                    return false;
-                }
-
-                this.setPaletteState(
-                    this.getPaletteState().withCurrentPaletteSlot((row - 1) * 2 + offset)
-                );
-
-                return true;
-            }
+            case GLFW.GLFW_KEY_UP:
+                return this.movePaletteRow(-1);
             case ZoomWidget.ZOOM_OUT_HOTKEY:
                 if (!this.canvasLayer.canDecreaseCanvasScale()) {
                     break;
@@ -492,20 +513,8 @@ public class PaintingScreen extends Screen {
 
                 this.canvasLayer.increaseCanvasScale();
                 return true;
-            case GLFW.GLFW_KEY_DOWN: {
-                final int row = this.getPaletteState().currentPaletteSlot() / 2;
-                final int offset = this.getPaletteState().currentPaletteSlot() % 2;
-
-                if (row >= 7) {
-                    return false;
-                }
-
-                this.setPaletteState(
-                    this.getPaletteState().withCurrentPaletteSlot((row + 1) * 2 + offset)
-                );
-
-                return true;
-            }
+            case GLFW.GLFW_KEY_DOWN:
+                return this.movePaletteRow(1);
             case HistoryWidget.UNDO_HOTKEY:
                 if (!hasControlDown()) {
                     break;

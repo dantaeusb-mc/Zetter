@@ -17,6 +17,7 @@ import net.minecraft.stats.Stats;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -108,6 +109,23 @@ public class CanvasItem extends Item
         if (!StringUtil.isNullOrEmpty(stringSize)) {
             tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
         }
+    }
+
+    /**
+     * A blank canvas of a given size, tagged so that it stacks with every other
+     * blank canvas of that size. Resolution is deliberately left out: it is only
+     * settled once the canvas gets its data.
+     *
+     * @param widthBlocks
+     * @param heightBlocks
+     * @return
+     */
+    public static ItemStack createBlank(int widthBlocks, int heightBlocks) {
+        final ItemStack stack = new ItemStack(ZetterItems.CANVAS.get());
+
+        setBlockSize(stack, widthBlocks, heightBlocks);
+
+        return stack;
     }
 
     /**
@@ -247,6 +265,59 @@ public class CanvasItem extends Item
         return Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
     }
 
+    /**
+     * Blank canvases only stack when their tags match exactly, and they reach a player
+     * from crafting, cutting, the creative tab, commands or another mod. Stamping the
+     * size the moment one shows up in an inventory keeps all of those identical.
+     *
+     * @param stack
+     * @param level
+     * @param entity
+     * @param slot
+     * @param selected
+     */
+    @Override
+    public void inventoryTick(ItemStack stack, Level level, Entity entity, int slot, boolean selected) {
+        super.inventoryTick(stack, level, entity, slot, selected);
+
+        if (!level.isClientSide()) {
+            ensureBlockSizeTag(stack);
+        }
+    }
+
+    /**
+     * Covers the canvas, cutting and stitching recipes before the result reaches the
+     * player, so a freshly crafted canvas merges with the stack already in the inventory
+     *
+     * @param stack
+     * @param level
+     * @param player
+     */
+    @Override
+    public void onCraftedBy(ItemStack stack, Level level, Player player) {
+        super.onCraftedBy(stack, level, player);
+
+        ensureBlockSizeTag(stack);
+    }
+
+    /**
+     * Writes the implicit default size out, so that two blank canvases of the same
+     * size always compare equal no matter where they came from
+     *
+     * @param stack
+     */
+    private static void ensureBlockSizeTag(ItemStack stack) {
+        final CompoundTag tag = stack.getTag();
+
+        if (tag != null && tag.contains(NBT_TAG_CACHED_BLOCK_SIZE)) {
+            return;
+        }
+
+        final int[] size = getBlockSize(stack);
+
+        setBlockSize(stack, size[0], size[1]);
+    }
+
     public static void setBlockSize(ItemStack stack, int widthBlocks, int heightBlocks) {
         final int[] size = new int[]{widthBlocks, heightBlocks};
 
@@ -283,15 +354,18 @@ public class CanvasItem extends Item
         return Component.translatable("item.zetter.painting.size", Integer.toString(size[0]), Integer.toString(size[1])).getString();
     }
 
+    /**
+     * Blank canvases carry no resolution: it is only settled when the canvas gets
+     * its data, so until then they all read back the same value and keep stacking
+     *
+     * @param stack
+     * @return
+     */
     public static int getResolution(ItemStack stack) {
         CompoundTag compoundNBT = stack.getTag();
 
-        if (compoundNBT == null) {
+        if (compoundNBT == null || !compoundNBT.contains(NBT_TAG_CACHED_RESOLUTION)) {
             return Helper.getResolution().getNumeric();
-        }
-
-        if (!compoundNBT.contains(NBT_TAG_CACHED_RESOLUTION)) {
-            compoundNBT.putInt(NBT_TAG_CACHED_RESOLUTION, Helper.getResolution().getNumeric());
         }
 
         return compoundNBT.getInt(NBT_TAG_CACHED_RESOLUTION);

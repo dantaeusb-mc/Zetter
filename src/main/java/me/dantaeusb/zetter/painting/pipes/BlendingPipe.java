@@ -11,8 +11,19 @@ import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.function.TriFunction;
 import org.joml.Vector3f;
 
-
+/**
+ * Mixes the color the tool carries into the color already on the canvas. How much
+ * of the new color lands is the intensity, what route the mix takes between the two
+ * is the blending option, see docs/painting-blending.md
+ */
 public class BlendingPipe implements Pipe {
+    /**
+     * Below this much chroma a color reads as gray, and a gray has no meaningful
+     * hue to mix towards
+     */
+    private static final float ACHROMATIC_CHROMA = 0.0001f;
+
+    private static final float TWO_PI = (float) (Math.PI * 2.0);
 
     @Override
     public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params) {
@@ -38,6 +49,7 @@ public class BlendingPipe implements Pipe {
         }
 
         intensity *= localIntensity;
+        intensity = Math.min(1f, Math.max(0f, intensity));
 
         BlendingOption blending = BlendingOption.DEFAULT;
         if (params instanceof BlendingParameterHolder) {
@@ -48,152 +60,125 @@ public class BlendingPipe implements Pipe {
     }
 
     /**
-     * Basic blending, in target color space so nothing fancy here
+     * Mixing light: channels are averaged where they stand, so two opposite colors
+     * meet in the middle as a gray, the way two lamps pointed at one spot would.
+     *
      * @param newColor
      * @param oldColor
      * @param intensity
      * @return
      */
-    public static int blendRGB(int newColor, int oldColor, float intensity) {
-        final Color newColorModel = new Color(newColor);
-        final Color oldColorModel = new Color(oldColor);
+    public static int blendAdditive(int newColor, int oldColor, float intensity) {
+        final Vector3f mixed = Color.argbToRgb(newColor).lerp(Color.argbToRgb(oldColor), 1f - intensity);
 
-        return Color.fromRgb(new Vector3f(
-                (newColorModel.getRed() * intensity + oldColorModel.getRed() * (1f - intensity)) / 255,
-                (newColorModel.getGreen() * intensity + oldColorModel.getGreen() * (1f - intensity)) / 255,
-                (newColorModel.getBlue() * intensity + oldColorModel.getBlue() * (1f - intensity)) / 255
-        )).getARGB();
+        return Color.fromRgb(mixed).getARGB();
     }
 
     /**
-     * Blend with
-     * http://nishitalab.org/user/UEI/publication/Sugita_IWAIT2015.pdf
+     * Mixing pigment: the hue travels around the color wheel rather than across it,
+     * so working yellow into blue passes through green instead of washing out to
+     * gray, and the mix keeps the saturation the two colors started with.
      *
-     * Problem: any clear color (black, grey, white)
-     * will result in an unfixable black pixel
+     * Done in OkLCh, the polar form of the Oklab space okHSL is built on. okHSL
+     * itself fits every color into the RGB gamut, and that fitting is what makes
+     * mixing predictable for a picker but loses accuracy on deep blues, which would
+     * show up here as a stroke landing on the wrong color.
      *
      * @param newColor
      * @param oldColor
+     * @param intensity
      * @return
      */
-    public static int blendRYB(int newColor, int oldColor, float intensity) {
-        intensity = Math.max(0, Math.min(1, intensity));
+    public static int blendSubtractive(int newColor, int oldColor, float intensity) {
+        final Vector3f newLab = Color.rgbToOklab(Color.argbToRgb(newColor));
+        final Vector3f oldLab = Color.rgbToOklab(Color.argbToRgb(oldColor));
 
-        // RYB doesn't work with pitch black, lighten it a bit
-        final float[] newFloat = BlendingPipe.protectPitchBlack(new Color(newColor).getRGBfloat());
-        final float[] oldFloat = BlendingPipe.protectPitchBlack(new Color(oldColor).getRGBfloat());
+        final float newChroma = (float) Math.sqrt(newLab.y * newLab.y + newLab.z * newLab.z);
+        final float oldChroma = (float) Math.sqrt(oldLab.y * oldLab.y + oldLab.z * oldLab.z);
 
-        final float[] rybNew = BlendingPipe.rgbToRyb(newFloat);
-        final float[] rybOld = BlendingPipe.rgbToRyb(oldFloat);
+        final float lightness = lerp(oldLab.x, newLab.x, intensity);
+        final float chroma = lerp(oldChroma, newChroma, intensity);
+        final float hue = lerpHue(
+            (float) Math.atan2(oldLab.z, oldLab.y), oldChroma,
+            (float) Math.atan2(newLab.z, newLab.y), newChroma,
+            intensity
+        );
 
-        final float negativeIntensity = 1F - intensity;
-        final float[] rybResult = new float[] {
-                intensity * rybNew[0] + negativeIntensity * rybOld[0],
-                intensity * rybNew[1] + negativeIntensity * rybOld[1],
-                intensity * rybNew[2] + negativeIntensity * rybOld[2],
-        };
+        return Color.fromRgb(Color.oklabToRgb(new Vector3f(
+            lightness,
+            (float) (chroma * Math.cos(hue)),
+            (float) (chroma * Math.sin(hue))
+        ))).getARGB();
+    }
 
-        final float[] rgbResult = BlendingPipe.protectOverflow(BlendingPipe.rybToRgb(rybResult));
-
-        return Color.fromRgb(new Vector3f(rgbResult[0], rgbResult[1], rgbResult[2])).getARGB();
+    private static float lerp(float from, float to, float intensity) {
+        return from + (to - from) * intensity;
     }
 
     /**
-     * @param rgb
+     * Takes the shorter of the two ways around the wheel. Hues exactly opposite each
+     * other are the same distance either way, and the tie is always broken the same
+     * direction: actions get replayed to rebuild the painting, so the same two colors
+     * have to give the same mix every time.
+     *
+     * @param fromHue
+     * @param fromChroma
+     * @param toHue
+     * @param toChroma
+     * @param intensity
      * @return
      */
-    private static float[] rgbToRyb(float[] rgb) {
-        final float w = Math.min(Math.min(rgb[0], rgb[1]), rgb[2]);
-
-        float rgbR = rgb[0] - w;
-        float rgbG = rgb[1] - w;
-        float rgbB = rgb[2] - w;
-
-        // Can remove duplicates but I hope compiler is smart
-        float rybR = rgbR - Math.min(rgbR, rgbG);
-        float rybY = .5F * (rgbG + Math.min(rgbR, rgbG));
-        float rybB = .5F * (rgbB + rgbG - Math.min(rgbR, rgbG));
-
-        // Actually probably better to avoid division by zero?
-        float n = Math.max(Math.max(rybR, rybY), rybB) / Math.max(Math.max(rgbR, rgbG), rgbB);
-
-        if (Float.isNaN(n) || n == 0F) {
-            n = 1F;
+    private static float lerpHue(float fromHue, float fromChroma, float toHue, float toChroma, float intensity) {
+        // A gray sitting at either end would otherwise drag the mix towards whatever
+        // hue fell out of the conversion, so it takes the hue of the other side
+        if (fromChroma <= ACHROMATIC_CHROMA) {
+            return toHue;
         }
 
-        rybR /= n;
-        rybY /= n;
-        rybB /= n;
+        if (toChroma <= ACHROMATIC_CHROMA) {
+            return fromHue;
+        }
 
-        float b = Math.min(Math.min(1F - rgb[0], 1F - rgb[1]), 1F - rgb[2]);
+        float delta = toHue - fromHue;
 
-        return new float[] { rybR + b, rybY + b, rybB + b };
-    }
+        if (delta > Math.PI) {
+            delta -= TWO_PI;
+        } else if (delta < -Math.PI) {
+            delta += TWO_PI;
+        }
 
-    private static float[] rybToRgb(float[] ryb) {
-        final float w = Math.min(Math.min(ryb[0], ryb[1]), ryb[2]);
-
-        float rybR = ryb[0] - w;
-        float rybY = ryb[1] - w;
-        float rybB = ryb[2] - w;
-
-        float rgbR = rybR + rybY - Math.min(rybY, rybB);
-        float rgbG = rybY + Math.min(rybY, rybB);
-        float rgbB = 2F * (rybB - Math.min(rybY, rybB));
-
-        float n = Math.max(Math.max(rgbR, rgbG), rgbB) / Math.max(Math.max(rybR, rybY), rybB);
-        n = n == 0F || Float.isNaN(n) ? 1F : n;
-
-        rgbR /= n;
-        rgbG /= n;
-        rgbB /= n;
-
-        float b = Math.min(Math.min(1F - ryb[0], 1F - ryb[1]), 1F - ryb[2]);
-
-        return new float[] { rgbR + b, rgbG + b, rgbB + b };
+        return fromHue + delta * intensity;
     }
 
     /**
-     * @todo: [MED] Implement!
-     *
-     * Blend with
-     * http://scottburns.us/fast-rgb-to-spectrum-conversion-for-reflectances/
-     * and
-     * http://scottburns.us/subtractive-color-mixture/
-     *
-     * @param newColor
-     * @param oldColor
-     * @return
+     * Listed in the order their buttons appear in the widgets texture
      */
-    public static int blendRGBC(int newColor, int oldColor, float intensity) {
-        return BlendingPipe.blendRYB(newColor, oldColor, intensity);
-    }
-
-    private static float[] protectPitchBlack(float[] rgb) {
-        return new float[] {
-                Math.max(rgb[0], 0.004F),
-                Math.max(rgb[1], 0.004F),
-                Math.max(rgb[2], 0.004F),
-        };
-    }
-
-    private static float[] protectOverflow(float[] rgb) {
-        return new float[] {
-                Math.min(Math.max(rgb[0], 0F), 1F),
-                Math.min(Math.max(rgb[1], 0F), 1F),
-                Math.min(Math.max(rgb[2], 0F), 1F),
-        };
-    }
-
     public enum BlendingOption {
-        RGB(BlendingPipe::blendRGB, Component.translatable("container.zetter.painting.blending.additive")),
-        RYB(BlendingPipe::blendRYB, Component.translatable("container.zetter.painting.blending.subtractive")),
-        RGBC(BlendingPipe::blendRGBC, Component.translatable("container.zetter.painting.blending.realistic"));
+        SUBTRACTIVE(BlendingPipe::blendSubtractive, Component.translatable("container.zetter.painting.blending.subtractive")),
+        ADDITIVE(BlendingPipe::blendAdditive, Component.translatable("container.zetter.painting.blending.additive"));
 
-        public static final BlendingOption DEFAULT = RYB;
+        public static final BlendingOption DEFAULT = SUBTRACTIVE;
+
         public final TriFunction<Integer, Integer, Float, Integer> blendingFunction;
 
         public final Component translatableComponent;
+
+        /**
+         * Parameters are carried by actions that come in from clients, and an action
+         * naming a mode we do not have would otherwise throw halfway through a replay
+         *
+         * @param name
+         * @return
+         */
+        public static BlendingOption byName(Object name) {
+            for (BlendingOption option : values()) {
+                if (option.name().equals(name)) {
+                    return option;
+                }
+            }
+
+            return DEFAULT;
+        }
 
         BlendingOption(TriFunction<Integer, Integer, Float, Integer> blendingFunction, Component translatableComponent) {
             this.blendingFunction = blendingFunction;
@@ -201,4 +186,3 @@ public class BlendingPipe implements Pipe {
         }
     }
 }
-

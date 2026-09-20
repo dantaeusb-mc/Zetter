@@ -39,12 +39,17 @@ import java.util.*;
  */
 public class CanvasState {
     public static int SNAPSHOT_HISTORY_SIZE = 10;
-    public static int ACTION_HISTORY_SIZE = 200;
+    public static int ACTION_HISTORY_SIZE = 512;
 
     // Keep history and snapshots for 30 minutes of inactivity
     public static int FREEZE_TIMEOUT = (Zetter.DEBUG_MODE ? 1 : 30) * 60 * 1000;
 
-    private final int MAX_ACTIONS_BEFORE_SNAPSHOT = ACTION_HISTORY_SIZE / SNAPSHOT_HISTORY_SIZE;
+    /**
+     * Counted in sub-actions, not actions: a snapshot is cut once this many painted
+     * points have settled, which is what bounds both replay cost and how far undo
+     * can reach back
+     */
+    private final int MAX_SUB_ACTIONS_BEFORE_SNAPSHOT = ACTION_HISTORY_SIZE / SNAPSHOT_HISTORY_SIZE;
 
     public static int CLIENT_SNAPSHOT_HISTORY_SIZE = 50;
     private static int SYNC_INTERVAL = 1000;
@@ -107,6 +112,13 @@ public class CanvasState {
      * on new action, wiping might be needed.
      */
     private boolean historyDirty = false;
+
+    /**
+     * Undo and redo only flip flags, the canvas is rebuilt from them. Several of those
+     * can land in one tick, and rebuilding once at the end of it gives the same result
+     * for a fraction of the work.
+     */
+    private boolean pendingRecollect = false;
 
     public CanvasState(CanvasHolderEntity entity) {
         this.canvasHolder = entity;
@@ -232,6 +244,11 @@ public class CanvasState {
                 this.performHistorySyncClient(false);
             }
         } else {
+            // Before the check below: the last player may have left mid-traversal
+            if (this.pendingRecollect) {
+                this.recollectPaintingData();
+            }
+
             // No need to tick if no one's using
             if (this.players.size() == 0 || this.getCanvasCode() == null) {
                 return;
@@ -503,15 +520,10 @@ public class CanvasState {
      * @return
      */
     public boolean isCanvasInitialized() {
-        /*ItemStack canvasStack = this.canvasHolder.getCanvasCode();
+        final String canvasCode = this.canvasHolder.getCanvasCode();
 
-        if (canvasStack == null) {
-            throw new IllegalStateException("Cannot check canvas initialization: no item in container");
-        }*/
-
-        String canvasCode = this.canvasHolder.getCanvasCode();
-
-        return canvasCode != null;
+        // A canvas with no data of its own still reports a default code so it can be rendered blank
+        return canvasCode != null && !CanvasData.isDefaultCanvasCode(canvasCode);
     }
 
     /**
@@ -550,6 +562,13 @@ public class CanvasState {
         CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.canvasHolder.level());
         canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
+        /*
+         * createEmpty writes the code into the stack's tag directly, which does not go
+         * through the container, so the holder would keep reporting the default code
+         * and we would initialize the canvas again on the next action
+         */
+        this.canvasHolder.getEaselContainer().changed();
+
         SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.canvasHolder.getId(), canvasCode,canvasData, System.currentTimeMillis());
 
         for (Player player : this.canvasHolder.getPlayersUsing()) {
@@ -568,9 +587,6 @@ public class CanvasState {
                 listener.stateCanvasInitializationEnd(this);
             }
         }
-
-        //this.canvasHolder.handleCanvasChange(canvasCode);
-        //this.canvasHolder.changed();
 
         return true;
     }
@@ -645,7 +661,13 @@ public class CanvasState {
 
         this.discardSnapshotsAfter(earliestChangedAction.getStartTime());
 
-        this.recollectPaintingData();
+        if (this.canvasHolder.level().isClientSide()) {
+            // Local feedback has to be immediate
+            this.recollectPaintingData();
+        } else {
+            this.pendingRecollect = true;
+        }
+
         this.onStateChanged();
 
         if (Zetter.DEBUG_MODE) {
@@ -896,6 +918,8 @@ public class CanvasState {
      * @param timestamp replay actions that started before this moment, exclusive
      */
     public void recollectPaintingData(long timestamp) {
+        this.pendingRecollect = false;
+
         final CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(true);
 
         // Snapshots taken after a canceled action started hold pixels that are no longer there
@@ -1023,7 +1047,7 @@ public class CanvasState {
     /**
      * Should we create a new snapshot
      * we should if players made more than
-     * MAX_ACTIONS_BEFORE_SNAPSHOT since last snapshot was made
+     * MAX_SUB_ACTIONS_BEFORE_SNAPSHOT since last snapshot was made
      *
      * Server-only
      * @return
@@ -1061,7 +1085,7 @@ public class CanvasState {
             actionsSinceSnapshot += paintingActionBuffer.countActions();
         }
 
-        return actionsSinceSnapshot >= MAX_ACTIONS_BEFORE_SNAPSHOT;
+        return actionsSinceSnapshot >= MAX_SUB_ACTIONS_BEFORE_SNAPSHOT;
     }
 
     /**

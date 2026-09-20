@@ -3,15 +3,22 @@ package me.dantaeusb.zetter.client.gui.painting.tool;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.PaintingScreen;
 import me.dantaeusb.zetter.client.gui.painting.AbstractPaintingGroupWidget;
+import me.dantaeusb.zetter.client.gui.painting.base.OptionsWidget;
 import me.dantaeusb.zetter.client.gui.painting.base.SliderWidget;
 import me.dantaeusb.zetter.client.gui.painting.util.SliderTrackTexture;
+import me.dantaeusb.zetter.painting.parameters.BlendingParameterHolder;
+import me.dantaeusb.zetter.painting.parameters.DitheringParameterHolder;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.client.gui.painting.util.ZetterColorPickerRenderer;
 import me.dantaeusb.zetter.core.ZetterRenderTypes;
+import me.dantaeusb.zetter.core.tools.Color;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import javax.annotation.Nullable;
+import java.util.function.Supplier;
 
 /**
  * Tools describe themselves with the same sliders laid out the same way,
@@ -20,6 +27,21 @@ import javax.annotation.Nullable;
 public abstract class AbstractToolParametersWidget extends AbstractPaintingGroupWidget {
   protected final static int SLIDER_POSITION_X = 5;
   protected final static int SLIDER_DISTANCE_GAP = 14;
+
+  /**
+   * Option buttons live next to each other in one strip of the widgets texture:
+   * four dithering patterns first, then the two blending modes
+   */
+  private final static int DITHERING_BUTTONS_U = 108;
+  private final static int BLENDING_BUTTONS_U = 188;
+  private final static int OPTION_BUTTONS_V = 163;
+
+  /**
+   * Both rows of options share a line, with their labels above them
+   */
+  protected final static int OPTIONS_LABEL_GAP = 10;
+  protected final static int DITHERING_POSITION_X = SLIDER_POSITION_X;
+  protected final static int BLENDING_POSITION_X = 95;
 
   /**
    * Checkerboard of the widgets texture, as tall as the groove of a dragged slider
@@ -46,6 +68,30 @@ public abstract class AbstractToolParametersWidget extends AbstractPaintingGroup
     );
   }
 
+  protected OptionsWidget<DitheringPipe.DitheringOption> createDitheringWidget(int x, int y, Supplier<DitheringParameterHolder> parameters) {
+    return new OptionsWidget<>(
+        this.parentScreen, x, y,
+        Component.translatable("container.zetter.painting.dithering"),
+        DitheringPipe.DitheringOption.values(),
+        option -> option.translatableComponent,
+        () -> parameters.get().getDithering(),
+        option -> parameters.get().setDithering(option),
+        DITHERING_BUTTONS_U, OPTION_BUTTONS_V
+    );
+  }
+
+  protected OptionsWidget<BlendingPipe.BlendingOption> createBlendingWidget(int x, int y, Supplier<BlendingParameterHolder> parameters) {
+    return new OptionsWidget<>(
+        this.parentScreen, x, y,
+        Component.translatable("container.zetter.painting.blending"),
+        BlendingPipe.BlendingOption.values(),
+        option -> option.translatableComponent,
+        () -> parameters.get().getBlending(),
+        option -> parameters.get().setBlending(option),
+        BLENDING_BUTTONS_U, OPTION_BUTTONS_V
+    );
+  }
+
   /**
    * Amount of whole pixel sizes the tool can be set to, a notch is painted for each.
    * Asked for every time the track is drawn, as bigger canvas resolutions are going
@@ -53,6 +99,24 @@ public abstract class AbstractToolParametersWidget extends AbstractPaintingGroup
    */
   protected int getSizeNotches() {
     return 0;
+  }
+
+  /**
+   * Rows of option buttons are labelled the same way the sliders are, with the
+   * label sitting right above the buttons it names
+   */
+  protected final void renderOptions(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, int positionY, OptionsWidget<?>... widgets) {
+    for (OptionsWidget<?> widget : widgets) {
+      guiGraphics.drawString(
+          this.parentScreen.getFont(),
+          widget.getMessage().getString(),
+          widget.getX(),
+          this.getY() + positionY - OPTIONS_LABEL_GAP,
+          Color.DARK_GRAY.getARGB(), false
+      );
+
+      widget.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
   }
 
   /**

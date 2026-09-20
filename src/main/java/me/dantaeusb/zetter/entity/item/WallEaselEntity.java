@@ -13,9 +13,6 @@ import org.joml.Vector3f;
 /**
  * Wall easel: a 5 blocks tall rack that holds canvases up to 4x4 blocks
  * standing straight on the ledge of the bottom plank.
- *
- * Unlike the standing easel it does not lean, and it is wide enough that
- * its bounding box has to follow the rotation of the entity.
  */
 public class WallEaselEntity extends CanvasHolderEntity {
     private static final int[] MAX_CANVAS_BLOCK_SIZE = new int[]{4, 4};
@@ -24,7 +21,7 @@ public class WallEaselEntity extends CanvasHolderEntity {
      * Middle of the rack, right above the ledge of the bottom plank.
      * Canvas leans on the planks, which start one pixel behind it.
      */
-    private static final Vector3f CANVAS_ANCHOR = new Vector3f(0.0f, 0.3125f, 0.0f);
+    private static final Vector3f CANVAS_ANCHOR = new Vector3f(0.0f, 0.3125f, 0.1875f);
 
     /*
      * Model bounds, blocks. Model space, so Z is pointing away
@@ -32,8 +29,8 @@ public class WallEaselEntity extends CanvasHolderEntity {
      */
     private static final float MODEL_HALF_WIDTH = 2.25f;
     private static final float MODEL_HEIGHT = 5.0f;
-    private static final float MODEL_FRONT = -0.25f;
-    private static final float MODEL_BACK = 0.4375f;
+    private static final float MODEL_FRONT = -0.1875f;
+    private static final float MODEL_BACK = 0.5f;
 
     public WallEaselEntity(EntityType<? extends WallEaselEntity> type, Level world) {
         super(type, world);

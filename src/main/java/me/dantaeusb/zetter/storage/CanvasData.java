@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 public class CanvasData extends AbstractCanvasData {
     public static final String TYPE = "canvas";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
+    private static final String DEFAULT_CODE_PREFIX = CODE_PREFIX + "default_";
     public static final CanvasDataBuilder<CanvasData> BUILDER = new CanvasCanvasDataBuilder();
 
     public static String getCanvasCode(int canvasId) {
@@ -29,7 +30,18 @@ public class CanvasData extends AbstractCanvasData {
      * @return
      */
     public static String getDefaultCanvasCode(int widthBlocks, int heightBlocks) {
-        return CODE_PREFIX + "default_" + widthBlocks + "x" + heightBlocks;
+        return DEFAULT_CODE_PREFIX + widthBlocks + "x" + heightBlocks;
+    }
+
+    /**
+     * Default canvases stand in for a canvas that has no data yet, and only exist
+     * on the client: the server treats such a code as an empty canvas
+     *
+     * @param canvasCode
+     * @return
+     */
+    public static boolean isDefaultCanvasCode(String canvasCode) {
+        return canvasCode.startsWith(DEFAULT_CODE_PREFIX);
     }
 
     protected CanvasData() {}
