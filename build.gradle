@@ -1,11 +1,8 @@
 buildscript {
     repositories {
         maven { url = 'https://maven.minecraftforge.net' }
-        maven { url='https://repo.spongepowered.org/repository/maven-public/' }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
         mavenCentral()
-    }
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1+', changing: true
     }
 }
 
@@ -36,7 +33,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'parchment', version: '1.20.1-2023.09.03-1.20.1'
+    mappings channel: mapping_channel, version: "${minecraft_version}-${mapping_version}"
     copyIdeResources = true
 
     runs {
@@ -101,10 +98,10 @@ minecraft {
             property 'forge.logging.console.level', 'debug'
 
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.
-            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+            args '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
 
             mods {
-                examplemod {
+                "${mod_id}" {
                     source sourceSets.main
                 }
             }
@@ -126,7 +123,8 @@ def replaceProperties = [
         forge_version: forge_version, forge_version_range: forge_version_range,
         loader_version_range: loader_version_range,
         mod_id: mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
-        mod_authors: mod_authors, mod_description: mod_description
+        mod_authors: mod_authors, mod_description: mod_description,
+        pack_format_number: pack_format_number
 ]
 
 processResources {
