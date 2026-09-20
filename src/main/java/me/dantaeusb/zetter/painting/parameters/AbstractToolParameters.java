@@ -6,13 +6,20 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.util.Tuple;
 import org.apache.commons.lang3.SerializationException;
 
-import java.io.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class AbstractToolParameters implements Cloneable {
+    private static final int CODE_MAX_LENGTH = 128;
+    private static final int STRING_VALUE_MAX_LENGTH = 128;
+
+    private static final byte TYPE_FLOAT = 0;
+    private static final byte TYPE_INTEGER = 1;
+    private static final byte TYPE_BOOLEAN = 2;
+    private static final byte TYPE_STRING = 3;
+
     protected HashMap<String, Object> values = new HashMap<>();
 
     @Override
@@ -42,29 +49,33 @@ public abstract class AbstractToolParameters implements Cloneable {
     }
 
     /**
-     * Uses Java's ObjectOutputStream which apparently is extremely inefficient
-     * for primitives. It takes 79 bytes to send float and int.
-     * Though works good for enums/strings
+     * Values are tagged with their type and written as primitives: every action
+     * carries a full copy of its parameters, so the encoding has to be compact
      *
      * @param buffer
      * @param entry
-     * @todo: fix that wasteful serializer
      */
     private static void writeEntry(FriendlyByteBuf buffer, Map.Entry<String, Object> entry) {
-        try {
-            buffer.writeUtf(entry.getKey(), 128);
-            ByteArrayOutputStream streamOutput = new ByteArrayOutputStream();
+        buffer.writeUtf(entry.getKey(), CODE_MAX_LENGTH);
 
-            ObjectOutputStream stream = new ObjectOutputStream(streamOutput);
-            stream.writeObject(entry.getValue());
-            streamOutput.close();
+        final Object value = entry.getValue();
 
-            final byte[] output = streamOutput.toByteArray();
-
-            buffer.writeInt(output.length);
-            buffer.writeBytes(streamOutput.toByteArray());
-        } catch (IOException e) {
-            throw new SerializationException("Unable to write value for parameter " + entry.getKey());
+        if (value instanceof Float floatValue) {
+            buffer.writeByte(TYPE_FLOAT);
+            buffer.writeFloat(floatValue);
+        } else if (value instanceof Integer integerValue) {
+            buffer.writeByte(TYPE_INTEGER);
+            buffer.writeVarInt(integerValue);
+        } else if (value instanceof Boolean booleanValue) {
+            buffer.writeByte(TYPE_BOOLEAN);
+            buffer.writeBoolean(booleanValue);
+        } else if (value instanceof String stringValue) {
+            buffer.writeByte(TYPE_STRING);
+            buffer.writeUtf(stringValue, STRING_VALUE_MAX_LENGTH);
+        } else {
+            throw new SerializationException(
+                "Unable to write parameter " + entry.getKey() + ": unsupported type " + value.getClass().getName()
+            );
         }
     }
 
@@ -99,28 +110,22 @@ public abstract class AbstractToolParameters implements Cloneable {
     }
 
     /**
-     * This is very dangerous as we perform class lookup I suppose
+     * Only the types writeEntry knows are accepted, so nothing here can name a
+     * class to instantiate
      *
      * @param buffer
      * @return
      */
     private static Tuple<String, Object> readEntry(FriendlyByteBuf buffer) {
-        final String key = buffer.readUtf(128);
-        final int length = buffer.readInt();
+        final String key = buffer.readUtf(CODE_MAX_LENGTH);
+        final byte type = buffer.readByte();
 
-        final byte[] input = new byte[length];
-        buffer.readBytes(length).nioBuffer().get(input);
-
-        try {
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(input);
-            ObjectInputStream objectStream = new ObjectInputStream(byteStream);
-            final Object value = objectStream.readObject();
-
-            return new Tuple<>(key, value);
-        } catch (IOException e) {
-            throw new SerializationException("Unable to read value for parameter " + key);
-        } catch (ClassNotFoundException e) {
-            throw new SerializationException("Incorrect or forbidden type for parameter " + key);
-        }
+        return switch (type) {
+            case TYPE_FLOAT -> new Tuple<>(key, buffer.readFloat());
+            case TYPE_INTEGER -> new Tuple<>(key, buffer.readVarInt());
+            case TYPE_BOOLEAN -> new Tuple<>(key, buffer.readBoolean());
+            case TYPE_STRING -> new Tuple<>(key, buffer.readUtf(STRING_VALUE_MAX_LENGTH));
+            default -> throw new SerializationException("Unknown type " + type + " for parameter " + key);
+        };
     }
 }

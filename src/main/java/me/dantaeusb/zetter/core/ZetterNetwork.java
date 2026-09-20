@@ -19,7 +19,7 @@ public class ZetterNetwork {
     public static SimpleChannel simpleChannel;
     // @todo: [LOW] Rename this on release, it's zetter:zetter_channel 0.1
     public static final ResourceLocation simpleChannelRL = new ResourceLocation(Zetter.MOD_ID, "zetter_channel");
-    public static final String MESSAGE_PROTOCOL_VERSION = "0.4";
+    public static final String MESSAGE_PROTOCOL_VERSION = "0.5";
 
     public static final byte PAINTING_FRAME = 21;
     public static final byte CANVAS_REQUEST = 22;
@@ -162,6 +162,11 @@ public class ZetterNetwork {
             SCanvasHolderAcceptPacket::writePacketData, SCanvasHolderAcceptPacket::readPacketData,
             SCanvasHolderAcceptPacket::handle,
             Optional.of(PLAY_TO_CLIENT));
+
+        simpleChannel.registerMessage(CANVAS_HOLDER_STOP_USING, CCanvasHolderStopUsingPacket.class,
+            CCanvasHolderStopUsingPacket::writePacketData, CCanvasHolderStopUsingPacket::readPacketData,
+            CCanvasHolderStopUsingPacket::handle,
+            Optional.of(PLAY_TO_SERVER));
     }
 
     public static boolean isThisProtocolAcceptedByClient(String protocolVersion) {

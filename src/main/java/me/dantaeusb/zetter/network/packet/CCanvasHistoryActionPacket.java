@@ -47,6 +47,7 @@ public class CCanvasHistoryActionPacket {
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCanvasHistoryPacket was received");
+            return;
         }
 
         ctx.enqueueWork(() -> ServerHandler.processCanvasHistory(packetIn, sendingPlayer));

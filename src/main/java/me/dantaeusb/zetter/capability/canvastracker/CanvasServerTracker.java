@@ -34,7 +34,12 @@ public class CanvasServerTracker implements CanvasTracker {
      */
     private final Map<String, AbstractCanvasData> virtualCanvases = new HashMap<>();
     private final Map<String, Vector<PlayerTrackingCanvas>> trackedCanvases = new HashMap<>();
-    private final Vector<String> desyncCanvases = new Vector<>();
+
+    /**
+     * Canvases changed since the last sync, mapped to the players that do not need
+     * it: those are painting on the canvas and get the change as an action instead
+     */
+    private final Map<String, Set<UUID>> desyncCanvases = new HashMap<>();
     private int ticksFromLastSync = 0;
 
     public CanvasServerTracker() {
@@ -110,12 +115,15 @@ public class CanvasServerTracker implements CanvasTracker {
     }
 
     public void markCanvasDesync(String canvasCode) {
-        if (this.desyncCanvases.contains(canvasCode)) {
-            // Already waiting for sync
-            return;
-        }
+        this.markCanvasDesync(canvasCode, Collections.emptySet());
+    }
 
-        this.desyncCanvases.add(canvasCode);
+    /**
+     * @param canvasCode
+     * @param playersReceivingActions players that follow this canvas action by action
+     */
+    public void markCanvasDesync(String canvasCode, Collection<UUID> playersReceivingActions) {
+        this.desyncCanvases.computeIfAbsent(canvasCode, code -> new HashSet<>()).addAll(playersReceivingActions);
     }
 
     /**
@@ -263,11 +271,36 @@ public class CanvasServerTracker implements CanvasTracker {
          */
         MinecraftServer server = this.level.getServer();
 
-        for (String canvasCode : this.desyncCanvases) {
-            for (PlayerTrackingCanvas playerTrackingCanvas : this.getTrackingEntries(canvasCode)) {
-                ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
+        for (Map.Entry<String, Set<UUID>> desyncEntry : this.desyncCanvases.entrySet()) {
+            final String canvasCode = desyncEntry.getKey();
+            final Vector<PlayerTrackingCanvas> trackingEntries = this.getTrackingEntries(canvasCode);
 
-                SCanvasSyncPacket<?> canvasSyncMessage = new SCanvasSyncPacket(canvasCode, this.getCanvasData(canvasCode), System.currentTimeMillis());
+            if (trackingEntries.isEmpty()) {
+                continue;
+            }
+
+            final AbstractCanvasData canvasData = this.getCanvasData(canvasCode);
+
+            if (canvasData == null) {
+                Zetter.LOG.warn("Unable to sync unknown canvas " + canvasCode);
+                continue;
+            }
+
+            final SCanvasSyncPacket<?> canvasSyncMessage = new SCanvasSyncPacket(canvasCode, canvasData, System.currentTimeMillis());
+
+            for (PlayerTrackingCanvas playerTrackingCanvas : trackingEntries) {
+                // Already up to date from the easel they are painting on
+                if (desyncEntry.getValue().contains(playerTrackingCanvas.playerId)) {
+                    continue;
+                }
+
+                final ServerPlayer playerEntity = server.getPlayerList().getPlayer(playerTrackingCanvas.playerId);
+
+                // Logged off since they started tracking
+                if (playerEntity == null) {
+                    continue;
+                }
+
                 ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> playerEntity), canvasSyncMessage);
             }
         }
@@ -277,7 +310,6 @@ public class CanvasServerTracker implements CanvasTracker {
     }
 
     /**
-     * @todo: [MED] check if already tracking
      * @param playerId
      * @param canvasName
      */
@@ -285,7 +317,7 @@ public class CanvasServerTracker implements CanvasTracker {
         Vector<PlayerTrackingCanvas> trackingEntries = this.getTrackingEntries(canvasName);
 
         for (PlayerTrackingCanvas playerTrackingCanvas : trackingEntries) {
-            if (playerTrackingCanvas.playerId == playerId) {
+            if (playerTrackingCanvas.playerId.equals(playerId)) {
                 return;
             }
         }
@@ -299,7 +331,7 @@ public class CanvasServerTracker implements CanvasTracker {
         }
 
         Vector<PlayerTrackingCanvas> trackingEntries = this.trackedCanvases.get(canvasName);
-        trackingEntries.removeIf((PlayerTrackingCanvas entry) -> entry.playerId == playerId);
+        trackingEntries.removeIf((PlayerTrackingCanvas entry) -> entry.playerId.equals(playerId));
     }
 
     public void stopTrackingAllCanvases(UUID playerId) {

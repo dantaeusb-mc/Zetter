@@ -61,6 +61,9 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   private static final String NBT_TAG_STORAGE_LEGACY = "Storage";
   private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
+  /** Server lags behind the client's position, so reach gets a block of slack */
+  private static final double REACH_TOLERANCE = 1.0D;
+
   private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(CanvasHolderEntity.class, EntityDataSerializers.STRING);
 
   protected CanvasState canvasState;
@@ -71,9 +74,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   /** The list of players currently using this canvas holder */
   protected ArrayList<Player> playersUsing = new ArrayList<>();
   protected HashMap<UUID, ItemStack> playersPalettes = new HashMap<>();
-
-  protected boolean canUndo = false;
-  protected boolean canRedo = false;
 
   protected BlockPos pos;
 
@@ -309,6 +309,51 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     return this.hasCanvas() && this.isInFrontOfCanvas(player.getEyePosition());
   }
 
+  /**
+   * Whether the player is close enough to keep working with this holder. Holders are
+   * several blocks tall and wide, so distance is measured to the nearest point of the
+   * bounding box rather than to the entity position.
+   *
+   * @param player
+   * @return
+   */
+  public boolean canPlayerAccessInventory(Player player) {
+    if (this.isRemoved() || !player.isAlive()) {
+      return false;
+    }
+
+    final Vec3 eyePosition = player.getEyePosition();
+    final AABB boundingBox = this.getBoundingBox();
+
+    final Vec3 closestPoint = new Vec3(
+        Mth.clamp(eyePosition.x, boundingBox.minX, boundingBox.maxX),
+        Mth.clamp(eyePosition.y, boundingBox.minY, boundingBox.maxY),
+        Mth.clamp(eyePosition.z, boundingBox.minZ, boundingBox.maxZ)
+    );
+
+    final double reach = player.getBlockReach() + REACH_TOLERANCE;
+
+    return eyePosition.distanceToSqr(closestPoint) <= reach * reach;
+  }
+
+  /**
+   * Stricter rule for picking up the palette in the first place, mirroring the one
+   * PaletteItem uses on the client so that a legitimate client is never refused
+   *
+   * @param player
+   * @return
+   */
+  public boolean canPlayerStartUsing(Player player) {
+    if (!this.canPlayerAccessInventory(player) || !this.playerCanDraw(player)) {
+      return false;
+    }
+
+    final Vec3 eyePosition = player.getEyePosition();
+    final double reach = player.getBlockReach() + REACH_TOLERANCE;
+
+    return this.getClosestCanvasPoint(eyePosition).distanceToSqr(eyePosition) <= reach * reach;
+  }
+
   /*
    * Painting state
    */
@@ -322,15 +367,19 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   public void addPlayerUsing(Player player, ItemStack paletteStack) {
+    this.playersPalettes.put(player.getUUID(), paletteStack);
+
     if (!this.playersUsing.contains(player)) {
       this.playersUsing.add(player);
+      this.canvasState.addPlayer(player);
     }
-
-    this.playersPalettes.put(player.getUUID(), paletteStack);
   }
 
   public void removePlayerUsing(Player player) {
-    this.playersUsing.remove(player);
+    if (this.playersUsing.remove(player)) {
+      this.canvasState.removePlayer(player);
+    }
+
     this.playersPalettes.remove(player.getUUID());
   }
 
@@ -352,15 +401,15 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   public boolean canUndo() {
-    return this.canUndo;
+    return this.canvasState.canUndo();
   }
 
   public boolean canRedo() {
-    return this.canRedo;
+    return this.canvasState.canRedo();
   }
 
   public boolean undo() {
-    if (!this.canUndo) {
+    if (!this.canUndo()) {
       return false;
     }
 
@@ -368,7 +417,7 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   public boolean redo() {
-    if (!this.canRedo) {
+    if (!this.canRedo()) {
       return false;
     }
 
@@ -462,11 +511,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     this.updateEntityDataFromInventory();
   }
 
-  public boolean canPlayerAccessInventory(Player player) {
-    // @todo: [HIGH] Implement check
-    return true;
-  }
-
   @Override
   public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
     if (capability == ForgeCapabilities.ITEM_HANDLER
@@ -552,6 +596,9 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     super.tick();
     this.tick++;
 
+    // History syncs in both directions, so the state ticks on both sides
+    this.canvasState.tick();
+
     // No need to check correctness and players on client side
     if (this.level().isClientSide()) {
       return;
@@ -594,17 +641,26 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
    * @return
    */
   public List<Player> checkPlayersUsing() {
-    List<Player> possiblyUsingPlayers = this.level().getEntitiesOfClass(Player.class, new AABB(this.pos.offset(-5, -5, -5), this.pos.offset(5, 5, 5)));
+    // Wide enough to be a superset of canPlayerAccessInventory, which does the real check
+    List<Player> possiblyUsingPlayers = this.level().getEntitiesOfClass(Player.class, this.getBoundingBox().inflate(8.0D));
 
     /**
      * @todo: [MED] Sending a packet just in case?
      */
-    this.playersUsing.removeIf(player ->
-        !possiblyUsingPlayers.contains(player)
-            || !this.canPlayerAccessInventory(player)
-            || !player.isAlive()
-            || !player.getItemInHand(player.getUsedItemHand()).is(ZetterItems.PALETTE.get())
-    );
+    this.playersUsing.removeIf(player -> {
+      if (possiblyUsingPlayers.contains(player)
+          && this.canPlayerAccessInventory(player)
+          && player.isAlive()
+          && (player.getMainHandItem().is(ZetterItems.PALETTE.get())
+              || player.getOffhandItem().is(ZetterItems.PALETTE.get()))) {
+        return false;
+      }
+
+      // Not removePlayerUsing(), it would modify the list we're iterating
+      this.canvasState.removePlayer(player);
+
+      return true;
+    });
 
     return this.playersUsing;
   }

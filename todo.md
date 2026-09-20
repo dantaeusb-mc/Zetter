@@ -29,6 +29,7 @@
 * \[HIGH\] I don't like how different classes of canvas data created, would be nice to invent something better;
 * \[HIGH\] ? Check that nothing breaks if player tries to draw to not loaded canvas;
 * \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
+* \[MED\] Canvas reads are not access controlled: `processCanvasRequest`, `processCanvasViewRequest` and `processCanvasRequestExport` take a canvas code straight off the wire, and codes are sequential, so a client can enumerate and download every painting on the server. Needs a rule for "may see this canvas" that does not break legitimate rendering;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern (`public final`);
 * \[LOW\] TIL LinkedLists are bad actually.

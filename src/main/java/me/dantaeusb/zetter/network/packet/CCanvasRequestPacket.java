@@ -40,6 +40,7 @@ public class CCanvasRequestPacket {
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CRequestSyncPacket was received");
+            return;
         }
 
         ctx.enqueueWork(() -> ServerHandler.processCanvasRequest(packetIn, sendingPlayer));

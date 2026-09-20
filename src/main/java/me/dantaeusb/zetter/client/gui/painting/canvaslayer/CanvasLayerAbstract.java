@@ -55,12 +55,21 @@ public abstract class CanvasLayerAbstract implements GuiEventListener, Narratabl
 
     public abstract void tick();
 
-    protected abstract boolean handleCanvasInteraction(double mouseX, double mouseY, int button);
-
-    protected boolean handleToolUse(int canvasX, int canvasY, int button) {
-        this.parentScreen.useTool(canvasX, canvasY);
-        return true;
+    public boolean canDecreaseCanvasScale() {
+        return false;
     }
+
+    public void decreaseCanvasScale() {
+    }
+
+    public boolean canIncreaseCanvasScale() {
+        return false;
+    }
+
+    public void increaseCanvasScale() {
+    }
+
+    protected abstract boolean handleCanvasInteraction(double mouseX, double mouseY, int button);
 
     /**
      * @param offsetX pixel of the canvas the cursor points at, screen coordinates

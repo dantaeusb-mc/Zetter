@@ -16,6 +16,13 @@ import java.util.function.Supplier;
  * Painting update - get frame buffer from client when they're making changes
  */
 public class CCanvasActionPacket {
+    /**
+     * Vanilla rejects serverbound payloads over 32767 bytes and Forge only splits
+     * clientbound ones, so the client has to batch actions to fit. Leaves room for
+     * the channel name, the discriminator and this packet's own header.
+     */
+    public static final int MAX_PAYLOAD_SIZE = 30000;
+
     public final int easelEntityId;
     public final Queue<CanvasAction> paintingActions;
 
@@ -37,18 +44,24 @@ public class CCanvasActionPacket {
         int entityId = networkBuffer.readInt();
         int actionBuffersCount = networkBuffer.readInt();
 
+        if (actionBuffersCount < 0) {
+            Zetter.LOG.error("Negative action count in canvas action packet, dropping");
+            return null;
+        }
+
         CCanvasActionPacket packet = new CCanvasActionPacket(entityId);
 
         for (int i = 0; i < actionBuffersCount; i++) {
             @Nullable CanvasAction action = CanvasAction.readPacketData(networkBuffer);
 
-            if (action != null) {
-                packet.paintingActions.add(action);
-            } else {
+            if (action == null) {
                 // @todo: [MED] Figure out why this happens. Guaranteed to happen after debugger pause!
                 // But also happens randomly when drawing a lot
-                Zetter.LOG.error("Cannot retrieve actions from buffer");
+                Zetter.LOG.error("Cannot retrieve actions from buffer, dropping the rest of the packet");
+                break;
             }
+
+            packet.paintingActions.add(action);
         }
 
         return packet;
@@ -73,6 +86,7 @@ public class CCanvasActionPacket {
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaintingUpdatePacket was received");
+            return;
         }
 
         ctx.enqueueWork(() -> ServerHandler.processAction(packetIn, sendingPlayer));

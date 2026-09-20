@@ -1,5 +1,6 @@
 package me.dantaeusb.zetter.entity.item.state.representation;
 
+import io.netty.buffer.Unpooled;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -20,6 +21,8 @@ import java.util.stream.Stream;
  *
  * Theoretically, we also can use relative time of "sub-action" but
  * it's complicated and not yet worth it
+ *
+ * See docs/painting-history.md
  */
 public class CanvasAction {
     private static final Random RANDOM = new Random();
@@ -50,11 +53,10 @@ public class CanvasAction {
 
     /**
      * 1 byte -- meta reserved
-     * 2 bytes -- time offset (up to 32s)
-     * 4+4 bytes x and y as floats
-     * 8 bytes -- extra
+     * 2 bytes -- time offset as short (up to 32s)
+     * 4+4 bytes -- x and y as floats
      */
-    private static final int FRAME_SIZE = 1 + 2 + 8;
+    private static final int FRAME_SIZE = 1 + 2 + 4 + 4;
     public static final int BUFFER_SIZE = FRAME_SIZE * MAX_ACTIONS_IN_BUFFER;
 
     private ByteBuffer subActionBuffer;
@@ -209,12 +211,11 @@ public class CanvasAction {
     }
 
     public Stream<CanvasSubAction> getSubActionStream() {
-        ByteBuffer subActionBuffer;
+        // The stream is lazy, so it needs indexes of its own
+        final ByteBuffer subActionBuffer = this.subActionBuffer.duplicate();
 
-        if (this.isCommitted()) {
-            subActionBuffer = this.subActionBuffer;
-        } else {
-            subActionBuffer = this.subActionBuffer.duplicate().flip();
+        if (!this.isCommitted()) {
+            subActionBuffer.flip();
         }
 
         subActionBuffer.rewind();
@@ -365,7 +366,32 @@ public class CanvasAction {
         }
     }
 
+    /**
+     * Space this action takes in a packet, measured with the writer that encodes
+     * it so the two cannot drift apart. Tool parameters go through
+     * ObjectOutputStream, which is wasteful enough that guessing is not safe.
+     *
+     * @param action
+     * @return
+     */
+    public static int getPacketSize(CanvasAction action) {
+        final FriendlyByteBuf measureBuffer = new FriendlyByteBuf(Unpooled.buffer());
+
+        try {
+            writePacketData(action, measureBuffer);
+
+            return measureBuffer.writerIndex();
+        } finally {
+            measureBuffer.release();
+        }
+    }
+
     public static void writePacketData(CanvasAction actionBuffer, FriendlyByteBuf buffer) {
+        // An open buffer is not flipped yet, so it would send its whole capacity as padding
+        if (!actionBuffer.isCommitted()) {
+            throw new IllegalStateException("Cannot write an action that is not committed: " + actionBuffer.id);
+        }
+
         buffer.writeInt(actionBuffer.id);
         buffer.writeUtf(actionBuffer.tool.toString(), 32);
         buffer.writeInt(actionBuffer.color);
@@ -374,22 +400,42 @@ public class CanvasAction {
         buffer.writeBoolean(actionBuffer.canceled);
         AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
 
-        buffer.writeInt(actionBuffer.subActionBuffer.rewind().limit());
-        buffer.writeBytes(actionBuffer.subActionBuffer);
+        final ByteBuffer subActions = actionBuffer.subActionBuffer.duplicate();
+        subActions.rewind();
+
+        buffer.writeInt(subActions.limit());
+        buffer.writeBytes(subActions);
     }
 
-    public static CanvasAction readPacketData(FriendlyByteBuf buffer) {
-        int actionId = buffer.readInt();
-        Tool tool = Tool.valueOf(buffer.readUtf(32));
-        int color = buffer.readInt();
-        Long startTime = buffer.readLong();
-        Long commitTime = buffer.readLong();
-        boolean canceled = buffer.readBoolean();
-        AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, tool);
-
-        int bufferSize = buffer.readInt();
+    /**
+     * Returns null on malformed input, which leaves the buffer mid-action: the
+     * caller cannot resynchronise and has to stop reading the packet
+     */
+    public static @Nullable CanvasAction readPacketData(FriendlyByteBuf buffer) {
         try {
-            ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
+            int actionId = buffer.readInt();
+            Tool tool = Tool.valueOf(buffer.readUtf(32));
+            int color = buffer.readInt();
+            Long startTime = buffer.readLong();
+            Long commitTime = buffer.readLong();
+            boolean canceled = buffer.readBoolean();
+            AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, tool);
+
+            int bufferSize = buffer.readInt();
+
+            if (bufferSize <= 0 || bufferSize > BUFFER_SIZE || bufferSize % FRAME_SIZE != 0) {
+                throw new IllegalArgumentException("Bad sub-action buffer size " + bufferSize);
+            }
+
+            /*
+             * Copied onto the heap on purpose: readBytes(int).nioBuffer() is a view into
+             * a Netty buffer that nothing releases, and an action outlives its packet by
+             * as long as it stays in history
+             */
+            final byte[] subActions = new byte[bufferSize];
+            buffer.readBytes(subActions);
+
+            ByteBuffer actionsBuffer = ByteBuffer.wrap(subActions);
 
             return new CanvasAction(
                     actionId,
@@ -401,8 +447,8 @@ public class CanvasAction {
                     actionsBuffer,
                     canceled
             );
-        } catch (IndexOutOfBoundsException e) {
-            Zetter.LOG.error(e);
+        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+            Zetter.LOG.error("Unable to read action: " + e);
         }
 
         return null;

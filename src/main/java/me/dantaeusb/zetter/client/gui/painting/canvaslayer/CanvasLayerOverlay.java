@@ -195,22 +195,26 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
         return false;
     }
 
-    private boolean canDecreaseCanvasScale() {
+    @Override
+    public boolean canDecreaseCanvasScale() {
         return this.parentScreen.getEaselState().canvasOverlayState().canvasScale() > CanvasOverlayState.MIN_SCALE;
     }
 
-    private void decreaseCanvasScale() {
+    @Override
+    public void decreaseCanvasScale() {
         this.parentScreen.setEaselState(this.parentScreen.getEaselState().decreaseCanvasScale());
         this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(
             this.getUpdatedCanvasOverlayState(new Vector2d(0, 0))
         ));
     }
 
-    private boolean canIncreaseCanvasScale() {
+    @Override
+    public boolean canIncreaseCanvasScale() {
         return this.parentScreen.getEaselState().canvasOverlayState().canvasScale() < CanvasOverlayState.MAX_SCALE;
     }
 
-    private void increaseCanvasScale() {
+    @Override
+    public void increaseCanvasScale() {
         this.parentScreen.setEaselState(this.parentScreen.getEaselState().increaseCanvasScale());
         this.parentScreen.setEaselState(this.parentScreen.getEaselState().withCanvasOverlayState(
             this.getUpdatedCanvasOverlayState(new Vector2d(0, 0))

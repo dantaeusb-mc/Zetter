@@ -66,6 +66,7 @@ public class CPaletteUseCanvasHolderPacket {
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CPaletteUseCanvasHolderPacket was received");
+            return;
         }
 
         ctx.enqueueWork(() -> ServerHandler.processPaletteUseCanvasHolder(packetIn, sendingPlayer));

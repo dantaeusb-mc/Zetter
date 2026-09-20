@@ -66,6 +66,7 @@ public class CSignPaintingPacket {
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCreatePaintingPacket was received");
+            return;
         }
 
         ctx.enqueueWork(() -> ServerHandler.processSignPainting(packetIn, sendingPlayer));

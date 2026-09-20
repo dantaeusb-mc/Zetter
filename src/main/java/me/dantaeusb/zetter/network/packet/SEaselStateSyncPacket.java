@@ -64,8 +64,7 @@ public class SEaselStateSyncPacket {
 
             if (hasSnapshot) {
                 final int snapshotId = networkBuffer.readInt();
-                final int snapshotColorLength = networkBuffer.readInt();
-                final byte[] snapshotColor = networkBuffer.readByteArray(snapshotColorLength);
+                final byte[] snapshotColor = networkBuffer.readByteArray();
                 final long snapshotTimestamp = networkBuffer.readLong();
 
                 snapshot = CanvasSnapshot.createNetworkSnapshot(snapshotId, snapshotColor, snapshotTimestamp);
@@ -82,11 +81,12 @@ public class SEaselStateSyncPacket {
             for (int i = 0; i < actionBuffersCount; i++) {
                 @Nullable CanvasAction action = CanvasAction.readPacketData(networkBuffer);
 
-                if (action != null) {
-                    unsyncedActions.add(action);
-                } else {
-                    Zetter.LOG.error("Cannot retrieve actions from buffer");
+                if (action == null) {
+                    Zetter.LOG.error("Cannot retrieve actions from buffer, dropping the rest of the packet");
+                    break;
                 }
+
+                unsyncedActions.add(action);
             }
 
             return new SEaselStateSyncPacket(easelEntityId, canvasCode, sync, snapshot, unsyncedActions);
@@ -108,7 +108,6 @@ public class SEaselStateSyncPacket {
 
         if (this.snapshot != null) {
             networkBuffer.writeInt(this.snapshot.id);
-            networkBuffer.writeInt(this.snapshot.colors.length);
             networkBuffer.writeByteArray(this.snapshot.colors);
             networkBuffer.writeLong(this.snapshot.timestamp);
         }

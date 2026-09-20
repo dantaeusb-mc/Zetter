@@ -74,6 +74,7 @@ public class CCanvasRequestExportPacket {
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
             Zetter.LOG.warn("EntityPlayerMP was null when CCanvasRequestExportPacket was received");
+            return;
         }
 
         ctx.enqueueWork(() -> ServerHandler.processCanvasExportRequest(packetIn, sendingPlayer));

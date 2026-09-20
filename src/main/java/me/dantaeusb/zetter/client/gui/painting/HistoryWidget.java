@@ -66,7 +66,6 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
         int iMouseX = (int) mouseX;
         int iMouseY = (int) mouseY;
 
-        // Quick check
         if (!this.isMouseOver(mouseX, mouseY)) {
             return false;
         }
@@ -76,9 +75,13 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
             int fromY = this.getY() + 1 + i * HISTORY_BUTTON_HEIGHT + i;
 
             if (isInRect(this.getX() + 1, fromY, historyButton.width, historyButton.height, iMouseX, iMouseY) && this.isValidClickButton(button)) {
-                historyButton.action.run();
+                // Consumed either way, a disabled button must not paint the canvas below
+                if (historyButton.active.get()) {
+                    historyButton.action.run();
 
-                this.playDownSound(Minecraft.getInstance().getSoundManager());
+                    this.playDownSound(Minecraft.getInstance().getSoundManager());
+                }
+
                 return true;
             }
 
@@ -114,14 +117,6 @@ public class HistoryWidget extends AbstractPaintingWidget implements Renderable 
             guiGraphics.blit(AbstractPaintingWidget.PAINTING_WIDGETS_TEXTURE_RESOURCE, this.getX() + 1, fromY, uOffset, historyButton.vPosition, historyButton.width, historyButton.height);
             i++;
         }
-    }
-
-    public boolean undo() {
-        return false;
-    }
-
-    public boolean redo() {
-        return false;
     }
 
     public class HistoryButton {

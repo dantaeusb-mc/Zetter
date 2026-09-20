@@ -86,8 +86,7 @@ public class ServerHandler {
 
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncMessage);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasRequest", e);
         }
     }
 
@@ -114,9 +113,38 @@ public class ServerHandler {
 
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncViewMessage);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasViewRequest", e);
         }
+    }
+
+    /**
+     * Resolve a canvas holder the player is allowed to act on. Everything the client
+     * sends here is an entity id off the wire, so it has to be checked every time.
+     *
+     * @param sendingPlayer
+     * @param canvasHolderId
+     * @param requireUsing whether the player must have started using the holder already
+     * @return
+     */
+    private static @Nullable CanvasHolderEntity getAccessibleCanvasHolder(ServerPlayer sendingPlayer, int canvasHolderId, boolean requireUsing) {
+        final Entity entity = sendingPlayer.level().getEntity(canvasHolderId);
+
+        if (!(entity instanceof CanvasHolderEntity canvasHolder)) {
+            Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " referenced entity " + canvasHolderId + " which is not a canvas holder");
+            return null;
+        }
+
+        if (!canvasHolder.canPlayerAccessInventory(sendingPlayer)) {
+            Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot reach canvas holder " + canvasHolderId);
+            return null;
+        }
+
+        if (requireUsing && !canvasHolder.getPlayersUsing().contains(sendingPlayer)) {
+            Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " is not using canvas holder " + canvasHolderId);
+            return null;
+        }
+
+        return canvasHolder;
     }
 
     /**
@@ -136,18 +164,42 @@ public class ServerHandler {
                 return;
             }
 
-            Entity canvasHolder = sendingPlayer.level().getEntity(packetIn.getCanvasHolderId());
+            final CanvasHolderEntity canvasHolder = getAccessibleCanvasHolder(sendingPlayer, packetIn.getCanvasHolderId(), false);
 
-            if (!(canvasHolder instanceof CanvasHolderEntity)) {
-                Zetter.LOG.error("Unable to process palette use canvas holder - entity is not found or not a canvas holder");
+            if (canvasHolder == null) {
                 return;
             }
 
-            ((CanvasHolderEntity) canvasHolder).addPlayerUsing(sendingPlayer, paletteStack);
+            // Same rule PaletteItem applies on the client when it picks a holder to aim at
+            if (!canvasHolder.canPlayerStartUsing(sendingPlayer)) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot start using canvas holder " + canvasHolder.getId());
+                return;
+            }
+
+            canvasHolder.addPlayerUsing(sendingPlayer, paletteStack);
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), new SCanvasHolderAcceptPacket(canvasHolder.getId(), paletteStack));
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processPaletteUseCanvasHolder", e);
+        }
+    }
+
+    /**
+     * Player closed the painting screen, drop them and their palette from the holder
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    public static void processCanvasHolderStopUsing(final CCanvasHolderStopUsingPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            if (!(sendingPlayer.level().getEntity(packetIn.getCanvasHolderId()) instanceof CanvasHolderEntity canvasHolder)) {
+                Zetter.LOG.warn("Unable to process stop using canvas holder - entity is not found or not a canvas holder");
+                return;
+            }
+
+            // No reach check: dropping yourself is harmless wherever you ended up
+            canvasHolder.removePlayerUsing(sendingPlayer);
+        } catch (Exception e) {
+            Zetter.LOG.error("Unable to handle processCanvasHolderStopUsing", e);
         }
     }
 
@@ -201,12 +253,10 @@ public class ServerHandler {
             SCanvasSyncExportPacket canvasSyncExportMessage = new SCanvasSyncExportPacket(canvasCode, paintingData, System.currentTimeMillis());
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportMessage);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
+            Zetter.LOG.error("Unable to handle processCanvasExportRequest", e);
 
             SCanvasSyncExportErrorPacket canvasSyncExportErrorMessage = new SCanvasSyncExportErrorPacket("console.zetter.error.unknown", null);
             ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), canvasSyncExportErrorMessage);
-
-            throw e;
         }
     }
 
@@ -235,8 +285,7 @@ public class ServerHandler {
 
             canvasTracker.stopTrackingCanvas(sendingPlayer.getUUID(), packetIn.getCanvasName());
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processUnloadRequest", e);
         }
     }
 
@@ -258,8 +307,7 @@ public class ServerHandler {
 
             PaletteItem.updatePaletteColor(paletteStack, packetIn.getColor(), packetIn.getSlotIndex());
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processPaletteUpdate", e);
         }
     }
 
@@ -292,8 +340,7 @@ public class ServerHandler {
                 sendingPlayer.getInventory().setItem(slot, paintingStack);
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processSignPainting", e);
         }
     }
 
@@ -335,7 +382,8 @@ public class ServerHandler {
 
             return outStack;
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
+            // Caller needs the stack, so this one still has to propagate
+            Zetter.LOG.error("Unable to create painting", e);
             throw e;
         }
     }
@@ -346,23 +394,20 @@ public class ServerHandler {
      */
     public static void processAction(final CCanvasActionPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            CanvasHolderEntity easelEntity = (CanvasHolderEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
+            final CanvasHolderEntity easelEntity = getAccessibleCanvasHolder(sendingPlayer, packetIn.easelEntityId, true);
+
+            if (easelEntity == null) {
+                return;
+            }
 
             // We don't trust client and writing our UUIDs
             for (CanvasAction actionBuffer : packetIn.paintingActions) {
                 actionBuffer.setAuthorUUID(sendingPlayer.getUUID());
             }
 
-            // @todo: [MED] Check if player can access entity
-
-            if (easelEntity != null) {
-                easelEntity.getCanvasState().processActionServer(packetIn.paintingActions);
-            } else {
-                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
-            }
+            easelEntity.getCanvasState().processActionServer(packetIn.paintingActions);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processAction", e);
         }
     }
 
@@ -373,22 +418,19 @@ public class ServerHandler {
      */
     public static void processCanvasHistory(final CCanvasHistoryActionPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            CanvasHolderEntity easelEntity = (CanvasHolderEntity) sendingPlayer.level().getEntity(packetIn.easelEntityId);
+            final CanvasHolderEntity easelEntity = getAccessibleCanvasHolder(sendingPlayer, packetIn.easelEntityId, true);
 
-            // @todo: [MED] Check if player can access entity
+            if (easelEntity == null) {
+                return;
+            }
 
-            if (easelEntity != null) {
-                if (packetIn.canceled) {
-                    easelEntity.getCanvasState().undo(packetIn.actionId);
-                } else {
-                    easelEntity.getCanvasState().redo(packetIn.actionId);
-                }
+            if (packetIn.canceled) {
+                easelEntity.getCanvasState().undo(packetIn.actionId);
             } else {
-                Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
+                easelEntity.getCanvasState().redo(packetIn.actionId);
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasHistory", e);
         }
     }
 
@@ -404,8 +446,7 @@ public class ServerHandler {
                 artistTableMenu.setMode(packetIn.getMode());
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processArtistTableModeChange", e);
         }
     }
 }

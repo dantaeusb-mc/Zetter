@@ -46,8 +46,7 @@ public class ClientHandler {
 
             canvasTracker.registerCanvasData(canvasCode, canvasData, timestamp);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasSync", e);
         }
     }
 
@@ -70,8 +69,7 @@ public class ClientHandler {
 
             processCanvasSync(packetIn, world);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasSyncView", e);
         }
     }
 
@@ -107,8 +105,7 @@ public class ClientHandler {
                 new PaintingScreen(paletteStack, (CanvasHolderEntity) canvasHolder)
             );
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasHolderAcceptPacket", e);
         }
     }
 
@@ -142,8 +139,7 @@ public class ClientHandler {
                 false
             );
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasSyncExportError", e);
         }
     }
 
@@ -181,8 +177,7 @@ public class ClientHandler {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas snapshot");
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processEaselStateSync", e);
         }
     }
 
@@ -195,7 +190,6 @@ public class ClientHandler {
     public static void processCanvasHistory(final SCanvasHistoryActionPacket packetIn, Level world) {
         try {
             CanvasHolderEntity easel = (CanvasHolderEntity) world.getEntity(packetIn.easelEntityId);
-            // @todo: [MED] Check if player can access entity
 
             if (easel != null) {
                 if (packetIn.canceled) {
@@ -207,8 +201,7 @@ public class ClientHandler {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasHistory", e);
         }
     }
 
@@ -229,8 +222,7 @@ public class ClientHandler {
 
             canvasTracker.unregisterCanvasData(canvasCode);
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processCanvasRemoval", e);
         }
     }
 
@@ -254,8 +246,7 @@ public class ClientHandler {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processEaselCanvasInitialization", e);
         }
     }
 
@@ -277,8 +268,7 @@ public class ClientHandler {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
             }
         } catch (Exception e) {
-            Zetter.LOG.error(e.getMessage());
-            throw e;
+            Zetter.LOG.error("Unable to handle processEaselReset", e);
         }
     }
 }

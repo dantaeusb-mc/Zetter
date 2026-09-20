@@ -7,6 +7,9 @@ import java.util.Random;
  * at a particular time, they're created only on
  * server side but then send to client for easier
  * state restoration
+ *
+ * A snapshot stamped T holds the canvas after every non-canceled action with a start
+ * time before T, see docs/painting-history.md
  */
 public class CanvasSnapshot {
     private static final Random RANDOM = new Random();

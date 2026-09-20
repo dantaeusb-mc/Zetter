@@ -3,6 +3,8 @@ package me.dantaeusb.zetter.client.gui;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.network.packet.CCanvasHolderStopUsingPacket;
 import me.dantaeusb.zetter.client.gui.painting.*;
 import me.dantaeusb.zetter.client.gui.painting.canvaslayer.CanvasLayerAbstract;
 import me.dantaeusb.zetter.client.gui.painting.canvaslayer.CanvasLayerImmersive;
@@ -298,19 +300,19 @@ public class PaintingScreen extends Screen {
      */
 
     public boolean canUndo() {
-        return false;
+        return this.canvasHolderEntity.canUndo();
     }
 
-    public void undo() {
-        // @todo: Implement undo
+    public boolean undo() {
+        return this.canvasHolderEntity.undo();
     }
 
     public boolean canRedo() {
-        return false;
+        return this.canvasHolderEntity.canRedo();
     }
 
-    public void redo() {
-        // @todo: Implement undo
+    public boolean redo() {
+        return this.canvasHolderEntity.redo();
     }
 
     /*
@@ -476,12 +478,20 @@ public class PaintingScreen extends Screen {
 
                 return true;
             }
-            /*case ZoomWidget.ZOOM_OUT_HOTKEY:
+            case ZoomWidget.ZOOM_OUT_HOTKEY:
+                if (!this.canvasLayer.canDecreaseCanvasScale()) {
+                    break;
+                }
+
                 this.canvasLayer.decreaseCanvasScale();
                 return true;
             case ZoomWidget.ZOOM_IN_HOTKEY:
+                if (!this.canvasLayer.canIncreaseCanvasScale()) {
+                    break;
+                }
+
                 this.canvasLayer.increaseCanvasScale();
-                return true;*/
+                return true;
             case GLFW.GLFW_KEY_DOWN: {
                 final int row = this.getPaletteState().currentPaletteSlot() / 2;
                 final int offset = this.getPaletteState().currentPaletteSlot() % 2;
@@ -496,16 +506,20 @@ public class PaintingScreen extends Screen {
 
                 return true;
             }
-            /*case HistoryWidget.UNDO_HOTKEY:
-                if (Screen.hasControlDown()) {
-                    this.getMenu().undo();
-                    return true;
+            case HistoryWidget.UNDO_HOTKEY:
+                if (!hasControlDown()) {
+                    break;
                 }
+
+                this.undo();
+                return true;
             case HistoryWidget.REDO_HOTKEY:
-                if (Screen.hasControlDown()) {
-                    this.getMenu().redo();
-                    return true;
-                }*/
+                if (!hasControlDown()) {
+                    break;
+                }
+
+                this.redo();
+                return true;
         }
 
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -684,7 +698,12 @@ public class PaintingScreen extends Screen {
 
     public void onClose() {
         this.paletteAccessor.writeColors();
-        // @todo: Send packet to remove player and palette from the entity
+
+        // Flushes the action buffer, so it has to go before we tell the server we are done
+        this.canvasHolderEntity.removePlayerUsing(this.getMinecraft().player);
+
+        ZetterNetwork.simpleChannel.sendToServer(new CCanvasHolderStopUsingPacket(this.canvasHolderEntity.getId()));
+
         super.onClose();
     }
 

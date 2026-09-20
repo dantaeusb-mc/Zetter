@@ -25,12 +25,17 @@ import javax.annotation.Nullable;
 import java.util.*;
 
 /**
- * This class is responsible for all canvas interactions for easels
- * It keeps painting states at different moments (snapshots)
- * action history, processes sync signals
+ * Canvas history for easels: the pixels are derived state, kept as a log of actions
+ * replayed over periodic snapshots and reconciled between client and server.
+ *
+ * A snapshot stamped T holds the canvas after every non-canceled action with a start
+ * time before T. Actions are ordered by that same field, so it alone decides what a
+ * snapshot already contains, and flipping an action's canceled flag invalidates every
+ * snapshot taken after it started.
+ *
+ * See docs/painting-history.md
  *
  * Maybe we should create it only with canvas and destroy when canvas removed
- * @todo: [LOW] Make it capability?
  */
 public class CanvasState {
     public static int SNAPSHOT_HISTORY_SIZE = 10;
@@ -275,7 +280,7 @@ public class CanvasState {
         ItemStack paletteStack = this.canvasHolder.getPaletteStack(player);
 
         // No palette or no paints left and player is not creative mode player
-        if (paletteStack.isEmpty() ||
+        if (paletteStack == null || paletteStack.isEmpty() ||
             (!player.isCreative() &&
                 (paletteStack.getDamageValue() >= paletteStack.getMaxDamage() - 1)
             )
@@ -554,7 +559,9 @@ public class CanvasState {
         // Drop things but not sync yet
         this.reset(false);
 
-        this.snapshots.add(CanvasSnapshot.createServerSnapshot(canvasData.getColorData(), timestamp - MAX_LATENCY - 1L));
+        // reset() leaves a snapshot stamped "now", we need one older than the first action
+        this.snapshots.clear();
+        this.insertSnapshot(CanvasSnapshot.createServerSnapshot(canvasData.getColorData(), timestamp - MAX_LATENCY - 1L));
 
         if (this.listeners != null) {
             for(EaselStateListener listener : this.listeners) {
@@ -581,7 +588,19 @@ public class CanvasState {
      * @return
      */
     private boolean applyHistoryTraversing(CanvasAction tillAction, boolean cancel) {
-        boolean changedState = false;
+        // We will discard every snapshot after it, so we need an older one to rebuild from
+        final CanvasAction earliestAffectedAction = cancel ? tillAction : this.getFirstActionOfCanceledState(true);
+
+        if (earliestAffectedAction == null) {
+            return false;
+        }
+
+        if (this.getSnapshotBefore(earliestAffectedAction.getStartTime()) == null) {
+            Zetter.LOG.warn("No snapshot old enough to traverse history to action " + earliestAffectedAction.id);
+            return false;
+        }
+
+        @Nullable CanvasAction earliestChangedAction = null;
 
         // Cancel all after, un-cancel all before
         if (cancel) {
@@ -592,7 +611,8 @@ public class CanvasState {
 
                 if (!currentAction.isCanceled()) {
                     currentAction.setCanceled(true);
-                    changedState = true;
+                    // Walking backwards, so every next hit is an earlier one
+                    earliestChangedAction = currentAction;
                 }
 
                 if (currentAction.id == tillAction.id) {
@@ -607,7 +627,10 @@ public class CanvasState {
 
                 if (currentAction.isCanceled()) {
                     currentAction.setCanceled(false);
-                    changedState = true;
+
+                    if (earliestChangedAction == null) {
+                        earliestChangedAction = currentAction;
+                    }
                 }
 
                 if (currentAction.id == tillAction.id) {
@@ -616,9 +639,11 @@ public class CanvasState {
             }
         }
 
-        if (!changedState) {
+        if (earliestChangedAction == null) {
             return false;
         }
+
+        this.discardSnapshotsAfter(earliestChangedAction.getStartTime());
 
         this.recollectPaintingData();
         this.onStateChanged();
@@ -745,11 +770,15 @@ public class CanvasState {
      */
 
     public boolean canUndo() {
-        return this.getLastActionOfCanceledState(false) != null;
+        final CanvasAction lastAction = this.getLastActionOfCanceledState(false);
+
+        return lastAction != null && this.getSnapshotBefore(lastAction.getStartTime()) != null;
     }
 
     public boolean canRedo() {
-        return this.getLastActionOfCanceledState(true) != null;
+        final CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(true);
+
+        return firstCanceledAction != null && this.getSnapshotBefore(firstCanceledAction.getStartTime()) != null;
     }
 
     public boolean undo() {
@@ -817,6 +846,29 @@ public class CanvasState {
         return tillAction;
     }
 
+    /**
+     * Insert an action keeping the list ordered by start time
+     *
+     * @param addedAction
+     */
+    private void insertAction(CanvasAction addedAction) {
+        final ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
+
+        while (actionsIterator.hasPrevious()) {
+            final CanvasAction currentAction = actionsIterator.previous();
+
+            if (currentAction.getStartTime() <= addedAction.getStartTime()) {
+                actionsIterator.next();
+                actionsIterator.add(addedAction);
+
+                return;
+            }
+        }
+
+        // Older than everything we have
+        actionsIterator.add(addedAction);
+    }
+
     private @Nullable CanvasAction findAction(int actionId) {
         ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
         @Nullable CanvasAction tillAction = null;
@@ -838,78 +890,45 @@ public class CanvasState {
      */
 
     /**
-     * This action will get the latest available snapshot for the current action set
-     * (might look up down the snapshot deque if the actions are canceled)
-     * From that snapshot, canvas state will be restored and actions applied
-     * in submitted order
+     * Restore the canvas to the state it had at a given moment: take the newest
+     * snapshot made before it and replay every action started since.
+     *
+     * @param timestamp replay actions that started before this moment, exclusive
      */
     public void recollectPaintingData(long timestamp) {
-        CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(true);
-        CanvasSnapshot latestSnapshot;
+        final CanvasAction firstCanceledAction = this.getFirstActionOfCanceledState(true);
 
-        if (firstCanceledAction != null) {
-            latestSnapshot = this.getSnapshotBefore(
-                Math.min(timestamp, firstCanceledAction.getStartTime())
-            );
-        } else {
-            // We CANNOT just use last snapshot, because it might have been captured "on a different timeline"
-            // Where some actions which are no longer in history are applied
-            // But to avoid visible "history fast-forward", we do not use that until history is
-            // fully synchronized
-            latestSnapshot = this.getSnapshotBefore(
-                timestamp
-            );
-        }
+        // Snapshots taken after a canceled action started hold pixels that are no longer there
+        final long snapshotBoundary = firstCanceledAction == null
+            ? timestamp
+            : Math.min(timestamp, firstCanceledAction.getStartTime());
+
+        final CanvasSnapshot latestSnapshot = this.getSnapshotBefore(snapshotBoundary);
 
         if (latestSnapshot == null) {
-            Zetter.LOG.error("Unable to find snapshot before first canceled action");
+            Zetter.LOG.error("Unable to find a snapshot to restore canvas from");
             return;
         }
 
         // @todo: [MED] No need to update data before collected: apply changes on buffer, then update data and texture
         this.applySnapshot(latestSnapshot);
-        ListIterator<CanvasAction> actionBufferIterator = this.getActionsEndIterator();
 
-        boolean foundCanceled = firstCanceledAction == null;
-        boolean foundLastBeforeSnapshot = false;
-
-        // Go back, find first canceled, then reverse iterator, then continue applying action
-        while(actionBufferIterator.hasPrevious()) {
-            CanvasAction action = actionBufferIterator.previous();
-
-            // Start looking when found first canceled action if any
-            if (!foundCanceled) {
-                foundCanceled = action.id == firstCanceledAction.id;
-            }
-
-            // And first action committed before snapshot
-            if (!foundLastBeforeSnapshot) {
-                foundLastBeforeSnapshot = action.isCommitted() && action.getCommitTime() < latestSnapshot.timestamp;
-            }
-
-            // When found or reached the end
-            if (
-                (foundCanceled && foundLastBeforeSnapshot) || !actionBufferIterator.hasPrevious()
-            ) {
-                // Turn around and start applying
-                while(actionBufferIterator.hasNext()) {
-                    action = actionBufferIterator.next();
-
-                    // We apply non-committed and non-sent always, as server cannot have idea of the new actions that were not pushed
-                    // (except if canceled, but it should never happen)
-                    if (
-                        !action.isCanceled() && ( // If not canceled and
-                            !action.isCommitted()  // not committed
-                            || !action.isSent() // or not sent
-                            || action.getCommitTime() > latestSnapshot.timestamp // or committed after snapshot
-                        )
-                    ) {
-                        this.applyAction(action, false);
-                    }
-                }
-
+        for (CanvasAction action : this.actions) {
+            // Ordered by start time, so there is nothing left past the boundary
+            if (action.getStartTime() >= timestamp) {
                 break;
             }
+
+            // Already part of the snapshot
+            if (action.getStartTime() < latestSnapshot.timestamp) {
+                continue;
+            }
+
+            if (action.isCanceled()) {
+                continue;
+            }
+
+            this.applyAction(action, false);
         }
 
         if (this.canvasHolder.level().isClientSide()) {
@@ -923,8 +942,11 @@ public class CanvasState {
         this.markDesync();
     }
 
+    /**
+     * Restore the canvas to its current state, including the stroke in progress
+     */
     public void recollectPaintingData() {
-        this.recollectPaintingData(System.currentTimeMillis());
+        this.recollectPaintingData(Long.MAX_VALUE);
     }
 
     /**
@@ -944,6 +966,26 @@ public class CanvasState {
         }
 
         return null;
+    }
+
+    /**
+     * Drop every snapshot taken after the given moment, their contents depend on
+     * actions that have been canceled or restored since
+     *
+     * @param startTime
+     */
+    private void discardSnapshotsAfter(long startTime) {
+        final ListIterator<CanvasSnapshot> snapshotIterator = this.getSnapshotsEndIterator();
+
+        while (snapshotIterator.hasPrevious()) {
+            final CanvasSnapshot snapshot = snapshotIterator.previous();
+
+            if (snapshot.timestamp <= startTime) {
+                return;
+            }
+
+            snapshotIterator.remove();
+        }
     }
 
     /**
@@ -991,6 +1033,11 @@ public class CanvasState {
             return true;
         }
 
+        // A snapshot taken while something is undone gets discarded by the next redo
+        if (this.getFirstActionOfCanceledState(true) != null) {
+            return false;
+        }
+
         long authoritativeTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
 
         CanvasSnapshot lastSnapshot = this.getLastSnapshot();
@@ -1026,16 +1073,16 @@ public class CanvasState {
     private void makeSnapshot() {
         assert this.getCanvasData() != null;
         if (this.canvasHolder.level().isClientSide()) {
-            this.snapshots.add(CanvasSnapshot.createWeakSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
+            this.insertSnapshot(CanvasSnapshot.createWeakSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
         } else if (this.snapshots.isEmpty()) {
-            this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
+            this.insertSnapshot(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
         } else {
             // Restore painting to state at which it could not be changed
             // (as processing window defines timeout for new actions, we're
             // sure that no new actions will be added to buffer before that timestamp)
             long authoritativeTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
             this.recollectPaintingData(authoritativeTimestamp);
-            this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), authoritativeTimestamp));
+            this.insertSnapshot(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), authoritativeTimestamp));
             // Get back to the current state
             this.recollectPaintingData();
         }
@@ -1053,7 +1100,7 @@ public class CanvasState {
 
         if (this.snapshots.size() > maxSize) {
             int i = 0;
-            ListIterator<CanvasSnapshot> canvasSnapshotIterator = this.snapshots.listIterator();
+            ListIterator<CanvasSnapshot> canvasSnapshotIterator = this.getSnapshotsEndIterator();
 
             while(canvasSnapshotIterator.hasPrevious()) {
                 canvasSnapshotIterator.previous();
@@ -1099,7 +1146,7 @@ public class CanvasState {
      * Client-only
      */
     public void performHistorySyncClient(boolean forceCommit) {
-        final Queue<CanvasAction> unsentActions = new ArrayDeque<>();
+        final ArrayDeque<CanvasAction> unsentActions = new ArrayDeque<>();
         ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
 
         while(actionsIterator.hasPrevious()) {
@@ -1115,19 +1162,35 @@ public class CanvasState {
                 }
             }
 
+            // Cannot stop here: actions synced from other players interleave with ours
             if (paintingActionBuffer.isSent()) {
-                break;
+                continue;
             }
 
-            unsentActions.add(paintingActionBuffer);
+            // Walking backwards, but the server merges by start time, so keep it chronological
+            unsentActions.addFirst(paintingActionBuffer);
         }
 
-        if (!unsentActions.isEmpty()) {
-            CCanvasActionPacket paintingFrameBufferPacket = new CCanvasActionPacket(this.canvasHolder.getId(), unsentActions);
-            ZetterNetwork.simpleChannel.sendToServer(paintingFrameBufferPacket);
+        while (!unsentActions.isEmpty()) {
+            final ArrayDeque<CanvasAction> batch = new ArrayDeque<>();
+            int batchSize = 0;
 
-            for (CanvasAction unsentAction : unsentActions) {
-                unsentAction.setSent();
+            while (!unsentActions.isEmpty()) {
+                final int actionSize = CanvasAction.getPacketSize(unsentActions.peek());
+
+                // Always send at least one action, however big it turns out to be
+                if (!batch.isEmpty() && batchSize + actionSize > CCanvasActionPacket.MAX_PAYLOAD_SIZE) {
+                    break;
+                }
+
+                batch.add(unsentActions.poll());
+                batchSize += actionSize;
+            }
+
+            ZetterNetwork.simpleChannel.sendToServer(new CCanvasActionPacket(this.canvasHolder.getId(), batch));
+
+            for (CanvasAction sentAction : batch) {
+                sentAction.setSent();
             }
         }
     }
@@ -1256,24 +1319,23 @@ public class CanvasState {
         }
 
         final int lastSyncedSnapshotId = this.playerLastSyncedSnapshot.get(player.getUUID());
-        final ListIterator<CanvasSnapshot> snapshotIterator = this.snapshots.listIterator();
+        final ListIterator<CanvasSnapshot> snapshotIterator = this.getSnapshotsEndIterator();
 
-        boolean foundLastSynced = false;
+        @Nullable CanvasSnapshot nextSnapshot = null;
 
-        while(snapshotIterator.hasNext()) {
-            CanvasSnapshot snapshot = snapshotIterator.next();
+        while (snapshotIterator.hasPrevious()) {
+            final CanvasSnapshot snapshot = snapshotIterator.previous();
 
-            // After we found last synced, we're sending the next one
-            if (foundLastSynced) {
-                return snapshot;
-            }
-
+            // Walking back from the newest, so the one we passed is the one to send
             if (snapshot.id == lastSyncedSnapshotId) {
-                foundLastSynced = true;
+                return nextSnapshot;
             }
+
+            nextSnapshot = snapshot;
         }
 
-        return null;
+        // The one we synced last was cleaned up since, catch the player up from the oldest
+        return this.snapshots.get(0);
     }
 
     /**
@@ -1292,6 +1354,10 @@ public class CanvasState {
             return;
         }
 
+        if (newActions.isEmpty()) {
+            return;
+        }
+
         if (!this.isCanvasInitialized()) {
             this.initializeCanvas(newActions.peek().getStartTime());
         }
@@ -1300,63 +1366,19 @@ public class CanvasState {
         final long processingAfterTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
         this.wipeCanceledActionsAndDiscardSnapshots();
 
-        Iterator<CanvasAction> newActionsIterator = newActions.iterator();
-        ListIterator<CanvasAction> existingActionsIterator = this.actions.listIterator();
-
-        // We should have at least one, so it's safe
-        CanvasAction newAction = newActionsIterator.next();
-
-        while (existingActionsIterator.hasNext()) {
-            if (newAction == null) {
-                break;
+        for (CanvasAction newAction : newActions) {
+            if (newAction.getStartTime() < processingAfterTimestamp) {
+                Zetter.LOG.warn("Got action that is too old, ignoring");
+                continue;
             }
 
-            CanvasAction existingAction = existingActionsIterator.next();
-
-            if (newAction.getStartTime().equals(existingAction.getStartTime())) {
-                Zetter.LOG.warn("Two actions have the same timestamp, weird!");
-
-                if (newAction.id == existingAction.id) {
-                    Zetter.LOG.warn("Got already synced action, ignoring");
-                }
-
-                existingActionsIterator.add(newAction);
-
-                if (newAction.isCanceled()) {
-                    this.historyDirty = true;
-                }
-
-                newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
-            } else if (existingAction.getStartTime() > newAction.getStartTime()) {
-                if (newAction.getStartTime() < processingAfterTimestamp) {
-                    Zetter.LOG.warn("Got action that is too old, ignoring");
-                    newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
-                    continue;
-                }
-
-                existingActionsIterator.previous(); // rewind to insert before
-                existingActionsIterator.add(newAction);
-
-                if (newAction.isCanceled()) {
-                    this.historyDirty = true;
-                }
-
-                existingActionsIterator.next(); // get back
-                newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
+            // Re-applying an action we already have would paint the stroke twice
+            if (this.findAction(newAction.id) != null) {
+                Zetter.LOG.warn("Got already synced action, ignoring");
+                continue;
             }
-        }
 
-        if (newAction != null) {
-            existingActionsIterator.add(newAction);
-
-            if (newAction.isCanceled()) {
-                this.historyDirty = true;
-            }
-        }
-
-        while(newActionsIterator.hasNext()) {
-            newAction = newActionsIterator.next();
-            existingActionsIterator.add(newAction);
+            this.insertAction(newAction);
 
             if (newAction.isCanceled()) {
                 this.historyDirty = true;
@@ -1381,16 +1403,18 @@ public class CanvasState {
      * @param doDamageClient apply damage to palette on client when applying action, server determines it by "sync" state
      */
     public void applyAction(CanvasAction action, boolean doDamageClient) {
-        boolean client = this.canvasHolder.level().isClientSide();
+        final boolean client = this.canvasHolder.level().isClientSide();
+
+        final Player actingPlayer = this.players.stream()
+                .filter((player) -> player.getUUID().equals(action.getAuthorUUID()))
+                .findFirst()
+                .orElse(null);
+
+        final boolean chargePalette = actingPlayer != null
+                && this.canvasHolder.getPaletteStack(actingPlayer) != null
+                && (client ? doDamageClient : !action.isSync() && !actingPlayer.isCreative());
 
         action.getSubActionStream().forEach((CanvasAction.CanvasSubAction subAction) -> {
-            final Player actingPlayer = this.players.stream().filter((player) -> player.getUUID().equals(action.getAuthorUUID())).findFirst().orElse(null);
-
-            if (actingPlayer == null) {
-                Zetter.LOG.error("Unable to find player for action " + action.id);
-                return;
-            }
-
             // Apply subAction directly
             int damage = action.tool.getTool().apply(
                     this.getCanvasData(),
@@ -1400,18 +1424,8 @@ public class CanvasState {
                     subAction.posY
             );
 
-            if (client) {
-                if (doDamageClient) {
-                    this.canvasHolder.damagePalette(actingPlayer, damage);
-                }
-            } else {
-                if (!action.isSync()) {
-                    Optional<Player> author = this.players.stream().filter(player -> player.getUUID().equals(action.getAuthorUUID())).findFirst();
-
-                    if (author.isEmpty() || !author.get().isCreative()) {
-                        this.canvasHolder.damagePalette(actingPlayer, damage);
-                    }
-                }
+            if (chargePalette) {
+                this.canvasHolder.damagePalette(actingPlayer, damage);
             }
         });
 
@@ -1468,60 +1482,19 @@ public class CanvasState {
             return;
         }
 
-        Iterator<CanvasAction> unsyncedIterator = actions.iterator();
-        ListIterator<CanvasAction> actionsIterator = this.actions.listIterator();
-
-        @Nullable CanvasAction clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
-
-        int fastForwards = 0;
         int addedActions = 0;
 
-        do {
-            CanvasAction unsyncedAction = unsyncedIterator.next();
-
-            // If there's no client actions saved found after synced action, just
-            // add all unsynced
-            if (clientAction == null) {
-                this.actions.add(unsyncedAction);
-                addedActions++;
+        for (CanvasAction unsyncedAction : actions) {
+            // Server is authoritative, take its copy: the canceled flag may have changed
+            if (this.findAndReplaceAction(unsyncedAction.id, unsyncedAction) != null) {
+                unsyncedAction.setSync();
 
                 continue;
             }
 
-            // Fast-forward client actions to the one that is made at the same
-            // time or later than the first unsynced action
-            if (unsyncedAction.getStartTime() > clientAction.getStartTime()) {
-                if (++fastForwards > 1) {
-                    Zetter.LOG.warn("Fast-forwarding actions without mark sync! Some actions were lost?");
-                }
-
-                while (actionsIterator.hasNext()) {
-                    if (clientAction.getStartTime() >= unsyncedAction.getStartTime()) {
-                        break;
-                    }
-
-                    clientAction = actionsIterator.next();
-                }
-            }
-
-            // Mark action as sync, because we received confirmation from server
-            // That server has this action
-            if (clientAction.id == unsyncedAction.id) {
-                clientAction.setSync();
-                clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
-            } else {
-                if (this.findAndReplaceAction(unsyncedAction.id, unsyncedAction) != null) {
-                    Zetter.LOG.warn("Duplicating action! Replacing.");
-                    clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
-                    continue;
-                }
-
-                actionsIterator.add(unsyncedAction);
-                addedActions++;
-
-                clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
-            }
-        } while (unsyncedIterator.hasNext());
+            this.insertAction(unsyncedAction);
+            addedActions++;
+        }
 
         this.unfreeze();
 
@@ -1580,7 +1553,10 @@ public class CanvasState {
      */
     private void markDesync() {
         if (!this.canvasHolder.level().isClientSide()) {
-            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.canvasHolder.level())).markCanvasDesync(this.getCanvasCode());
+            final List<UUID> playersReceivingActions = this.players.stream().map(Player::getUUID).toList();
+
+            ((CanvasServerTracker) Helper.getLevelCanvasTracker(this.canvasHolder.level()))
+                .markCanvasDesync(this.getCanvasCode(), playersReceivingActions);
         }
     }
 
