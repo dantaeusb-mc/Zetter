@@ -43,6 +43,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.NetworkHooks;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import javax.annotation.Nullable;
@@ -236,6 +237,52 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     final double alongV = Mth.clamp(relative.dot(v), 0.0D, this.canvasVectorsBlockHeight);
 
     return corner.add(u.scale(alongU)).add(v.scale(alongV));
+  }
+
+  /**
+   * Pixel of the canvas a ray points at, or null when there is no canvas or the ray
+   * runs along its plane. The pixel can fall outside the canvas.
+   *
+   * @param origin
+   * @param direction
+   * @param partialTicks
+   * @return
+   */
+  public @Nullable Vector2f getCanvasPixel(Vec3 origin, Vec3 direction, float partialTicks) {
+    final CanvasData canvasData = this.getCanvasData();
+
+    if (canvasData == null) {
+      return null;
+    }
+
+    final Vector3f normal = this.getCanvasNormal();
+    final Vector3f ray = direction.toVector3f().normalize();
+
+    final float denominator = ray.dot(normal);
+
+    // Looking along the canvas rather than at it
+    if (Mth.abs(denominator) < Mth.EPSILON) {
+      return null;
+    }
+
+    final Vector3f canvasPosition = new Vector3f(this.getCanvasOffset()).add(this.getPosition(partialTicks).toVector3f());
+    final Vector3f rayOrigin = origin.toVector3f();
+
+    final float distance = new Vector3f(canvasPosition).sub(rayOrigin).dot(normal) / denominator;
+    final Vector3f relative = new Vector3f(ray).mul(distance).add(rayOrigin).sub(canvasPosition);
+
+    /*
+     * The plane vectors are one world unit, which is one block, so the distance
+     * along them is in blocks and turns into pixels by the canvas resolution. The
+     * offset they are measured from sits one block in from the corner, which is
+     * that same resolution again.
+     */
+    final int resolution = canvasData.getResolution().getNumeric();
+
+    return new Vector2f(
+      relative.dot(this.getCanvasU()) * resolution + resolution,
+      relative.dot(this.getCanvasV()) * resolution + resolution
+    );
   }
 
   public boolean isInFrontOfCanvas(Vec3 position) {

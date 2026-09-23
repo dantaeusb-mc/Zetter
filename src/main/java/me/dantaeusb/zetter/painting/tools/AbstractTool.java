@@ -51,9 +51,15 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
      * Should be idempotent! Actions sent across network, not changes!
      * No random or side effects!
      *
+     * Input arrives as separate points however fast the cursor happens to be
+     * reported, so a tool that draws a continuous stroke gets the point the stroke
+     * came from and is expected to fill the gap itself. It is null when this point
+     * starts a stroke. Filling the gap here rather than recording every step of it
+     * keeps a fast stroke the same size on the wire as a slow one.
+     *
      * Returns palette damage!
      */
-    public int apply(CanvasData canvas, T params, int color, float posX, float posY) {
+    public int apply(CanvasData canvas, T params, int color, float posX, float posY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
         return useTool(canvas, params, color, posX, posY);
     }
 

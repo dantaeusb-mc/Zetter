@@ -217,14 +217,19 @@ public class PaintingScreen extends Screen {
         );
     }
 
-    public void useTool(float posX, float posY) {
+    /**
+     * @param continuous whether the pointer dragged here from the previous point
+     *                   rather than starting the stroke here
+     */
+    public void useTool(float posX, float posY, boolean continuous) {
         this.getCanvasHolderEntity().getCanvasState().useTool(
             this.getMinecraft().player,
             this.paletteState.currentTool(),
             posX,
             posY,
             this.currentColor.getARGB(),
-            this.getToolsParameters().getToolParameters(this.paletteState.currentTool())
+            this.getToolsParameters().getToolParameters(this.paletteState.currentTool()),
+            continuous
         );
     }
 

@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
 import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -51,6 +52,65 @@ public class Pencil extends AbstractTool<PencilParameters> {
         }
 
         return Math.floor(lastPosX) != Math.floor(newPosX) || Math.floor(lastPosY) != Math.floor(newPosY);
+    }
+
+    /**
+     * Cursor positions arrive as far apart as the pointer moved between reports, so
+     * the gap back to the point the stroke came from is filled with a line.
+     *
+     * Bresenham steps one cell at a time and takes the diagonal as a staircase,
+     * which is the line a pixel art tool is expected to draw: covering every cell
+     * the path grazes would round the stroke out and make it a pixel wider.
+     *
+     * @param canvas
+     * @param params
+     * @param color
+     * @param posX
+     * @param posY
+     * @param lastPosX
+     * @param lastPosY
+     * @return
+     */
+    @Override
+    public int apply(CanvasData canvas, PencilParameters params, int color, float posX, float posY, @Nullable Float lastPosX, @Nullable Float lastPosY) {
+        if (lastPosX == null || lastPosY == null) {
+            return this.useTool(canvas, params, color, posX, posY);
+        }
+
+        final int targetX = Mth.floor(posX);
+        final int targetY = Mth.floor(posY);
+
+        int currentX = Mth.floor(lastPosX);
+        int currentY = Mth.floor(lastPosY);
+
+        final int stepX = currentX < targetX ? 1 : -1;
+        final int stepY = currentY < targetY ? 1 : -1;
+
+        final int deltaX = Math.abs(targetX - currentX);
+        final int deltaY = -Math.abs(targetY - currentY);
+
+        int error = deltaX + deltaY;
+        int damage = 0;
+
+        // The cell the stroke came from was painted when that point was applied,
+        // so stepping before painting leaves it alone instead of blending it twice
+        while (currentX != targetX || currentY != targetY) {
+            final int doubleError = error * 2;
+
+            if (doubleError >= deltaY) {
+                error += deltaY;
+                currentX += stepX;
+            }
+
+            if (doubleError <= deltaX) {
+                error += deltaX;
+                currentY += stepY;
+            }
+
+            damage += this.useTool(canvas, params, color, currentX + 0.5f, currentY + 0.5f);
+        }
+
+        return damage;
     }
 
     @Override

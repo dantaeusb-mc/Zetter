@@ -50,7 +50,7 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
      * @return
      */
     @Override
-    protected boolean handleCanvasInteraction(double mouseX, double mouseY, int button) {
+    protected boolean handleCanvasInteraction(double mouseX, double mouseY, int button, boolean continuous) {
         Vector2i canvasZeroCoordinates = this.getCanvasZeroCoordinates();
 
         if (canvasZeroCoordinates == null) {
@@ -83,7 +83,8 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
 
         this.parentScreen.useTool(
             (float) (iMouseX - canvasZeroCoordinates.x) / this.getCanvasScale(),
-            (float) (iMouseY - canvasZeroCoordinates.y) / this.getCanvasScale()
+            (float) (iMouseY - canvasZeroCoordinates.y) / this.getCanvasScale(),
+            continuous
         );
 
         return true;
@@ -149,7 +150,7 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isMouseOver(mouseX, mouseY)) {
             this.dragStart = new Vector2d(mouseX, mouseY);
-            this.handleCanvasInteraction(mouseX, mouseY, button);
+            this.handleCanvasInteraction(mouseX, mouseY, button, false);
             return true;
         }
 
@@ -170,7 +171,7 @@ public class CanvasLayerOverlay extends CanvasLayerAbstract {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (this.isMouseOver(mouseX, mouseY)) {
             if (this.dragStart != null) {
-                this.handleCanvasInteraction(mouseX, mouseY, button);
+                this.handleCanvasInteraction(mouseX, mouseY, button, true);
                 return true;
             }
 

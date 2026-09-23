@@ -52,7 +52,7 @@ public class CanvasAction {
     private Long commitTime;
 
     /**
-     * 1 byte -- meta reserved
+     * 1 byte -- meta flags, see CanvasSubAction
      * 2 bytes -- time offset as short (up to 32s)
      * 4+4 bytes -- x and y as floats
      */
@@ -188,7 +188,7 @@ public class CanvasAction {
      * @param posX
      * @param posY
      */
-    public void addFrame(float posX, float posY) {
+    public void addFrame(float posX, float posY, boolean continuous) {
         if (this.commitTime != null) {
             throw new IllegalStateException("Cannot add frame to committed action buffer");
         }
@@ -200,7 +200,7 @@ public class CanvasAction {
         final long currentTime = System.currentTimeMillis();
         final int passedTime = (int) (currentTime - this.startTime);
 
-        final CanvasSubAction action = new CanvasSubAction(passedTime, posX, posY);
+        final CanvasSubAction action = new CanvasSubAction(passedTime, posX, posY, continuous);
         CanvasSubAction.writeToBuffer(action, this.subActionBuffer);
 
         this.lastAction = action;
@@ -313,14 +313,27 @@ public class CanvasAction {
     }
 
     public static class CanvasSubAction {
+        /**
+         * Marks a written frame, so that an empty buffer slot never reads as one
+         */
+        private static final byte META_FRAME = 0x1;
+
+        /**
+         * The stroke carried on from the point before this one, rather than starting
+         * here. Kept in the frame rather than worked out from timing or distance
+         * because replaying the action has to reach the same answer as the client
+         * that drew it.
+         */
+        private static final byte META_CONTINUOUS = 0x2;
+
         public final byte meta;
 
         public final int time;
         public final float posX;
         public final float posY;
 
-        public CanvasSubAction(int time, float posX, float posY) {
-            this.meta = (byte) 0x1;
+        public CanvasSubAction(int time, float posX, float posY, boolean continuous) {
+            this.meta = (byte) (META_FRAME | (continuous ? META_CONTINUOUS : 0));
 
             if (time > 0xFFFF) {
                 throw new IllegalStateException("Time offset for action is to big");
@@ -331,6 +344,10 @@ public class CanvasAction {
             this.posY = posY;
         }
 
+        public boolean isContinuous() {
+            return (this.meta & META_CONTINUOUS) != 0;
+        }
+
         private CanvasSubAction(byte meta, int time, float posX, float posY) {
             this.meta = meta;
             this.time = time;
@@ -339,10 +356,12 @@ public class CanvasAction {
         }
 
         public static void writeToBuffer(CanvasSubAction action, ByteBuffer buffer) {
-            // Meta
-            buffer.put((byte) 0x1);
+            // Meta, flags and all: writing a bare frame marker here drops whatever
+            // the frame was carrying, and the loss only shows once the action is
+            // replayed out of the buffer rather than applied as it is drawn
+            buffer.put(action.meta);
 
-            // Time
+            // Time, low byte first
             buffer.put((byte) (action.time & 0xFF));
             buffer.put((byte) ((action.time >> 8) & 0xFF));
 
@@ -355,8 +374,11 @@ public class CanvasAction {
             // Meta
             final byte meta = buffer.get();
 
-            // Time
-            final int time = buffer.get() << 8 & buffer.get();
+            // Time, written low byte first. Bytes are signed, so each one has to be
+            // masked back to its unsigned value before being put together
+            final int low = buffer.get() & 0xFF;
+            final int high = buffer.get() & 0xFF;
+            final int time = (high << 8) | low;
 
             // Position
             final float posX = buffer.getFloat();

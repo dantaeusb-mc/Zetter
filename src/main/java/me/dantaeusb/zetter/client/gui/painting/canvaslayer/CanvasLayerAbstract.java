@@ -69,7 +69,11 @@ public abstract class CanvasLayerAbstract implements GuiEventListener, Narratabl
     public void increaseCanvasScale() {
     }
 
-    protected abstract boolean handleCanvasInteraction(double mouseX, double mouseY, int button);
+    /**
+     * @param continuous whether the pointer dragged here from the previous point
+     *                   rather than starting the stroke here
+     */
+    protected abstract boolean handleCanvasInteraction(double mouseX, double mouseY, int button, boolean continuous);
 
     /**
      * @param offsetX pixel of the canvas the cursor points at, screen coordinates

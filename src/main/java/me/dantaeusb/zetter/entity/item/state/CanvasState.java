@@ -293,7 +293,7 @@ public class CanvasState {
      * @param posX
      * @param posY
      */
-    public void useTool(Player player, Tool tool, float posX, float posY, int color, AbstractToolParameters parameters) {
+    public void useTool(Player player, Tool tool, float posX, float posY, int color, AbstractToolParameters parameters, boolean continuous) {
         ItemStack paletteStack = this.canvasHolder.getPaletteStack(player);
 
         // No palette or no paints left and player is not creative mode player
@@ -329,8 +329,20 @@ public class CanvasState {
                 this.unfreeze();
                 final boolean initialized = this.isCanvasInitialized();
 
+                /*
+                 * Recorded before it is applied: recording is what decides whether
+                 * this point extends the open action or starts a new one, and that
+                 * is the same call replay makes when working out where a stroke
+                 * carried on from. Applying first would let the two disagree.
+                 */
+                final CanvasAction.CanvasSubAction origin = this.recordAction(player.getUUID(), tool, color, parameters, posX, posY, continuous);
+
                 if (initialized) {
-                    int damage = tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
+                    int damage = tool.getTool().apply(
+                        this.getCanvasData(), parameters, color, posX, posY,
+                        origin == null ? null : Float.valueOf(origin.posX),
+                        origin == null ? null : Float.valueOf(origin.posY)
+                    );
 
                     if (!player.isCreative()) {
                         this.canvasHolder.damagePalette(player, damage);
@@ -339,14 +351,12 @@ public class CanvasState {
                     CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
                 }
 
-                this.recordAction(player.getUUID(), tool, color, parameters, posX, posY);
-
                 if (!initialized) {
                     // Forcefully push changes immediately so canvas will be initialized on server and synced back
                     this.performHistorySyncClient(true);
                 }
             } else {
-                tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY);
+                tool.getTool().apply(this.getCanvasData(), parameters, color, posX, posY, null, null);
             }
         }
     }
@@ -459,17 +469,26 @@ public class CanvasState {
      * @param posX
      * @param posY
      */
-    private void recordAction(UUID playerId, Tool tool, int color, AbstractToolParameters parameters, float posX, float posY) {
+    private @Nullable CanvasAction.CanvasSubAction recordAction(UUID playerId, Tool tool, int color, AbstractToolParameters parameters, float posX, float posY, boolean continuous) {
         CanvasAction lastAction = this.getLastAction();
+        boolean started = false;
 
         if (lastAction == null || lastAction.isCommitted()) {
             lastAction = this.createAction(playerId, tool, color, parameters);
+            started = true;
         } else if (!lastAction.canContinue(playerId, tool, color, parameters)) {
             lastAction.commit();
             lastAction = this.createAction(playerId, tool, color, parameters);
+            started = true;
         }
 
-        lastAction.addFrame(posX, posY);
+        // A stroke can only carry on from a point the same action holds, as that is
+        // as far back as replay looks
+        final CanvasAction.CanvasSubAction origin = started ? null : lastAction.getLastAction();
+
+        lastAction.addFrame(posX, posY, continuous);
+
+        return continuous ? origin : null;
     }
 
     /**
@@ -1438,20 +1457,30 @@ public class CanvasState {
                 && this.canvasHolder.getPaletteStack(actingPlayer) != null
                 && (client ? doDamageClient : !action.isSync() && !actingPlayer.isCreative());
 
-        action.getSubActionStream().forEach((CanvasAction.CanvasSubAction subAction) -> {
+        CanvasAction.CanvasSubAction origin = null;
+
+        for (CanvasAction.CanvasSubAction subAction : action.getSubActionStream().toList()) {
+            // Only within the action: the point a stroke carried on from is not kept
+            // across a commit, so a stroke long enough to be split starts over here
+            final CanvasAction.CanvasSubAction from = subAction.isContinuous() ? origin : null;
+
             // Apply subAction directly
             int damage = action.tool.getTool().apply(
                     this.getCanvasData(),
                     action.parameters,
                     action.color,
                     subAction.posX,
-                    subAction.posY
+                    subAction.posY,
+                    from == null ? null : Float.valueOf(from.posX),
+                    from == null ? null : Float.valueOf(from.posY)
             );
 
             if (chargePalette) {
                 this.canvasHolder.damagePalette(actingPlayer, damage);
             }
-        });
+
+            origin = subAction;
+        }
 
         if (!client) {
             action.setSync();

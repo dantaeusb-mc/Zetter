@@ -55,7 +55,7 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (this.isMouseOver(mouseX, mouseY)) {
-            this.handleCanvasInteraction(mouseX, mouseY, button);
+            this.handleCanvasInteraction(mouseX, mouseY, button, false);
             return true;
         }
 
@@ -74,7 +74,7 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
      */
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        this.handleCanvasInteraction(mouseX, mouseY, button);
+        this.handleCanvasInteraction(mouseX, mouseY, button, true);
         return true;
     }
 
@@ -92,14 +92,14 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
     }
 
     @Override
-    protected boolean handleCanvasInteraction(double mouseX, double mouseY, int button) {
+    protected boolean handleCanvasInteraction(double mouseX, double mouseY, int button, boolean continuous) {
         Vector2f canvasCoordinates = this.projectToCanvasCoordinates(mouseX, mouseY, this.parentScreen.getMinecraft().getFrameTime());
 
         if (canvasCoordinates == null) {
             return false; // Can't apply tool if unable to project to canvas coordinates
         }
 
-        this.parentScreen.useTool(canvasCoordinates.x, canvasCoordinates.y);
+        this.parentScreen.useTool(canvasCoordinates.x, canvasCoordinates.y, continuous);
 
         return true;
     }
@@ -290,36 +290,11 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
         Vector3f direction = new Vector3f(farPoint.x - nearPoint.x, farPoint.y - nearPoint.y, farPoint.z - nearPoint.z);
         direction.normalize();
 
-        Vector3f canvasHolderPosition = this.parentScreen.getCanvasHolderEntity().getPosition(partialTicks).toVector3f();
-        Vector3f canvasPosition = new Vector3f(this.parentScreen.getCanvasHolderEntity().getCanvasOffset());
-        canvasPosition.add(canvasHolderPosition);
-        Vector3f canvasPlaneNormal = new Vector3f(this.parentScreen.getCanvasHolderEntity().getCanvasNormal());
-
-        float denominator = direction.dot(canvasPlaneNormal);
-
-        if (Mth.abs(denominator) < Mth.EPSILON) {
-            return null;
-        }
-
-        Vector3f vectorToPlane = new Vector3f(canvasPosition).sub(nearPoint);
-        float numerator = vectorToPlane.dot(canvasPlaneNormal);
-        float distance = (numerator / denominator);
-
-        Vector3f intersection = new Vector3f(
-            nearPoint.x + (direction.x * distance),
-            nearPoint.y + (direction.y * distance),
-            nearPoint.z + (direction.z * distance)
+        return this.parentScreen.getCanvasHolderEntity().getCanvasPixel(
+            new Vec3(nearPoint.x, nearPoint.y, nearPoint.z),
+            new Vec3(direction.x, direction.y, direction.z),
+            partialTicks
         );
-
-        Vector3f u = this.parentScreen.getCanvasHolderEntity().getCanvasU();
-        Vector3f v = this.parentScreen.getCanvasHolderEntity().getCanvasV();
-
-        Vector3f relativePosition = new Vector3f(intersection).sub(canvasPosition);
-
-        float x = relativePosition.dot(u) * 16.0f + 16.0f;
-        float y = relativePosition.dot(v) * 16.0f + 16.0f;
-
-        return new Vector2f(x, y);
     }
 
     private @Nullable Matrix4f getCanvasViewMatrix(float partialTicks) {
