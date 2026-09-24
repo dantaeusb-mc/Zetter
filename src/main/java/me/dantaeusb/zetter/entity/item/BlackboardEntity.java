@@ -14,7 +14,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.item.ChalkItem;
+import me.dantaeusb.zetter.item.BlackboardImplement;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DrawingData;
@@ -147,16 +147,16 @@ public class BlackboardEntity extends CanvasHolderEntity {
     }
 
     /**
-     * Chalk is what a board is drawn on with. Letting a palette open a screen on one
-     * would put the whole painting interface in front of a surface meant to be drawn
-     * on in place.
+     * Anything meant to be used on a board directly — chalk, a sponge. Letting a
+     * palette open a screen on one would put the whole painting interface in front of
+     * a surface meant to be worked on in place.
      *
      * @param stack
      * @return
      */
     @Override
     public boolean acceptsImplement(ItemStack stack) {
-        return stack.getItem() instanceof ChalkItem;
+        return stack.getItem() instanceof BlackboardImplement;
     }
 
     /**

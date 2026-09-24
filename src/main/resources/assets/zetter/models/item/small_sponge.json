@@ -1,0 +1,15 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "zetter:item/sponge/wet"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "damaged": 1,
+        "damage": 0.9
+      },
+      "model": "zetter:item/small_sponge_dry"
+    }
+  ]
+}

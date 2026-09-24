@@ -25,6 +25,7 @@ public class ZetterItems
     public static final RegistryObject<PaintingItem> PAINTING = ITEMS.register("painting", () -> new PaintingItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<PaintsItem> PAINTS = ITEMS.register("paints", () -> new PaintsItem());
     public static final RegistryObject<PaletteItem> PALETTE = ITEMS.register("palette", () -> new PaletteItem());
+    public static final RegistryObject<SpongeItem> SMALL_SPONGE = ITEMS.register("small_sponge", () -> new SpongeItem(new Item.Properties()));
 
     public static final HashMap<String, RegistryObject<FrameItem>> FRAMES = new HashMap<>();
 

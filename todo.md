@@ -30,6 +30,8 @@
 * \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
 * \[MED\] Canvas reads are not access controlled: `processCanvasRequest`, `processCanvasViewRequest` and `processCanvasRequestExport` take a canvas code straight off the wire, and codes are sequential, so a client can enumerate and download every painting on the server. Needs a rule for "may see this canvas" that does not break legitimate rendering;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
+* \[MED\] Drawings are stored against the overworld's data storage (`CanvasServerTracker#blankCanvasData`, `Helper#getLevelCanvasTracker`) though they belong to an entity that lives in some other dimension;
+* \[LOW\] Boards saved before drawings became entity-owned still carry a dead `storage` tag holding the canvas item they used to fake; nothing reads it any more;
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern (`public final`);
 * \[LOW\] TIL LinkedLists are bad actually.
 

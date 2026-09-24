@@ -1,15 +1,11 @@
 package me.dantaeusb.zetter.client.input;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.entity.item.BlackboardEntity;
-import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.entity.item.BlackboardEntity;
+import me.dantaeusb.zetter.item.BlackboardImplement;
 import me.dantaeusb.zetter.network.packet.CCanvasHolderStopUsingPacket;
-import me.dantaeusb.zetter.network.packet.CChalkUseCanvasHolderPacket;
-import me.dantaeusb.zetter.painting.Tool;
-import me.dantaeusb.zetter.painting.parameters.BrushParameters;
-import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
-import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
+import me.dantaeusb.zetter.network.packet.CImplementUseCanvasHolderPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
@@ -17,7 +13,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.event.TickEvent;
@@ -28,25 +23,19 @@ import org.joml.Vector2f;
 import javax.annotation.Nullable;
 
 /**
- * Drawing on a board with chalk, which happens in the world rather than in a screen
+ * Working on a board in the world rather than through a screen.
  */
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public class ChalkHandler {
-    private static final BrushParameters CHALK = new BrushParameters(
-        BrushParameters.MIN_SIZE, 1.0f,
-        BlendingPipe.BlendingOption.SUBTRACTIVE,
-        DitheringPipe.DitheringOption.NO_DITHERING
-    );
-
+public class BlackboardHandler {
     /**
-     * Board being drawn on, or -1. Held rather than looked up every tick because
+     * Board being worked on, or -1. Held rather than looked up every tick because
      * starting costs a packet, and because leaving one has to be noticed.
      */
     private static int boardId = -1;
 
     /**
      * Whether the previous tick drew, which is what tells the tool a stroke carried
-     * on rather than started here — a brush fills the gap back to the last point
+     * on rather than started here — a swept tool fills the gap back to the last point
      */
     private static boolean continuing = false;
 
@@ -57,10 +46,9 @@ public class ChalkHandler {
         }
 
         final Minecraft minecraft = Minecraft.getInstance();
+        final BlackboardEntity board = lookedAtBoard(minecraft);
 
-        final InteractionHand hand = chalkHand(minecraft);
-
-        if (hand == null || lookedAtBoard(minecraft, hand) == null) {
+        if (board == null || implementHand(minecraft.player, board) == null) {
             return;
         }
 
@@ -86,10 +74,10 @@ public class ChalkHandler {
             return;
         }
 
-        final InteractionHand hand = chalkHand(minecraft);
-        final BlackboardEntity board = hand == null ? null : lookedAtBoard(minecraft, hand);
+        final BlackboardEntity board = lookedAtBoard(minecraft);
+        final InteractionHand hand = board == null ? null : implementHand(minecraft.player, board);
 
-        if (hand == null || board == null) {
+        if (board == null || hand == null) {
             stop(minecraft);
             return;
         }
@@ -99,7 +87,8 @@ public class ChalkHandler {
 
     private static void draw(Minecraft minecraft, BlackboardEntity board, InteractionHand hand) {
         final LocalPlayer player = minecraft.player;
-        final ItemStack chalkStack = player.getItemInHand(hand);
+        final ItemStack implementStack = player.getItemInHand(hand);
+        final BlackboardImplement implement = (BlackboardImplement) implementStack.getItem();
 
         if (board.getId() != boardId) {
             stop(minecraft);
@@ -109,8 +98,8 @@ public class ChalkHandler {
              * the board looks like on this client, and if it refuses, the actions
              * are dropped when they arrive rather than never having been drawn.
              */
-            ZetterNetwork.simpleChannel.sendToServer(new CChalkUseCanvasHolderPacket(board.getId(), hand));
-            board.addPlayerUsing(player, chalkStack);
+            ZetterNetwork.simpleChannel.sendToServer(new CImplementUseCanvasHolderPacket(board.getId(), hand));
+            board.addPlayerUsing(player, implementStack);
 
             boardId = board.getId();
             continuing = false;
@@ -129,10 +118,10 @@ public class ChalkHandler {
         }
 
         board.getCanvasState().useTool(
-            player, Tool.BRUSH,
+            player, implement.getTool(),
             pixel.x, pixel.y,
-            ((ChalkItem) chalkStack.getItem()).getColor(),
-            CHALK,
+            implement.getToolColor(implementStack),
+            implement.getToolParameters(implementStack),
             continuing
         );
 
@@ -140,7 +129,7 @@ public class ChalkHandler {
     }
 
     /**
-     * Let go of whatever board was being drawn on. Safe to call when there is none,
+     * Let go of whatever board was being worked on. Safe to call when there is none,
      * which is most ticks.
      */
     private static void stop(Minecraft minecraft) {
@@ -163,15 +152,20 @@ public class ChalkHandler {
     }
 
     /**
-     * Hand holding chalk, main first, or null for neither
+     * Hand holding something this board can be worked on with, main first, or null
+     * for neither. The board decides, so the same rule applies here and on the server.
+     *
+     * @param player
+     * @param board
+     * @return
      */
-    private static @Nullable InteractionHand chalkHand(Minecraft minecraft) {
-        if (minecraft.player == null) {
+    private static @Nullable InteractionHand implementHand(@Nullable LocalPlayer player, BlackboardEntity board) {
+        if (player == null) {
             return null;
         }
 
         for (InteractionHand hand : InteractionHand.values()) {
-            if (minecraft.player.getItemInHand(hand).getItem() instanceof ChalkItem) {
+            if (board.acceptsImplement(player.getItemInHand(hand))) {
                 return hand;
             }
         }
@@ -180,13 +174,12 @@ public class ChalkHandler {
     }
 
     /**
-     * Board under the crosshair that the chalk in this hand can be used on.
+     * Board under the crosshair
      *
      * @param minecraft
-     * @param chalkHand
      * @return
      */
-    private static @Nullable BlackboardEntity lookedAtBoard(Minecraft minecraft, InteractionHand chalkHand) {
+    private static @Nullable BlackboardEntity lookedAtBoard(Minecraft minecraft) {
         final HitResult hitResult = minecraft.hitResult;
 
         if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
@@ -195,11 +188,6 @@ public class ChalkHandler {
 
         final Entity entity = ((EntityHitResult) hitResult).getEntity();
 
-        if (!(entity instanceof BlackboardEntity board)) {
-            return null;
-        }
-
-        // Same rule the server applies when the packet lands
-        return board.acceptsImplement(minecraft.player.getItemInHand(chalkHand)) ? board : null;
+        return entity instanceof BlackboardEntity board ? board : null;
     }
 }

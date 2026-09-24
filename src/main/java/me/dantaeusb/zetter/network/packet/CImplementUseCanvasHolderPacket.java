@@ -11,20 +11,20 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 /**
- * Player started drawing on a board with a stick of chalk.
+ * Player started working on a board with whatever they are holding — chalk, a sponge.
  *
  * A palette is looked up by the id written into it, because it can be anywhere in
- * the player's inventory. Chalk is drawn with in hand, so the hand is all that is
- * sent and the server reads the stack out of it — a client cannot name a stick of
- * chalk it is not holding.
+ * the player's inventory. A board is worked on with the hand, so the hand is all that
+ * is sent and the server reads the stack out of it: a client cannot name an item it
+ * is not holding.
  *
  * @see CPaletteUseCanvasHolderPacket
  */
-public class CChalkUseCanvasHolderPacket {
+public class CImplementUseCanvasHolderPacket {
     private final int canvasHolderId;
     private final InteractionHand hand;
 
-    public CChalkUseCanvasHolderPacket(int canvasHolderId, InteractionHand hand) {
+    public CImplementUseCanvasHolderPacket(int canvasHolderId, InteractionHand hand) {
         this.canvasHolderId = canvasHolderId;
         this.hand = hand;
     }
@@ -37,8 +37,8 @@ public class CChalkUseCanvasHolderPacket {
         return this.hand;
     }
 
-    public static CChalkUseCanvasHolderPacket readPacketData(FriendlyByteBuf networkBuffer) {
-        return new CChalkUseCanvasHolderPacket(
+    public static CImplementUseCanvasHolderPacket readPacketData(FriendlyByteBuf networkBuffer) {
+        return new CImplementUseCanvasHolderPacket(
             networkBuffer.readInt(),
             networkBuffer.readBoolean() ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND
         );
@@ -49,27 +49,27 @@ public class CChalkUseCanvasHolderPacket {
         networkBuffer.writeBoolean(this.hand == InteractionHand.OFF_HAND);
     }
 
-    public static void handle(final CChalkUseCanvasHolderPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
+    public static void handle(final CImplementUseCanvasHolderPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
         NetworkEvent.Context ctx = ctxSupplier.get();
         LogicalSide sideReceived = ctx.getDirection().getReceptionSide();
         ctx.setPacketHandled(true);
 
         if (sideReceived != LogicalSide.SERVER) {
-            Zetter.LOG.warn("CChalkUseCanvasHolderPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
+            Zetter.LOG.warn("CImplementUseCanvasHolderPacket received on wrong side:" + ctx.getDirection().getReceptionSide());
             return;
         }
 
         final ServerPlayer sendingPlayer = ctx.getSender();
         if (sendingPlayer == null) {
-            Zetter.LOG.warn("EntityPlayerMP was null when CChalkUseCanvasHolderPacket was received");
+            Zetter.LOG.warn("EntityPlayerMP was null when CImplementUseCanvasHolderPacket was received");
             return;
         }
 
-        ctx.enqueueWork(() -> ServerHandler.processChalkUseCanvasHolder(packetIn, sendingPlayer));
+        ctx.enqueueWork(() -> ServerHandler.processImplementUseCanvasHolder(packetIn, sendingPlayer));
     }
 
     @Override
     public String toString() {
-        return "CChalkUseCanvasHolderPacket[canvasHolderId=" + this.canvasHolderId + ",hand=" + this.hand + "]";
+        return "CImplementUseCanvasHolderPacket[canvasHolderId=" + this.canvasHolderId + ",hand=" + this.hand + "]";
     }
 }

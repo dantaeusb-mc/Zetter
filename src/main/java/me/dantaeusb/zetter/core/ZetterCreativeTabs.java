@@ -5,6 +5,8 @@ import me.dantaeusb.zetter.item.BlackboardItem;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.item.FrameItem;
+import me.dantaeusb.zetter.item.SpongeItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -19,6 +21,8 @@ public class ZetterCreativeTabs
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ZetterItems.PALETTE);
             event.accept(CanvasItem.createBlank(1, 1));
+            event.accept(ZetterItems.SMALL_SPONGE);
+            event.accept(driedSponge());
 
             for (RegistryObject<ChalkItem> chalkItem : ZetterItems.CHALKS.values()) {
                 event.accept(chalkItem);
@@ -38,5 +42,18 @@ public class ZetterCreativeTabs
         } else if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
             event.accept(ZetterItems.PAINTS);
         }
+    }
+
+    /**
+     * Wet and dry are the same item, so the dry one is only reachable in creative by
+     * handing one out with its water already gone
+     *
+     * @return
+     */
+    private static ItemStack driedSponge() {
+        final ItemStack spongeStack = new ItemStack(ZetterItems.SMALL_SPONGE.get());
+        spongeStack.setDamageValue(SpongeItem.CAPACITY - 1);
+
+        return spongeStack;
     }
 }

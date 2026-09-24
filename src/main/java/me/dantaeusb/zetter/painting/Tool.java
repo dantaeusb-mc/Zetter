@@ -6,6 +6,7 @@ public enum Tool {
     BRUSH(new Brush()),
     EYEDROPPER(new Eyedropper()),
     BUCKET(new Bucket()),
+    SPONGE(new Sponge()),
     HAND(new Hand());
 
     private final AbstractTool tool;

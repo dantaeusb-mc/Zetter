@@ -10,7 +10,6 @@ import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
-import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.packet.*;
@@ -190,21 +189,16 @@ public class ServerHandler {
     }
 
     /**
-     * Player started drawing on a board with chalk. No screen opens and no accept
-     * comes back: the client has already started drawing locally, and if this is
-     * refused its actions are simply dropped when they arrive.
+     * Player started working on a board. No screen opens and no accept comes back:
+     * the client has already started drawing locally, and if this is refused its
+     * actions are simply dropped when they arrive.
      *
      * @param packetIn
      * @param sendingPlayer
      */
-    public static void processChalkUseCanvasHolder(final CChalkUseCanvasHolderPacket packetIn, ServerPlayer sendingPlayer) {
+    public static void processImplementUseCanvasHolder(final CImplementUseCanvasHolderPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            final ItemStack chalkStack = sendingPlayer.getItemInHand(packetIn.getHand());
-
-            if (!(chalkStack.getItem() instanceof ChalkItem)) {
-                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " is not holding chalk");
-                return;
-            }
+            final ItemStack implementStack = sendingPlayer.getItemInHand(packetIn.getHand());
 
             final CanvasHolderEntity canvasHolder = getAccessibleCanvasHolder(sendingPlayer, packetIn.getCanvasHolderId(), false);
 
@@ -212,8 +206,9 @@ public class ServerHandler {
                 return;
             }
 
-            if (!canvasHolder.acceptsImplement(chalkStack)) {
-                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot use chalk on canvas holder " + canvasHolder.getId());
+            // Same rule the client applies when it picks a hand to work with
+            if (!canvasHolder.acceptsImplement(implementStack)) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot use " + implementStack.getItem() + " on canvas holder " + canvasHolder.getId());
                 return;
             }
 
@@ -222,9 +217,9 @@ public class ServerHandler {
                 return;
             }
 
-            canvasHolder.addPlayerUsing(sendingPlayer, chalkStack);
+            canvasHolder.addPlayerUsing(sendingPlayer, implementStack);
         } catch (Exception e) {
-            Zetter.LOG.error("Unable to handle processChalkUseCanvasHolder", e);
+            Zetter.LOG.error("Unable to handle processImplementUseCanvasHolder", e);
         }
     }
 

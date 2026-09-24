@@ -1,5 +1,10 @@
 package me.dantaeusb.zetter.item;
 
+import me.dantaeusb.zetter.painting.Tool;
+import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
+import me.dantaeusb.zetter.painting.parameters.BrushParameters;
+import me.dantaeusb.zetter.painting.pipes.BlendingPipe;
+import me.dantaeusb.zetter.painting.pipes.DitheringPipe;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -8,7 +13,18 @@ import net.minecraft.world.item.ItemStack;
  * A stick of chalk, one per dye color. Draws straight onto a blackboard rather
  * than opening a screen, and wears down as it goes the way a palette does.
  */
-public class ChalkItem extends Item {
+public class ChalkItem extends Item implements BlackboardImplement {
+    /**
+     * A stick of chalk is as wide as it is: the smallest brush there is, laid down
+     * at full strength. Shared because it never varies with the stack, and only ever
+     * read from.
+     */
+    private static final BrushParameters CHALK = new BrushParameters(
+        BrushParameters.MIN_SIZE, 1.0f,
+        BlendingPipe.BlendingOption.SUBTRACTIVE,
+        DitheringPipe.DitheringOption.NO_DITHERING
+    );
+
     /**
      * A blackboard is a thousand pixels of slate, and chalk should last longer than
      * one boardful, so it is counted in pixels rather than in strokes
@@ -59,5 +75,20 @@ public class ChalkItem extends Item {
     @Override
     public boolean isRepairable(ItemStack stack) {
         return false;
+    }
+
+    @Override
+    public Tool getTool() {
+        return Tool.BRUSH;
+    }
+
+    @Override
+    public AbstractToolParameters getToolParameters(ItemStack stack) {
+        return CHALK;
+    }
+
+    @Override
+    public int getToolColor(ItemStack stack) {
+        return this.getColor();
     }
 }

@@ -18,6 +18,7 @@ public class ZetterCraftingRecipes
     public static final RegistryObject<RecipeSerializer<CopyingRecipe>> COPYING = RECIPE_SERIALIZERS.register("copying", CopyingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<CanvasStitchingRecipe>> CANVAS_STITCHING = RECIPE_SERIALIZERS.register("canvas_stitching", CanvasStitchingRecipe.Serializer::new);
     public static final RegistryObject<RecipeSerializer<CanvasCuttingRecipe>> CANVAS_CUTTING = RECIPE_SERIALIZERS.register("canvas_cutting", CanvasCuttingRecipe.Serializer::new);
+    public static final RegistryObject<RecipeSerializer<SpongeWettingRecipe>> SPONGE_WETTING = RECIPE_SERIALIZERS.register("sponge_wetting", SpongeWettingRecipe.Serializer::new);
 
     public static void init(IEventBus bus) {
         RECIPE_SERIALIZERS.register(bus);

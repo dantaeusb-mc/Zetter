@@ -10,6 +10,7 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
+import me.dantaeusb.zetter.item.BlackboardImplement;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -295,11 +296,9 @@ public class CanvasState {
     public void useTool(Player player, Tool tool, float posX, float posY, int color, AbstractToolParameters parameters, boolean continuous) {
         ItemStack paletteStack = this.canvasHolder.getPaletteStack(player);
 
-        // No palette or no paints left and player is not creative mode player
+        // Nothing in hand, or nothing left in it, and player is not creative mode player
         if (paletteStack == null || paletteStack.isEmpty() ||
-            (!player.isCreative() &&
-                (paletteStack.getDamageValue() >= paletteStack.getMaxDamage() - 1)
-            )
+            (!player.isCreative() && isImplementSpent(paletteStack))
         ) {
             return;
         }
@@ -597,6 +596,22 @@ public class CanvasState {
         }
 
         return true;
+    }
+
+    /**
+     * Whether there is anything left in what the player is holding. Running a stack
+     * to its last point of damage means used up for a palette or a stick of chalk,
+     * but a sponge out of water still works, differently, so the item gets to say.
+     *
+     * @param implementStack
+     * @return
+     */
+    private static boolean isImplementSpent(ItemStack implementStack) {
+        if (implementStack.getItem() instanceof BlackboardImplement implement) {
+            return implement.isWornOut(implementStack);
+        }
+
+        return implementStack.getDamageValue() >= implementStack.getMaxDamage() - 1;
     }
 
     /*

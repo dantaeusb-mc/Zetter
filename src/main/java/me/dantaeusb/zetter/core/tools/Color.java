@@ -135,6 +135,53 @@ public class Color {
     return (alpha << 24) | (argb & 0x00FFFFFF);
   }
 
+  /**
+   * Mixes two colors by how much of each there actually is.
+   * Each channel is weighted by its own alpha before mixing and divided back out
+   * afterwards.
+   *
+   * @param fromArgb
+   * @param toArgb
+   * @param factor how much of the second color, 0-1
+   * @return
+   */
+  public static int lerpPremultiplied(int fromArgb, int toArgb, float factor) {
+    final float fromAlpha = getAlpha(fromArgb) / 255.0f;
+    final float toAlpha = getAlpha(toArgb) / 255.0f;
+
+    final float alpha = fromAlpha + (toAlpha - fromAlpha) * factor;
+
+    if (alpha <= 0.0f) {
+      return 0x00000000;
+    }
+
+    return (Math.min(255, Math.max(0, Math.round(alpha * 255.0f))) << 24)
+        | lerpChannel(fromArgb, fromAlpha, toArgb, toAlpha, factor, alpha, 16)
+        | lerpChannel(fromArgb, fromAlpha, toArgb, toAlpha, factor, alpha, 8)
+        | lerpChannel(fromArgb, fromAlpha, toArgb, toAlpha, factor, alpha, 0);
+  }
+
+  /**
+   * One channel of {@link #lerpPremultiplied}, weighted in and divided back out
+   *
+   * @param fromArgb
+   * @param fromAlpha
+   * @param toArgb
+   * @param toAlpha
+   * @param factor
+   * @param alpha mixed coverage, never zero here
+   * @param shift
+   * @return
+   */
+  private static int lerpChannel(int fromArgb, float fromAlpha, int toArgb, float toAlpha, float factor, float alpha, int shift) {
+    final float from = ((fromArgb >> shift) & 0xFF) * fromAlpha;
+    final float to = ((toArgb >> shift) & 0xFF) * toAlpha;
+
+    final int channel = Math.min(255, Math.max(0, Math.round((from + (to - from) * factor) / alpha)));
+
+    return channel << shift;
+  }
+
   public static Vector3f argbToRgb(int argb) {
     int r = (argb >> 16) & 0xFF;
     int g = (argb >> 8) & 0xFF;

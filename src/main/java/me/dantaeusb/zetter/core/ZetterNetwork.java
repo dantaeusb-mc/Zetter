@@ -52,7 +52,7 @@ public class ZetterNetwork {
     public static final byte CANVAS_HOLDER_ACCEPT_USE = 44;
 
     public static final byte CANVAS_HOLDER_STOP_USING = 45;
-    public static final byte CANVAS_HOLDER_USE_CHALK = 46;
+    public static final byte CANVAS_HOLDER_USE_IMPLEMENT = 46;
 
     @SubscribeEvent
     @SuppressWarnings("unused")
@@ -169,10 +169,10 @@ public class ZetterNetwork {
             CCanvasHolderStopUsingPacket::handle,
             Optional.of(PLAY_TO_SERVER));
 
-        simpleChannel.registerMessage(CANVAS_HOLDER_USE_CHALK, CChalkUseCanvasHolderPacket.class,
-            CChalkUseCanvasHolderPacket::writePacketData,
-            CChalkUseCanvasHolderPacket::readPacketData,
-            CChalkUseCanvasHolderPacket::handle
+        simpleChannel.registerMessage(CANVAS_HOLDER_USE_IMPLEMENT, CImplementUseCanvasHolderPacket.class,
+            CImplementUseCanvasHolderPacket::writePacketData,
+            CImplementUseCanvasHolderPacket::readPacketData,
+            CImplementUseCanvasHolderPacket::handle
         );
     }
 

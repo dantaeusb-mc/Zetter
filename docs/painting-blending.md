@@ -83,8 +83,83 @@ Two cases are worth holding on to:
 
 > Source-over can only ever **add** coverage. Rubbing a pixel back out is
 > destination-out, a different operation (`resultAlpha = canvasAlpha × (1 −
-> sourceAlpha)`), and a tool that erases — a sponge — needs it rather than a
-> transparent colour, which under source-over is simply a no-op.
+> sourceAlpha)`), so a tool that erases needs it rather than a transparent colour,
+> which under source-over is simply a no-op. The sponge does its own, below, and
+> runs no pipes at all.
+
+## The sponge
+
+Wiping a board down, in `painting/tools/Sponge.java`. It sweeps the same
+[capsule](../src/main/java/me/dantaeusb/zetter/painting/tools/brush/Capsule.java) the
+brush does, but instead of mixing a colour in it does two things to what is already
+there — drags it along, then lifts some of it off:
+
+```
+face    = min(1, proximity × 2.5)
+grip    = face × lane
+
+dragged = the pixel one reach back along the stroke
+colour ← lerpPremultiplied(colour, dragged, smear × grip)
+alpha  ← alpha × (1 − erase × grip)
+```
+
+A brush tapers, because bristles do. A sponge is a **flat face** pressed against the
+board, so it takes the same off everything under it and gives way only at the rim —
+that is what `face` is. With a brush's taper instead, a sponge wipes so much less than
+its own width that clearing a board turns into scrubbing.
+
+### Smearing
+
+The drag is what makes a sponge a sponge rather than an eraser. Each pass pulls what
+lies **behind** a pixel, along the way the hand came, onto the pixel itself, so chalk
+travels forward and fades out into a tail. `reach` is normally exactly as far as the
+hand moved in that tick, capped, so a fast swipe carries chalk further than a careful
+rub without ever picking a colour up in one place and setting it down in another.
+
+Colours are mixed **premultiplied** — see `Color#lerpPremultiplied`. Most of a
+blackboard is transparent, and on a canvas that starts empty transparent means
+transparent *black*, so mixing it in the plain way would drag grey dirt in from the
+bare slate around every mark.
+
+> The sponge reads pixels it is also writing, so it reads them from a copy of the
+> region taken before the sweep. Reading the canvas live would let each pixel pick up
+> what the one before it had just been given, and every one of those would feed the
+> next: the smear would run the whole width of the sweep, and which way it ran would
+> depend on which way the loop happened to go. The copy is a local, not a field —
+> tools are single instances shared by the client and the server thread.
+
+### Wetness
+
+The only dial, and everything comes off it on one cubic curve. A sponge does not get
+steadily better as it wets; it is either damp enough to lift chalk or it is not, so
+most of the range sits near the top (half wet is already 89% of soaked) and the whole
+falloff is bunched at the dry end.
+
+| | dry | soaked |
+|---|---|---|
+| `erase` | 0.025 | 0.2 |
+| `smear` | 0.55 | 0.02 |
+
+Read the curve one way for the erase and the other way for the smear, so what the
+sponge stops lifting it starts pushing. Neither erase figure is anywhere near 1: a
+pass is dozens of overlapping touches, so they compound, and soaked they take a
+stroke down to a smear in one sweep and off entirely in two or three. A board cleaned
+once still looks like a board somebody drew on.
+
+`lane` is the last of it. The sponge is divided into lanes across the direction of
+travel, each taking a different share of both the drag and the lift, and wetness
+flattens them out — a soaked sponge meets the board evenly, a dry one only catches in
+places. Because the lane comes from the pixel's **perpendicular distance to the stroke
+axis**, the lanes run *along* the stroke and a pixel keeps the same one for as long as
+the hand keeps going the same way. Wipe from a different angle and they fall
+differently, so a board that has been cleaned many times carries a record of every
+direction somebody cleaned it from. A dab has no direction, so no lanes and no drag —
+it only lifts.
+
+> Erasing is more sensitive to overlap than painting is. Painting the same colour
+> twice leaves the same colour; erasing twice erases twice, so how hard the sponge
+> bites depends on how slowly it was dragged. That is fair for a sponge, but it is
+> why the erase constants read much lower than the effect they produce.
 
 ### Additive
 

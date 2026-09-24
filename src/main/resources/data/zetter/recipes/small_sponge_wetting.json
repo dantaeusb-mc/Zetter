@@ -1,0 +1,6 @@
+{
+  "type": "zetter:sponge_wetting",
+  "sponge": {
+    "item": "zetter:small_sponge"
+  }
+}

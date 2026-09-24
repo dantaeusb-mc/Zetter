@@ -90,6 +90,9 @@ public abstract class AbstractToolParameters implements Cloneable {
             case BUCKET:
                 toolParameters = new BucketParameters();
                 break;
+            case SPONGE:
+                toolParameters = new SpongeParameters();
+                break;
             case PENCIL:
             default:
                 toolParameters = new PencilParameters();
