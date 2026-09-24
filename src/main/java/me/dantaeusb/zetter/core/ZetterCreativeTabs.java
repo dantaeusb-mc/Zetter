@@ -1,7 +1,9 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.item.BlackboardItem;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.item.FrameItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -17,6 +19,10 @@ public class ZetterCreativeTabs
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ZetterItems.PALETTE);
             event.accept(CanvasItem.createBlank(1, 1));
+
+            for (RegistryObject<ChalkItem> chalkItem : ZetterItems.CHALKS.values()) {
+                event.accept(chalkItem);
+            }
         } else if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(ZetterItems.ARTIST_TABLE);
             event.accept(ZetterItems.EASEL);
@@ -24,6 +30,10 @@ public class ZetterCreativeTabs
 
             for (RegistryObject<FrameItem> frameItem : ZetterItems.FRAMES.values()) {
                 event.accept(frameItem);
+            }
+
+            for (RegistryObject<BlackboardItem> blackboardItem : ZetterItems.BLACKBOARDS.values()) {
+                event.accept(blackboardItem);
             }
         } else if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
             event.accept(ZetterItems.PAINTS);

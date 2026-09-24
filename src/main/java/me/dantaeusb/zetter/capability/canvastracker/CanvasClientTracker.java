@@ -10,7 +10,9 @@ import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.entity.item.BlackboardEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.DrawingData;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -51,6 +53,19 @@ public class CanvasClientTracker implements CanvasTracker {
             this.canvases.put(canvasCode, canvasData);
             CanvasRenderer.getInstance().addCanvas(canvasCode, canvasData);
         }
+
+        final int drawingResolution = BlackboardEntity.CANVAS_RESOLUTION.getNumeric();
+        final String drawingCode = DrawingData.getDefaultCanvasCode(BlackboardEntity.BLOCK_WIDTH, BlackboardEntity.BLOCK_HEIGHT);
+        final DrawingData drawingData = DrawingData.BUILDER.createFresh(
+            BlackboardEntity.CANVAS_RESOLUTION,
+            BlackboardEntity.BLOCK_WIDTH * drawingResolution,
+            BlackboardEntity.BLOCK_HEIGHT * drawingResolution,
+            0x00000000
+        );
+        drawingData.setManaged(false);
+
+        this.canvases.put(drawingCode, drawingData);
+        CanvasRenderer.getInstance().addCanvas(drawingCode, drawingData);
     }
 
     @Override

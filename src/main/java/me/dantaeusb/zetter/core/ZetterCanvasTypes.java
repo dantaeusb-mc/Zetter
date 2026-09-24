@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
+import me.dantaeusb.zetter.storage.DrawingData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.resources.ResourceLocation;
@@ -22,6 +23,10 @@ public class ZetterCanvasTypes
         new ResourceLocation(Zetter.MOD_ID, CanvasData.TYPE),
         CanvasData.BUILDER,
         CanvasData.class));
+    public static final RegistryObject<CanvasDataType<DrawingData>> DRAWING = CANVAS_TYPES.register(DrawingData.TYPE, () -> new CanvasDataType<>(
+        new ResourceLocation(Zetter.MOD_ID, DrawingData.TYPE),
+        DrawingData.BUILDER,
+        DrawingData.class));
     public static final RegistryObject<CanvasDataType<PaintingData>> PAINTING = CANVAS_TYPES.register(PaintingData.TYPE, () -> new CanvasDataType<>(
         new ResourceLocation(Zetter.MOD_ID, PaintingData.TYPE),
         PaintingData.BUILDER,

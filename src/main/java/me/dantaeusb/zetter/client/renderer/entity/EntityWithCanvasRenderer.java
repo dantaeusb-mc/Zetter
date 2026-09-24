@@ -25,14 +25,19 @@ import javax.annotation.Nullable;
 public abstract class EntityWithCanvasRenderer<T extends CanvasHolderEntity> extends EntityRenderer<T> {
     public static final ResourceLocation CANVAS_TEXTURE = new ResourceLocation(Zetter.MOD_ID, "textures/entity/canvas.png");
 
+    @Nullable
     protected final EntityModel<T> model;
     protected final ResourceLocation texture;
 
-    public EntityWithCanvasRenderer(EntityRendererProvider.Context context, EntityModel<T> model, ResourceLocation texture) {
+    public EntityWithCanvasRenderer(EntityRendererProvider.Context context, @Nullable EntityModel<T> model, ResourceLocation texture) {
         super(context);
 
         this.model = model;
         this.texture = texture;
+    }
+
+    public EntityWithCanvasRenderer(EntityRendererProvider.Context context, ResourceLocation texture) {
+        this(context, null, texture);
     }
 
     /**
@@ -44,10 +49,7 @@ public abstract class EntityWithCanvasRenderer<T extends CanvasHolderEntity> ext
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(180.0F - entityYaw));
 
-        VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(this.texture));
-
-        // last are r, g, b, a
-        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
+        this.renderBody(canvasHolderEntity, partialTicks, poseStack, buffer, packedLight);
 
         if (canvasHolderEntity.hasCanvas()) {
             // Doesn't make sense to get CanvasData from item since we're on client, requesting directly from capability
@@ -61,6 +63,21 @@ public abstract class EntityWithCanvasRenderer<T extends CanvasHolderEntity> ext
         }
 
         poseStack.popPose();
+    }
+
+    /**
+     * Everything of the holder that is not the canvas, drawn in the rotated pose so
+     * that it shares the canvas' model space
+     */
+    protected void renderBody(T entity, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+        if (this.model == null) {
+            return;
+        }
+
+        VertexConsumer vertexBuilder = buffer.getBuffer(RenderType.entityCutout(this.getTextureLocation(entity)));
+
+        // last are r, g, b, a
+        this.model.renderToBuffer(poseStack, vertexBuilder, packedLight, OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
     }
 
     /**

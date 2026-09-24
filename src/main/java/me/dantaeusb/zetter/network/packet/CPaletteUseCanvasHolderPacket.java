@@ -1,48 +1,49 @@
 package me.dantaeusb.zetter.network.packet;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.item.PaletteItem;
-import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.ServerHandler;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.InteractionHand;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.network.NetworkEvent;
 
-import java.util.UUID;
 import java.util.function.Supplier;
 
+/**
+ * Player raised a palette at a canvas holder.
+ *
+ * Only the hand travels. A palette is used from the hand like anything else, so the
+ * server can read the stack out of it, and a client that names its own hand cannot
+ * name a palette it is not holding.
+ *
+ * @see CChalkUseCanvasHolderPacket
+ */
 public class CPaletteUseCanvasHolderPacket {
     private final int canvasHolderId;
-    private final ItemStack paletteStack;
+    private final InteractionHand hand;
 
-    public CPaletteUseCanvasHolderPacket(int canvasHolderId, ItemStack paletteStack) {
+    public CPaletteUseCanvasHolderPacket(int canvasHolderId, InteractionHand hand) {
         this.canvasHolderId = canvasHolderId;
-        this.paletteStack = paletteStack;
+        this.hand = hand;
     }
 
     public int getCanvasHolderId() {
         return this.canvasHolderId;
     }
 
-    public ItemStack getPaletteStack() {
-        return this.paletteStack;
+    public InteractionHand getHand() {
+        return this.hand;
     }
 
     /**
      * Reads the raw packet data from the data stream.
      */
     public static CPaletteUseCanvasHolderPacket readPacketData(FriendlyByteBuf networkBuffer) {
-        int canvasHolderId = networkBuffer.readInt();
-        ItemStack paletteStack = networkBuffer.readItem();
-
-        if (paletteStack.isEmpty() || !(paletteStack.getItem() instanceof PaletteItem)) {
-            throw new IllegalArgumentException("Invalid palette item in packet: " + paletteStack);
-        }
-
-        return new CPaletteUseCanvasHolderPacket(canvasHolderId, paletteStack);
+        return new CPaletteUseCanvasHolderPacket(
+            networkBuffer.readInt(),
+            networkBuffer.readBoolean() ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND
+        );
     }
 
     /**
@@ -50,7 +51,7 @@ public class CPaletteUseCanvasHolderPacket {
      */
     public void writePacketData(FriendlyByteBuf networkBuffer) {
         networkBuffer.writeInt(this.canvasHolderId);
-        networkBuffer.writeItem(this.paletteStack);
+        networkBuffer.writeBoolean(this.hand == InteractionHand.OFF_HAND);
     }
 
     public static void handle(final CPaletteUseCanvasHolderPacket packetIn, Supplier<NetworkEvent.Context> ctxSupplier) {
@@ -75,6 +76,6 @@ public class CPaletteUseCanvasHolderPacket {
     @Override
     public String toString()
     {
-        return "CPaletteUseCanvasHolderPacket[canvasHolderId=" + this.canvasHolderId + ",paletteUuid=" + PaletteItem.getPaletteUuid(this.paletteStack) + "]";
+        return "CPaletteUseCanvasHolderPacket[canvasHolderId=" + this.canvasHolderId + ",hand=" + this.hand + "]";
     }
 }

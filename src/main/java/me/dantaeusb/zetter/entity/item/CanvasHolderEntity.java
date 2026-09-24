@@ -8,6 +8,7 @@ import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.entity.item.container.CanvasContainer;
 import me.dantaeusb.zetter.entity.item.state.CanvasState;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -108,6 +109,57 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
    */
   public abstract int[] getMaxCanvasBlockSize();
 
+  /**
+   * Size to lay the canvas plane out with before any canvas data has arrived. An
+   * easel has no way of knowing, but a holder whose canvas is a fixed part of it
+   * does, and wants its plane in the right place from the first frame.
+   */
+  protected int[] getCanvasBlockSizeFallback() {
+    return new int[]{1, 1};
+  }
+
+  /**
+   * Colour a blank canvas starts out as. Primed white for a canvas on an easel;
+   * a board's slate is behind the drawing rather than part of it, so its canvas
+   * starts as nothing at all and lets the slate through.
+   */
+  public int getInitialCanvasColor() {
+    return Helper.CANVAS_COLOR;
+  }
+
+  /**
+   * What to show while a canvas is in the holder but has no pixels yet. An easel
+   * stands one up so the painter has something to aim at; a holder that has
+   * something of its own behind the canvas returns null and shows that instead.
+   *
+   * @param blockWidth
+   * @param blockHeight
+   * @return
+   */
+  protected @Nullable String getPlaceholderCanvasCode(int blockWidth, int blockHeight) {
+    return CanvasData.getDefaultCanvasCode(blockWidth, blockHeight);
+  }
+
+  /**
+   * Bring this holder's canvas into being. Called the first time somebody paints,
+   * never when the holder is placed, so that a world full of easels and boards
+   * nobody has touched costs nothing.
+   *
+   * The resolution is the holder's to choose rather than something handed to it: a
+   * canvas on an easel takes the server's setting, where a board is fixed at what
+   * its slate is drawn for.
+   *
+   * @param canvasStack
+   * @param blockWidth
+   * @param blockHeight
+   * @return
+   */
+  public CanvasData createCanvasData(ItemStack canvasStack, int blockWidth, int blockHeight) {
+    final AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.get(CanvasItem.getResolution(canvasStack));
+
+    return CanvasItem.createEmpty(canvasStack, resolution, blockWidth, blockHeight, this.getInitialCanvasColor(), this.level());
+  }
+
   protected abstract Item getHolderItem();
 
   /*
@@ -129,8 +181,10 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
 
     final CanvasData canvasData = this.getCanvasData();
 
-    int blockWidth = 1;
-    int blockHeight = 1;
+    final int[] fallback = this.getCanvasBlockSizeFallback();
+
+    int blockWidth = fallback[0];
+    int blockHeight = fallback[1];
 
     if (canvasData != null) {
       blockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
@@ -177,8 +231,10 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
 
     final CanvasData canvasData = this.getCanvasData();
 
-    int blockWidth = 1;
-    int blockHeight = 1;
+    final int[] fallback = this.getCanvasBlockSizeFallback();
+
+    int blockWidth = fallback[0];
+    int blockHeight = fallback[1];
 
     if (canvasData != null) {
       blockWidth = canvasData.getWidth() / canvasData.getResolution().getNumeric();
@@ -381,13 +437,10 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     return eyePosition.distanceToSqr(closestPoint) <= reach * reach;
   }
 
-  /**
-   * Stricter rule for picking up the palette in the first place, mirroring the one
-   * PaletteItem uses on the client so that a legitimate client is never refused
-   *
-   * @param player
-   * @return
-   */
+  public boolean acceptsPalette() {
+    return true;
+  }
+
   public boolean canPlayerStartUsing(Player player) {
     if (!this.canPlayerAccessInventory(player) || !this.playerCanDraw(player)) {
       return false;
@@ -521,7 +574,7 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
       int[] size = CanvasItem.getBlockSize(canvasStack);
       assert size != null && size.length == 2;
 
-      canvasCode = CanvasData.getDefaultCanvasCode(size[0], size[1]);
+      canvasCode = this.getPlaceholderCanvasCode(size[0], size[1]);
     }
 
     this.setCanvasCode(canvasCode);

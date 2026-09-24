@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.entity.item.BlackboardEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.entity.item.WallEaselEntity;
@@ -26,6 +27,11 @@ public class ZetterEntities {
     public static RegistryObject<EntityType<WallEaselEntity>> WALL_EASEL_ENTITY = ENTITIES.register("wall_easel_entity", () -> EntityType.Builder.<WallEaselEntity>of(WallEaselEntity::new, MobCategory.MISC)
         .sized(4.5F, 5.0F)
         .build(Zetter.MOD_ID + "_wall_easel_entity"));
+
+    // Actual bounding box follows the rotation of the board, see BlackboardEntity#makeBoundingBox
+    public static RegistryObject<EntityType<BlackboardEntity>> BLACKBOARD_ENTITY = ENTITIES.register("blackboard_entity", () -> EntityType.Builder.<BlackboardEntity>of(BlackboardEntity::new, MobCategory.MISC)
+        .sized(BlackboardEntity.BLOCK_WIDTH, BlackboardEntity.BLOCK_HEIGHT)
+        .build(Zetter.MOD_ID + "_blackboard_entity"));
 
     public static void init(IEventBus bus) {
         ENTITIES.register(bus);

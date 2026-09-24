@@ -10,6 +10,7 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.DrawingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -30,6 +31,7 @@ import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 public class CanvasItem extends Item
 {
@@ -131,12 +133,12 @@ public class CanvasItem extends Item
     /**
      * @see {net.minecraft.world.item.MapItem#getCustomMapData(ItemStack, Level)}
      */
-    public static CanvasData createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level world) {
+    public static CanvasData createEmpty(ItemStack stack, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, int groundColor, Level world) {
         if (world.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }
 
-        String canvasCode = createNewCanvasData(resolution, widthBlock, heightBlock, world);
+        String canvasCode = createNewCanvasData(resolution, widthBlock, heightBlock, groundColor, world);
         CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(world);
 
         CanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
@@ -371,13 +373,35 @@ public class CanvasItem extends Item
         return compoundNBT.getInt(NBT_TAG_CACHED_RESOLUTION);
     }
 
+    public static CanvasData createEmptyDrawing(ItemStack stack, UUID holderId, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, int groundColor, Level world) {
+        if (world.isClientSide()) {
+            throw new InvalidParameterException("Create canvas called on client");
+        }
+
+        final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(world);
+
+        final CanvasData canvasData = DrawingData.BUILDER.createFresh(
+            resolution,
+            widthBlock * resolution.getNumeric(),
+            heightBlock * resolution.getNumeric(),
+            groundColor
+        );
+
+        final String canvasCode = DrawingData.getCanvasCode(holderId);
+        canvasTracker.registerCanvasData(canvasCode, canvasData);
+
+        storeCanvasData(stack, canvasCode, canvasData);
+
+        return canvasData;
+    }
+
     /**
      *
      * @see {net.minecraft.world.item.MapItem#createNewSavedData(Level, int, int, int, boolean, boolean, ResourceKey)}
      * @param level
      * @return
      */
-    private static String createNewCanvasData(AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, Level level) {
+    private static String createNewCanvasData(AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, int groundColor, Level level) {
         if (level.isClientSide()) {
             throw new InvalidParameterException("Create canvas called on client");
         }
@@ -387,7 +411,8 @@ public class CanvasItem extends Item
         CanvasData canvasData = CanvasData.BUILDER.createFresh(
             resolution,
             widthBlock * resolution.getNumeric(),
-            heightBlock * resolution.getNumeric()
+            heightBlock * resolution.getNumeric(),
+            groundColor
         );
 
         String canvasCode = CanvasData.getCanvasCode(canvasTracker.getFreeCanvasId());

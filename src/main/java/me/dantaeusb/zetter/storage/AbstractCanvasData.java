@@ -108,6 +108,23 @@ public abstract class AbstractCanvasData extends SavedData {
     return this.getColorAt(this.getPixelIndex(pixelX, pixelY));
   }
 
+  /**
+   * Marks a code as standing in for a canvas that has no pixels yet. Every kind of
+   * canvas has its own default.
+   */
+  protected static final String DEFAULT_CODE_MARKER = "default_";
+
+  /**
+   * Whether a code names a default — a stand-in that lives only on the client and is
+   * never saved or sent
+   *
+   * @param canvasCode
+   * @return
+   */
+  public static boolean isDefaultCode(String canvasCode) {
+    return canvasCode.contains(DEFAULT_CODE_MARKER);
+  }
+
   public void setManaged(boolean managed) {
     this.managed = managed;
   }

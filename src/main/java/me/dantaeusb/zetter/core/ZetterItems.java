@@ -1,9 +1,11 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.entity.item.BlackboardEntity;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.item.*;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -50,6 +52,25 @@ public class ZetterItems
 
     public static final RegistryObject<FrameItem> GOLD_FRAME = registerFrame("gold_basic_frame", PaintingEntity.Materials.GOLD, false);
     public static final RegistryObject<FrameItem> GOLD_PLATE_FRAME = registerFrame("gold_plated_frame", PaintingEntity.Materials.GOLD, true);
+
+    public static final HashMap<String, RegistryObject<BlackboardItem>> BLACKBOARDS = new HashMap<>();
+    public static final HashMap<DyeColor, RegistryObject<ChalkItem>> CHALKS = new HashMap<>();
+
+    static {
+        for (BlackboardEntity.Materials material : BlackboardEntity.Materials.values()) {
+            BLACKBOARDS.put(
+                material.toString(),
+                ITEMS.register(material + "_blackboard", () -> new BlackboardItem(new Item.Properties(), material))
+            );
+        }
+
+        for (DyeColor color : DyeColor.values()) {
+            CHALKS.put(
+                color,
+                ITEMS.register(color.getName() + "_chalk", () -> new ChalkItem(new Item.Properties(), color))
+            );
+        }
+    }
 
     private static RegistryObject<FrameItem> registerFrame(String name, PaintingEntity.Materials material, boolean plated)
     {

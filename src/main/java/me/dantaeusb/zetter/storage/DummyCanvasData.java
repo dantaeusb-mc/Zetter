@@ -89,7 +89,7 @@ public class DummyCanvasData extends AbstractCanvasData {
     }
 
     private static class DummyCanvasDataBuilder implements CanvasDataBuilder<DummyCanvasData> {
-        public DummyCanvasData createFresh(Resolution resolution, int width, int height) {
+        public DummyCanvasData createFresh(Resolution resolution, int width, int height, int groundColor) {
             return DummyCanvasData.createDummy(resolution, width, height);
         }
 

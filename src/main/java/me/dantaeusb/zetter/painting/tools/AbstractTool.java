@@ -84,7 +84,7 @@ public abstract class AbstractTool<T extends AbstractToolParameters> {
         }
 
         for (Pipe pipe : this.pipes) {
-            if (pipe.shouldUsePipe(this, parameters)) {
+            if (pipe.shouldUsePipe(this, parameters, color)) {
                 color = pipe.applyPipe(canvas, parameters, color, index, localIntensity);
             }
         }

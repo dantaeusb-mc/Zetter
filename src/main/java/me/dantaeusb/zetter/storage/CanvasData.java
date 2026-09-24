@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 public class CanvasData extends AbstractCanvasData {
     public static final String TYPE = "canvas";
     public static final String CODE_PREFIX = Zetter.MOD_ID + "_" + TYPE + "_";
-    private static final String DEFAULT_CODE_PREFIX = CODE_PREFIX + "default_";
+    private static final String DEFAULT_CODE_PREFIX = CODE_PREFIX + DEFAULT_CODE_MARKER;
     public static final CanvasDataBuilder<CanvasData> BUILDER = new CanvasCanvasDataBuilder();
 
     public static String getCanvasCode(int canvasId) {
@@ -62,7 +62,9 @@ public class CanvasData extends AbstractCanvasData {
         return super.save(compoundTag);
     }
 
-    private static class CanvasCanvasDataBuilder implements CanvasDataBuilder<CanvasData> {
+    protected static abstract class AbstractCanvasDataBuilder<T extends CanvasData> implements CanvasDataBuilder<T> {
+        protected abstract T create();
+
         /**
          * Create empty canvas data filled with canvas color
          * @param resolution
@@ -70,15 +72,15 @@ public class CanvasData extends AbstractCanvasData {
          * @param height
          * @return
          */
-        public CanvasData createFresh(Resolution resolution, int width, int height) {
+        public T createFresh(Resolution resolution, int width, int height, int groundColor) {
             byte[] color = new byte[width * height * 4];
             ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
             for (int x = 0; x < width * height; x++) {
-                defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
+                defaultColorBuffer.putInt(x * 4, groundColor);
             }
 
-            final CanvasData newCanvas = new CanvasData();
+            final T newCanvas = this.create();
             newCanvas.wrapData(resolution, width, height, color);
 
             return newCanvas;
@@ -92,15 +94,15 @@ public class CanvasData extends AbstractCanvasData {
          * @param color
          * @return
          */
-        public CanvasData createWrap(Resolution resolution, int width, int height, byte[] color) {
-            final CanvasData newCanvas = new CanvasData();
+        public T createWrap(Resolution resolution, int width, int height, byte[] color) {
+            final T newCanvas = this.create();
             newCanvas.wrapData(resolution, width, height, color);
 
             return newCanvas;
         }
 
-        public CanvasData load(CompoundTag compoundTag) {
-            final CanvasData newCanvas = new CanvasData();
+        public T load(CompoundTag compoundTag) {
+            final T newCanvas = this.create();
 
             newCanvas.width = compoundTag.getInt(NBT_TAG_WIDTH);
             newCanvas.height = compoundTag.getInt(NBT_TAG_HEIGHT);
@@ -121,8 +123,8 @@ public class CanvasData extends AbstractCanvasData {
          * Networking
          */
 
-        public CanvasData readPacketData(FriendlyByteBuf networkBuffer) {
-            final CanvasData newCanvas = new CanvasData();
+        public T readPacketData(FriendlyByteBuf networkBuffer) {
+            final T newCanvas = this.create();
 
             final byte resolutionOrdinal = networkBuffer.readByte();
             AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.values()[resolutionOrdinal];
@@ -145,7 +147,7 @@ public class CanvasData extends AbstractCanvasData {
             return newCanvas;
         }
 
-        public void writePacketData(CanvasData canvasData, FriendlyByteBuf networkBuffer) {
+        public void writePacketData(T canvasData, FriendlyByteBuf networkBuffer) {
             networkBuffer.writeByte(canvasData.resolution.ordinal());
             networkBuffer.writeInt(canvasData.width);
             networkBuffer.writeInt(canvasData.height);
@@ -153,5 +155,11 @@ public class CanvasData extends AbstractCanvasData {
             networkBuffer.writeBytes(canvasData.getColorDataBuffer());
         }
     }
-}
 
+    private static class CanvasCanvasDataBuilder extends AbstractCanvasDataBuilder<CanvasData> {
+        @Override
+        protected CanvasData create() {
+            return new CanvasData();
+        }
+    }
+}

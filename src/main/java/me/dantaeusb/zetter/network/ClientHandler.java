@@ -17,6 +17,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
@@ -81,11 +82,21 @@ public class ClientHandler {
      */
     public static void processCanvasHolderAcceptPacket(final SCanvasHolderAcceptPacket packetIn, Level world) {
         try {
-            assert Minecraft.getInstance().player != null;
-            ItemStack paletteStack = Helper.lookupPaletteStackByPlayer(Minecraft.getInstance().player, PaletteItem.getPaletteUuid(packetIn.getPaletteStack()));
+            final LocalPlayer player = Minecraft.getInstance().player;
+            assert player != null;
+
+            // The palette this client raised a moment ago, still in the hand it used
+            ItemStack paletteStack = ItemStack.EMPTY;
+
+            for (InteractionHand hand : InteractionHand.values()) {
+                if (player.getItemInHand(hand).getItem() instanceof PaletteItem) {
+                    paletteStack = player.getItemInHand(hand);
+                    break;
+                }
+            }
 
             if (paletteStack.isEmpty()) {
-                Zetter.LOG.error("Unable to process palette use canvas holder - item in slot is not a palette");
+                Zetter.LOG.error("Unable to process palette use canvas holder - player is not holding a palette");
                 return;
             }
 
@@ -96,10 +107,7 @@ public class ClientHandler {
                 return;
             }
 
-            ((CanvasHolderEntity) canvasHolder).addPlayerUsing(
-                Minecraft.getInstance().player,
-                paletteStack
-            );
+            ((CanvasHolderEntity) canvasHolder).addPlayerUsing(player, paletteStack);
 
             Minecraft.getInstance().setScreen(
                 new PaintingScreen(paletteStack, (CanvasHolderEntity) canvasHolder)

@@ -6,7 +6,7 @@ import me.dantaeusb.zetter.storage.CanvasData;
 
 public interface Pipe {
 
-    boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params);
+    boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params, int color);
 
     int applyPipe(CanvasData canvas, AbstractToolParameters params, int color, int index, float localIntensity);
 }

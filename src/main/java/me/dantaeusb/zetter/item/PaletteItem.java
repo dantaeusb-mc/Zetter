@@ -53,7 +53,8 @@ public class PaletteItem extends Item {
         // Holders are wider than they are deep, so we look around the player and sort out the ones we can reach below
         AABB bb = player.getBoundingBox().inflate(pickRange + 1.0D);
 
-        List<Entity> canvasHolders = level.getEntities(player, bb, entity -> entity instanceof CanvasHolderEntity);
+        List<Entity> canvasHolders = level.getEntities(player, bb,
+            entity -> entity instanceof CanvasHolderEntity canvasHolder && canvasHolder.acceptsPalette());
 
         if (canvasHolders.isEmpty()) {
             return InteractionResultHolder.fail(player.getItemInHand(hand));
@@ -104,7 +105,7 @@ public class PaletteItem extends Item {
         if (level.isClientSide()) {
             CPaletteUseCanvasHolderPacket useCanvasHolder = new CPaletteUseCanvasHolderPacket(
                 closestCanvasHolder.getId(),
-                paletteStack
+                hand
             );
             ZetterNetwork.simpleChannel.sendToServer(useCanvasHolder);
         }

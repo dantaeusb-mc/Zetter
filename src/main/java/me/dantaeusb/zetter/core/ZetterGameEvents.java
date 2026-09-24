@@ -4,6 +4,8 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.entity.item.BlackboardEntity;
+import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.item.crafting.CanvasStitchingRecipe;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -11,6 +13,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.event.TickEvent;
+import net.minecraft.world.InteractionHand;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -25,6 +29,25 @@ public class ZetterGameEvents {
         CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(player.level());
 
         canvasTracker.stopTrackingAllCanvases(player.getUUID());
+    }
+
+    /**
+     * Cancel punch when using chalk on the blackboard and apply as a tool
+     *
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onAttackBlackboard(AttackEntityEvent event) {
+        if (!(event.getTarget() instanceof BlackboardEntity)) {
+            return;
+        }
+
+        for (InteractionHand hand : InteractionHand.values()) {
+            if (event.getEntity().getItemInHand(hand).getItem() instanceof ChalkItem) {
+                event.setCanceled(true);
+                return;
+            }
+        }
     }
 
     @SubscribeEvent

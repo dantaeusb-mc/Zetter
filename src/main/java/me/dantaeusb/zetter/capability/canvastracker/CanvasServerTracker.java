@@ -10,6 +10,7 @@ import me.dantaeusb.zetter.network.packet.SCanvasRemovalPacket;
 import me.dantaeusb.zetter.network.packet.SCanvasSyncPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
+import me.dantaeusb.zetter.storage.DrawingData;
 import me.dantaeusb.zetter.storage.CanvasDataType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -225,7 +226,8 @@ public class CanvasServerTracker implements CanvasTracker {
             return;
         }
 
-        if (!canvasData.getType().equals(ZetterCanvasTypes.CANVAS.get())) {
+        if (!canvasData.getType().equals(ZetterCanvasTypes.CANVAS.get())
+            && !canvasData.getType().equals(ZetterCanvasTypes.DRAWING.get())) {
             Zetter.LOG.error("Trying to unregister canvas of type " + canvasData.getType().resourceLocation.toString() + " on server side, not supported yet");
             return;
         }
@@ -235,8 +237,12 @@ public class CanvasServerTracker implements CanvasTracker {
         CanvasUnregisterEvent.Pre preEvent = new CanvasUnregisterEvent.Pre(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(preEvent);
 
-        int canvasId = Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
-        this.clearCanvasId(canvasId);
+        if (canvasCode.startsWith(CanvasData.CODE_PREFIX)) {
+            int canvasId = Integer.parseInt(canvasCode.substring(CanvasData.CODE_PREFIX.length()));
+            this.clearCanvasId(canvasId);
+        }
+
+        this.blankCanvasData(canvasCode, canvasData);
 
         Vector<PlayerTrackingCanvas> trackingPlayers = this.trackedCanvases.get(canvasCode);
 
@@ -253,6 +259,28 @@ public class CanvasServerTracker implements CanvasTracker {
 
         CanvasUnregisterEvent.Post postEvent = new CanvasUnregisterEvent.Post(canvasCode, canvasData, this.level, timestamp);
         MinecraftForge.EVENT_BUS.post(postEvent);
+    }
+
+    /**
+     * Wipe what an unregistered canvas was holding.
+     *
+     * The world's storage has no way to drop an entry, so the entry is replaced with the smallest blank
+     * canvas there is
+     *
+     * @param canvasCode
+     * @param canvasData the data being unregistered, which decides what kind of
+     *                   blank replaces it
+     */
+    private void blankCanvasData(String canvasCode, AbstractCanvasData canvasData) {
+        final int side = AbstractCanvasData.Resolution.x16.getNumeric();
+
+        final AbstractCanvasData blank = canvasData.getType().builder.createFresh(
+            AbstractCanvasData.Resolution.x16, side, side, 0x00000000
+        );
+
+        blank.setDirty();
+
+        this.level.getServer().overworld().getDataStorage().set(canvasCode, blank);
     }
 
     /**

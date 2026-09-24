@@ -114,6 +114,27 @@ public class Color {
     return Math.min(255, Math.max(0, Math.round(value * 255.0f)));
   }
 
+  /**
+   * Alpha channel of a packed color, 0-255
+   *
+   * @param argb
+   * @return
+   */
+  public static int getAlpha(int argb) {
+    return argb >>> 24;
+  }
+
+  /**
+   * The same color carrying a different alpha, 0-255
+   *
+   * @param argb
+   * @param alpha
+   * @return
+   */
+  public static int withAlpha(int argb, int alpha) {
+    return (alpha << 24) | (argb & 0x00FFFFFF);
+  }
+
   public static Vector3f argbToRgb(int argb) {
     int r = (argb >> 16) & 0xFF;
     int g = (argb >> 8) & 0xFF;

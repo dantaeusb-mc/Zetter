@@ -129,14 +129,14 @@ public class PaintingData extends AbstractCanvasData {
          * @param height
          * @return
          */
-        public PaintingData createFresh(Resolution resolution, int width, int height) {
+        public PaintingData createFresh(Resolution resolution, int width, int height, int groundColor) {
             final PaintingData newPainting = new PaintingData();
 
             byte[] color = new byte[width * height * 4];
             ByteBuffer defaultColorBuffer = ByteBuffer.wrap(color);
 
             for (int x = 0; x < width * height; x++) {
-                defaultColorBuffer.putInt(x * 4, Helper.CANVAS_COLOR);
+                defaultColorBuffer.putInt(x * 4, groundColor);
             }
 
             newPainting.wrapData(resolution, width, height, color);

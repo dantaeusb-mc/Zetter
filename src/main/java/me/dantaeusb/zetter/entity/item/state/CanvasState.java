@@ -542,7 +542,7 @@ public class CanvasState {
         final String canvasCode = this.canvasHolder.getCanvasCode();
 
         // A canvas with no data of its own still reports a default code so it can be rendered blank
-        return canvasCode != null && !CanvasData.isDefaultCanvasCode(canvasCode);
+        return canvasCode != null && !AbstractCanvasData.isDefaultCode(canvasCode);
     }
 
     /**
@@ -573,12 +573,11 @@ public class CanvasState {
             }
         }
 
-        int resolution = CanvasItem.getResolution(canvasStack);
         int[] size = CanvasItem.getBlockSize(canvasStack);
 
         assert size != null && size.length == 2; // @todo: Stop menu updates to prevent sending change before initialization packet
 
-        CanvasData canvasData = CanvasItem.createEmpty(canvasStack, AbstractCanvasData.Resolution.get(resolution), size[0], size[1], this.canvasHolder.level());
+        CanvasData canvasData = this.canvasHolder.createCanvasData(canvasStack, size[0], size[1]);
         canvasCode = CanvasItem.getCanvasCode(canvasStack);
 
         /*

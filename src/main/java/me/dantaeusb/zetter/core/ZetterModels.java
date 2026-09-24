@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.core;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.model.EaselModel;
 import me.dantaeusb.zetter.client.model.WallEaselModel;
+import me.dantaeusb.zetter.client.renderer.entity.BlackboardRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.WallEaselRenderer;
@@ -22,6 +23,10 @@ public class ZetterModels
         for (ModelResourceLocation modelLocation : FramedPaintingRenderer.FRAME_MODELS.values()) {
             event.register(modelLocation);
         }
+
+        for (ModelResourceLocation modelLocation : BlackboardRenderer.getFrameModels()) {
+            event.register(modelLocation);
+        }
     }
 
     @SubscribeEvent
@@ -30,6 +35,7 @@ public class ZetterModels
         event.registerEntityRenderer(ZetterEntities.FRAMED_PAINTING_ENTITY.get(), FramedPaintingRenderer::new);
         event.registerEntityRenderer(ZetterEntities.EASEL_ENTITY.get(), EaselRenderer::new);
         event.registerEntityRenderer(ZetterEntities.WALL_EASEL_ENTITY.get(), WallEaselRenderer::new);
+        event.registerEntityRenderer(ZetterEntities.BLACKBOARD_ENTITY.get(), BlackboardRenderer::new);
     }
 
     @SubscribeEvent

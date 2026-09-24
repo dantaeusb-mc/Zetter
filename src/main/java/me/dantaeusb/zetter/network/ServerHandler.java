@@ -10,6 +10,7 @@ import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.PaintingItem;
+import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.menu.ArtistTableMenu;
 import me.dantaeusb.zetter.network.packet.*;
@@ -157,16 +158,21 @@ public class ServerHandler {
      */
     public static void processPaletteUseCanvasHolder(final CPaletteUseCanvasHolderPacket packetIn, ServerPlayer sendingPlayer) {
         try {
-            ItemStack paletteStack = Helper.lookupPaletteStackByPlayer(sendingPlayer, PaletteItem.getPaletteUuid(packetIn.getPaletteStack()));
+            final ItemStack paletteStack = sendingPlayer.getItemInHand(packetIn.getHand());
 
-            if (paletteStack.isEmpty()) {
-                Zetter.LOG.error("Unable to process palette use canvas holder - item in slot is not a palette");
+            if (!(paletteStack.getItem() instanceof PaletteItem)) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " is not holding a palette");
                 return;
             }
 
             final CanvasHolderEntity canvasHolder = getAccessibleCanvasHolder(sendingPlayer, packetIn.getCanvasHolderId(), false);
 
             if (canvasHolder == null) {
+                return;
+            }
+
+            if (!canvasHolder.acceptsPalette()) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot use a palette on canvas holder " + canvasHolder.getId());
                 return;
             }
 
@@ -177,9 +183,43 @@ public class ServerHandler {
             }
 
             canvasHolder.addPlayerUsing(sendingPlayer, paletteStack);
-            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), new SCanvasHolderAcceptPacket(canvasHolder.getId(), paletteStack));
+            ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> sendingPlayer), new SCanvasHolderAcceptPacket(canvasHolder.getId()));
         } catch (Exception e) {
             Zetter.LOG.error("Unable to handle processPaletteUseCanvasHolder", e);
+        }
+    }
+
+    /**
+     * Player started drawing on a board with chalk. No screen opens and no accept
+     * comes back: the client has already started drawing locally, and if this is
+     * refused its actions are simply dropped when they arrive.
+     *
+     * @param packetIn
+     * @param sendingPlayer
+     */
+    public static void processChalkUseCanvasHolder(final CChalkUseCanvasHolderPacket packetIn, ServerPlayer sendingPlayer) {
+        try {
+            final ItemStack chalkStack = sendingPlayer.getItemInHand(packetIn.getHand());
+
+            if (!(chalkStack.getItem() instanceof ChalkItem)) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " is not holding chalk");
+                return;
+            }
+
+            final CanvasHolderEntity canvasHolder = getAccessibleCanvasHolder(sendingPlayer, packetIn.getCanvasHolderId(), false);
+
+            if (canvasHolder == null) {
+                return;
+            }
+
+            if (!canvasHolder.canPlayerStartUsing(sendingPlayer)) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot start using canvas holder " + canvasHolder.getId());
+                return;
+            }
+
+            canvasHolder.addPlayerUsing(sendingPlayer, chalkStack);
+        } catch (Exception e) {
+            Zetter.LOG.error("Unable to handle processChalkUseCanvasHolder", e);
         }
     }
 

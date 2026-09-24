@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 public class DitheringPipe implements Pipe {
 
     @Override
-    public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params) {
+    public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params, int color) {
         if (params instanceof DitheringParameterHolder) {
             return ((DitheringParameterHolder) params).getDithering() != DitheringOption.NO_DITHERING;
         }

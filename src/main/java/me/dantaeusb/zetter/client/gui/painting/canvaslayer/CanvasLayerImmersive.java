@@ -167,7 +167,7 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
         CanvasRenderer.getInstance().renderCanvas(poseStack, renderTypeBufferImpl, canvasCode, canvasData, 0xF000F0);
         renderTypeBufferImpl.endBatch();
 
-        this.renderCursor(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderCursor(guiGraphics, canvasData, mouseX, mouseY, partialTick);
 
         poseStack.popPose();
         RenderSystem.restoreProjectionMatrix();
@@ -178,7 +178,7 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
         poseStack.last().pose().set(lastMatrix);
     }
 
-    private void renderCursor(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    private void renderCursor(GuiGraphics guiGraphics, AbstractCanvasData canvasData, int mouseX, int mouseY, float partialTicks) {
         final int CURSOR_SCALE = 6;
 
         if (mouseX > this.parentScreen.getToolsWindowLeftPos() &&
@@ -221,9 +221,12 @@ public class CanvasLayerImmersive extends CanvasLayerAbstract {
             return;
         }
 
+        // Use canvas resolution to scale cursor
+        final float downScale = (float) canvasData.getResolution().getNumeric() / Helper.getBasicResolution().getNumeric();
+
         poseStack.pushPose();
         poseStack.translate(0.0d, 0.0d, -0.001d);
-        poseStack.scale(1.0f / CURSOR_SCALE, 1.0f / CURSOR_SCALE, 1.0f);
+        poseStack.scale(1.0f / (CURSOR_SCALE * downScale), 1.0f / (CURSOR_SCALE * downScale), 1.0f);
 
         if (shape == null) {
             int radius = 4;

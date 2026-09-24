@@ -26,8 +26,12 @@ public class BlendingPipe implements Pipe {
     private static final float TWO_PI = (float) (Math.PI * 2.0);
 
     @Override
-    public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params) {
+    public boolean shouldUsePipe(AbstractTool tool, AbstractToolParameters params, int color) {
         if (tool instanceof Brush) {
+            return true;
+        }
+
+        if (Color.getAlpha(color) < 0xFF) {
             return true;
         }
 
@@ -56,7 +60,44 @@ public class BlendingPipe implements Pipe {
             blending = ((BlendingParameterHolder) params).getBlending();
         }
 
-        return blending.blendingFunction.apply(color, originalColor, intensity);
+        if (Color.getAlpha(color) == 0xFF && Color.getAlpha(originalColor) == 0xFF) {
+            return blending.blendingFunction.apply(color, originalColor, intensity);
+        }
+
+        return blendOver(blending, color, originalColor, intensity);
+    }
+
+    /**
+     * Lays a stroke over what is already on the canvas, keeping track of how much of
+     * the canvas is covered at all.
+     *
+     * On an opaque canvas that share is the intensity, which is what this mixed by
+     * before alpha existed. On an empty one it is all of it, so a soft stroke puts
+     * down its own color at a low alpha rather than mixing itself halfway into the
+     * nothing behind it and arriving dark.
+     *
+     * @param blending
+     * @param color
+     * @param originalColor
+     * @param intensity
+     * @return
+     */
+    private static int blendOver(BlendingOption blending, int color, int originalColor, float intensity) {
+        final float sourceAlpha = Color.getAlpha(color) / 255f * intensity;
+        final float destinationAlpha = Color.getAlpha(originalColor) / 255f;
+        final float resultAlpha = sourceAlpha + destinationAlpha * (1f - sourceAlpha);
+
+        // Nothing over nothing: no color to keep and none to mix towards
+        if (resultAlpha <= 0f) {
+            return 0x00000000;
+        }
+
+        final float weight = Math.min(1f, sourceAlpha / resultAlpha);
+
+        return Color.withAlpha(
+            blending.blendingFunction.apply(color, originalColor, weight),
+            Math.round(resultAlpha * 255f)
+        );
     }
 
     /**
