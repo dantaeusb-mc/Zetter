@@ -58,7 +58,9 @@ public class ChalkHandler {
 
         final Minecraft minecraft = Minecraft.getInstance();
 
-        if (chalkHand(minecraft) == null || lookedAtBoard(minecraft) == null) {
+        final InteractionHand hand = chalkHand(minecraft);
+
+        if (hand == null || lookedAtBoard(minecraft, hand) == null) {
             return;
         }
 
@@ -85,7 +87,7 @@ public class ChalkHandler {
         }
 
         final InteractionHand hand = chalkHand(minecraft);
-        final BlackboardEntity board = lookedAtBoard(minecraft);
+        final BlackboardEntity board = hand == null ? null : lookedAtBoard(minecraft, hand);
 
         if (hand == null || board == null) {
             stop(minecraft);
@@ -178,9 +180,13 @@ public class ChalkHandler {
     }
 
     /**
-     * Board under the crosshair.
+     * Board under the crosshair that the chalk in this hand can be used on.
+     *
+     * @param minecraft
+     * @param chalkHand
+     * @return
      */
-    private static @Nullable BlackboardEntity lookedAtBoard(Minecraft minecraft) {
+    private static @Nullable BlackboardEntity lookedAtBoard(Minecraft minecraft, InteractionHand chalkHand) {
         final HitResult hitResult = minecraft.hitResult;
 
         if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
@@ -189,6 +195,11 @@ public class ChalkHandler {
 
         final Entity entity = ((EntityHitResult) hitResult).getEntity();
 
-        return entity instanceof BlackboardEntity board ? board : null;
+        if (!(entity instanceof BlackboardEntity board)) {
+            return null;
+        }
+
+        // Same rule the server applies when the packet lands
+        return board.acceptsImplement(minecraft.player.getItemInHand(chalkHand)) ? board : null;
     }
 }

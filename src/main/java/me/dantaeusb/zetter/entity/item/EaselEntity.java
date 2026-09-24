@@ -10,7 +10,7 @@ import org.joml.Vector3f;
  * Standing easel: a small rack that holds canvases up to 2x2 blocks,
  * leaning back like a real easel does.
  */
-public class EaselEntity extends CanvasHolderEntity {
+public class EaselEntity extends AbstractEaselEntity {
     private static final int[] MAX_CANVAS_BLOCK_SIZE = new int[]{2, 2};
 
     /**

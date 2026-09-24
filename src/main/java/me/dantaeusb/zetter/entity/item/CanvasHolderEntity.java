@@ -3,15 +3,10 @@ package me.dantaeusb.zetter.entity.item;
 import com.mojang.math.Axis;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.core.ItemStackHandlerListener;
-import me.dantaeusb.zetter.core.ZetterItems;
-import me.dantaeusb.zetter.entity.item.container.CanvasContainer;
 import me.dantaeusb.zetter.entity.item.state.CanvasState;
-import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.item.PaletteItem;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -21,9 +16,6 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
-import net.minecraft.world.Containers;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -37,10 +29,6 @@ import net.minecraft.world.level.block.DiodeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.network.NetworkHooks;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -54,13 +42,10 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Everything that holds a canvas a player can paint on: keeps the canvas
- * item, keeps the painting state and knows where the canvas is placed
- * in the world
+ * Everything that holds a canvas a player can paint on: knows which canvas that is,
+ * keeps the painting state and knows where the canvas sits in the world.
  */
-public abstract class CanvasHolderEntity extends Entity implements ItemStackHandlerListener {
-  private static final String NBT_TAG_STORAGE = "storage";
-  private static final String NBT_TAG_STORAGE_LEGACY = "Storage";
+public abstract class CanvasHolderEntity extends Entity {
   private static final String NBT_TAG_CANVAS_CODE = "CanvasCode";
 
   /** Server lags behind the client's position, so reach gets a block of slack */
@@ -69,9 +54,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   private static final EntityDataAccessor<String> DATA_ID_CANVAS_CODE = SynchedEntityData.defineId(CanvasHolderEntity.class, EntityDataSerializers.STRING);
 
   protected CanvasState canvasState;
-
-  protected CanvasContainer easelContainer;
-  protected final LazyOptional<ItemStackHandler> easelContainerOptional = LazyOptional.of(() -> this.easelContainer);
 
   /** The list of players currently using this canvas holder */
   protected ArrayList<Player> playersUsing = new ArrayList<>();
@@ -93,7 +75,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     super(entityType, level);
 
     this.canvasState = new CanvasState(this);
-    this.createInventory();
   }
 
   /*
@@ -128,37 +109,22 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   /**
-   * What to show while a canvas is in the holder but has no pixels yet. An easel
-   * stands one up so the painter has something to aim at; a holder that has
-   * something of its own behind the canvas returns null and shows that instead.
+   * Called while the entity is still being constructed, so it can only read what is
+   * constant about the holder.
    *
-   * @param blockWidth
-   * @param blockHeight
    * @return
    */
-  protected @Nullable String getPlaceholderCanvasCode(int blockWidth, int blockHeight) {
-    return CanvasData.getDefaultCanvasCode(blockWidth, blockHeight);
+  protected @Nullable String getInitialCanvasCode() {
+    return null;
   }
 
   /**
-   * Bring this holder's canvas into being. Called the first time somebody paints,
-   * never when the holder is placed, so that a world full of easels and boards
-   * nobody has touched costs nothing.
+   * Bring this holder's canvas into being and adopt its code.
+   * Server only.
    *
-   * The resolution is the holder's to choose rather than something handed to it: a
-   * canvas on an easel takes the server's setting, where a board is fixed at what
-   * its slate is drawn for.
-   *
-   * @param canvasStack
-   * @param blockWidth
-   * @param blockHeight
    * @return
    */
-  public CanvasData createCanvasData(ItemStack canvasStack, int blockWidth, int blockHeight) {
-    final AbstractCanvasData.Resolution resolution = AbstractCanvasData.Resolution.get(CanvasItem.getResolution(canvasStack));
-
-    return CanvasItem.createEmpty(canvasStack, resolution, blockWidth, blockHeight, this.getInitialCanvasColor(), this.level());
-  }
+  public abstract @Nullable CanvasData createCanvasData();
 
   protected abstract Item getHolderItem();
 
@@ -355,7 +321,9 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
    */
 
   protected void defineSynchedData() {
-    this.entityData.define(DATA_ID_CANVAS_CODE, "");
+    final String initialCanvasCode = this.getInitialCanvasCode();
+
+    this.entityData.define(DATA_ID_CANVAS_CODE, initialCanvasCode == null ? "" : initialCanvasCode);
   }
 
   public @Nullable String getCanvasCode() {
@@ -398,12 +366,14 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     return canvasTracker.getCanvasData(canvasCode);
   }
 
+  /**
+   * Whether there is a surface to paint on at all, which is not the same as there
+   * being anything painted on it yet
+   *
+   * @return
+   */
   public boolean hasCanvas() {
     return this.getCanvasCode() != null;
-  }
-
-  public ItemStack getCanvasStack() {
-    return this.easelContainer.getCanvasStack();
   }
 
   public boolean playerCanDraw(Player player) {
@@ -437,8 +407,14 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
     return eyePosition.distanceToSqr(closestPoint) <= reach * reach;
   }
 
-  public boolean acceptsPalette() {
-    return true;
+  /**
+   * Whether a player holding this item stack could draw on this holder with it.
+   *
+   * @param stack
+   * @return
+   */
+  public boolean acceptsImplement(ItemStack stack) {
+    return stack.getItem() instanceof PaletteItem;
   }
 
   public boolean canPlayerStartUsing(Player player) {
@@ -523,103 +499,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   /*
-   * Inventory
-   */
-
-  protected void createInventory() {
-    CanvasContainer currentEaselStorage = this.easelContainer;
-    this.easelContainer = new CanvasContainer(this);
-
-    if (currentEaselStorage != null) {
-      currentEaselStorage.removeListener(this);
-      int i = Math.min(currentEaselStorage.getSlots(), this.easelContainer.getSlots());
-
-      for (int j = 0; j < i; ++j) {
-        ItemStack itemstack = currentEaselStorage.getStackInSlot(j);
-        if (!itemstack.isEmpty()) {
-          this.easelContainer.setStackInSlot(j, itemstack.copy());
-        }
-      }
-    }
-
-    this.easelContainer.addListener(this);
-  }
-
-  /**
-   * This is temporary for migrating from BE to Entity
-   *
-   * @return
-   */
-  public CanvasContainer getEaselContainer() {
-    return this.easelContainer;
-  }
-
-  /**
-   * If canvas does not exist, set to null
-   * If exists but not initialized, set to default
-   * If exists and initialized, use code
-   */
-  protected void updateEntityDataFromInventory() {
-    ItemStack canvasStack = this.easelContainer.getCanvasStack();
-
-    if (canvasStack.isEmpty()) {
-      this.setCanvasCode(null);
-      this.updateCanvasVectors();
-      return;
-    }
-
-    String canvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-    if (canvasCode == null) {
-      int[] size = CanvasItem.getBlockSize(canvasStack);
-      assert size != null && size.length == 2;
-
-      canvasCode = this.getPlaceholderCanvasCode(size[0], size[1]);
-    }
-
-    this.setCanvasCode(canvasCode);
-    this.updateCanvasVectors();
-  }
-
-  public void containerChanged(ItemStackHandler easelContainer, int slot) {
-    ItemStack canvasStack = ((CanvasContainer) easelContainer).getCanvasStack();
-    String newCanvasCode = null;
-    String existingCanvasCode = null;
-
-    if (!canvasStack.isEmpty()) {
-      newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-      // Initialize canvas
-      if (newCanvasCode == null) {
-        CanvasItem.getCanvasData(canvasStack, this.level());
-        newCanvasCode = CanvasItem.getCanvasCode(canvasStack);
-      }
-    }
-
-    if (this.getEaselContainer().getCanvas() != null) {
-      existingCanvasCode = this.getEaselContainer().getCanvas().code;
-    }
-
-    // @todo: [HIGH] Supposedly won't work on client if new canvas is not yet initialized, because it'll have nullish code
-    // Canvas changed, drop state
-    if (newCanvasCode == null || !newCanvasCode.equals(existingCanvasCode)) {
-      this.canvasState.reset();
-    }
-
-    this.updateEntityDataFromInventory();
-  }
-
-  @Override
-  public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction direction) {
-    if (capability == ForgeCapabilities.ITEM_HANDLER
-        && (direction == null || direction == Direction.UP || direction == Direction.DOWN)) {
-      return this.easelContainerOptional.cast();
-    }
-
-    return super.getCapability(capability, direction);
-  }
-
-  /*
    * Entity
    */
 
@@ -628,26 +507,19 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   public void addAdditionalSaveData(CompoundTag compoundTag) {
-    compoundTag.put(NBT_TAG_STORAGE, this.easelContainer.serializeNBT());
-
     if (this.getCanvasCode() != null) {
       compoundTag.putString(NBT_TAG_CANVAS_CODE, this.getCanvasCode());
     }
   }
 
   public void readAdditionalSaveData(CompoundTag compoundTag) {
-    this.createInventory();
-
-    if (compoundTag.contains(NBT_TAG_STORAGE_LEGACY)) {
-      this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_STORAGE_LEGACY));
-    } else {
-      this.easelContainer.deserializeNBT(compoundTag.getCompound(NBT_TAG_STORAGE));
-    }
-
-    final String canvasCode = compoundTag.getString(NBT_TAG_CANVAS_CODE);
-
-    if (canvasCode != null) {
-      this.setCanvasCode(canvasCode);
+    /*
+     * Only when it is there: a holder that starts out with a canvas of its own has
+     * already set one, and an absent tag would otherwise read back as an empty
+     * string and take it away again
+     */
+    if (compoundTag.contains(NBT_TAG_CANVAS_CODE)) {
+      this.setCanvasCode(compoundTag.getString(NBT_TAG_CANVAS_CODE));
     }
   }
 
@@ -662,28 +534,6 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
 
   public boolean isPushable() {
     return false;
-  }
-
-  @Override
-  public InteractionResult interact(Player player, InteractionHand hand) {
-    ItemStack heldItem = player.getItemInHand(hand);
-
-    if (player.isCrouching() && heldItem.isEmpty()) {
-      ItemStack canvasStack = this.easelContainer.extractCanvasStack();
-      player.setItemInHand(hand, canvasStack);
-      return InteractionResult.sidedSuccess(this.level().isClientSide());
-    }
-
-    if (heldItem.is(ZetterItems.CANVAS.get())) {
-      if (this.easelContainer.getCanvasStack().isEmpty() && this.easelContainer.isItemValid(CanvasContainer.CANVAS_SLOT, heldItem)) {
-        this.easelContainer.setCanvasStack(heldItem);
-        player.setItemInHand(hand, ItemStack.EMPTY);
-
-        return InteractionResult.sidedSuccess(this.level().isClientSide());
-      }
-    }
-
-    return InteractionResult.PASS;
   }
 
   /**
@@ -749,8 +599,8 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
       if (possiblyUsingPlayers.contains(player)
           && this.canPlayerAccessInventory(player)
           && player.isAlive()
-          && (player.getMainHandItem().is(ZetterItems.PALETTE.get())
-              || player.getOffhandItem().is(ZetterItems.PALETTE.get()))) {
+          && (this.acceptsImplement(player.getMainHandItem())
+              || this.acceptsImplement(player.getOffhandItem()))) {
         return false;
       }
 
@@ -841,15 +691,13 @@ public abstract class CanvasHolderEntity extends Entity implements ItemStackHand
   }
 
   /**
-   * When this tile entity is destroyed, drop all of its contents into the world
+   * When this holder is destroyed, drop anything it was holding on somebody else's
+   * behalf.
    *
    * @param level
    * @param blockPos
    */
   public void dropAllContents(Level level, BlockPos blockPos) {
-    for (int i = 0; i < this.easelContainer.getSlots(); i++) {
-      Containers.dropItemStack(level, blockPos.getX(), blockPos.getY(), blockPos.getZ(), this.easelContainer.getStackInSlot(i));
-    }
   }
 
   @Override

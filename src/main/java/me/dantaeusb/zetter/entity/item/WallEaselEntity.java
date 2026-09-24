@@ -14,7 +14,7 @@ import org.joml.Vector3f;
  * Wall easel: a 5 blocks tall rack that holds canvases up to 4x4 blocks
  * standing straight on the ledge of the bottom plank.
  */
-public class WallEaselEntity extends CanvasHolderEntity {
+public class WallEaselEntity extends AbstractEaselEntity {
     private static final int[] MAX_CANVAS_BLOCK_SIZE = new int[]{4, 4};
 
     /**

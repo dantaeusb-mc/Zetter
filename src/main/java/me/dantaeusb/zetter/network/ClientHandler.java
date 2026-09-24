@@ -249,7 +249,6 @@ public class ClientHandler {
 
             if (easel != null) {
                 easel.getCanvasState().reset();
-                easel.getEaselContainer().handleCanvasChange(packetIn.canvasCode);
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding history reset");
             }

@@ -10,7 +10,6 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.network.packet.CCanvasRequestViewPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
-import me.dantaeusb.zetter.storage.DrawingData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -31,7 +30,6 @@ import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 public class CanvasItem extends Item
 {
@@ -371,28 +369,6 @@ public class CanvasItem extends Item
         }
 
         return compoundNBT.getInt(NBT_TAG_CACHED_RESOLUTION);
-    }
-
-    public static CanvasData createEmptyDrawing(ItemStack stack, UUID holderId, AbstractCanvasData.Resolution resolution, int widthBlock, int heightBlock, int groundColor, Level world) {
-        if (world.isClientSide()) {
-            throw new InvalidParameterException("Create canvas called on client");
-        }
-
-        final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(world);
-
-        final CanvasData canvasData = DrawingData.BUILDER.createFresh(
-            resolution,
-            widthBlock * resolution.getNumeric(),
-            heightBlock * resolution.getNumeric(),
-            groundColor
-        );
-
-        final String canvasCode = DrawingData.getCanvasCode(holderId);
-        canvasTracker.registerCanvasData(canvasCode, canvasData);
-
-        storeCanvasData(stack, canvasCode, canvasData);
-
-        return canvasData;
     }
 
     /**

@@ -1,7 +1,13 @@
 package me.dantaeusb.zetter.storage;
 
 import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
+import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
+import net.minecraft.world.level.Level;
+
+import java.security.InvalidParameterException;
+import java.util.UUID;
 
 /**
  * A drawing belongs to the entity it was made on rather than to an item.
@@ -37,7 +43,7 @@ public class DrawingData extends CanvasData {
      * @param holderId
      * @return
      */
-    public static String getCanvasCode(java.util.UUID holderId) {
+    public static String getCanvasCode(UUID holderId) {
         return CODE_PREFIX + holderId;
     }
 
@@ -60,6 +66,43 @@ public class DrawingData extends CanvasData {
      */
     public static String getDefaultCanvasCode(int widthBlocks, int heightBlocks) {
         return DEFAULT_CODE_PREFIX + widthBlocks + "x" + heightBlocks;
+    }
+
+    /**
+     * A fresh drawing for the entity that will carry it, registered so it is found
+     * again by the code that entity reports. Nothing is written into an item along
+     * the way: a drawing has none, which is the whole point of it.
+     *
+     * Server only.
+     *
+     * @param holderId
+     * @param resolution
+     * @param widthBlocks
+     * @param heightBlocks
+     * @param groundColor
+     * @param level
+     * @return
+     */
+    public static CanvasData create(
+        UUID holderId, Resolution resolution,
+        int widthBlocks, int heightBlocks, int groundColor, Level level
+    ) {
+        if (level.isClientSide()) {
+            throw new InvalidParameterException("Create drawing called on client");
+        }
+
+        final CanvasServerTracker canvasTracker = (CanvasServerTracker) Helper.getLevelCanvasTracker(level);
+
+        final CanvasData drawing = BUILDER.createFresh(
+            resolution,
+            widthBlocks * resolution.getNumeric(),
+            heightBlocks * resolution.getNumeric(),
+            groundColor
+        );
+
+        canvasTracker.registerCanvasData(getCanvasCode(holderId), drawing);
+
+        return drawing;
     }
 
     protected DrawingData() {}

@@ -10,7 +10,6 @@ import me.dantaeusb.zetter.core.ZetterNetwork;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasAction;
 import me.dantaeusb.zetter.entity.item.state.representation.CanvasSnapshot;
-import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.network.packet.*;
 import me.dantaeusb.zetter.painting.Tool;
 import me.dantaeusb.zetter.painting.parameters.AbstractToolParameters;
@@ -554,16 +553,7 @@ public class CanvasState {
      * @return boolean True if initialization is successful
      */
     public boolean initializeCanvas(long timestamp) {
-        ItemStack canvasStack = this.canvasHolder.getCanvasStack();
-
-        if (canvasStack == null) {
-            throw new IllegalStateException("Cannot initialize canvas: no item in container");
-        }
-
-        String canvasCode = CanvasItem.getCanvasCode(canvasStack);
-
-        if (canvasCode != null) {
-            // Already initialized
+        if (this.isCanvasInitialized()) {
             return false;
         }
 
@@ -573,19 +563,19 @@ public class CanvasState {
             }
         }
 
-        int[] size = CanvasItem.getBlockSize(canvasStack);
+        // @todo: Stop menu updates to prevent sending change before initialization packet
+        final CanvasData canvasData = this.canvasHolder.createCanvasData();
 
-        assert size != null && size.length == 2; // @todo: Stop menu updates to prevent sending change before initialization packet
-
-        CanvasData canvasData = this.canvasHolder.createCanvasData(canvasStack, size[0], size[1]);
-        canvasCode = CanvasItem.getCanvasCode(canvasStack);
+        // Nothing to make one from, an easel whose canvas was taken out from under us
+        if (canvasData == null) {
+            return false;
+        }
 
         /*
-         * createEmpty writes the code into the stack's tag directly, which does not go
-         * through the container, so the holder would keep reporting the default code
-         * and we would initialize the canvas again on the next action
+         * The holder adopts the code as part of creating the canvas, so this is the
+         * one place that has to read it back rather than being told it
          */
-        this.canvasHolder.getEaselContainer().changed();
+        final String canvasCode = this.canvasHolder.getCanvasCode();
 
         SEaselCanvasInitializationPacket initPacket = new SEaselCanvasInitializationPacket(this.canvasHolder.getId(), canvasCode,canvasData, System.currentTimeMillis());
 
@@ -1391,7 +1381,7 @@ public class CanvasState {
      * @param newActions
      */
     public void processActionServer(Queue<CanvasAction> newActions) {
-        if (this.canvasHolder.getCanvasStack().isEmpty()) {
+        if (!this.canvasHolder.hasCanvas()) {
             Zetter.LOG.warn("Got action buffer but no canvas found on easel");
             return;
         }

@@ -171,7 +171,7 @@ public class ServerHandler {
                 return;
             }
 
-            if (!canvasHolder.acceptsPalette()) {
+            if (!canvasHolder.acceptsImplement(paletteStack)) {
                 Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot use a palette on canvas holder " + canvasHolder.getId());
                 return;
             }
@@ -209,6 +209,11 @@ public class ServerHandler {
             final CanvasHolderEntity canvasHolder = getAccessibleCanvasHolder(sendingPlayer, packetIn.getCanvasHolderId(), false);
 
             if (canvasHolder == null) {
+                return;
+            }
+
+            if (!canvasHolder.acceptsImplement(chalkStack)) {
+                Zetter.LOG.warn("Player " + sendingPlayer.getName().getString() + " cannot use chalk on canvas holder " + canvasHolder.getId());
                 return;
             }
 

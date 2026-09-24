@@ -73,8 +73,6 @@ public class BlackboardItem extends Item {
             blackboard.setPos(vec3);
             blackboard.setYRot(rotation);
 
-            blackboard.getEaselContainer().setCanvasStack(CanvasItem.createBlank(BlackboardEntity.BLOCK_WIDTH, BlackboardEntity.BLOCK_HEIGHT));
-
             level.addFreshEntity(blackboard);
 
             level.playSound(null, blackboard.getX(), blackboard.getY(), blackboard.getZ(), SoundEvents.ARMOR_STAND_PLACE, SoundSource.BLOCKS, 0.75F, 0.8F);

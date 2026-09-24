@@ -9,15 +9,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DrawingData;
@@ -26,8 +23,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
-
-import javax.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -127,42 +122,41 @@ public class BlackboardEntity extends CanvasHolderEntity {
     }
 
     /**
-     * An empty one, so that a board nobody has drawn on shows its slate. An easel
-     * stands a primed canvas up while it waits; a board would be covering the very
-     * thing the player is looking at.
-     *
-     * @param blockWidth
-     * @param blockHeight
      * @return
      */
     @Override
-    protected @Nullable String getPlaceholderCanvasCode(int blockWidth, int blockHeight) {
-        return DrawingData.getDefaultCanvasCode(blockWidth, blockHeight);
+    protected String getInitialCanvasCode() {
+        return DrawingData.getDefaultCanvasCode(BLOCK_WIDTH, BLOCK_HEIGHT);
     }
 
     /**
-     * A drawing rather than a canvas: it belongs to this board and goes when the
-     * board does.
-     * @param canvasStack
-     * @param blockWidth
-     * @param blockHeight
-     * @return
-     */
-    @Override
-    public CanvasData createCanvasData(ItemStack canvasStack, int blockWidth, int blockHeight) {
-        return CanvasItem.createEmptyDrawing(canvasStack, this.getUUID(), CANVAS_RESOLUTION, blockWidth, blockHeight, this.getInitialCanvasColor(), this.level());
-    }
-
-    /**
-     * Chalk is what a board is drawn on with, and letting
-     * a palette open a screen on one would put the whole painting interface in front
-     * of a surface meant to be drawn on in place.
+     * Fixed at the size and resolution the slate texture is drawn for.
      *
      * @return
      */
     @Override
-    public boolean acceptsPalette() {
-        return false;
+    public CanvasData createCanvasData() {
+        final CanvasData drawing = DrawingData.create(
+            this.getUUID(), CANVAS_RESOLUTION,
+            BLOCK_WIDTH, BLOCK_HEIGHT, this.getInitialCanvasColor(), this.level()
+        );
+
+        this.setCanvasCode(DrawingData.getCanvasCode(this.getUUID()));
+
+        return drawing;
+    }
+
+    /**
+     * Chalk is what a board is drawn on with. Letting a palette open a screen on one
+     * would put the whole painting interface in front of a surface meant to be drawn
+     * on in place.
+     *
+     * @param stack
+     * @return
+     */
+    @Override
+    public boolean acceptsImplement(ItemStack stack) {
+        return stack.getItem() instanceof ChalkItem;
     }
 
     /**
@@ -318,30 +312,6 @@ public class BlackboardEntity extends CanvasHolderEntity {
         }
 
         return true;
-    }
-
-    /**
-     * The slate is part of the board, so unlike an easel there is nothing to slot
-     * into it or take back out. Drawing happens on its face with chalk.
-     *
-     * @param player
-     * @param hand
-     * @return
-     */
-    @Override
-    public InteractionResult interact(Player player, InteractionHand hand) {
-        return InteractionResult.PASS;
-    }
-
-    /**
-     * Breaking the board takes the drawing with it, the way wiping a chalkboard
-     * does.
-     *
-     * @param level
-     * @param blockPos
-     */
-    @Override
-    public void dropAllContents(Level level, BlockPos blockPos) {
     }
 
     @Override

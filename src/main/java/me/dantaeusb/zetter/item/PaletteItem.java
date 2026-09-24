@@ -54,7 +54,7 @@ public class PaletteItem extends Item {
         AABB bb = player.getBoundingBox().inflate(pickRange + 1.0D);
 
         List<Entity> canvasHolders = level.getEntities(player, bb,
-            entity -> entity instanceof CanvasHolderEntity canvasHolder && canvasHolder.acceptsPalette());
+            entity -> entity instanceof CanvasHolderEntity canvasHolder && canvasHolder.acceptsImplement(paletteStack));
 
         if (canvasHolders.isEmpty()) {
             return InteractionResultHolder.fail(player.getItemInHand(hand));
