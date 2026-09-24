@@ -51,12 +51,6 @@ public class BlackboardEntity extends CanvasHolderEntity {
      */
     public static final AbstractCanvasData.Resolution CANVAS_RESOLUTION = AbstractCanvasData.Resolution.x32;
 
-    /**
-     * Middle of the bottom edge of the slate, a hair proud of the frame's front face
-     * so that the two do not fight over which one is in front
-     */
-    private static final Vector3f CANVAS_ANCHOR = new Vector3f(0.0f, 0.0f, 0.43f);
-
     /*
      * Model bounds, blocks. Model space, so Z is pointing away from the front of the
      * board: the back sits on the block boundary, flat against the wall, and the
@@ -66,6 +60,21 @@ public class BlackboardEntity extends CanvasHolderEntity {
     private static final float MODEL_HEIGHT = BLOCK_HEIGHT;
     private static final float MODEL_FRONT = 0.4375f;
     private static final float MODEL_BACK = 0.5f;
+
+    /**
+     * How far behind the front of the frame the chalk sits, block pixels.
+     *
+     * The drawing is on slate held inside the frame, not laid over the front of it,
+     * so the frame stands proud of the chalk and the edge of the board reads as a
+     * lip rather than as a line. It also keeps the slate clear of the frame's front
+     * face, which the two were within a thousandth of a block of sharing.
+     */
+    private static final float CANVAS_INSET = 0.125f;
+
+    /**
+     * Middle of the bottom edge of the slate, set back into the frame
+     */
+    private static final Vector3f CANVAS_ANCHOR = new Vector3f(0.0f, 0.0f, MODEL_FRONT + CANVAS_INSET / 16.0f);
 
     public BlackboardEntity(EntityType<? extends BlackboardEntity> type, Level level) {
         super(type, level);

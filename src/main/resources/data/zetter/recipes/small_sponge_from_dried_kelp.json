@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "ingredients": [
     {
-      "item": "minecraft:sponge"
+      "item": "minecraft:dried_kelp"
     }
   ],
   "result": {
     "item": "zetter:small_sponge",
-    "count": 4,
+    "count": 1,
     "nbt": {
       "Damage": 16383
     }

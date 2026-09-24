@@ -48,7 +48,7 @@ public class BlackboardRenderer extends EntityWithCanvasRenderer<BlackboardEntit
     private static final double FRAME_DEPTH = 1.0D / 16.0D;
 
     /**
-     * Canvas pixels the slate sits behind the chalk
+     * Block pixels the slate sits behind the chalk, in the canvas plane's own space
      */
     private static final float SLATE_DEPTH = 0.125F;
 
