@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "zetter:white_chalk",
+    "zetter:orange_chalk",
+    "zetter:magenta_chalk",
+    "zetter:light_blue_chalk",
+    "zetter:yellow_chalk",
+    "zetter:lime_chalk",
+    "zetter:pink_chalk",
+    "zetter:gray_chalk",
+    "zetter:light_gray_chalk",
+    "zetter:cyan_chalk",
+    "zetter:purple_chalk",
+    "zetter:blue_chalk",
+    "zetter:brown_chalk",
+    "zetter:green_chalk",
+    "zetter:red_chalk",
+    "zetter:black_chalk"
+  ]
+}

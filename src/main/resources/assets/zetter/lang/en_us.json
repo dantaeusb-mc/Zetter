@@ -85,6 +85,8 @@
 	"item.zetter.canvas": "Canvas",
 	"item.zetter.canvas.blank": "Blank canvas",
 	"item.zetter.canvas.painted": "Painted canvas",
+	"item.zetter.chalk_box": "Chalk Box",
+	"item.zetter.chalk_box.fullness": "%s of %s",
 	"item.zetter.cherry_blackboard": "Cherry Blackboard",
 	"item.zetter.crimson_basic_frame": "Crimson Frame",
 	"item.zetter.crimson_blackboard": "Crimson Blackboard",

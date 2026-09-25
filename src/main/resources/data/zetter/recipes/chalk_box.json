@@ -1,0 +1,17 @@
+{
+  "type": "zetter:chalk_box_filling",
+  "materials": [
+    {
+      "ingredient": {
+        "item": "minecraft:calcite"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:paper"
+      },
+      "count": 2
+    }
+  ]
+}

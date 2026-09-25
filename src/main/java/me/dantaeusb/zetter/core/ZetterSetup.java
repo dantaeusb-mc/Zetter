@@ -13,6 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
+import me.dantaeusb.zetter.item.ChalkBoxItem;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
 import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
@@ -27,6 +28,12 @@ public class ZetterSetup
         event.enqueueWork(() -> {
             // Not registering PaintingScreen as it's client-side only
             MenuScreens.register(ZetterContainerMenus.ARTIST_TABLE.get(), ArtistTableScreen::new);
+
+            ItemProperties.register(
+                ZetterItems.CHALK_BOX.get(),
+                new ResourceLocation("fullness"),
+                (stack, level, entity, seed) -> ChalkBoxItem.getFullness(stack)
+            );
 
             // @todo: [CRIT] Broke icons with paintings!
             for (RegistryObject<FrameItem> frame : ZetterItems.FRAMES.values()) {

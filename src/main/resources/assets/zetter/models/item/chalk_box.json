@@ -1,0 +1,14 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "zetter:item/chalk_box/empty"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "fullness": 0.0001
+      },
+      "model": "zetter:item/chalk_box_filled"
+    }
+  ]
+}

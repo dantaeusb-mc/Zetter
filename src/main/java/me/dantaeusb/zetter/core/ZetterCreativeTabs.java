@@ -21,6 +21,7 @@ public class ZetterCreativeTabs
         if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
             event.accept(ZetterItems.PALETTE);
             event.accept(CanvasItem.createBlank(1, 1));
+            event.accept(ZetterItems.CHALK_BOX);
             event.accept(ZetterItems.SMALL_SPONGE);
             event.accept(driedSponge());
 

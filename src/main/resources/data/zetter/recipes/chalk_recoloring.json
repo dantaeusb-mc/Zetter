@@ -1,0 +1,6 @@
+{
+  "type": "zetter:chalk_recoloring",
+  "chalk": {
+    "tag": "zetter:chalk"
+  }
+}
