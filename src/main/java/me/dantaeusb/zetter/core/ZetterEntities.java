@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.entity.item.BlackboardEntity;
 import me.dantaeusb.zetter.entity.item.EaselEntity;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
+import me.dantaeusb.zetter.entity.item.StandBoardEntity;
 import me.dantaeusb.zetter.entity.item.WallEaselEntity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -32,6 +33,11 @@ public class ZetterEntities {
     public static RegistryObject<EntityType<BlackboardEntity>> BLACKBOARD_ENTITY = ENTITIES.register("blackboard_entity", () -> EntityType.Builder.<BlackboardEntity>of(BlackboardEntity::new, MobCategory.MISC)
         .sized(BlackboardEntity.BLOCK_WIDTH, BlackboardEntity.BLOCK_HEIGHT)
         .build(Zetter.MOD_ID + "_blackboard_entity"));
+
+    // Footprint is square, so it needs no turning with the stand
+    public static RegistryObject<EntityType<StandBoardEntity>> STANDING_BOARD_ENTITY = ENTITIES.register("standing_board_entity", () -> EntityType.Builder.<StandBoardEntity>of(StandBoardEntity::new, MobCategory.MISC)
+        .sized(1.0F, 1.5F)
+        .build(Zetter.MOD_ID + "_standing_board_entity"));
 
     public static void init(IEventBus bus) {
         ENTITIES.register(bus);

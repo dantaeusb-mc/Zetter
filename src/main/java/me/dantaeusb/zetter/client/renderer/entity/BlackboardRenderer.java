@@ -4,9 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
 import me.dantaeusb.zetter.entity.item.BlackboardEntity;
 import me.dantaeusb.zetter.entity.item.CanvasHolderEntity;
-import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -31,16 +31,8 @@ import java.util.Map;
  * middle left open.
  */
 public class BlackboardRenderer extends EntityWithCanvasRenderer<BlackboardEntity> {
-    private static final Map<BlackboardEntity.Surfaces, ResourceLocation> SURFACES =
-        new EnumMap<>(BlackboardEntity.Surfaces.class);
-
-    /**
-     * Boards are made of every wood in the game, but the painting frames stop short
-     * of the newest two, so those borrow the closest frame they can until their own
-     * artwork exists
-     */
-    private static final Map<BlackboardEntity.Materials, PaintingEntity.Materials> FRAME_MATERIALS =
-        new EnumMap<>(BlackboardEntity.Materials.class);
+    private static final Map<AbstractBoardEntity.Surfaces, ResourceLocation> SURFACES =
+        new EnumMap<>(AbstractBoardEntity.Surfaces.class);
 
     /**
      * Frame tiles are a pixel deep and hang with their backs flat on the wall
@@ -63,25 +55,11 @@ public class BlackboardRenderer extends EntityWithCanvasRenderer<BlackboardEntit
     };
 
     static {
-        for (BlackboardEntity.Surfaces surface : BlackboardEntity.Surfaces.values()) {
+        for (AbstractBoardEntity.Surfaces surface : AbstractBoardEntity.Surfaces.values()) {
             SURFACES.put(surface, new ResourceLocation(Zetter.MOD_ID, "textures/entity/blackboard/" + surface + ".png"));
         }
 
-        for (BlackboardEntity.Materials material : BlackboardEntity.Materials.values()) {
-            final PaintingEntity.Materials frame = PaintingEntity.Materials.fromString(material.toString());
-
-            if (frame != null) {
-                FRAME_MATERIALS.put(material, frame);
-                continue;
-            }
-
-            // Cherry and bamboo, which take the nearest frame in tone until they have one
-            FRAME_MATERIALS.put(material, material == BlackboardEntity.Materials.BAMBOO
-                ? PaintingEntity.Materials.BIRCH
-                : PaintingEntity.Materials.OAK);
-        }
-
-        for (PaintingEntity.Materials material : FRAME_MATERIALS.values()) {
+        for (AbstractBoardEntity.Materials material : AbstractBoardEntity.Materials.values()) {
             for (String tileCode : TILE_CODES) {
                 final String key = material + "/" + tileCode;
 
@@ -101,7 +79,7 @@ public class BlackboardRenderer extends EntityWithCanvasRenderer<BlackboardEntit
     }
 
     public BlackboardRenderer(EntityRendererProvider.Context context) {
-        super(context, SURFACES.get(BlackboardEntity.Surfaces.GREEN));
+        super(context, SURFACES.get(AbstractBoardEntity.Surfaces.GREEN));
     }
 
     /**
@@ -130,7 +108,7 @@ public class BlackboardRenderer extends EntityWithCanvasRenderer<BlackboardEntit
     }
 
     private void renderFrame(BlackboardEntity entity, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        final PaintingEntity.Materials material = FRAME_MATERIALS.get(entity.getMaterial());
+        final AbstractBoardEntity.Materials material = entity.getMaterial();
 
         poseStack.pushPose();
 
@@ -178,7 +156,7 @@ public class BlackboardRenderer extends EntityWithCanvasRenderer<BlackboardEntit
     /**
      * @see FramedPaintingRenderer#renderModel
      */
-    private void renderTile(PaintingEntity.Materials material, String tileCode, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    private void renderTile(AbstractBoardEntity.Materials material, String tileCode, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         final ModelResourceLocation modelLocation = FRAME_MODELS.get(material + "/" + tileCode);
 
         if (modelLocation == null) {

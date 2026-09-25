@@ -2,7 +2,7 @@ package me.dantaeusb.zetter.client.input;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterNetwork;
-import me.dantaeusb.zetter.entity.item.BlackboardEntity;
+import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
 import me.dantaeusb.zetter.item.BlackboardImplement;
 import me.dantaeusb.zetter.network.packet.CCanvasHolderStopUsingPacket;
 import me.dantaeusb.zetter.network.packet.CImplementUseCanvasHolderPacket;
@@ -23,7 +23,8 @@ import org.joml.Vector2f;
 import javax.annotation.Nullable;
 
 /**
- * Working on a board in the world rather than through a screen.
+ * Working on a board in the world rather than through a screen, whichever kind of
+ * board it is.
  */
 @Mod.EventBusSubscriber(modid = Zetter.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class BlackboardHandler {
@@ -46,7 +47,7 @@ public class BlackboardHandler {
         }
 
         final Minecraft minecraft = Minecraft.getInstance();
-        final BlackboardEntity board = lookedAtBoard(minecraft);
+        final AbstractBoardEntity board = lookedAtBoard(minecraft);
 
         if (board == null || implementHand(minecraft.player, board) == null) {
             return;
@@ -74,7 +75,7 @@ public class BlackboardHandler {
             return;
         }
 
-        final BlackboardEntity board = lookedAtBoard(minecraft);
+        final AbstractBoardEntity board = lookedAtBoard(minecraft);
         final InteractionHand hand = board == null ? null : implementHand(minecraft.player, board);
 
         if (board == null || hand == null) {
@@ -85,7 +86,7 @@ public class BlackboardHandler {
         draw(minecraft, board, hand);
     }
 
-    private static void draw(Minecraft minecraft, BlackboardEntity board, InteractionHand hand) {
+    private static void draw(Minecraft minecraft, AbstractBoardEntity board, InteractionHand hand) {
         final LocalPlayer player = minecraft.player;
         final ItemStack implementStack = player.getItemInHand(hand);
         final BlackboardImplement implement = (BlackboardImplement) implementStack.getItem();
@@ -140,7 +141,7 @@ public class BlackboardHandler {
         if (minecraft.level != null && minecraft.player != null) {
             final Entity previous = minecraft.level.getEntity(boardId);
 
-            if (previous instanceof BlackboardEntity board) {
+            if (previous instanceof AbstractBoardEntity board) {
                 board.removePlayerUsing(minecraft.player);
             }
 
@@ -159,7 +160,7 @@ public class BlackboardHandler {
      * @param board
      * @return
      */
-    private static @Nullable InteractionHand implementHand(@Nullable LocalPlayer player, BlackboardEntity board) {
+    private static @Nullable InteractionHand implementHand(@Nullable LocalPlayer player, AbstractBoardEntity board) {
         if (player == null) {
             return null;
         }
@@ -179,7 +180,7 @@ public class BlackboardHandler {
      * @param minecraft
      * @return
      */
-    private static @Nullable BlackboardEntity lookedAtBoard(Minecraft minecraft) {
+    private static @Nullable AbstractBoardEntity lookedAtBoard(Minecraft minecraft) {
         final HitResult hitResult = minecraft.hitResult;
 
         if (hitResult == null || hitResult.getType() != HitResult.Type.ENTITY) {
@@ -188,6 +189,6 @@ public class BlackboardHandler {
 
         final Entity entity = ((EntityHitResult) hitResult).getEntity();
 
-        return entity instanceof BlackboardEntity board ? board : null;
+        return entity instanceof AbstractBoardEntity board ? board : null;
     }
 }

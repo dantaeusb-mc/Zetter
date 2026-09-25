@@ -6,6 +6,7 @@ import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.item.ChalkItem;
 import me.dantaeusb.zetter.item.FrameItem;
 import me.dantaeusb.zetter.item.SpongeItem;
+import me.dantaeusb.zetter.item.StandBoardItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -39,6 +40,10 @@ public class ZetterCreativeTabs
 
             for (RegistryObject<BlackboardItem> blackboardItem : ZetterItems.BLACKBOARDS.values()) {
                 event.accept(blackboardItem);
+            }
+
+            for (RegistryObject<StandBoardItem> standingBoardItem : ZetterItems.STANDING_BOARDS.values()) {
+                event.accept(standingBoardItem);
             }
         } else if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
             event.accept(ZetterItems.PAINTS);

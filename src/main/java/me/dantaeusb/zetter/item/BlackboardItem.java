@@ -1,6 +1,7 @@
 package me.dantaeusb.zetter.item;
 
 import me.dantaeusb.zetter.core.ZetterEntities;
+import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
 import me.dantaeusb.zetter.entity.item.BlackboardEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -18,15 +19,15 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class BlackboardItem extends Item {
-    private final BlackboardEntity.Materials material;
+    private final AbstractBoardEntity.Materials material;
 
-    public BlackboardItem(Properties properties, BlackboardEntity.Materials material) {
+    public BlackboardItem(Properties properties, AbstractBoardEntity.Materials material) {
         super(properties);
 
         this.material = material;
     }
 
-    public BlackboardEntity.Materials getMaterial() {
+    public AbstractBoardEntity.Materials getMaterial() {
         return this.material;
     }
 

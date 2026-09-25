@@ -10,7 +10,9 @@ import me.dantaeusb.zetter.event.CanvasUnregisterEvent;
 import me.dantaeusb.zetter.menu.artisttable.CanvasCombinationAction;
 import me.dantaeusb.zetter.network.packet.CCanvasUnloadRequestPacket;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
+import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
 import me.dantaeusb.zetter.entity.item.BlackboardEntity;
+import me.dantaeusb.zetter.entity.item.StandBoardEntity;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.DrawingData;
 import net.minecraft.world.level.Level;
@@ -54,18 +56,26 @@ public class CanvasClientTracker implements CanvasTracker {
             CanvasRenderer.getInstance().addCanvas(canvasCode, canvasData);
         }
 
-        final int drawingResolution = BlackboardEntity.CANVAS_RESOLUTION.getNumeric();
-        final String drawingCode = DrawingData.getDefaultCanvasCode(BlackboardEntity.BLOCK_WIDTH, BlackboardEntity.BLOCK_HEIGHT);
-        final DrawingData drawingData = DrawingData.BUILDER.createFresh(
-            BlackboardEntity.CANVAS_RESOLUTION,
-            BlackboardEntity.BLOCK_WIDTH * drawingResolution,
-            BlackboardEntity.BLOCK_HEIGHT * drawingResolution,
-            0x00000000
-        );
-        drawingData.setManaged(false);
+        // One blank drawing per size of board, shown until the board's own arrives
+        final int[][] boardSizes = new int[][]{
+            {BlackboardEntity.BLOCK_WIDTH, BlackboardEntity.BLOCK_HEIGHT},
+            {StandBoardEntity.BLOCK_WIDTH, StandBoardEntity.BLOCK_HEIGHT}
+        };
 
-        this.canvases.put(drawingCode, drawingData);
-        CanvasRenderer.getInstance().addCanvas(drawingCode, drawingData);
+        for (int[] size : boardSizes) {
+            final int drawingResolution = AbstractBoardEntity.CANVAS_RESOLUTION.getNumeric();
+            final String drawingCode = DrawingData.getDefaultCanvasCode(size[0], size[1]);
+            final DrawingData drawingData = DrawingData.BUILDER.createFresh(
+                AbstractBoardEntity.CANVAS_RESOLUTION,
+                size[0] * drawingResolution,
+                size[1] * drawingResolution,
+                0x00000000
+            );
+            drawingData.setManaged(false);
+
+            this.canvases.put(drawingCode, drawingData);
+            CanvasRenderer.getInstance().addCanvas(drawingCode, drawingData);
+        }
     }
 
     @Override

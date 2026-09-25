@@ -2,10 +2,12 @@ package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.model.EaselModel;
+import me.dantaeusb.zetter.client.model.StandBoardModel;
 import me.dantaeusb.zetter.client.model.WallEaselModel;
 import me.dantaeusb.zetter.client.renderer.entity.BlackboardRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.EaselRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.FramedPaintingRenderer;
+import me.dantaeusb.zetter.client.renderer.entity.StandBoardRenderer;
 import me.dantaeusb.zetter.client.renderer.entity.WallEaselRenderer;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -36,6 +38,7 @@ public class ZetterModels
         event.registerEntityRenderer(ZetterEntities.EASEL_ENTITY.get(), EaselRenderer::new);
         event.registerEntityRenderer(ZetterEntities.WALL_EASEL_ENTITY.get(), WallEaselRenderer::new);
         event.registerEntityRenderer(ZetterEntities.BLACKBOARD_ENTITY.get(), BlackboardRenderer::new);
+        event.registerEntityRenderer(ZetterEntities.STANDING_BOARD_ENTITY.get(), StandBoardRenderer::new);
     }
 
     @SubscribeEvent
@@ -45,5 +48,6 @@ public class ZetterModels
         event.registerLayerDefinition(EaselModel.EASEL_BODY_LAYER, EaselModel::createBodyLayer);
         event.registerLayerDefinition(FramedPaintingRenderer.PAINTING_PLATE_LAYER, FramedPaintingRenderer::createPlateLayer);
         event.registerLayerDefinition(WallEaselModel.WALL_EASEL_BODY_LAYER, WallEaselModel::createBodyLayer);
+        event.registerLayerDefinition(StandBoardModel.STAND_BOARD_BODY_LAYER, StandBoardModel::createBodyLayer);
     }
 }

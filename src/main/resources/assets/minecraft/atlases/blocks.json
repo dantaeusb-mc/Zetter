@@ -7,8 +7,18 @@
         },
         {
             "type": "directory",
+            "source": "entity/frame/bamboo",
+            "prefix": "entity/frame/bamboo/"
+        },
+        {
+            "type": "directory",
             "source": "entity/frame/birch",
             "prefix": "entity/frame/birch/"
+        },
+        {
+            "type": "directory",
+            "source": "entity/frame/cherry",
+            "prefix": "entity/frame/cherry/"
         },
         {
             "type": "directory",

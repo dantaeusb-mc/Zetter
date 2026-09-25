@@ -1,7 +1,7 @@
 package me.dantaeusb.zetter.core;
 
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.entity.item.BlackboardEntity;
+import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
 import me.dantaeusb.zetter.entity.item.PaintingEntity;
 import me.dantaeusb.zetter.item.*;
 import net.minecraft.world.item.BlockItem;
@@ -56,13 +56,19 @@ public class ZetterItems
     public static final RegistryObject<FrameItem> GOLD_PLATE_FRAME = registerFrame("gold_plated_frame", PaintingEntity.Materials.GOLD, true);
 
     public static final HashMap<String, RegistryObject<BlackboardItem>> BLACKBOARDS = new HashMap<>();
+    public static final HashMap<String, RegistryObject<StandBoardItem>> STANDING_BOARDS = new HashMap<>();
     public static final HashMap<DyeColor, RegistryObject<ChalkItem>> CHALKS = new HashMap<>();
 
     static {
-        for (BlackboardEntity.Materials material : BlackboardEntity.Materials.values()) {
+        for (AbstractBoardEntity.Materials material : AbstractBoardEntity.Materials.values()) {
             BLACKBOARDS.put(
                 material.toString(),
                 ITEMS.register(material + "_blackboard", () -> new BlackboardItem(new Item.Properties(), material))
+            );
+
+            STANDING_BOARDS.put(
+                material.toString(),
+                ITEMS.register(material + "_standing_board", () -> new StandBoardItem(new Item.Properties(), material))
             );
         }
 
