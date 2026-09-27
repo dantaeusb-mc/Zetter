@@ -102,7 +102,7 @@ public class CanvasCuttingRecipe extends CustomRecipe {
      * @return
      */
     public @NotNull RecipeSerializer<?> getSerializer() {
-        return ZetterCraftingRecipes.COPYING.get();
+        return ZetterCraftingRecipes.CANVAS_CUTTING.get();
     }
 
     /**

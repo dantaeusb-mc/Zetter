@@ -49,5 +49,6 @@ public class Zetter
         // Custom types and registries
         ZetterRegistries.init(MOD_EVENT_BUS);
         ZetterCanvasTypes.init(MOD_EVENT_BUS);
+        ZetterSounds.init(MOD_EVENT_BUS);
     }
 }

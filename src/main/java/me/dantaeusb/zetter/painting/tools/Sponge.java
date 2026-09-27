@@ -12,11 +12,9 @@ import java.util.ArrayList;
 /**
  * Wiping a board down.
  *
- * Chalk is taken off rather than moved about, and how evenly it comes off is what
- * the sponge's wetness decides. A soaked sponge meets the board flat and lifts
- * everything; a dry one only catches in places, leaving chalk alive in lanes that
- * run the way the hand went. Wipe a board enough times from enough directions and
- * it keeps a record of all of them, which is the entire point of the tool.
+ * A soaked sponge meets the board flat and lifts everything; a dry one only catches in places,
+ * leaving chalk alive in lanes that run the way the hand went. Wipe a board enough times from
+ * enough directions, and it keeps a record of all of them.
  *
  * See docs/painting-blending.md
  */
@@ -26,7 +24,7 @@ public class Sponge extends AbstractTool<SpongeParameters> {
      * squarely, dry and soaked.
      */
     private static final float DRY_ERASE = 0.025f;
-    private static final float WET_ERASE = 0.2f;
+    private static final float WET_ERASE = 0.38f;
 
     /**
      * How much of what is behind a pixel gets dragged onto it, dry and soaked.

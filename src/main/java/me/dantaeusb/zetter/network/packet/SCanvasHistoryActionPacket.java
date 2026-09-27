@@ -12,17 +12,17 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Needed when several players are editing, to notify other players
- * that one of them canceled an action
+ * Needed when several players are editing, to tell every painter which
+ * actions an undo or redo canceled or restored
  */
 public class SCanvasHistoryActionPacket {
     public final int easelEntityId;
-    public final int actionId;
+    public final int[] actionIds;
     public final boolean canceled;
 
-    public SCanvasHistoryActionPacket(int easelEntityId, int actionId, boolean canceled) {
+    public SCanvasHistoryActionPacket(int easelEntityId, int[] actionIds, boolean canceled) {
         this.easelEntityId = easelEntityId;
-        this.actionId = actionId;
+        this.actionIds = actionIds;
         this.canceled = canceled;
     }
 
@@ -32,10 +32,10 @@ public class SCanvasHistoryActionPacket {
      */
     public static SCanvasHistoryActionPacket readPacketData(FriendlyByteBuf buffer) {
         final int easelEntityId = buffer.readInt();
-        final int actionId = buffer.readInt();
+        final int[] actionIds = buffer.readVarIntArray();
         final boolean canceled = buffer.readBoolean();
 
-        return new SCanvasHistoryActionPacket(easelEntityId, actionId, canceled);
+        return new SCanvasHistoryActionPacket(easelEntityId, actionIds, canceled);
     }
 
     /**
@@ -43,7 +43,7 @@ public class SCanvasHistoryActionPacket {
      */
     public void writePacketData(FriendlyByteBuf buffer) {
         buffer.writeInt(this.easelEntityId);
-        buffer.writeInt(this.actionId);
+        buffer.writeVarIntArray(this.actionIds);
         buffer.writeBoolean(this.canceled);
     }
 

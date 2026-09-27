@@ -130,7 +130,7 @@ public class CanvasStitchingRecipe extends CustomRecipe {
      * @return
      */
     public @NotNull RecipeSerializer<?> getSerializer() {
-        return ZetterCraftingRecipes.COPYING.get();
+        return ZetterCraftingRecipes.CANVAS_STITCHING.get();
     }
 
     /**

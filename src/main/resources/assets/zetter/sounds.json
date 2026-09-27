@@ -1,0 +1,24 @@
+{
+  "chalk_scratch": {
+    "category": "block",
+    "subtitle": "subtitles.zetter.chalk_scratch",
+    "sounds": [
+      {
+        "name": "zetter:chalk_scratch",
+        "stream": true,
+        "attenuation_distance": 12
+      }
+    ]
+  },
+  "chalk_impact": {
+    "category": "block",
+    "subtitle": "subtitles.zetter.chalk_impact",
+    "sounds": [
+      "zetter:chalk_impact_0",
+      "zetter:chalk_impact_1",
+      "zetter:chalk_impact_2",
+      "zetter:chalk_impact_3",
+      "zetter:chalk_impact_4"
+    ]
+  }
+}

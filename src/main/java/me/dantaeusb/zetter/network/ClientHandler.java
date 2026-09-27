@@ -190,7 +190,7 @@ public class ClientHandler {
     }
 
     /**
-     * Undo and redo packets from other players
+     * Actions changed by an undo or redo, from any painter at this easel
      *
      * @param packetIn
      * @param world
@@ -200,11 +200,7 @@ public class ClientHandler {
             CanvasHolderEntity easel = (CanvasHolderEntity) world.getEntity(packetIn.easelEntityId);
 
             if (easel != null) {
-                if (packetIn.canceled) {
-                    easel.getCanvasState().undo(packetIn.actionId);
-                } else {
-                    easel.getCanvasState().redo(packetIn.actionId);
-                }
+                easel.getCanvasState().applyHistoryChanges(packetIn.actionIds, packetIn.canceled);
             } else {
                 Zetter.LOG.warn("Unable to find entity " + packetIn.easelEntityId + " disregarding canvas changes");
             }

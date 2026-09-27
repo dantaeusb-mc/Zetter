@@ -640,6 +640,7 @@ public class CanvasState {
         }
 
         @Nullable CanvasAction earliestChangedAction = null;
+        final List<CanvasAction> changedActions = new ArrayList<>();
 
         // Cancel all after, un-cancel all before
         if (cancel) {
@@ -650,6 +651,7 @@ public class CanvasState {
 
                 if (!currentAction.isCanceled()) {
                     currentAction.setCanceled(true);
+                    changedActions.add(currentAction);
                     // Walking backwards, so every next hit is an earlier one
                     earliestChangedAction = currentAction;
                 }
@@ -666,6 +668,7 @@ public class CanvasState {
 
                 if (currentAction.isCanceled()) {
                     currentAction.setCanceled(false);
+                    changedActions.add(currentAction);
 
                     if (earliestChangedAction == null) {
                         earliestChangedAction = currentAction;
@@ -704,32 +707,19 @@ public class CanvasState {
                 ZetterNetwork.simpleChannel.sendToServer(historyPacket);
             }
         } else {
+            /*
+             * Every painter gets the exact actions that changed, the one who asked
+             * included: "undo till X" picks a different range on each side if their
+             * logs differ, a list of ids does not. The rewind makes the next sync carry
+             * the new state anyway, for actions a player did not have yet.
+             */
+            this.rewindPlayersSyncTo(earliestChangedAction);
+
+            final int[] changedActionIds = changedActions.stream().mapToInt(action -> action.id).toArray();
+            final SCanvasHistoryActionPacket historyPacket = new SCanvasHistoryActionPacket(this.canvasHolder.getId(), changedActionIds, cancel);
+
             for (Player player : this.players) {
-                // If not sent any actions, it will send canceled already
-                if (this.playerLastSyncedAction.containsKey(player.getUUID())) {
-                    int lastSyncedActionUuid = this.playerLastSyncedAction.get(player.getUUID());
-                    ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
-                    boolean found = false;
-
-                    // If we sent action (found last sent action before tillAction), then we need to send history packet
-                    while(actionsIterator.hasPrevious()) {
-                        CanvasAction action = actionsIterator.previous();
-
-                        if (lastSyncedActionUuid == tillAction.id) {
-                            found = true;
-                            break;
-                        }
-
-                        if (action.id == tillAction.id) {
-                            break;
-                        }
-                    }
-
-                    if (found) {
-                        SCanvasHistoryActionPacket historyPacket = new SCanvasHistoryActionPacket(this.canvasHolder.getId(), tillAction.id, cancel);
-                        ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), historyPacket);
-                    }
-                }
+                ZetterNetwork.simpleChannel.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) player), historyPacket);
             }
         }
 
@@ -872,6 +862,45 @@ public class CanvasState {
 
     public boolean redo(CanvasAction tillAction) {
         return this.applyHistoryTraversing(tillAction, false);
+    }
+
+    /**
+     * Take the server's word on which actions an undo or redo changed, rather
+     * than working out the range again over a log that may differ from its
+     *
+     * Client-only
+     * @param actionIds
+     * @param canceled
+     */
+    public void applyHistoryChanges(int[] actionIds, boolean canceled) {
+        @Nullable CanvasAction earliestChangedAction = null;
+
+        for (int actionId : actionIds) {
+            final @Nullable CanvasAction action = this.findAction(actionId);
+
+            // Not synced to us yet, it will arrive in that state; or already there,
+            // which is the usual case for whoever pressed undo
+            if (action == null || action.isCanceled() == canceled) {
+                continue;
+            }
+
+            action.setCanceled(canceled);
+
+            if (earliestChangedAction == null || action.getStartTime() < earliestChangedAction.getStartTime()) {
+                earliestChangedAction = action;
+            }
+        }
+
+        if (earliestChangedAction == null) {
+            return;
+        }
+
+        this.discardSnapshotsAfter(earliestChangedAction.getStartTime());
+        this.recollectPaintingData();
+        this.onStateChanged();
+
+        this.historyDirty = true;
+        this.unfreeze();
     }
 
     private @Nullable CanvasAction findAndReplaceAction(int actionId, CanvasAction action) {
@@ -1346,6 +1375,53 @@ public class CanvasState {
     }
 
     /**
+     * Move every player's sync position back to just before the given action, if
+     * they were past it. Sync only walks forward from that position, so an action
+     * inserted or changed behind it would otherwise never reach them. Resending
+     * what they already have is harmless, the client takes the server's copy.
+     *
+     * Server-only
+     * @param action
+     */
+    private void rewindPlayersSyncTo(CanvasAction action) {
+        final int actionIndex = this.actions.indexOf(action);
+
+        if (actionIndex == -1) {
+            return;
+        }
+
+        final @Nullable CanvasAction previousAction = actionIndex > 0 ? this.actions.get(actionIndex - 1) : null;
+        final Iterator<Map.Entry<UUID, Integer>> syncedIterator = this.playerLastSyncedAction.entrySet().iterator();
+
+        while (syncedIterator.hasNext()) {
+            final Map.Entry<UUID, Integer> lastSynced = syncedIterator.next();
+            final int syncedIndex = this.indexOfAction(lastSynced.getValue());
+
+            // Behind it already, or pointing at nothing we have, which would stall sync for good
+            if (syncedIndex != -1 && syncedIndex < actionIndex) {
+                continue;
+            }
+
+            if (previousAction != null) {
+                lastSynced.setValue(previousAction.id);
+            } else {
+                // Nothing before it, sync the whole history again
+                syncedIterator.remove();
+            }
+        }
+    }
+
+    private int indexOfAction(int actionId) {
+        for (int i = this.actions.size() - 1; i >= 0; i--) {
+            if (this.actions.get(i).id == actionId) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    /**
      * Get list of actions in history that was not synced with the
      * player since the last sync, to keep history consistent between
      * players
@@ -1389,7 +1465,6 @@ public class CanvasState {
      * Called from network - process player's work
      * And drop canceled actions on server if needed
      *
-     * @todo: [MED] Then rewind and make sure that playerLastSyncedAction is not after the first inserted action
      * @todo: [LOW] It is possible that this and processHistorySyncClient could be unified, because they're doing essentially the same thing
      *
      * Server-only
@@ -1413,6 +1488,8 @@ public class CanvasState {
         final long processingAfterTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
         this.wipeCanceledActionsAndDiscardSnapshots();
 
+        @Nullable CanvasAction earliestInsertedAction = null;
+
         for (CanvasAction newAction : newActions) {
             if (newAction.getStartTime() < processingAfterTimestamp) {
                 Zetter.LOG.warn("Got action that is too old, ignoring");
@@ -1427,9 +1504,19 @@ public class CanvasState {
 
             this.insertAction(newAction);
 
+            if (earliestInsertedAction == null || newAction.getStartTime() < earliestInsertedAction.getStartTime()) {
+                earliestInsertedAction = newAction;
+            }
+
             if (newAction.isCanceled()) {
                 this.historyDirty = true;
             }
+        }
+
+        // A stroke arrives only once committed, so it can land behind actions
+        // other players have already been synced past
+        if (earliestInsertedAction != null) {
+            this.rewindPlayersSyncTo(earliestInsertedAction);
         }
 
         this.unfreeze();

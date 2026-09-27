@@ -2,11 +2,17 @@ package me.dantaeusb.zetter.client.input;
 
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.core.ZetterNetwork;
+import me.dantaeusb.zetter.core.ZetterSounds;
 import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
+import me.dantaeusb.zetter.client.sound.ChalkScratchSound;
 import me.dantaeusb.zetter.item.BlackboardImplement;
+import me.dantaeusb.zetter.item.ChalkItem;
+import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.network.packet.CCanvasHolderStopUsingPacket;
 import me.dantaeusb.zetter.network.packet.CImplementUseCanvasHolderPacket;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.util.RandomSource;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
@@ -39,6 +45,18 @@ public class BlackboardHandler {
      * on rather than started here — a swept tool fills the gap back to the last point
      */
     private static boolean continuing = false;
+
+    /**
+     * The scratching, while there is any. Held rather than looked up, since the sound
+     * engine is told how far the hand moved and has to be told by someone.
+     */
+    private static ChalkScratchSound scratch = null;
+
+    /**
+     * Where the last tick drew, so this one knows how far the hand came. Speed is the
+     * whole of the sound's expression, and nothing else measures it.
+     */
+    private static Vector2f lastPixel = null;
 
     @SubscribeEvent
     public static void onAttackKey(InputEvent.InteractionKeyMappingTriggered event) {
@@ -126,7 +144,75 @@ public class BlackboardHandler {
             continuing
         );
 
+        scratch(minecraft, board, implementStack, pixel);
+
         continuing = true;
+        lastPixel = pixel;
+    }
+
+    /**
+     * The chalk landing on the board.
+     *
+     * Played at the listener like the scratching, since drawing means standing right
+     * in front of the board and there is nothing for direction to say.
+     *
+     * @param minecraft
+     */
+    private static void touch(Minecraft minecraft) {
+        final RandomSource random = minecraft.level.getRandom();
+
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(
+            ZetterSounds.CHALK_IMPACT.get(),
+            0.85f + random.nextFloat() * 0.3f,
+            0.6f + random.nextFloat() * 0.2f
+        ));
+    }
+
+    /**
+     * Keeps the scratching going, and tells it how fast the hand is moving.
+     *
+     * @param minecraft
+     * @param board
+     * @param implementStack
+     * @param pixel
+     */
+    private static void scratch(Minecraft minecraft, AbstractBoardEntity board, ItemStack implementStack, Vector2f pixel) {
+        if (!(implementStack.getItem() instanceof ChalkItem)) {
+            return;
+        }
+
+        boolean touching = false;
+
+        if (scratch == null || scratch.isStopped() || scratch.getBoard() != board) {
+            scratch = new ChalkScratchSound(board);
+            minecraft.getSoundManager().play(scratch);
+
+            touching = true;
+        }
+
+        if (scratch.resume() || touching) {
+            touch(minecraft);
+        }
+
+        if (lastPixel == null || !continuing) {
+            return;
+        }
+
+        final float dx = pixel.x - lastPixel.x;
+        final float dy = pixel.y - lastPixel.y;
+
+        scratch.moved((float) Math.sqrt(dx * dx + dy * dy));
+
+        /*
+         * Where on the slate the chalk is, as a fraction either way. The board's modes
+         * can only be excited away from their own nodes, so this is what decides which
+         * of them answer — and why drawing a circle sounds different all the way round.
+         */
+        final CanvasData canvasData = board.getCanvasData();
+
+        if (canvasData != null) {
+            scratch.contact(pixel.x / canvasData.getWidth(), pixel.y / canvasData.getHeight());
+        }
     }
 
     /**
@@ -148,8 +234,14 @@ public class BlackboardHandler {
             ZetterNetwork.simpleChannel.sendToServer(new CCanvasHolderStopUsingPacket(boardId));
         }
 
+        // Released, not discarded: it fades itself out and waits to be picked up again
+        if (scratch != null) {
+            scratch.release();
+        }
+
         boardId = -1;
         continuing = false;
+        lastPixel = null;
     }
 
     /**
