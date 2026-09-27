@@ -3,8 +3,10 @@ package me.dantaeusb.zetter.client.renderer.item;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.client.renderer.StitchedCanvasPreview;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
+import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -67,8 +69,12 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
             poseStack.scale(0.38F, 0.38F, 0.38F);
         }
 
-        if (hahaLevelInWithoutLevelRenderer != null && !itemStack.isEmpty() && canvasCode != null && CanvasItem.getCanvasData(itemStack, Minecraft.getInstance().level) != null) {
-            CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, canvasCode, CanvasItem.getCanvasData(itemStack, Minecraft.getInstance().level), combinedLight);
+        if (hahaLevelInWithoutLevelRenderer != null && !itemStack.isEmpty() && canvasCode != null) {
+            AbstractCanvasData canvasData = StitchedCanvasPreview.getCanvasData(itemStack, hahaLevelInWithoutLevelRenderer);
+
+            if (canvasData != null) {
+                CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, canvasCode, canvasData, combinedLight);
+            }
         }
 
         poseStack.popPose();

@@ -3,8 +3,8 @@ package me.dantaeusb.zetter.client.gui.tooltip;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import me.dantaeusb.zetter.Zetter;
-import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.client.renderer.StitchedCanvasPreview;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
@@ -48,8 +48,7 @@ public class CanvasTooltipRenderer implements ClientTooltipComponent {
       return;
     }
 
-    CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(mc.level);
-    AbstractCanvasData canvasData = canvasTracker.getCanvasData(canvasCode);
+    AbstractCanvasData canvasData = StitchedCanvasPreview.getCanvasData(stack, mc.level);
 
     if (canvasData == null) {
       CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasCode);

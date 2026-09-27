@@ -214,6 +214,11 @@ public class CanvasRenderer implements AutoCloseable {
             return;
         }
 
+        // Built locally from its parts, server never has it
+        if (canvasCode.equals(Helper.COMBINED_CANVAS_CODE)) {
+            return;
+        }
+
         if (this.textureRequestTimeout.containsKey(canvasCode)) {
             TextureRequest textureRequest = this.textureRequestTimeout.get(canvasCode);
 

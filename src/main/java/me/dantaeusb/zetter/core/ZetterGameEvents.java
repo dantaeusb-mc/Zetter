@@ -72,9 +72,10 @@ public class ZetterGameEvents {
     }
 
     /**
-     * Put actual canvas data to the stitched canvas,
-     * on client it would be enough to use COMBINED_CANVAS_CODE, but for the
-     * safety let the client request and load the contents by regular means.
+     * Fired only when the craft is confirmed, right before ingredients
+     * are consumed, so the parts are still in the grid: creates the
+     * stitched canvas and releases the parts.
+     * Client builds its own preview, see StitchedCanvasPreview.
      *
      * @param event
      */
@@ -86,14 +87,14 @@ public class ZetterGameEvents {
             return;
         }
 
-        if (event.getCrafting().is(ZetterItems.CANVAS.get()) && event.getInventory() instanceof CraftingContainer craftingContainer) {
+        if (event.getInventory() instanceof CraftingContainer craftingContainer) {
             player.level().getRecipeManager().getRecipeFor(
                 RecipeType.CRAFTING,
                 craftingContainer,
                 player.level()
             ).ifPresent(recipe -> {
-                if (!player.level().isClientSide && recipe instanceof CanvasStitchingRecipe) {
-                    CanvasStitchingHelper.createStitchedCanvasAndWriteNewCanvasData(craftingContainer, event.getCrafting(), player);
+                if (recipe instanceof CanvasStitchingRecipe) {
+                    CanvasStitchingHelper.finishStitching(craftingContainer, event.getCrafting(), player);
                 }
             });
         }

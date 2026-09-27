@@ -5,7 +5,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.dantaeusb.zetter.core.*;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -77,20 +76,6 @@ public class CanvasStitchingRecipe extends CustomRecipe {
             return false;
         }
 
-        // @todo: It's never client side!
-        /*if (level.isClientSide()) {
-            ClientCombinedCanvasHelper.getInstance().cleanupCombinedCanvas(level);
-            DummyCanvasData combinedCanvasData = ClientCombinedCanvasHelper.getInstance().getOrRequestCanvasesForStitching(craftingInventory, level);
-
-            *//**
-             * Otherwise it'll be registered when all parts are ready
-             * @see {@link ClientCombinedCanvasHelper#updateCombinedCanvas}
-             *//*
-            if (combinedCanvasData != null) {
-                Helper.getLevelCanvasTracker(level).registerCanvasData(Helper.COMBINED_CANVAS_CODE, combinedCanvasData);
-            }
-        }*/
-
         return true;
     }
 
@@ -114,9 +99,11 @@ public class CanvasStitchingRecipe extends CustomRecipe {
         ItemStack outCanvas = new ItemStack(ZetterItems.CANVAS.get());
         outCanvas.setCount(1);
 
-        // Should use combined code only if there's painting data
+        // Should use combined code only if there's painting data,
+        // parts let client build the preview for that code
         if (anyCanvasHasData) {
             CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
+            CanvasStitchingHelper.StitchParts.fromContainer(craftingInventory, canvasGridRectangle).writeTo(outCanvas);
         }
 
         final int[] stitchedBlockSize = canvasGridRectangle.getStitchedBlockSize();

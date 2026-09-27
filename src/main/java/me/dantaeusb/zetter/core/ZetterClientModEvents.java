@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.gui.overlay.PaintingInfoOverlay;
 import me.dantaeusb.zetter.client.gui.tooltip.CanvasTooltipRenderer;
+import me.dantaeusb.zetter.client.renderer.StitchedCanvasPreview;
 import me.dantaeusb.zetter.event.CanvasOverlayViewEvent;
 import me.dantaeusb.zetter.event.CanvasRegisterEvent;
 import me.dantaeusb.zetter.event.CanvasViewEvent;
@@ -14,9 +15,11 @@ import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.CanvasData;
 import me.dantaeusb.zetter.storage.PaintingData;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderTooltipEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.RegistryObject;
@@ -107,6 +110,18 @@ public class ZetterClientModEvents {
                     event.setCanceled(true);
                 }
             }
+        }
+    }
+
+    /**
+     * Stitching preview is only shown in crafting result,
+     * which is gone with the screen
+     * @param event
+     */
+    @SubscribeEvent
+    public static void onContainerScreenClosing(ScreenEvent.Closing event) {
+        if (event.getScreen() instanceof AbstractContainerScreen<?> && Minecraft.getInstance().level != null) {
+            StitchedCanvasPreview.release(Minecraft.getInstance().level);
         }
     }
 
