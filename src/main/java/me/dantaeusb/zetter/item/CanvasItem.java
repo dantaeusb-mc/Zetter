@@ -3,6 +3,7 @@ package me.dantaeusb.zetter.item;
 import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
+import me.dantaeusb.zetter.core.CanvasCuttingHelper;
 import me.dantaeusb.zetter.core.ClientHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -30,6 +31,7 @@ import javax.annotation.Nullable;
 import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Predicate;
 
 public class CanvasItem extends Item
 {
@@ -104,11 +106,44 @@ public class CanvasItem extends Item
 
     @OnlyIn(Dist.CLIENT)
     public void appendHoverText(ItemStack stack, @Nullable Level worldIn, List<Component> tooltip, TooltipFlag flagIn) {
+        // Crafting result of a cut: parts differ in size, so no single size to show
+        final int cutParts = CanvasCuttingHelper.getCutParts(stack);
+
+        if (cutParts > 0) {
+            tooltip.add(Component.translatable("item.zetter.canvas.cut_parts", cutParts).withStyle(ChatFormatting.GRAY));
+            return;
+        }
+
         String stringSize = getStringSize(stack);
 
         if (!StringUtil.isNullOrEmpty(stringSize)) {
             tooltip.add((Component.literal(stringSize)).withStyle(ChatFormatting.GRAY));
         }
+    }
+
+    /**
+     * Stack in the crafting event is not always the one player gets: shift-click
+     * crafts into a copy and fires with the stack taken before the move. So the
+     * result is looked up in carried and inventory first, and only then the event
+     * stack is used (drop and swap take it as is).
+     *
+     * @param player
+     * @param craftedStack
+     * @param isResult tells the result apart by what the recipe wrote on it
+     * @return null if not found
+     */
+    public static @Nullable ItemStack findCraftedStack(Player player, ItemStack craftedStack, Predicate<ItemStack> isResult) {
+        if (isResult.test(player.containerMenu.getCarried())) {
+            return player.containerMenu.getCarried();
+        }
+
+        for (ItemStack inventoryStack : player.getInventory().items) {
+            if (isResult.test(inventoryStack)) {
+                return inventoryStack;
+            }
+        }
+
+        return isResult.test(craftedStack) ? craftedStack : null;
     }
 
     /**

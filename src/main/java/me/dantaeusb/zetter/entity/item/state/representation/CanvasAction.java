@@ -193,8 +193,8 @@ public class CanvasAction {
             throw new IllegalStateException("Cannot add frame to committed action buffer");
         }
 
-        if (this.shouldCommit()) {
-            throw new IllegalStateException("Cannot add frame to action buffer that should be committed");
+        if (!this.subActionBuffer.hasRemaining()) {
+            throw new IllegalStateException("Cannot add frame to action buffer that is full");
         }
 
         final long currentTime = System.currentTimeMillis();

@@ -1,23 +1,27 @@
 package me.dantaeusb.zetter.item.crafting;
 
 import com.google.gson.JsonObject;
-import me.dantaeusb.zetter.core.CanvasStitchingHelper;
+import me.dantaeusb.zetter.Zetter;
+import me.dantaeusb.zetter.core.CanvasCuttingHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCraftingRecipes;
 import me.dantaeusb.zetter.core.ZetterItems;
 import me.dantaeusb.zetter.item.CanvasItem;
-import me.dantaeusb.zetter.storage.DummyCanvasData;
-import net.minecraft.client.Minecraft;
+import net.minecraft.core.NonNullList;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.ForgeHooks;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 public class CanvasCuttingRecipe extends CustomRecipe {
     public CanvasCuttingRecipe(ResourceLocation id) {
@@ -40,62 +44,110 @@ public class CanvasCuttingRecipe extends CustomRecipe {
     }
 
     /**
-     * Used to check if a recipe matches current crafting inventory
+     * A single canvas larger than 1x1, and room in the grid for its parts
      */
     public boolean matches(@NotNull CraftingContainer craftingInventory, @NotNull Level level) {
-        ItemStack canvas = ItemStack.EMPTY;
+        final int sourceSlot = CanvasCuttingHelper.findSource(craftingInventory);
 
-        for (int i = 0; i < craftingInventory.getContainerSize(); i++) {
-            ItemStack currentStack = craftingInventory.getItem(i);
-            if (!currentStack.isEmpty()) {
-                if (currentStack.getItem() != ZetterItems.CANVAS.get()) {
-                    return false;
-                }
-                if (!canvas.isEmpty()) {
-                    // More than one canvas found
-                    return false;
-                }
-                canvas = currentStack;
-            }
-        }
-
-        if (canvas.isEmpty()) {
+        if (sourceSlot == -1) {
             return false;
         }
 
-        int[] blockSize = CanvasItem.getBlockSize(canvas);
+        final int[] size = CanvasItem.getBlockSize(craftingInventory.getItem(sourceSlot));
 
-        return blockSize != null && blockSize[0] > 1 || blockSize[1] > 1;
+        if (size[0] <= 1 && size[1] <= 1) {
+            return false;
+        }
+
+        return CanvasCuttingHelper.halve(size[0]).length <= craftingInventory.getWidth()
+            && CanvasCuttingHelper.halve(size[1]).length <= craftingInventory.getHeight();
     }
 
     /**
-     * Returns an Item that is the result of this recipe.
-     * The actual canvas on that item will be written after the recipe is actually used,
-     * by handling an event (Forge: PlayerContainerEvent.ItemCraftedEvent)
-     *
-     * I am avoiding full canvas registration here, as that would trash the canvas data
-     * storage with potentially thousands of discarded canvases.
+     * A promise of the top-left part: blank, sized as that part, and marked
+     * with the source, so it gets no preview. It becomes the actual part once
+     * the craft is confirmed, see {@link CanvasCuttingHelper#finishCutting}.
      */
     public @NotNull ItemStack assemble(@NotNull CraftingContainer craftingInventory, @NotNull RegistryAccess registryAccess) {
-        CanvasStitchingHelper.CanvasGridRectangle canvasGridRectangle = CanvasStitchingHelper.getCraftingContainerCanvasRectangle(craftingInventory);
+        final int sourceSlot = CanvasCuttingHelper.findSource(craftingInventory);
 
-        if (canvasGridRectangle == null) {
+        if (sourceSlot == -1) {
             return ItemStack.EMPTY;
         }
 
-        boolean anyCanvasHasData = craftingInventory.hasAnyMatching(stack -> !CanvasItem.isEmpty(stack));
+        final ItemStack sourceStack = craftingInventory.getItem(sourceSlot);
+        final int[] size = CanvasItem.getBlockSize(sourceStack);
+        final List<CanvasCuttingHelper.Part> parts = CanvasCuttingHelper.cut(size[0], size[1]);
+        final CanvasCuttingHelper.Part topLeft = parts.get(0);
 
-        ItemStack outCanvas = new ItemStack(ZetterItems.CANVAS.get());
-        outCanvas.setCount(1);
-        // Should use combined code only if there's painting data
-        if (anyCanvasHasData) {
-            DummyCanvasData stitchedCanvas = CanvasStitchingHelper.createStitchedCanvasData(craftingInventory, canvasGridRectangle, Minecraft.getInstance().level);
-            //stitchedCanvas
-            CanvasItem.setCanvasCode(outCanvas, Helper.COMBINED_CANVAS_CODE);
-        }
-        CanvasItem.setBlockSize(outCanvas, canvasGridRectangle.width, canvasGridRectangle.height);
+        final ItemStack outCanvas = CanvasItem.createBlank(topLeft.blockWidth(), topLeft.blockHeight());
+        outCanvas.getOrCreateTag().put(
+            CanvasCuttingHelper.NBT_TAG_CUT_SOURCE,
+            CanvasCuttingHelper.createCutSourceTag(sourceStack, parts.size())
+        );
 
         return outCanvas;
+    }
+
+    /**
+     * Every part but the top-left one goes back to the grid, laid out as in the source.
+     * Called by the result slot after the crafting event and before the source is
+     * taken from the grid, so this is the last to read it and releases it.
+     * <p>
+     * On client this only predicts: parts are blank until the server syncs the grid.
+     */
+    @Override
+    public @NotNull NonNullList<ItemStack> getRemainingItems(@NotNull CraftingContainer craftingInventory) {
+        final NonNullList<ItemStack> remainingItems = NonNullList.withSize(craftingInventory.getContainerSize(), ItemStack.EMPTY);
+        final int sourceSlot = CanvasCuttingHelper.findSource(craftingInventory);
+
+        if (sourceSlot == -1) {
+            return remainingItems;
+        }
+
+        final ItemStack sourceStack = craftingInventory.getItem(sourceSlot);
+        // Set by the result slot around this call only
+        final Player player = ForgeHooks.getCraftingPlayer();
+
+        if (player == null) {
+            // No crafting event without a player, so no top-left part: keep the source
+            Zetter.LOG.warn("Canvas cut without a crafting player, source is kept");
+            remainingItems.set(sourceSlot, sourceStack.copyWithCount(1));
+            return remainingItems;
+        }
+
+        final int[] size = CanvasItem.getBlockSize(sourceStack);
+        final List<CanvasCuttingHelper.Part> parts = CanvasCuttingHelper.cut(size[0], size[1]);
+        final CanvasCuttingHelper.Part lastPart = parts.get(parts.size() - 1);
+        final int gridWidth = craftingInventory.getWidth();
+
+        final int[] layoutStart = CanvasCuttingHelper.placeInGrid(
+            sourceSlot % gridWidth,
+            sourceSlot / gridWidth,
+            lastPart.column() + 1,
+            lastPart.row() + 1,
+            gridWidth,
+            craftingInventory.getHeight()
+        );
+
+        final Level level = player.level();
+
+        for (CanvasCuttingHelper.Part part : parts.subList(1, parts.size())) {
+            final int slot = (layoutStart[1] + part.row()) * gridWidth + layoutStart[0] + part.column();
+
+            remainingItems.set(slot, level.isClientSide()
+                ? CanvasItem.createBlank(part.blockWidth(), part.blockHeight())
+                : CanvasCuttingHelper.createPart(sourceStack, part, level)
+            );
+        }
+
+        final String sourceCode = CanvasItem.getCanvasCode(sourceStack);
+
+        if (!level.isClientSide() && sourceCode != null && CanvasItem.getCanvasData(sourceStack, level) != null) {
+            Helper.getLevelCanvasTracker(level).unregisterCanvasData(sourceCode);
+        }
+
+        return remainingItems;
     }
 
     /**

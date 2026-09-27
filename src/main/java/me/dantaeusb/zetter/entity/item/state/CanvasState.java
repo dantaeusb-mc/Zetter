@@ -1151,7 +1151,18 @@ public class CanvasState {
         if (this.canvasHolder.level().isClientSide()) {
             this.insertSnapshot(CanvasSnapshot.createWeakSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
         } else if (this.snapshots.isEmpty()) {
-            this.insertSnapshot(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), System.currentTimeMillis()));
+            /*
+             * Nothing to rebuild from. Stamped "now", the snapshot would claim to hold current state, and
+             * replay would skip it when action stamped at the same time arrives.
+             */
+            final CanvasAction lastAction = this.getLastAction();
+            long timestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
+
+            if (lastAction != null) {
+                timestamp = Math.max(timestamp, lastAction.getStartTime() + 1L);
+            }
+
+            this.insertSnapshot(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), timestamp));
         } else {
             // Restore painting to state at which it could not be changed
             // (as processing window defines timeout for new actions, we're

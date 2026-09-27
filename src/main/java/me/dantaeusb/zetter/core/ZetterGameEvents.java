@@ -5,6 +5,7 @@ import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.client.gui.overlay.CanvasOverlay;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
 import me.dantaeusb.zetter.entity.item.AbstractBoardEntity;
+import me.dantaeusb.zetter.item.crafting.CanvasCuttingRecipe;
 import me.dantaeusb.zetter.item.crafting.CanvasStitchingRecipe;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -73,8 +74,8 @@ public class ZetterGameEvents {
 
     /**
      * Fired only when the craft is confirmed, right before ingredients
-     * are consumed, so the parts are still in the grid: creates the
-     * stitched canvas and releases the parts.
+     * are consumed, so they are still in the grid: creates the stitched
+     * canvas or the top-left cut part on the result.
      * Client builds its own preview, see StitchedCanvasPreview.
      *
      * @param event
@@ -95,6 +96,8 @@ public class ZetterGameEvents {
             ).ifPresent(recipe -> {
                 if (recipe instanceof CanvasStitchingRecipe) {
                     CanvasStitchingHelper.finishStitching(craftingContainer, event.getCrafting(), player);
+                } else if (recipe instanceof CanvasCuttingRecipe) {
+                    CanvasCuttingHelper.finishCutting(craftingContainer, event.getCrafting(), player);
                 }
             });
         }

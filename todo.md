@@ -12,6 +12,8 @@
 * \[HIGH\] * Not saving current palette selection and pixel buffer in Easel Entity;
 * \[HIGH\] ? Central piece of iron frame actually has no model (except back which it lacks for some reason);
 * \[MED\] If painting has some problems, just remove it instead of crashing or throwing errors (i.e. requesting non-existent canvas);
+* \[HIGH\] `CanvasCuttingRecipe#matches` returns `blockSize != null && a || b` (missing parentheses);
+* \[LOW\] Stitching releases part canvases after the craft; a creative-duplicated painted canvas sharing a part's code would lose its data (artist table does the same);
 
 #### Release tasks:
 
@@ -30,6 +32,8 @@
 * \[LOW\] Looks like if color in a palette somehow getting wrong value, it's unfixable with new color due to alpha channel: maybe we can set alpha to 255 explicitly when picking a color in order to remove potential problem;
 * \[MED\] Canvas reads are not access controlled: `processCanvasRequest`, `processCanvasViewRequest` and `processCanvasRequestExport` take a canvas code straight off the wire, and codes are sequential, so a client can enumerate and download every painting on the server. Needs a rule for "may see this canvas" that does not break legitimate rendering;
 * \[LOW\] Trying to unload non-existent canvases sometimes;
+* \[MED\] `CanvasAction#isActionCompatible` ignores parameters, though docs/painting-history.md says an action stays open only while they hold. `useTool` paints each live frame with the current parameters, but replay uses the ones cloned when the action started, so a sponge drying mid-stroke replays at its starting wetness. `AbstractToolParameters` has no `equals` to compare with yet;
+* \[MED\] Action `startTime` is the client's wall clock, but the server compares it with its own: the too-old filter in `CanvasState#processActionServer` and snapshot timestamps. A client whose clock runs a few seconds behind has its strokes silently dropped. Needs an offset measured per player, or server-side stamping;
 * \[MED\] Drawings are stored against the overworld's data storage (`CanvasServerTracker#blankCanvasData`, `Helper#getLevelCanvasTracker`) though they belong to an entity that lives in some other dimension;
 * \[LOW\] Boards saved before drawings became entity-owned still carry a dead `storage` tag holding the canvas item they used to fake; nothing reads it any more;
 * \[LOW\] Remove network getters/setters: they're useless, and actually looks like a bad pattern (`public final`);

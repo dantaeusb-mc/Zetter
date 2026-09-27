@@ -4,6 +4,7 @@ import me.dantaeusb.zetter.Zetter;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasServerTracker;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.client.renderer.CanvasRenderer;
+import me.dantaeusb.zetter.core.CanvasCuttingHelper;
 import me.dantaeusb.zetter.core.Helper;
 import me.dantaeusb.zetter.core.ZetterCanvasTypes;
 import me.dantaeusb.zetter.core.ZetterItems;
@@ -305,13 +306,13 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                                 combinedCanvasData.getResolution(),
                                 numericResolution,
                                 numericResolution,
-                                getPartialColorData(
+                                CanvasCuttingHelper.sliceColorData(
                                     combinedCanvasData.getColorData(),
+                                    compoundCanvasWidth * numericResolution,
+                                    x * numericResolution,
+                                    y * numericResolution,
                                     numericResolution,
-                                    x,
-                                    y,
-                                    compoundCanvasWidth,
-                                    compoundCanvasHeight
+                                    numericResolution
                                 )
                             );
 
@@ -328,13 +329,13 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                     combinedCanvasData.getResolution(),
                     numericResolution,
                     numericResolution,
-                    getPartialColorData(
+                    CanvasCuttingHelper.sliceColorData(
                         combinedCanvasData.getColorData(),
+                        compoundCanvasWidth * numericResolution,
+                        missingX * numericResolution,
+                        missingY * numericResolution,
                         numericResolution,
-                        missingX,
-                        missingY,
-                        compoundCanvasWidth,
-                        compoundCanvasHeight
+                        numericResolution
                     )
                 );
 
@@ -419,18 +420,5 @@ public class CanvasSplitAction extends AbstractCanvasAction {
                 }
             }
         }
-    }
-
-    private static byte[] getPartialColorData(byte[] colorData, int resolution, int blockX, int blockY, int blockWidth, int blockHeight) {
-        byte[] destinationColor = new byte[resolution * resolution * 4];
-        ByteBuffer colorBuffer = ByteBuffer.wrap(colorData);
-
-        final int offset = ((blockWidth * resolution * blockY * resolution) + blockX * resolution) * 4;
-
-        for (int y = 0; y < resolution; y++) {
-            colorBuffer.get(offset + (blockWidth * resolution * y) * 4, destinationColor, y * resolution * 4, resolution * 4);
-        }
-
-        return destinationColor;
     }
 }

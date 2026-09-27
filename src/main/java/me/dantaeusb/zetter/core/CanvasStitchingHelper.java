@@ -20,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.UUID;
 
 /**
  * Helper to handle events and combination of the combined canvas when stitching.
@@ -29,11 +28,6 @@ public class CanvasStitchingHelper {
     /**
      * Craft is confirmed and parts are about to be consumed: creates
      * the stitched canvas on the result, then releases the parts.
-     * <p>
-     * Stack in the event is not always the one player gets: shift-click
-     * crafts into a copy and fires with the stack taken before the move.
-     * So the result is looked up in carried and inventory first, and only
-     * then the event stack is used (drop and swap take it as is).
      *
      * @param craftingContainer
      * @param craftedStack
@@ -54,22 +48,11 @@ public class CanvasStitchingHelper {
             return;
         }
 
-        ItemStack resultStack = null;
-
-        if (stitchParts.equals(StitchParts.readFrom(player.containerMenu.getCarried()))) {
-            resultStack = player.containerMenu.getCarried();
-        } else {
-            for (ItemStack inventoryStack : player.getInventory().items) {
-                if (stitchParts.equals(StitchParts.readFrom(inventoryStack))) {
-                    resultStack = inventoryStack;
-                    break;
-                }
-            }
-        }
-
-        if (resultStack == null && stitchParts.equals(StitchParts.readFrom(craftedStack))) {
-            resultStack = craftedStack;
-        }
+        final ItemStack resultStack = CanvasItem.findCraftedStack(
+            player,
+            craftedStack,
+            stack -> stitchParts.equals(StitchParts.readFrom(stack))
+        );
 
         if (resultStack == null) {
             // Keep parts: they are the only data this painting has
@@ -125,25 +108,6 @@ public class CanvasStitchingHelper {
                 canvasTracker.unregisterCanvasData(partCode);
             }
         }
-    }
-
-    /**
-     * Will create stitched canvas from container grid,
-     * a part that has a code but no data is filled with default color.
-     *
-     * @param craftingInventory
-     * @param canvasGridRectangle
-     * @param level
-     * @return null if no part has any painting on it: the result is a blank canvas
-     */
-    public static @Nullable DummyCanvasData createStitchedCanvasData(CraftingContainer craftingInventory, CanvasGridRectangle canvasGridRectangle, Level level) {
-        final StitchParts stitchParts = StitchParts.fromContainer(craftingInventory, canvasGridRectangle);
-
-        if (!stitchParts.hasAnyCode()) {
-            return null;
-        }
-
-        return createStitchedCanvasData(stitchParts, level, true);
     }
 
     /**
@@ -277,10 +241,6 @@ public class CanvasStitchingHelper {
         int height = max.getB() + 1 - min.getB();
 
         return new CanvasGridRectangle(min.getA(), min.getB(), width, height, canvasBlockSize);
-    }
-
-    public static String generateCombinedCanvasCode(CanvasGridRectangle canvasGridRectangle) {
-        return "combined_" + UUID.randomUUID();
     }
 
     /**

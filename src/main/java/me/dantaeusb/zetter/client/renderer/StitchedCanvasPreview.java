@@ -16,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
  */
 public class StitchedCanvasPreview {
     private static @Nullable CanvasStitchingHelper.StitchParts cachedParts;
-    private static AbstractCanvasData[] cachedPartData = new AbstractCanvasData[0];
     private static @Nullable DummyCanvasData cachedPreview;
 
     /**
@@ -38,19 +37,10 @@ public class StitchedCanvasPreview {
         }
 
         final CanvasTracker canvasTracker = Helper.getLevelCanvasTracker(level);
-        final AbstractCanvasData[] partData = new AbstractCanvasData[stitchParts.codes.length];
         boolean partsReady = true;
 
-        for (int i = 0; i < stitchParts.codes.length; i++) {
-            final String partCode = stitchParts.codes[i];
-
-            if (partCode == null) {
-                continue;
-            }
-
-            partData[i] = canvasTracker.getCanvasData(partCode);
-
-            if (partData[i] == null) {
+        for (String partCode : stitchParts.codes) {
+            if (partCode != null && canvasTracker.getCanvasData(partCode) == null) {
                 CanvasRenderer.getInstance().queueCanvasTextureUpdate(partCode);
                 partsReady = false;
             }
@@ -64,7 +54,6 @@ public class StitchedCanvasPreview {
             cachedPreview != null
             && canvasTracker.getCanvasData(Helper.COMBINED_CANVAS_CODE) == cachedPreview
             && stitchParts.equals(cachedParts)
-            && sameInstances(partData, cachedPartData)
         ) {
             return cachedPreview;
         }
@@ -78,7 +67,6 @@ public class StitchedCanvasPreview {
         canvasTracker.registerCanvasData(Helper.COMBINED_CANVAS_CODE, preview);
 
         cachedParts = stitchParts;
-        cachedPartData = partData;
         cachedPreview = preview;
 
         return preview;
@@ -100,25 +88,6 @@ public class StitchedCanvasPreview {
         }
 
         cachedParts = null;
-        cachedPartData = new AbstractCanvasData[0];
         cachedPreview = null;
-    }
-
-    /**
-     * Tracker replaces data object on every sync, so identity tells
-     * whether a part changed since the preview was built
-     */
-    private static boolean sameInstances(AbstractCanvasData[] left, AbstractCanvasData[] right) {
-        if (left.length != right.length) {
-            return false;
-        }
-
-        for (int i = 0; i < left.length; i++) {
-            if (left[i] != right[i]) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

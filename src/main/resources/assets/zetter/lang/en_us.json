@@ -88,6 +88,7 @@
   "item.zetter.brown_chalk": "Brown Chalk",
   "item.zetter.canvas": "Canvas",
   "item.zetter.canvas.blank": "Blank canvas",
+  "item.zetter.canvas.cut_parts": "Cuts into %s parts",
   "item.zetter.canvas.painted": "Painted canvas",
   "item.zetter.chalk_box": "Chalk Box",
   "item.zetter.chalk_box.fullness": "%s of %s",

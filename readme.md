@@ -26,3 +26,7 @@ https://crowdin.com/project/zetter
 ### Licensing
 
 Mozilla Public License 2.0
+
+The chalk impact sounds in `assets/zetter/sounds/chalk_impact_*.ogg` are cut from a
+chalkboard recording by soundud3 and are used under
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
