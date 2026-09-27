@@ -307,6 +307,12 @@ public class CanvasItem extends Item
      * @param stack
      */
     private static void ensureBlockSizeTag(ItemStack stack) {
+        // Paintings and frames inherit these hooks, but their size comes with the
+        // painting: stamped on an empty frame, it reads as a framed painting
+        if (!stack.is(ZetterItems.CANVAS.get())) {
+            return;
+        }
+
         final CompoundTag tag = stack.getTag();
 
         if (tag != null && tag.contains(NBT_TAG_CACHED_BLOCK_SIZE)) {

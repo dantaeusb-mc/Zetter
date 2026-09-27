@@ -214,6 +214,15 @@ public abstract class AbstractEaselEntity extends CanvasHolderEntity implements 
       // The slot holds one, and a player carrying a stack of blanks should keep the rest
       this.easelContainer.setCanvasStack(heldItem.split(1));
 
+      /*
+       * Creative restores a held stack that shrank while interacting (Player#interactOn),
+       * but only the same instance: hand it a new one, so a painted canvas isn't
+       * duplicated by hanging it
+       */
+      if (player.getAbilities().instabuild) {
+        player.setItemInHand(hand, heldItem.copy());
+      }
+
       if (!replacedStack.isEmpty()) {
         player.getInventory().placeItemBackInInventory(replacedStack);
       }

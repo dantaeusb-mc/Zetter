@@ -3,7 +3,6 @@ package me.dantaeusb.zetter.client.renderer;
 import me.dantaeusb.zetter.capability.canvastracker.CanvasTracker;
 import me.dantaeusb.zetter.core.CanvasStitchingHelper;
 import me.dantaeusb.zetter.core.Helper;
-import me.dantaeusb.zetter.item.CanvasItem;
 import me.dantaeusb.zetter.storage.AbstractCanvasData;
 import me.dantaeusb.zetter.storage.DummyCanvasData;
 import net.minecraft.world.item.ItemStack;
@@ -20,9 +19,10 @@ public class StitchedCanvasPreview {
     private static AbstractCanvasData[] cachedPartData = new AbstractCanvasData[0];
     private static @Nullable DummyCanvasData cachedPreview;
 
-    public static @Nullable AbstractCanvasData getCanvasData(ItemStack stack, Level level) {
-        final String canvasCode = CanvasItem.getCanvasCode(stack);
-
+    /**
+     * @param canvasCode resolved by the caller: paintings and frames keep theirs elsewhere
+     */
+    public static @Nullable AbstractCanvasData getCanvasData(ItemStack stack, String canvasCode, Level level) {
         if (Helper.COMBINED_CANVAS_CODE.equals(canvasCode)) {
             return getPreview(stack, level);
         }

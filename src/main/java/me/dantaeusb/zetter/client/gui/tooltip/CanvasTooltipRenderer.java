@@ -48,7 +48,7 @@ public class CanvasTooltipRenderer implements ClientTooltipComponent {
       return;
     }
 
-    AbstractCanvasData canvasData = StitchedCanvasPreview.getCanvasData(stack, mc.level);
+    AbstractCanvasData canvasData = StitchedCanvasPreview.getCanvasData(stack, canvasCode, mc.level);
 
     if (canvasData == null) {
       CanvasRenderer.getInstance().queueCanvasTextureUpdate(canvasCode);

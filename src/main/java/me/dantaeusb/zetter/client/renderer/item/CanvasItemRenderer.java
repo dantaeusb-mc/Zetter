@@ -70,7 +70,7 @@ public class CanvasItemRenderer extends BlockEntityWithoutLevelRenderer {
         }
 
         if (hahaLevelInWithoutLevelRenderer != null && !itemStack.isEmpty() && canvasCode != null) {
-            AbstractCanvasData canvasData = StitchedCanvasPreview.getCanvasData(itemStack, hahaLevelInWithoutLevelRenderer);
+            AbstractCanvasData canvasData = StitchedCanvasPreview.getCanvasData(itemStack, canvasCode, hahaLevelInWithoutLevelRenderer);
 
             if (canvasData != null) {
                 CanvasRenderer.getInstance().renderCanvas(poseStack, buffer, canvasCode, canvasData, combinedLight);

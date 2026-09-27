@@ -161,11 +161,20 @@ public class PaintingItem extends CanvasItem
     public static String getPaintingCode(ItemStack stack) {
         CompoundTag compoundNBT = stack.getTag();
 
-        if (compoundNBT == null) {
+        // Other tags don't make a painting: an empty frame may carry a name
+        if (compoundNBT == null || !compoundNBT.contains(NBT_TAG_PAINTING_CODE)) {
             return null;
         }
 
-        return compoundNBT.getString(NBT_TAG_PAINTING_CODE);
+        final String paintingCode = compoundNBT.getString(NBT_TAG_PAINTING_CODE);
+
+        // Never written empty: if it shows up, something upstream changed
+        if (paintingCode.isEmpty()) {
+            Zetter.LOG.warn("Painting code is present but empty on " + stack);
+            return null;
+        }
+
+        return paintingCode;
     }
 
     /**
