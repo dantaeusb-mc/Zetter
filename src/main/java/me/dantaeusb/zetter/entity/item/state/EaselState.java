@@ -298,7 +298,7 @@ public class EaselState {
 
         Float lastX = null, lastY = null;
 
-        if (lastAction != null && lastAction.tool == tool && !lastAction.isCommitted()) {
+        if (lastAction != null && lastAction.canContinue(player.getUUID(), tool, color, parameters)) {
             final CanvasAction.CanvasSubAction lastSubAction = lastAction.getLastAction();
 
             if (lastSubAction != null) {
@@ -807,23 +807,6 @@ public class EaselState {
         return this.applyHistoryTraversing(tillAction, false);
     }
 
-    private @Nullable CanvasAction findAndReplaceAction(int actionId, CanvasAction action) {
-        ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
-        @Nullable CanvasAction tillAction = null;
-
-        while(actionsIterator.hasPrevious()) {
-            CanvasAction currentAction = actionsIterator.previous();
-
-            if (currentAction.id == actionId) {
-                tillAction = currentAction;
-                actionsIterator.set(action);
-                break;
-            }
-        }
-
-        return tillAction;
-    }
-
     private @Nullable CanvasAction findAction(int actionId) {
         ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
         @Nullable CanvasAction tillAction = null;
@@ -875,50 +858,17 @@ public class EaselState {
 
         // @todo: [MED] No need to update data before collected: apply changes on buffer, then update data and texture
         this.applySnapshot(latestSnapshot);
-        ListIterator<CanvasAction> actionBufferIterator = this.getActionsEndIterator();
-
-        boolean foundCanceled = firstCanceledAction == null;
-        boolean foundLastBeforeSnapshot = false;
-
-        // Go back, find first canceled, then reverse iterator, then continue applying action
-        while(actionBufferIterator.hasPrevious()) {
-            CanvasAction action = actionBufferIterator.previous();
-
-            // Start looking when found first canceled action if any
-            if (!foundCanceled) {
-                foundCanceled = action.id == firstCanceledAction.id;
-            }
-
-            // And first action committed before snapshot
-            if (!foundLastBeforeSnapshot) {
-                foundLastBeforeSnapshot = action.isCommitted() && action.getCommitTime() < latestSnapshot.timestamp;
-            }
-
-            // When found or reached the end
-            if (
-                (foundCanceled && foundLastBeforeSnapshot) || !actionBufferIterator.hasPrevious()
-            ) {
-                // Turn around and start applying
-                while(actionBufferIterator.hasNext()) {
-                    action = actionBufferIterator.next();
-
-                    // We apply non-committed and non-sent always, as server cannot have idea of the new actions that were not pushed
-                    // (except if canceled, but it should never happen)
-                    if (
-                        !action.isCanceled() && ( // If not canceled and
-                            !action.isCommitted()  // not committed
-                            || !action.isSent() // or not sent
-                            || action.getCommitTime() > latestSnapshot.timestamp // or committed after snapshot
-                        )
-                    ) {
-                        this.applyAction(action, false);
-                    }
-                }
-
-                break;
+        // Actions are atomic at commit time. Historical server snapshots must exclude
+        // later strokes, otherwise those strokes get baked in and replayed twice.
+        for (CanvasAction action : this.actions) {
+            boolean afterSnapshot = !action.isCommitted() || !action.isSent()
+                    || action.getCommitTime() > latestSnapshot.timestamp;
+            boolean withinTimestamp = this.easel.level().isClientSide()
+                    || (action.isCommitted() && action.getCommitTime() <= timestamp);
+            if (!action.isCanceled() && afterSnapshot && withinTimestamp) {
+                this.applyAction(action, false);
             }
         }
-
         if (this.easel.level().isClientSide()) {
             CanvasRenderer.getInstance().updateCanvasTexture(this.getCanvasCode(), this.getCanvasData());
         }
@@ -931,7 +881,7 @@ public class EaselState {
     }
 
     public void recollectPaintingData() {
-        this.recollectPaintingData(System.currentTimeMillis());
+        this.recollectPaintingData(Long.MAX_VALUE);
     }
 
     /**
@@ -1041,6 +991,20 @@ public class EaselState {
             // (as processing window defines timeout for new actions, we're
             // sure that no new actions will be added to buffer before that timestamp)
             long authoritativeTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
+            // Keep a complete prefix of drawing order. A long stroke can commit
+            // after a newer, shorter stroke; including only the latter would
+            // reverse their layers when the long stroke is replayed.
+            ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
+            while (actionsIterator.hasPrevious()) {
+                CanvasAction action = actionsIterator.previous();
+                if (action.getStartTime() <= authoritativeTimestamp
+                        && (!action.isCommitted() || action.getCommitTime() > authoritativeTimestamp)) {
+                    authoritativeTimestamp = action.getStartTime() - 1L;
+                }
+            }
+            if (authoritativeTimestamp <= this.getLastSnapshot().timestamp) {
+                return;
+            }
             this.recollectPaintingData(authoritativeTimestamp);
             this.snapshots.add(CanvasSnapshot.createServerSnapshot(this.getCanvasData().getColorData(), authoritativeTimestamp));
             // Get back to the current state
@@ -1106,7 +1070,7 @@ public class EaselState {
      * Client-only
      */
     public void performHistorySyncClient(boolean forceCommit) {
-        final Queue<CanvasAction> unsentActions = new ArrayDeque<>();
+        final Deque<CanvasAction> unsentActions = new ArrayDeque<>();
         ListIterator<CanvasAction> actionsIterator = this.getActionsEndIterator();
 
         while(actionsIterator.hasPrevious()) {
@@ -1126,7 +1090,7 @@ public class EaselState {
                 break;
             }
 
-            unsentActions.add(paintingActionBuffer);
+            unsentActions.addFirst(paintingActionBuffer);
         }
 
         if (!unsentActions.isEmpty()) {
@@ -1294,82 +1258,45 @@ public class EaselState {
      * @param newActions
      */
     public void processActionServer(Queue<CanvasAction> newActions) {
+        if (newActions.isEmpty()) {
+            return;
+        }
         if (this.easel.getCanvasStack().isEmpty()) {
             Zetter.LOG.warn("Got action buffer but no canvas found on easel");
             return;
         }
 
+        // Preserve drawing order even if an older client sends a reversed batch.
+        List<CanvasAction> orderedActions = newActions.stream()
+                .sorted(Comparator.comparingLong(CanvasAction::getStartTime)).toList();
         if (!this.isCanvasInitialized()) {
-            this.initializeCanvas(newActions.peek().getStartTime());
+            this.initializeCanvas(orderedActions.get(0).getStartTime());
         }
 
-        // We don't want to process actions that are too old
         final long processingAfterTimestamp = System.currentTimeMillis() - PROCESSING_WINDOW;
         this.wipeCanceledActionsAndDiscardSnapshots();
-
-        Iterator<CanvasAction> newActionsIterator = newActions.iterator();
-        ListIterator<CanvasAction> existingActionsIterator = this.actions.listIterator();
-
-        // We should have at least one, so it's safe
-        CanvasAction newAction = newActionsIterator.next();
-
-        while (existingActionsIterator.hasNext()) {
-            if (newAction == null) {
-                break;
+        for (CanvasAction newAction : orderedActions) {
+            if (this.findAction(newAction.id) != null) {
+                continue;
             }
-
-            CanvasAction existingAction = existingActionsIterator.next();
-
-            if (newAction.getStartTime().equals(existingAction.getStartTime())) {
-                Zetter.LOG.warn("Two actions have the same timestamp, weird!");
-
-                if (newAction.id == existingAction.id) {
-                    Zetter.LOG.warn("Got already synced action, ignoring");
-                }
-
-                existingActionsIterator.add(newAction);
-
-                if (newAction.isCanceled()) {
-                    this.historyDirty = true;
-                }
-
-                newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
-            } else if (existingAction.getStartTime() > newAction.getStartTime()) {
-                if (newAction.getStartTime() < processingAfterTimestamp) {
-                    Zetter.LOG.warn("Got action that is too old, ignoring");
-                    newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
-                    continue;
-                }
-
-                existingActionsIterator.previous(); // rewind to insert before
-                existingActionsIterator.add(newAction);
-
-                if (newAction.isCanceled()) {
-                    this.historyDirty = true;
-                }
-
-                existingActionsIterator.next(); // get back
-                newAction = newActionsIterator.hasNext() ? newActionsIterator.next() : null;
+            int insertionIndex = 0;
+            while (insertionIndex < this.actions.size()
+                    && this.actions.get(insertionIndex).getStartTime() <= newAction.getStartTime()) {
+                insertionIndex++;
             }
-        }
-
-        if (newAction != null) {
-            existingActionsIterator.add(newAction);
-
+            if (insertionIndex < this.actions.size() && newAction.getStartTime() < processingAfterTimestamp) {
+                Zetter.LOG.warn("Got action that is too old, ignoring");
+                continue;
+            }
+            this.actions.add(insertionIndex, newAction);
             if (newAction.isCanceled()) {
                 this.historyDirty = true;
             }
-        }
-
-        while(newActionsIterator.hasNext()) {
-            newAction = newActionsIterator.next();
-            existingActionsIterator.add(newAction);
-
-            if (newAction.isCanceled()) {
-                this.historyDirty = true;
+            // A late insertion can precede a player's last acknowledgement.
+            if (insertionIndex < this.actions.size() - 1) {
+                this.playerLastSyncedAction.clear();
             }
         }
-
         this.unfreeze();
 
         this.cleanupActionHistory();
@@ -1468,61 +1395,32 @@ public class EaselState {
             return;
         }
 
-        Iterator<CanvasAction> unsyncedIterator = actions.iterator();
-        ListIterator<CanvasAction> actionsIterator = this.actions.listIterator();
-
-        @Nullable CanvasAction clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
-
-        int fastForwards = 0;
         int addedActions = 0;
-
-        do {
-            CanvasAction unsyncedAction = unsyncedIterator.next();
-
-            // If there's no client actions saved found after synced action, just
-            // add all unsynced
+        CanvasAction previousSyncedAction = null;
+        for (CanvasAction unsyncedAction : actions) {
+            CanvasAction clientAction = this.findAction(unsyncedAction.id);
             if (clientAction == null) {
-                this.actions.add(unsyncedAction);
+                clientAction = unsyncedAction;
                 addedActions++;
-
-                continue;
-            }
-
-            // Fast-forward client actions to the one that is made at the same
-            // time or later than the first unsynced action
-            if (unsyncedAction.getStartTime() > clientAction.getStartTime()) {
-                if (++fastForwards > 1) {
-                    Zetter.LOG.warn("Fast-forwarding actions without mark sync! Some actions were lost?");
-                }
-
-                while (actionsIterator.hasNext()) {
-                    if (clientAction.getStartTime() >= unsyncedAction.getStartTime()) {
-                        break;
-                    }
-
-                    clientAction = actionsIterator.next();
-                }
-            }
-
-            // Mark action as sync, because we received confirmation from server
-            // That server has this action
-            if (clientAction.id == unsyncedAction.id) {
-                clientAction.setSync();
-                clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
             } else {
-                if (this.findAndReplaceAction(unsyncedAction.id, unsyncedAction) != null) {
-                    Zetter.LOG.warn("Duplicating action! Replacing.");
-                    clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
-                    continue;
-                }
-
-                actionsIterator.add(unsyncedAction);
-                addedActions++;
-
-                clientAction = actionsIterator.hasNext() ? actionsIterator.next() : null;
+                // Keep any local undo state while acknowledging the stroke.
+                this.actions.remove(clientAction);
             }
-        } while (unsyncedIterator.hasNext());
+            clientAction.setSync();
 
+            int insertionIndex = 0;
+            while (insertionIndex < this.actions.size()
+                    && this.actions.get(insertionIndex).getStartTime() < clientAction.getStartTime()) {
+                insertionIndex++;
+            }
+            // The server's order also breaks ties for actions started in the same millisecond.
+            if (previousSyncedAction != null
+                    && previousSyncedAction.getStartTime().equals(clientAction.getStartTime())) {
+                insertionIndex = this.actions.indexOf(previousSyncedAction) + 1;
+            }
+            this.actions.add(insertionIndex, clientAction);
+            previousSyncedAction = clientAction;
+        }
         this.unfreeze();
 
         if (addedActions > 0) {

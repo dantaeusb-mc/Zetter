@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 public abstract class AbstractToolParameters implements Cloneable {
     protected HashMap<String, Object> values = new HashMap<>();
 
+    public boolean hasSameValues(AbstractToolParameters other) {
+        return other != null && this.getClass() == other.getClass() && this.values.equals(other.values);
+    }
+
     @Override
     public AbstractToolParameters clone() throws CloneNotSupportedException {
         AbstractToolParameters copy = (AbstractToolParameters) super.clone();
@@ -109,7 +113,7 @@ public abstract class AbstractToolParameters implements Cloneable {
         final int length = buffer.readInt();
 
         final byte[] input = new byte[length];
-        buffer.readBytes(length).nioBuffer().get(input);
+        buffer.readBytes(input);
 
         try {
             ByteArrayInputStream byteStream = new ByteArrayInputStream(input);

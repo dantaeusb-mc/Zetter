@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.util.Random;
 import java.util.UUID;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -151,7 +152,8 @@ public class CanvasAction {
      * @return
      */
     public boolean isActionCompatible(UUID authorId, Tools tool, int color, AbstractToolParameters parameters) {
-        return this.authorUUID == authorId && this.tool == tool && this.color == color;
+        return Objects.equals(this.authorUUID, authorId) && this.tool == tool && this.color == color
+                && this.parameters.hasSameValues(parameters);
     }
 
     /**
@@ -212,7 +214,7 @@ public class CanvasAction {
         ByteBuffer subActionBuffer;
 
         if (this.isCommitted()) {
-            subActionBuffer = this.subActionBuffer;
+            subActionBuffer = this.subActionBuffer.asReadOnlyBuffer();
         } else {
             subActionBuffer = this.subActionBuffer.duplicate().flip();
         }
@@ -355,7 +357,7 @@ public class CanvasAction {
             final byte meta = buffer.get();
 
             // Time
-            final int time = buffer.get() << 8 & buffer.get();
+            final int time = Byte.toUnsignedInt(buffer.get()) | (Byte.toUnsignedInt(buffer.get()) << 8);
 
             // Position
             final float posX = buffer.getFloat();
@@ -374,8 +376,10 @@ public class CanvasAction {
         buffer.writeBoolean(actionBuffer.canceled);
         AbstractToolParameters.writePacketData(actionBuffer.parameters, buffer);
 
-        buffer.writeInt(actionBuffer.subActionBuffer.rewind().limit());
-        buffer.writeBytes(actionBuffer.subActionBuffer);
+        ByteBuffer frames = actionBuffer.subActionBuffer.asReadOnlyBuffer();
+        frames.rewind();
+        buffer.writeInt(frames.remaining());
+        buffer.writeBytes(frames);
     }
 
     public static CanvasAction readPacketData(FriendlyByteBuf buffer) {
@@ -388,8 +392,14 @@ public class CanvasAction {
         AbstractToolParameters parameters = AbstractToolParameters.readPacketData(buffer, tool);
 
         int bufferSize = buffer.readInt();
+        if (bufferSize <= 0 || bufferSize > BUFFER_SIZE || bufferSize % FRAME_SIZE != 0) {
+            throw new IllegalArgumentException("Invalid canvas action buffer size: " + bufferSize);
+        }
         try {
-            ByteBuffer actionsBuffer = buffer.readBytes(bufferSize).nioBuffer();
+            // Own the bytes: network buffers may be released before the history is replayed.
+            byte[] frames = new byte[bufferSize];
+            buffer.readBytes(frames);
+            ByteBuffer actionsBuffer = ByteBuffer.wrap(frames);
 
             return new CanvasAction(
                     actionId,

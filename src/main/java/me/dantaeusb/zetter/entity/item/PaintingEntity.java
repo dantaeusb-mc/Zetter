@@ -14,6 +14,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
+import net.minecraft.server.level.ServerEntity;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -27,6 +29,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.apache.commons.lang3.Validate;
@@ -175,7 +178,7 @@ public class PaintingEntity extends HangingEntity implements IEntityWithComplexS
 
     /**
      * Offset from hanging block position to geometrical center of the picture
-     * if pixel size is twice as resolution, like 32, 64
+     * if the size in hanging-entity units is even blocks, like 32, 64
      * [][]*[][]
      * that means that block edge is geometrical center. If it's not, like 48 or 16,
      * we have to move center to the middle of the block
@@ -184,7 +187,8 @@ public class PaintingEntity extends HangingEntity implements IEntityWithComplexS
      * the opposite
      */
     private double offs(int pixelSize) {
-        return pixelSize % (Helper.getResolution().getNumeric() * 2) == 0 ? 0.5D : 0.0D;
+        // getWidth/getHeight use 16 units per block, independent of canvas resolution.
+        return pixelSize % 32 == 0 ? 0.5D : 0.0D;
     }
 
     public double[] getRenderOffset() {
@@ -340,6 +344,7 @@ public class PaintingEntity extends HangingEntity implements IEntityWithComplexS
      * Do not re-center bounding box
      * Copied from PaintingEntity
      */
+    @Override
     public void moveTo(double x, double y, double z, float yaw, float pitch) {
         this.setPos(x, y, z);
     }
@@ -348,9 +353,26 @@ public class PaintingEntity extends HangingEntity implements IEntityWithComplexS
      * Sets a target for the client to interpolate towards over the next few ticks
      * Copied from PaintingEntity
      */
-    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements, boolean teleport) {
-        BlockPos blockpos = this.pos.offset((int) (x - this.getX()), (int) (y - this.getY()), (int) (z - this.getZ()));
-        this.setPos(blockpos.getX(), blockpos.getY(), blockpos.getZ());
+    @Override
+    public void lerpTo(double x, double y, double z, float yaw, float pitch, int posRotationIncrements) {
+        this.setPos(x, y, z);
+    }
+
+    @Override
+    public Vec3 trackingPosition() {
+        // BlockAttachedEntity.setPos expects the attachment anchor, not the image center.
+        return Vec3.atLowerCornerOf(this.pos);
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getAddEntityPacket(ServerEntity serverEntity) {
+        return new ClientboundAddEntityPacket(this, this.direction.get3DDataValue(), this.getPos());
+    }
+
+    @Override
+    public void recreateFromPacket(ClientboundAddEntityPacket packet) {
+        super.recreateFromPacket(packet);
+        this.setDirection(Direction.from3DDataValue(packet.getData()));
     }
 
     public void playPlacementSound() {
